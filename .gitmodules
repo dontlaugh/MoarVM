@@ -1,27 +1,27 @@
-[submodule "3rdparty/libuv"]
-	path = 3rdparty/libuv
+[submodule "subprojects/libuv"]
+	path = subprojects/libuv
 	url = https://github.com/libuv/libuv.git
-[submodule "3rdparty/dyncall"]
-	path = 3rdparty/dyncall
+[submodule "subprojects/dyncall"]
+	path = subprojects/dyncall
 	url = https://github.com/MoarVM/dyncall.git
-[submodule "3rdparty/dynasm"]
-	path = 3rdparty/dynasm
+[submodule "subprojects/dynasm"]
+	path = subprojects/dynasm
 	url = https://github.com/MoarVM/dynasm.git
-[submodule "3rdparty/libtommath"]
-	path = 3rdparty/libtommath
+[submodule "subprojects/libtommath"]
+	path = subprojects/libtommath
 	url = https://github.com/MoarVM/libtommath
-[submodule "3rdparty/cmp"]
-	path = 3rdparty/cmp
+[submodule "subprojects/cmp"]
+	path = subprojects/cmp
 	url = https://github.com/MoarVM/cmp.git
-[submodule "3rdparty/libatomicops"]
-	path = 3rdparty/libatomicops
+[submodule "subprojects/libatomicops"]
+	path = subprojects/libatomicops
 	url = https://github.com/MoarVM/libatomic_ops
-[submodule "3rdparty/ryu"]
-	path = 3rdparty/ryu
+[submodule "subprojects/ryu"]
+	path = subprojects/ryu
 	url = https://github.com/MoarVM/ryu
 	ignore = untracked
-[submodule "3rdparty/mimalloc"]
-	path = 3rdparty/mimalloc
+[submodule "subprojects/mimalloc"]
+	path = subprojects/mimalloc
 	url = https://github.com/microsoft/mimalloc.git
 	ignore = untracked
 
