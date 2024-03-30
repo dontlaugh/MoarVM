@@ -1,20 +1,12 @@
 project('MoarVM', 'c')
 
-subdir('src')
+# subdir('src')
 
+cmake = import('cmake')
 
-# generated sources (Configure.pl)
-# Makefile
-# build/mk-moar-pc.pl
-# src/gen/config.c
-# src/gen/config.h
-# tools/check.mk
-
-# build outputs and some generated sources (make, after Configure.pl)
-# libmoar.so
-# moar (executable)
-# pkgconfig/moar.pc
-# ... obj .o files for every .c file
-# src/jit/core_templates.h (from src/jit/core_templates.expr?)
-# src/jit/x64/tile_pattern.h (from src/jit/x64/tile_pattern.tile?)
+dyncall_subproject = cmake.subproject('dyncall')
+dyncall_s_lib = dyncall_subproject.dependency('dyncall_s')
+shared_library('dyncall_s', dependencies : [dyncall_s_lib])
+shared_library('dyncallback_s', dependencies : [dyncall_s_lib])
+shared_library('dynload_s', dependencies : [dyncall_s_lib])
 
