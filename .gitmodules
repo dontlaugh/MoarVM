@@ -18,7 +18,7 @@
 	url = https://github.com/MoarVM/libatomic_ops
 [submodule "subprojects/ryu"]
 	path = subprojects/ryu
-	url = https://github.com/MoarVM/ryu
+	url = https://github.com/dontlaugh/ryu
 	ignore = untracked
 [submodule "subprojects/mimalloc"]
 	path = subprojects/mimalloc
