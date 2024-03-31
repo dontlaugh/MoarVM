@@ -25,3 +25,8 @@ message('CMake targets:\n - ' + '\n - '.join(libuv_subproject.target_list()))
 # shared_library('libuv', dependencies : [libuv_lib])
 libuv_lib_a = libuv_subproject.dependency('uv_a')
 static_library('uv_a', dependencies : [libuv_lib_a])
+
+# Latest master of ryu has CMake support
+ryu_subproject = cmake.subproject('ryu')
+ryu_lib = ryu_subproject.dependency('ryu')
+static_library('ryu', dependencies : [ryu_lib])
