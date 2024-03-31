@@ -2,6 +2,7 @@
 *~
 *.bak
 *.swp
+.idea
 # Emacs specfic in-use files
 \#*\#
 .#*
