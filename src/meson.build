@@ -1,5 +1,8 @@
 
+subdir('gen')
 
-sources = ['main.c']
+srcs = ['main.c', 'moar.c']
 
-executable('moar', sources : srcs)
+moar_deps = [dyncall_s_lib, mimalloc_lib, libuv_lib_a, ryu_lib]
+
+executable('moar', sources : srcs, dependencies : moar_deps)
