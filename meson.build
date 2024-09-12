@@ -33,6 +33,10 @@ ryu_subproject = cmake.subproject('ryu')
 ryu_lib = ryu_subproject.dependency('ryu')
 static_library('ryu', dependencies : [ryu_lib])
 
+libtommath_subproject = subproject('libtommath')
+libtommath_lib = libtommath_subproject.get_variable('libtommath_dep')
+
+
 #
 # Generate: src/gen/config.c, src/gen/config.h
 #
