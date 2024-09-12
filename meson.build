@@ -4,6 +4,10 @@ cmake = import('cmake')
 
 dyncall_subproject = cmake.subproject('dyncall')
 dyncall_s_lib = dyncall_subproject.dependency('dyncall_s')
+#dyncall_project_dir = dyncall_subproject.get_variable('CMAKE_ROOT')
+dynload_inc_dir = include_directories(['subprojects/dyncall/dynload',
+                                       'subprojects/dyncall/dyncall',
+                                       'subprojects/dyncall/dyncallback'])
 shared_library('dyncall_s', dependencies : [dyncall_s_lib])
 shared_library('dyncallback_s', dependencies : [dyncall_s_lib])
 shared_library('dynload_s', dependencies : [dyncall_s_lib])
@@ -17,7 +21,7 @@ static_library('mimalloc-static', dependencies : [mimalloc_lib])
 libuv_opts = cmake.subproject_options()
 # libuv_opts.add_cmake_defines({'LIBUV_BUILD_SHARED': true})
 libuv_subproject = cmake.subproject('libuv', options : libuv_opts)
-message('CMake targets:\n - ' + '\n - '.join(libuv_subproject.target_list()))
+#message('CMake targets:\n - ' + '\n - '.join(libuv_subproject.target_list()))
 # if set LIBUV_BUILD_SHARED we can build a shared lib
 # libuv_lib = mimalloc_subproject.dependency('uv')
 # shared_library('libuv', dependencies : [libuv_lib])
