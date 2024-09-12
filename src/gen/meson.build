@@ -1,5 +1,5 @@
 
-# Output cannot contain a path segment, but input cannot
+# Output cannot contain a path segment, but input can?
 
 configure_file(input : '../../build/config.h.in',
                output : 'config.h',
