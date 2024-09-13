@@ -22,7 +22,7 @@ main_srcs = ['main.c', 'moar.c']
 
 moar_thirdparty_deps = [
     dyncall_s_lib,
-    mimalloc_lib,
+    mimalloc_lib,  # need .h
     libuv_lib_a,
     ryu_lib,
     libtommath_lib,

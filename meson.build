@@ -13,6 +13,7 @@ shared_library('dynload_s', dependencies : [dyncall_s_lib])
 
 mimalloc_subproject = cmake.subproject('mimalloc')
 mimalloc_lib = mimalloc_subproject.dependency('mimalloc')
+mimalloc_inc  =  include_directories('subprojects/mimalloc/include')
 shared_library('mimalloc', dependencies : [mimalloc_lib])
 static_library('mimalloc-static', dependencies : [mimalloc_lib])
 
