@@ -1,4 +1,6 @@
 /* Default maximum size of bytecode we'll inline. */
+#ifndef INLINE_H
+#define INLINE_H
 #define MVM_SPESH_DEFAULT_MAX_INLINE_SIZE 192
 
 /* The maximum number of locals an inliner can reach, and maximum number of
@@ -74,3 +76,4 @@ void MVM_spesh_inline(MVMThreadContext *tc, MVMSpeshGraph *inliner,
     MVMSpeshIns *runbytecode_ins, MVMSpeshGraph *inlinee, MVMStaticFrame *inlinee_sf,
     MVMSpeshOperand code_ref_reg, MVMSpeshIns *resume_init, MVMuint16 bytecode_size);
 MVMuint32 MVM_spesh_inline_get_max_size(MVMThreadContext *tc, MVMStaticFrame *sf);
+#endif // INLINE_H

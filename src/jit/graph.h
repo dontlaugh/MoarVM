@@ -1,5 +1,8 @@
 /* The MVMJitGraph is - for now - really a linked list of instructions.
  * It's likely I'll add complexity when it's needed */
+#ifndef GRAPH_H
+#define GRAPH_H
+
 struct MVMJitGraph {
     MVMSpeshGraph *sg;
     MVMJitNode    *first_node;
@@ -305,3 +308,4 @@ struct MVMJitNode {
 
 MVMJitGraph* MVM_jit_try_make_graph(MVMThreadContext *tc, MVMSpeshGraph *sg);
 void MVM_jit_graph_destroy(MVMThreadContext *tc, MVMJitGraph *graph);
+#endif // GRAPH_H

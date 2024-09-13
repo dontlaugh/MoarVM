@@ -1,4 +1,7 @@
 /* Per-thread profiling data. */
+#ifndef LOG_H
+#define LOG_H
+
 struct MVMProfileThreadData {
     /* The current call graph node we're in. */
     MVMProfileCallNode *current_call;
@@ -242,3 +245,4 @@ void MVM_profiler_log_spesh_end(MVMThreadContext *tc);
 void MVM_profiler_log_osr(MVMThreadContext *tc, MVMuint64 jitted);
 void MVM_profiler_log_deopt_one(MVMThreadContext *tc);
 void MVM_profiler_log_deopt_all(MVMThreadContext *tc);
+#endif // LOG_H

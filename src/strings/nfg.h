@@ -5,6 +5,9 @@
  * to ensure that we never break another thread doing a read. Memory to be
  * freed is thus done at a global safe point, which means we never have one
  * thread reading memory freed by another. */
+#ifndef NFG_H
+#define NFG_H
+
 struct MVMNFGState {
     /* Table of information about synthetic graphemes. Given some (negative)
      * synthetic S, we look up in this table with (-S - 1). */
@@ -92,3 +95,4 @@ MVMint32 MVM_nfg_is_concat_stable(MVMThreadContext *tc, MVMString *a, MVMString 
 /* NFG subsystem initialization and cleanup. */
 void MVM_nfg_init(MVMThreadContext *tc);
 void MVM_nfg_destroy(MVMThreadContext *tc);
+#endif // NFG_H

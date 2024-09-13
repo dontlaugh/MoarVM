@@ -1,4 +1,7 @@
 /* Represents a bytes => chars decoding stream. */
+#ifndef DECODE_STREAM_H
+#define DECODE_STREAM_H
+
 struct MVMDecodeStream {
     /* Head and tail of the input byte buffers. */
     MVMDecodeStreamBytes *bytes_head;
@@ -120,3 +123,4 @@ void MVM_string_decodestream_destroy(MVMThreadContext *tc, MVMDecodeStream *ds);
 void MVM_string_decode_stream_sep_default(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec);
 void MVM_string_decode_stream_sep_from_strings(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec, MVMString **seps, MVMint32 num_seps);
 void MVM_string_decode_stream_sep_destroy(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec);
+#endif // DECODE_STREAM_H

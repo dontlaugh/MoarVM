@@ -1,5 +1,8 @@
 /* The configuration for a particular High Level Language. Of note, this
  * indicates the types to use in various situations. */
+#ifndef HLL_H
+#define HLL_H
+
 struct MVMHLLConfig {
     /* HLL name. This is needed for serialize_stable(), and needs to be first
      * for MVMFixKeyHash. */
@@ -81,3 +84,4 @@ MVM_PUBLIC MVMHLLConfig * MVM_hll_current(MVMThreadContext *tc);
 void MVM_hll_enter_compilee_mode(MVMThreadContext *tc);
 void MVM_hll_leave_compilee_mode(MVMThreadContext *tc);
 MVM_PUBLIC MVMObject * MVM_hll_sym_get(MVMThreadContext *tc, MVMString *hll, MVMString *sym);
+#endif // HLL_H

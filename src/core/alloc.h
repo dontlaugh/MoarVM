@@ -1,3 +1,5 @@
+#ifndef ALLOC_H
+#define ALLOC_H
 MVM_STATIC_INLINE void * MVM_malloc(size_t size) {
 #ifdef MVM_USE_MIMALLOC
     void *ptr = mi_malloc(size);
@@ -118,3 +120,4 @@ MVM_STATIC_INLINE void MVM_alloc_safepoint(MVMThreadContext *tc) {
     }
     tc->instance->free_at_safepoint = NULL;
 }
+#endif // ALLOC_H

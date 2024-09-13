@@ -1,4 +1,7 @@
 /* Representation of a reference to a native value. */
+#ifndef NATIVEREF_H
+#define NATIVEREF_H
+
 struct MVMNativeRefBody {
     union {
         struct {
@@ -104,3 +107,4 @@ AO_t * MVM_nativeref_as_atomic_lex_i(MVMThreadContext *tc, MVMObject *ref_obj);
 AO_t * MVM_nativeref_as_atomic_attribute_i(MVMThreadContext *tc, MVMObject *ref_obj);
 AO_t * MVM_nativeref_as_atomic_positional_i(MVMThreadContext *tc, MVMObject *ref_obj);
 AO_t * MVM_nativeref_as_atomic_multidim_i(MVMThreadContext *tc, MVMObject *ref_obj);
+#endif // NATIVEREF_H

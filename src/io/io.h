@@ -1,5 +1,8 @@
 /* Operation table for I/O. A given handle type may implement any number of
  * these sections. */
+#ifndef IO_H
+#define IO_H
+
 struct MVMIOOps {
     /* The various sections that may be implemented. */
     const MVMIOClosable        *closable;
@@ -117,3 +120,4 @@ void MVM_io_flush_standard_handles(MVMThreadContext *tc);
 #ifdef _WIN32
 int MVM_set_std_handle_to_nul(FILE* file, int fd, BOOL read, int std_handle_type);
 #endif
+#endif // IO_H

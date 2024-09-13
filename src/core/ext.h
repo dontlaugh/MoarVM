@@ -1,3 +1,6 @@
+#ifndef EXT_H
+#define EXT_H
+
 typedef void MVMExtOpFunc(MVMThreadContext *tc, MVMuint8 *cur_op);
 typedef void MVMExtOpSpesh(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins);
 typedef void MVMExtOpFactDiscover(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins);
@@ -32,3 +35,4 @@ const MVMOpInfo * MVM_ext_resolve_extop_record(MVMThreadContext *tc,
         MVMExtOpRecord *record);
 const MVMOpInfo * MVM_ext_resolve_extop_record_in_cu(MVMThreadContext *tc,
         MVMCompUnit *cu, MVMuint16 opcode);
+#endif // EXT_H

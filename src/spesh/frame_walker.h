@@ -1,4 +1,7 @@
 /* State maintained during a spesh-aware frame walk. */
+#ifndef FRAME_WALKER_H
+#define FRAME_WALKER_H
+
 struct MVMSpeshFrameWalker {
     /* The current real MVMFrame that we are considering. */
     MVMFrame *cur_caller_frame;
@@ -76,3 +79,4 @@ MVM_STATIC_INLINE void MVM_spesh_frame_walker_cleanup(MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw) {
     MVM_gc_root_temp_pop_n(tc, 2);
 }
+#endif // FRAME_WALKER_H

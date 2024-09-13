@@ -1,3 +1,5 @@
+#ifndef THREADCONTEXT_H
+#define THREADCONTEXT_H
 #define MVMGCSTATUS_MASK 3
 #define MVMSUSPENDSTATUS_MASK 12
 
@@ -357,3 +359,4 @@ MVM_STATIC_INLINE void MVM_set_running_threads_context(MVMThreadContext *tc) {
 }
 
 #endif
+#endif // THREADCONTEXT_H

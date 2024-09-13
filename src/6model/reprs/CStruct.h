@@ -1,4 +1,6 @@
 /* Attribute location flags. */
+#ifndef CSTRUCT_H
+#define CSTRUCT_H
 #define MVM_CSTRUCT_ATTR_IN_STRUCT 0
 #define MVM_CSTRUCT_ATTR_CSTRUCT   1
 #define MVM_CSTRUCT_ATTR_CARRAY    2
@@ -85,3 +87,4 @@ struct MVMCStructREPRData {
 
 /* Initializes the CStruct REPR. */
 const MVMREPROps * MVMCStruct_initialize(MVMThreadContext *tc);
+#endif // CSTRUCT_H

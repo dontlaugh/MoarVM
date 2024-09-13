@@ -78,6 +78,8 @@ Not all the optimisations described above are in place yet. Starting with
  * the memory, and delete (if implemented) would need to return the memory so
  * that it could be freed correctly. But no code needs this (yet).
  */
+#ifndef FIXKEY_HASH_TABLE_H
+#define FIXKEY_HASH_TABLE_H
 
 struct MVMFixKeyHashTableControl {
     MVMHashNumItems cur_items;
@@ -102,3 +104,4 @@ struct MVMFixKeyHashTableControl {
 struct MVMFixKeyHashTable {
     struct MVMFixKeyHashTableControl *table;
 };
+#endif // FIXKEY_HASH_TABLE_H

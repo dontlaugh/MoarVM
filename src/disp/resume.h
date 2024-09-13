@@ -1,4 +1,7 @@
 /* How do we find the resume init arguments for the dispatch? */
+#ifndef RESUME_H
+#define RESUME_H
+
 typedef enum {
     /* Using an untranslated dispatch program; in this case there's either a
      * run or recorded dispatch entry on the callstack that we read. */
@@ -77,3 +80,4 @@ void MVM_disp_resume_mark_resumption_state(MVMThreadContext *tc, MVMDispResumpti
         MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
 void MVM_disp_resume_destroy_resumption_state(MVMThreadContext *tc,
         MVMDispResumptionState *res_state);
+#endif // RESUME_H

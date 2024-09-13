@@ -1,4 +1,7 @@
 /* Representation used for bootstrapping the KnowHOW type. */
+#ifndef KNOWHOWREPR_H
+#define KNOWHOWREPR_H
+
 struct MVMKnowHOWREPRBody {
     /* Methods table; a hash. */
     MVMObject *methods;
@@ -16,3 +19,4 @@ struct MVMKnowHOWREPR {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMKnowHOWREPR_initialize(MVMThreadContext *tc);
+#endif // KNOWHOWREPR_H

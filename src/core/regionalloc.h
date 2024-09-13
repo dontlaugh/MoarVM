@@ -1,4 +1,7 @@
 /* A block of bump-pointer allocated memory. For single-threaded use only. */
+#ifndef REGIONALLOC_H
+#define REGIONALLOC_H
+
 struct MVMRegionBlock {
     /* The memory buffer itself. */
     char *buffer;
@@ -25,3 +28,4 @@ struct MVMRegionAlloc {
 void * MVM_region_alloc(MVMThreadContext *tc, MVMRegionAlloc *alloc, size_t s);
 void MVM_region_destroy(MVMThreadContext *tc, MVMRegionAlloc *alloc);
 void MVM_region_merge(MVMThreadContext *tc,  MVMRegionAlloc *target, MVMRegionAlloc *source);
+#endif // REGIONALLOC_H

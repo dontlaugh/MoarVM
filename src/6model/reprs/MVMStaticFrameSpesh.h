@@ -1,6 +1,8 @@
 /* Representation used for holding specializer (dynamic optimization) data
  * about a static frame (logged statistics, generated specializations, and
  * so forth). */
+#ifndef MVMSTATICFRAMESPESH_H
+#define MVMSTATICFRAMESPESH_H
 
 struct MVMStaticFrameSpeshBody {
     /* Specialization argument guard tree, for selecting a specialization. */
@@ -35,3 +37,4 @@ struct MVMStaticFrameSpesh {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMStaticFrameSpesh_initialize(MVMThreadContext *tc);
+#endif // MVMSTATICFRAMESPESH_H

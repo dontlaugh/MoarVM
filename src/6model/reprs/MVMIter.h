@@ -1,4 +1,6 @@
 /* Representation used by VM-level iterators. */
+#ifndef MVMITER_H
+#define MVMITER_H
 
 #define MVM_ITER_MODE_ARRAY         0
 #define MVM_ITER_MODE_ARRAY_INT     1
@@ -67,3 +69,4 @@ MVM_STATIC_INLINE MVMint64 MVM_iter_istrue_hash(MVMThreadContext *tc, MVMIter *i
 
     return MVM_str_hash_at_end(tc, hashtable, body->hash_state.next) ? 0 : 1;
 }
+#endif // MVMITER_H

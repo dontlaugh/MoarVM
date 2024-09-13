@@ -1,4 +1,7 @@
 /* A single node in the concurrent blocking queue. */
+#ifndef CONCBLOCKINGQUEUE_H
+#define CONCBLOCKINGQUEUE_H
+
 struct MVMConcBlockingQueueNode {
     MVMObject                *value;
     MVMConcBlockingQueueNode *next;
@@ -38,3 +41,4 @@ MVMObject * MVM_concblockingqueue_poll(MVMThreadContext *tc, MVMConcBlockingQueu
 
 /* Purely for the convenience of the jit */
 MVMObject * MVM_concblockingqueue_jit_poll(MVMThreadContext *tc, MVMObject *queue);
+#endif // CONCBLOCKINGQUEUE_H

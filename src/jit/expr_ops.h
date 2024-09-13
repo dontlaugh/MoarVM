@@ -9,6 +9,8 @@
    NB: This file is parsed by tools/expr_ops.pm *AND* included by
    src/jit/expr.h, so keep it in order!
 */
+#ifndef EXPR_OPS_H
+#define EXPR_OPS_H
 #define MVM_JIT_EXPR_OPS(_) \
     /* invalid operator */ \
     _(NOOP, 0, 0), \
@@ -80,3 +82,4 @@
     _(STACK, 0, 0), \
     /* End of list marker */ \
     _(MAX_NODES, 0, 0)
+#endif // EXPR_OPS_H

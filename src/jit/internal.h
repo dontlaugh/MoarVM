@@ -3,6 +3,8 @@
 
 /* Override dynasm state definitions, so that we can use our own compiler
  * with register allocation structures etc. */
+#ifndef INTERNAL_H
+#define INTERNAL_H
 #define Dst_DECL MVMJitCompiler *compiler
 #define Dst_REF (compiler->dasm_handle)
 #define Dst (compiler)
@@ -110,3 +112,4 @@ extern const MVMBitmap MVM_JIT_REGISTER_CLASS[];
 #define MVM_ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
 const char * MVM_register_type(MVMint8 reg_type);
+#endif // INTERNAL_H

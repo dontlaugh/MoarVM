@@ -42,6 +42,8 @@ Not all the optimisations described above are in place yet. Starting with
 "minimum viable product", with a design that should support adding them.
 
 */
+#ifndef INDEX_HASH_TABLE_H
+#define INDEX_HASH_TABLE_H
 
 struct MVMIndexHashTableControl {
     MVMHashNumItems cur_items;
@@ -68,3 +70,4 @@ struct MVMIndexHashEntry {
 };
 
 #define MVM_INDEX_HASH_NOT_FOUND 0xFFFFFFFF
+#endif // INDEX_HASH_TABLE_H

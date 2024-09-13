@@ -2,6 +2,9 @@
  * off this. In read mode, we don't do much besides populate and then
  * read this. In write mode, however, the tables and data chunks will be
  * filled out and grown as needed. */
+#ifndef SERIALIZATION_H
+#define SERIALIZATION_H
+
 struct MVMSerializationRoot {
     /* The version of the serialization format. */
     MVMint32 version;
@@ -201,3 +204,4 @@ void MVM_serialization_write_ptr(MVMThreadContext *tc, MVMSerializationWriter *w
 void MVM_serialization_write_cstr(MVMThreadContext *tc, MVMSerializationWriter *writer, const char *cstr);
 MVM_PUBLIC void MVM_serialization_write_ref(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMObject *ref);
 void MVM_serialization_write_stable_ref(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMSTable *st);
+#endif // SERIALIZATION_H

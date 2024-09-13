@@ -1,5 +1,8 @@
 /* Operations table for a certain type of asynchronous task that can be run on
  * the event loop. */
+#ifndef EVENTLOOP_H
+#define EVENTLOOP_H
+
 struct MVMAsyncTaskOps {
     /* How to set work up on the event loop. */
     void (*setup) (MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data);
@@ -33,3 +36,4 @@ void MVM_io_eventloop_start(MVMThreadContext *tc);
 void MVM_io_eventloop_stop(MVMThreadContext *tc);
 void MVM_io_eventloop_join(MVMThreadContext *tc);
 void MVM_io_eventloop_destroy(MVMThreadContext *tc);
+#endif // EVENTLOOP_H

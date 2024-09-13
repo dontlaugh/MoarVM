@@ -1,4 +1,6 @@
 /* struct and union types are forward-declared for convenience */
+#ifndef TYPES_H
+#define TYPES_H
 
 typedef struct MVMActiveHandler MVMActiveHandler;
 typedef struct MVMArgInfo MVMArgInfo;
@@ -336,3 +338,4 @@ typedef struct MVMTracked MVMTracked;
 typedef struct MVMTrackedBody MVMTrackedBody;
 typedef struct MVMStat MVMStat;
 typedef struct MVMStatBody MVMStatBody;
+#endif // TYPES_H

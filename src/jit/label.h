@@ -1,4 +1,7 @@
 /* Aqcuiqre labels */
+#ifndef LABEL_H
+#define LABEL_H
+
 MVMint32 MVM_jit_label_before_graph(MVMThreadContext *tc, MVMJitGraph *jg, MVMSpeshGraph *sg);
 MVMint32 MVM_jit_label_after_graph(MVMThreadContext *tc, MVMJitGraph *jg, MVMSpeshGraph *sg);
 MVMint32 MVM_jit_label_before_bb(MVMThreadContext *tc, MVMJitGraph *jg, MVMSpeshBB *bb);
@@ -15,3 +18,4 @@ MVMint32 MVM_jit_label_is_for_ins(MVMThreadContext *tc, MVMJitGraph *jg, MVMint3
 /* Internal labels aren't actually assigned their 'final number' before
  * compilation, so this is *NOT VALID* during graph building */
 MVMint32 MVM_jit_label_is_internal(MVMThreadContext *tc, MVMJitGraph *jg, MVMint32 label);
+#endif // LABEL_H

@@ -1,6 +1,9 @@
 /* Body of a multi-dim array is two blobs of memory: one holding the sizes of
  * the dimensions, and another holding the storage. The number of dimensions
  * is part of the type. */
+#ifndef MULTIDIMARRAY_H
+#define MULTIDIMARRAY_H
+
 struct MVMMultiDimArrayBody {
     /* The sizes of the dimensions. */
     MVMint64 *dimensions;
@@ -48,3 +51,4 @@ struct MVMMultiDimArrayREPRData {
 
 /* Initializes the MultiDimArray REPR. */
 const MVMREPROps * MVMMultiDimArray_initialize(MVMThreadContext *tc);
+#endif // MULTIDIMARRAY_H

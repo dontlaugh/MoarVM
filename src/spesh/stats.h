@@ -1,5 +1,8 @@
 /* Statistics are stored per static frame. This data structure is only ever
  * read/written by the specializer thread. */
+#ifndef STATS_H
+#define STATS_H
+
 struct MVMSpeshStats {
     /* Statistics on a per-callsite basis. */
     MVMSpeshStatsByCallsite *by_callsite;
@@ -239,3 +242,4 @@ void MVM_spesh_sim_stack_gc_mark(MVMThreadContext *tc, MVMSpeshSimStack *sims,
     MVMGCWorklist *worklist);
 void MVM_spesh_sim_stack_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSpeshSimStack *sims);
 void MVM_spesh_sim_stack_destroy(MVMThreadContext *tc, MVMSpeshSimStack *sims);
+#endif // STATS_H

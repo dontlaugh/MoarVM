@@ -1,3 +1,5 @@
+#ifndef TELEMEH_H
+#define TELEMEH_H
 #include "stdint.h"
 
 MVM_PUBLIC void MVM_telemetry_timestamp(MVMThreadContext *threadID, const char *description);
@@ -9,3 +11,4 @@ MVM_PUBLIC void MVM_telemetry_interval_annotate_dynamic(uintptr_t subject, int i
 
 MVM_PUBLIC void MVM_telemetry_init(FILE *outfile);
 MVM_PUBLIC void MVM_telemetry_finish(void);
+#endif // TELEMEH_H

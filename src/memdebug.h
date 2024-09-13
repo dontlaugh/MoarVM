@@ -1,3 +1,6 @@
+#ifndef MEMDEBUG_H
+#define MEMDEBUG_H
+
 #ifdef MVM_VALGRIND_SUPPORT
 #  include <valgrind/memcheck.h>
 
@@ -8,4 +11,6 @@
 #define VALGRIND_MEMPOOL_FREE(pool, addr) do { } while (0)
 #define VALGRIND_MOVE_MEMPOOL(poolA, poolB) do { } while (0)
 #define VALGRIND_MAKE_MEM_DEFINED(addr, size) do { } while (0)
+#endif
+
 #endif

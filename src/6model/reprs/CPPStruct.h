@@ -1,4 +1,6 @@
 /* Attribute location flags. */
+#ifndef CPPSTRUCT_H
+#define CPPSTRUCT_H
 #define MVM_CPPSTRUCT_ATTR_IN_STRUCT 0
 #define MVM_CPPSTRUCT_ATTR_CSTRUCT   1
 #define MVM_CPPSTRUCT_ATTR_CARRAY    2
@@ -85,3 +87,4 @@ struct MVMCPPStructREPRData {
 
 /* Initializes the CPPStruct REPR. */
 const MVMREPROps * MVMCPPStruct_initialize(MVMThreadContext *tc);
+#endif // CPPSTRUCT_H

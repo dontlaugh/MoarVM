@@ -2,6 +2,9 @@
  * purpose of producing specializations. */
 
 /* The kind of log entry we have. */
+#ifndef MVMSPESHLOG_H
+#define MVMSPESHLOG_H
+
 typedef enum {
     /* Entry to a callframe. */
     MVM_SPESH_LOG_ENTRY,
@@ -108,3 +111,4 @@ struct MVMSpeshLog {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMSpeshLog_initialize(MVMThreadContext *tc);
+#endif // MVMSPESHLOG_H

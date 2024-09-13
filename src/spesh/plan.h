@@ -4,6 +4,8 @@
  * body, otherwise it's possible to have the loop body optimized later than
  * the looping frame itself, and thus a (good) specialization of the loop body
  * would not be available. */
+#ifndef PLAN_H
+#define PLAN_H
 #define MVM_SPESH_PLAN_SF_MIN_OSR   200
 
 /* The minimum number of hits or OSR hits a given static frame and interned
@@ -79,3 +81,4 @@ void MVM_spesh_plan_gc_mark(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMGCWorkl
 void MVM_spesh_plan_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSpeshPlan *plan);
 void MVM_spesh_plan_destroy(MVMThreadContext *tc, MVMSpeshPlan *plan);
 MVMSpeshStatsType * MVM_spesh_plan_copy_type_tuple(MVMThreadContext *tc, MVMCallsite *cs, MVMSpeshStatsType *to_copy);
+#endif // PLAN_H

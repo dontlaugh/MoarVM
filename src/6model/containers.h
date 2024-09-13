@@ -3,6 +3,9 @@
  * of container object (like Perl 6's Scalar) or it may be a reference to a
  * native lexical or object field. The function table determines the way it
  * behaves. */
+#ifndef CONTAINERS_H
+#define CONTAINERS_H
+
 struct MVMContainerSpec {
     /* Name of this container specification. */
     char *name;
@@ -106,3 +109,4 @@ MVMint64 MVM_6model_container_atomic_add(MVMThreadContext *tc, MVMObject *cont, 
 
 void *MVM_container_devirtualize_fetch_for_jit(MVMThreadContext *tc, MVMSTable *st, MVMuint16 type);
 void *MVM_container_devirtualize_store_for_jit(MVMThreadContext *tc, MVMSTable *st, MVMuint16 type);
+#endif // CONTAINERS_H

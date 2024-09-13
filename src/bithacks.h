@@ -1,3 +1,5 @@
+#ifndef BITHACKS_H
+#define BITHACKS_H
 static MVMuint32 MVM_bithacks_count_bits(MVMuint64 value) {
     MVMuint32 count;
 
@@ -22,3 +24,5 @@ static MVMuint64 MVM_bithacks_next_greater_pow2(MVMuint64 value)
     value |= value >> 32;
     return value + 1;
 }
+
+#endif

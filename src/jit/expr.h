@@ -1,3 +1,5 @@
+#ifndef EXPR_H
+#define EXPR_H
 #define MVM_JIT_PTR_SZ sizeof(void*)
 #define MVM_JIT_REG_SZ sizeof(MVMRegister)
 #define MVM_JIT_INT_SZ sizeof(MVMint64)
@@ -125,3 +127,4 @@ MVM_STATIC_INLINE MVMint32 MVM_JIT_EXPR_IS_NUM(MVMJitExprTree *tree, MVMint32 no
     MVMuint8 expr_type = MVM_JIT_EXPR_TYPE(tree,node);
     return expr_type == MVM_reg_num32 || expr_type == MVM_reg_num64;
 }
+#endif // EXPR_H

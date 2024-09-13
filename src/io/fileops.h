@@ -1,3 +1,5 @@
+#ifndef FILEOPS_H
+#define FILEOPS_H
 #include <sys/types.h>
 
 #define MVM_FILE_FLOCK_SHARED        1       /* Shared lock. Read lock */
@@ -47,3 +49,4 @@ MVMString * MVM_file_readlink(MVMThreadContext *tc, MVMString *path);
 #ifndef _WIN32
 MVMint64 MVM_are_we_group_member(MVMThreadContext *tc, gid_t group);
 #endif
+#endif // FILEOPS_H

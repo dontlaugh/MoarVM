@@ -1,4 +1,7 @@
 /* Representation for an exception in MoarVM. */
+#ifndef MVMEXCEPTION_H
+#define MVMEXCEPTION_H
+
 struct MVMExceptionBody {
     /* The exception message. */
     MVMString *message;
@@ -27,3 +30,4 @@ struct MVMException {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMException_initialize(MVMThreadContext *tc);
+#endif // MVMEXCEPTION_H

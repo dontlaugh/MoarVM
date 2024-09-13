@@ -42,6 +42,8 @@ Not all the optimisations described above are in place yet. Starting with
 "minimum viable product", with a design that should support adding them.
 
 */
+#ifndef PTR_HASH_TABLE_H
+#define PTR_HASH_TABLE_H
 
 struct MVMPtrHashTableControl {
     MVMHashNumItems cur_items;
@@ -67,3 +69,4 @@ struct MVMPtrHashEntry {
     const void *key;
     uintptr_t value;
 };
+#endif // PTR_HASH_TABLE_H

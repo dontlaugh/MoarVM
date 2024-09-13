@@ -1,3 +1,5 @@
+#ifndef CSIPHASH_H
+#define CSIPHASH_H
 #include <stddef.h>
 /* <MIT License>
  Copyright (c) 2013  Marek Majkowski <marek@popcount.org>
@@ -197,3 +199,4 @@ MVM_STATIC_INLINE uint64_t siphash24(const uint8_t *src, size_t src_sz, const ui
 #endif
     return siphashfinish(&sh, (uint8_t *)in, src_sz);
 }
+#endif // CSIPHASH_H

@@ -1,3 +1,5 @@
+#ifndef INTTYPES_H
+#define INTTYPES_H
 #if defined(_MSC_VER) && (_MSC_VER < 1800)
 #include <msinttypes/inttypes.h>
 /* Print size_t values. */
@@ -9,3 +11,4 @@
 #include <inttypes.h>
 #define MVM_PRSz "zu" /* C99 */
 #endif
+#endif // INTTYPES_H

@@ -1,3 +1,5 @@
+#ifndef PROCOPS_H
+#define PROCOPS_H
 #define MVM_PIPE_INHERIT        1
 #define MVM_PIPE_IGNORE         2
 #define MVM_PIPE_CAPTURE        4
@@ -33,3 +35,4 @@ MVMint64 MVM_proc_fork(MVMThreadContext *tc);
 MVM_PUBLIC char ** MVM_UnicodeToUTF8_argv(const int argc, wchar_t **argv);
 #endif
 
+#endif // PROCOPS_H

@@ -1,3 +1,6 @@
+#ifndef CROSSTHREADWRITE_H
+#define CROSSTHREADWRITE_H
+
 void MVM_cross_thread_write_instrument(MVMThreadContext *tc, MVMStaticFrame *static_frame);
 void MVM_cross_thread_write_check(MVMThreadContext *tc, MVMObject *written, MVMint16 guilty);
 
@@ -14,3 +17,4 @@ void MVM_cross_thread_write_check(MVMThreadContext *tc, MVMObject *written, MVMi
 #define MVM_CTW_DELETE_KEY      10
 #define MVM_CTW_ASSIGN          11
 #define MVM_CTW_REBLESS         12
+#endif // CROSSTHREADWRITE_H

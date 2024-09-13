@@ -1,4 +1,7 @@
 /* Representation used for VM thread handles. */
+#ifndef SEMAPHORE_H
+#define SEMAPHORE_H
+
 struct MVMSemaphoreBody {
     uv_sem_t *sem;
 };
@@ -14,3 +17,4 @@ const MVMREPROps * MVMSemaphore_initialize(MVMThreadContext *tc);
 MVMint64 MVM_semaphore_tryacquire(MVMThreadContext *tc, MVMSemaphore *sem);
 void MVM_semaphore_acquire(MVMThreadContext *tc, MVMSemaphore *sem);
 void MVM_semaphore_release(MVMThreadContext *tc, MVMSemaphore *sem);
+#endif // SEMAPHORE_H

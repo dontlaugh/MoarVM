@@ -13,6 +13,9 @@
  * current instruction address. */
 
 /* This is the top level cache struct, living in a static frame. */
+#ifndef INLINE_CACHE_H
+#define INLINE_CACHE_H
+
 struct MVMDispInlineCache {
     /* Cache entries. Atomically updated, released via. safepoint. These are
      * always initialized for instructions that would use them to the initial
@@ -107,3 +110,4 @@ MVMuint32 MVM_disp_inline_cache_transition(MVMThreadContext *tc,
 void MVM_disp_inline_cache_destroy(MVMThreadContext *tc, MVMDispInlineCache *cache);
 MVMuint32 MVM_disp_inline_cache_get_kind(MVMThreadContext *tc, MVMDispInlineCacheEntry *entry);
 MVMint32 MVM_disp_inline_cache_try_get_kind(MVMThreadContext *tc, MVMDispInlineCacheEntry *entry);
+#endif // INLINE_CACHE_H

@@ -1,3 +1,6 @@
+#ifndef ORCHESTRATE_H
+#define ORCHESTRATE_H
+
 void MVM_gc_enter_from_allocator(MVMThreadContext *tc);
 void MVM_gc_enter_from_interrupt(MVMThreadContext *tc);
 MVM_PUBLIC void MVM_gc_mark_thread_blocked(MVMThreadContext *tc);
@@ -54,3 +57,4 @@ typedef enum {
     if (MVM_GC_DEBUG_ENABLED(flags)) \
         printf((msg), (tc)->thread_id, \
             (int)MVM_load(&(tc)->instance->gc_seq_number) , ##__VA_ARGS__)
+#endif // ORCHESTRATE_H

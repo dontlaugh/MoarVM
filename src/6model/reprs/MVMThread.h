@@ -1,4 +1,7 @@
 /* Various stages a thread can be in. */
+#ifndef MVMTHREAD_H
+#define MVMTHREAD_H
+
 typedef enum {
     MVM_thread_stage_unstarted = 0,
     MVM_thread_stage_starting = 1,
@@ -45,3 +48,4 @@ struct MVMThread {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMThread_initialize(MVMThreadContext *tc);
+#endif // MVMTHREAD_H

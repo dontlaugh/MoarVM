@@ -410,6 +410,8 @@ be worth it.
  * "fail fast". There might still be a win here, but it might be hard to be sure
  * of, and it might only be a CPU for "last level cache miss" trade off.
  */
+#ifndef STR_HASH_TABLE_H
+#define STR_HASH_TABLE_H
 
 struct MVMStrHashTableControl {
     MVMuint64 salt;
@@ -512,3 +514,4 @@ MVM_STATIC_INLINE int MVM_str_hash_at_end(MVMThreadContext *tc,
 #endif
     return iterator.pos == 0;
 }
+#endif // STR_HASH_TABLE_H

@@ -6,6 +6,8 @@
  * loops trigger it. */
 /* Don't use a MVM_load(&tc->gc_status) here for performance, it's okay
  * if the interrupt is delayed a bit. */
+#ifndef INTERP_H
+#define INTERP_H
 #define GC_SYNC_POINT(tc) \
     if (tc->gc_status) { \
         MVM_gc_enter_from_interrupt(tc); \
@@ -166,3 +168,4 @@ static char * MVM_reg_get_debug_name(MVMThreadContext *tc, MVMuint16 type) {
             return "unknown";
     }
 }
+#endif // INTERP_H

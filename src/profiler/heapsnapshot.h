@@ -1,3 +1,6 @@
+#ifndef HEAPSNAPSHOT_H
+#define HEAPSNAPSHOT_H
+
 struct MVMHeapDumpIndexSnapshotEntry {
     MVMuint64 collectables_size;
     MVMuint64 full_refs_size;
@@ -261,3 +264,4 @@ MVM_PUBLIC void MVM_profile_heap_add_collectable_rel_vm_str(MVMThreadContext *tc
     MVMHeapSnapshotState *ss, MVMCollectable *collectable, MVMString *desc);
 MVM_PUBLIC void MVM_profile_heap_add_collectable_rel_idx(MVMThreadContext *tc,
     MVMHeapSnapshotState *ss, MVMCollectable *collectable, MVMuint64 idx);
+#endif // HEAPSNAPSHOT_H

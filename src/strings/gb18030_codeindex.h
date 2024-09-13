@@ -1,3 +1,5 @@
+#ifndef GB18030_CODEINDEX_H
+#define GB18030_CODEINDEX_H
 #define GB18030_NULL 0
 
 static const MVMint32 gb18030_index_to_cp_len2_record[126][191]=
@@ -10908,3 +10910,4 @@ static MVMint64 gb18030_cp_to_index(MVMGrapheme32 codepoint) {
     }
     return result == 0 ? GB18030_NULL : result;
 }
+#endif // GB18030_CODEINDEX_H

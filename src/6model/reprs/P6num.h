@@ -1,3 +1,5 @@
+#ifndef P6NUM_H
+#define P6NUM_H
 #define MVM_P6NUM_C_TYPE_FLOAT       -1
 #define MVM_P6NUM_C_TYPE_DOUBLE      -2
 #define MVM_P6NUM_C_TYPE_LONGDOUBLE  -3
@@ -23,3 +25,4 @@ struct MVMP6numREPRData {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMP6num_initialize(MVMThreadContext *tc);
+#endif // P6NUM_H

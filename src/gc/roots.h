@@ -1,4 +1,6 @@
 /* Set this flag to debug temporary root pushes/pops. */
+#ifndef ROOTS_H
+#define ROOTS_H
 #define MVM_TEMP_ROOT_DEBUG 0
 
 /* The number of temp roots we start out with per thread (and so can rely on
@@ -191,3 +193,4 @@ void MVM_gc_root_add_frame_registers_to_worklist(MVMThreadContext *tc, MVMGCWork
         __MVMROOT_VAR_NAME != 0 \
         ; \
     MVM_gc_root_temp_pop_n(tc, 6), __MVMROOT_VAR_NAME = 0)
+#endif // ROOTS_H

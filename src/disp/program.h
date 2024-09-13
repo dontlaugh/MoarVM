@@ -23,6 +23,9 @@
  */
 
 /* Kinds of outcome of a dispatch program. */
+#ifndef PROGRAM_H
+#define PROGRAM_H
+
 typedef enum {
     /* Indicates we failed to produce an outcome, probably due to an exception. */
     MVM_DISP_OUTCOME_FAILED,
@@ -706,3 +709,4 @@ void MVM_disp_program_destroy(MVMThreadContext *tc, MVMDispProgram *dp);
 void MVM_disp_program_recording_destroy(MVMThreadContext *tc, MVMDispProgramRecording *rec);
 
 const char *MVM_disp_opcode_to_name(MVMDispProgramOpcode op);
+#endif // PROGRAM_H

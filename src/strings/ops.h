@@ -1,4 +1,6 @@
 /* Encoding types and encoding validity check. */
+#ifndef OPS_H
+#define OPS_H
 #define MVM_encoding_type_MIN           1
 #define MVM_encoding_type_utf8          1
 #define MVM_encoding_type_ascii         2
@@ -158,3 +160,4 @@ void NFG_check_concat (MVMThreadContext *tc, MVMString *result, MVMString *a, MV
 #define NFG_CHECK(tc, s, varname)
 #define NFG_CHECK_CONCAT(tc, s, a, b, varname)
 #endif
+#endif // OPS_H

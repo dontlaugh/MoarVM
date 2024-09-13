@@ -1,4 +1,6 @@
 /* States an async task can be in. */
+#ifndef MVMASYNCTASK_H
+#define MVMASYNCTASK_H
 #define MVM_ASYNC_TASK_STATE_NEW        0
 #define MVM_ASYNC_TASK_STATE_SETUP      1
 #define MVM_ASYNC_TASK_STATE_CANCELLED  2
@@ -33,3 +35,4 @@ struct MVMAsyncTask {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMAsyncTask_initialize(MVMThreadContext *tc);
+#endif // MVMASYNCTASK_H

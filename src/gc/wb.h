@@ -1,4 +1,6 @@
 /* Functions for if the write barriers are hit. */
+#ifndef WB_H
+#define WB_H
 MVM_PUBLIC void MVM_gc_write_barrier_hit(MVMThreadContext *tc, MVMCollectable *update_root);
 MVM_PUBLIC void MVM_gc_write_barrier_hit_by(MVMThreadContext *tc, MVMCollectable *update_root,
         MVMCollectable *referenced);
@@ -37,3 +39,4 @@ MVM_STATIC_INLINE void MVM_gc_write_barrier_no_update_referenced(MVMThreadContex
         update_addr = _r; \
     }
 #endif
+#endif // WB_H

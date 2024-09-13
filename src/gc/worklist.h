@@ -12,6 +12,9 @@
  * on these issues, but for now this is probably less bad than some of the
  * other options.
  */
+#ifndef WORKLIST_H
+#define WORKLIST_H
+
 struct MVMGCWorklist {
     /* The worklist itself. An array of addresses which hold pointers to
      * collectables (yes, two levels of indirection, since we need to
@@ -116,3 +119,4 @@ void MVM_gc_worklist_destroy(MVMThreadContext *tc, MVMGCWorklist *worklist);
 /* The number of pointers we assume the list may need to hold initially;
  * it will be resized as needed. */
 #define MVM_GC_WORKLIST_START_SIZE      256
+#endif // WORKLIST_H

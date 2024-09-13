@@ -1,5 +1,7 @@
 /* Maximum args a call can take for us to consider it for optimization. A
  * named arg counts as 2 for these purposes. */
+#ifndef OPTIMIZE_H
+#define OPTIMIZE_H
 #define MAX_ARGS_FOR_OPT 8
 
 /* Percentage of type tuples that we expect to match at a callsite in order to
@@ -29,3 +31,4 @@ MVM_PUBLIC MVMSpeshFacts * MVM_spesh_get_and_use_facts(MVMThreadContext *tc, MVM
 MVM_PUBLIC MVMSpeshFacts * MVM_spesh_get_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o);
 MVM_PUBLIC void MVM_spesh_use_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *f);
 MVM_PUBLIC MVMString * MVM_spesh_get_string(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o);
+#endif // OPTIMIZE_H

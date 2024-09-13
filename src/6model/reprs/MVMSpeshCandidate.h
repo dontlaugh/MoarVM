@@ -1,4 +1,7 @@
 /* A specialization candidate. */
+#ifndef MVMSPESHCANDIDATE_H
+#define MVMSPESHCANDIDATE_H
+
 struct MVMSpeshCandidateBody {
     /* The callsite that this specialization is for. */
     MVMCallsite *cs;
@@ -95,3 +98,4 @@ const MVMREPROps * MVMSpeshCandidate_initialize(MVMThreadContext *tc);
 /* Functions for creating and clearing up specializations. */
 void MVM_spesh_candidate_add(MVMThreadContext *tc, MVMSpeshPlanned *p);
 void MVM_spesh_candidate_discard_existing(MVMThreadContext *tc, MVMStaticFrame *sf);
+#endif // MVMSPESHCANDIDATE_H

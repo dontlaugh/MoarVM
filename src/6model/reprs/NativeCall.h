@@ -1,4 +1,7 @@
 /* Representation for a native callsite. */
+#ifndef NATIVECALL_H
+#define NATIVECALL_H
+
 struct MVMNativeCallBody {
     char       *lib_name;
     DLLib      *lib_handle;
@@ -26,3 +29,4 @@ struct MVMNativeCall {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMNativeCall_initialize(MVMThreadContext *tc);
+#endif // NATIVECALL_H

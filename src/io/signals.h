@@ -1,4 +1,8 @@
+#ifndef SIGNALS_H
+#define SIGNALS_H
+
 MVMObject * MVM_io_get_signals(MVMThreadContext *tc);
 MVMObject * MVM_io_signal_handle(MVMThreadContext *tc,
     MVMObject *setup_notify_queue, MVMObject *setup_notify_schedulee,
     MVMObject *queue, MVMObject *schedulee, MVMint64 signal, MVMObject *async_type);
+#endif // SIGNALS_H

@@ -1,6 +1,9 @@
 /* An argument capture carries a callsite and a set of arguments. The capture
  * indicates how to interpret the arguments. There will never be any flattening
  * arguments at this point; those are resolved earlier. */
+#ifndef MVMCAPTURE_H
+#define MVMCAPTURE_H
+
 struct MVMCaptureBody {
     /* The callsite. */
     MVMCallsite *callsite;
@@ -48,3 +51,4 @@ MVMObject * MVM_capture_insert_arg(MVMThreadContext *tc, MVMObject *capture, MVM
         MVMCallsiteFlags kind, MVMRegister value);
 MVMObject * MVM_capture_replace_arg(MVMThreadContext *tc, MVMObject *capture_obj, MVMuint32 idx,
         MVMCallsiteEntry kind, MVMRegister value);
+#endif // MVMCAPTURE_H

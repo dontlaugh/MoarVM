@@ -1,3 +1,6 @@
+#ifndef MVMCOMPUNIT_H
+#define MVMCOMPUNIT_H
+
 struct MVMExtOpRecord {
     /* Used to query the extop registry. */
     MVMString *name;
@@ -158,3 +161,4 @@ struct MVMCompUnit {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMCompUnit_initialize(MVMThreadContext *tc);
+#endif // MVMCOMPUNIT_H

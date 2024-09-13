@@ -1,4 +1,7 @@
 /* Boolification. */
+#ifndef COERCE_H
+#define COERCE_H
+
 MVMint64 MVM_coerce_istrue_s(MVMThreadContext *tc, MVMString *str);
 
 /* Stringification. */
@@ -14,3 +17,4 @@ MVMObject* MVM_radix(MVMThreadContext *tc, MVMint64 radix, MVMString *str, MVMin
 
 /* Size of the int to string coercion cache (we cache 0 ..^ this). */
 #define MVM_INT_TO_STR_CACHE_SIZE 65
+#endif // COERCE_H

@@ -1,4 +1,7 @@
 /* Information about an inserted guard instruction due to logging. */
+#ifndef LOG_H
+#define LOG_H
+
 struct MVMSpeshLogGuard {
     /* Instruction and containing basic block. */
     MVMSpeshIns *ins;
@@ -50,3 +53,4 @@ void MVM_spesh_log_return_type(MVMThreadContext *tc, MVMObject *value);
 void MVM_spesh_log_return_to_unlogged(MVMThreadContext *tc);
 void MVM_spesh_log_dispatch_resolution_for_correlation_id(MVMThreadContext *tc,
         MVMint32 cid, MVMuint32 bytecode_offset, MVMuint16 result_index);
+#endif // LOG_H

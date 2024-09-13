@@ -4,6 +4,8 @@
  * load factor, or PTR_MIN_SIZE_BASE_2 or MVM_HASH_INITIAL_BITS_IN_METADATA,
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
+#ifndef PTR_HASH_TABLE_FUNCS_H
+#define PTR_HASH_TABLE_FUNCS_H
 #define MVM_PTR_HASH_LOAD_FACTOR 0.75
 MVM_STATIC_INLINE MVMuint32 MVM_ptr_hash_official_size(const struct MVMPtrHashTableControl *control) {
     return 1 << (MVMuint32)control->official_size_log2;
@@ -148,3 +150,4 @@ struct MVMPtrHashEntry *MVM_ptr_hash_lvalue_fetch(MVMThreadContext *tc,
 uintptr_t MVM_ptr_hash_fetch_and_delete(MVMThreadContext *tc,
                                         MVMPtrHashTable *hashtable,
                                         const void *key);
+#endif // PTR_HASH_TABLE_FUNCS_H

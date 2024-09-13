@@ -1,4 +1,7 @@
 /* Representation used for VM thread handles. */
+#ifndef REENTRANTMUTEX_H
+#define REENTRANTMUTEX_H
+
 struct MVMReentrantMutexBody {
     /* The (non-reentrant) mutex supplied by libuv. Sadly, we have to hold it
      * at a level of indirection - at least on Windows - because if the object
@@ -24,3 +27,4 @@ void MVM_reentrantmutex_lock_checked(MVMThreadContext *tc, MVMObject *lock);
 void MVM_reentrantmutex_lock(MVMThreadContext *tc, MVMReentrantMutex *rm);
 void MVM_reentrantmutex_unlock_checked(MVMThreadContext *tc, MVMObject *lock);
 void MVM_reentrantmutex_unlock(MVMThreadContext *tc, MVMReentrantMutex *rm);
+#endif // REENTRANTMUTEX_H

@@ -6,6 +6,9 @@
  * know when we are moving back to a prior segment. */
 
 /* A region of the call stack. */
+#ifndef CALLSTACK_H
+#define CALLSTACK_H
+
 struct MVMCallStackRegion {
     /* Next call stack region, which we start allocating in if this one is
      * full. NULL if none has been allocated yet. */
@@ -510,3 +513,4 @@ MVM_STATIC_INLINE MVMCallStackRecord * MVM_callstack_prev_significant_record(
 
 /* Migration to callstack-based special return in Rakudo extops. */
 #define MVM_CALLSTACK_SPECIAL_RETURN 1
+#endif // CALLSTACK_H

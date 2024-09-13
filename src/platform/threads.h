@@ -1,3 +1,5 @@
+#ifndef THREADS_H
+#define THREADS_H
 #if defined _WIN32
 #define MVM_platform_thread_yield SwitchToThread
 #elif defined MVM_HAS_PTHREAD_YIELD
@@ -18,3 +20,4 @@
 #define MVM_platform_thread_exit(status) pthread_exit(status)
 #define MVM_platform_thread_id() (MVMint64)uv_thread_self()
 #endif
+#endif // THREADS_H

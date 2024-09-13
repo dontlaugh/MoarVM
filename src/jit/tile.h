@@ -1,3 +1,6 @@
+#ifndef TILE_H
+#define TILE_H
+
 struct MVMJitTileTemplate {
     void (*emit)(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTile *tile, MVMJitExprTree *tree);
     const char    *path;
@@ -71,3 +74,4 @@ void MVM_jit_tile_list_destroy(MVMThreadContext *tc, MVMJitTileList *list);
 #define MVM_JIT_TILE_NAME(name) MVM_jit_tile_ ## name
 #define MVM_JIT_TILE_DECL(name) \
     void MVM_JIT_TILE_NAME(name) (MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTile *tile, MVMJitExprTree *tree)
+#endif // TILE_H

@@ -1,4 +1,7 @@
 /* Representation for a continuation in the VM. */
+#ifndef MVMCONTINUATION_H
+#define MVMCONTINUATION_H
+
 struct MVMContinuationBody {
     /* The top record on the callstack. */
     MVMCallStackRecord *stack_top;
@@ -36,3 +39,4 @@ struct MVMContinuation {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMContinuation_initialize(MVMThreadContext *tc);
+#endif // MVMCONTINUATION_H

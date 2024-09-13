@@ -1,4 +1,6 @@
 /* The various native call argument types. */
+#ifndef NATIVECALL_H
+#define NATIVECALL_H
 #define MVM_NATIVECALL_ARG_VOID            0
 #define MVM_NATIVECALL_ARG_CHAR            2
 #define MVM_NATIVECALL_ARG_SHORT           4
@@ -158,3 +160,4 @@ MVMJitGraph *MVM_nativecall_jit_graph_for_caller_code(
     MVMint16            dst,
     MVMSpeshIns       **arg_ins
 );
+#endif // NATIVECALL_H
