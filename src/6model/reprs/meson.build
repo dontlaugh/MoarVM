@@ -50,8 +50,16 @@ sixmodel_reprs_srcs = [
 'VMArray.c',
 ]
 
+sixmodel_reprs_deps = [
+    dynload_s_lib,
+    mimalloc_dep,
+    libuv_dep,
+    libtommath_lib,
+]
+
 sixmodel_reprs_lib = static_library('sixmodel', sixmodel_reprs_srcs,
-                                    include_directories : [config_h_inc])
+                                    dependencies : sixmodel_reprs_deps,
+                                    include_directories : [config_h_inc, dynload_inc_dir])
 
 sixmodel_reprs_dep = declare_dependency(link_with : sixmodel_reprs_lib)
 

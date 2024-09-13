@@ -4,6 +4,7 @@ cmake = import('cmake')
 
 dyncall_subproject = cmake.subproject('dyncall')
 dyncall_s_lib = dyncall_subproject.dependency('dyncall_s')
+dynload_s_lib = dyncall_subproject.dependency('dynload_s')
 dynload_inc_dir = include_directories(['subprojects/dyncall/dynload',
                                        'subprojects/dyncall/dyncall',
                                        'subprojects/dyncall/dyncallback'])
@@ -12,16 +13,17 @@ shared_library('dyncallback_s', dependencies : [dyncall_s_lib])
 shared_library('dynload_s', dependencies : [dyncall_s_lib])
 
 mimalloc_subproject = cmake.subproject('mimalloc')
-mimalloc_lib = mimalloc_subproject.dependency('mimalloc')
+mimalloc_dep = mimalloc_subproject.dependency('mimalloc')
+# include files depended on a lot...
 mimalloc_inc  =  include_directories('subprojects/mimalloc/include')
-shared_library('mimalloc', dependencies : [mimalloc_lib])
-static_library('mimalloc-static', dependencies : [mimalloc_lib])
+shared_library('mimalloc', dependencies : [mimalloc_dep])
+static_library('mimalloc-static', dependencies : [mimalloc_dep])
 
 libuv_opts = cmake.subproject_options()
 libuv_subproject = cmake.subproject('libuv', options : libuv_opts)
 #message('CMake targets:\n - ' + '\n - '.join(libuv_subproject.target_list()))
-libuv_lib_a = libuv_subproject.dependency('uv_a')
-static_library('uv_a', dependencies : [libuv_lib_a])
+libuv_dep = libuv_subproject.dependency('uv_a')
+static_library('uv_a', dependencies : [libuv_dep])
 
 ryu_subproject = cmake.subproject('ryu')
 ryu_lib = ryu_subproject.dependency('ryu')
