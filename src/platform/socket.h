@@ -1,3 +1,5 @@
+#ifndef SOCKET_H
+#define SOCKET_H
 #ifdef _WIN32
 #  include <winsock2.h>
 #  include <ws2tcpip.h>
@@ -36,3 +38,5 @@ typedef int MVMSocket;
 #  define MVM_platform_close_socket close
 #  define MVM_platform_isatty isatty
 #endif
+
+#endif /* SOCKET_H */

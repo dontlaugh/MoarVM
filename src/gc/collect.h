@@ -1,5 +1,7 @@
 /* The maximum size of the nursery area. Note that since it's semi-space
  * copying, we could actually have double this amount allocated per thread. */
+#ifndef COLLECT_H
+#define COLLECT_H
 #define MVM_NURSERY_SIZE 4194304
 
 /* The nursery size threads other than the main thread start out with. If
@@ -59,3 +61,4 @@ void MVM_gc_collect_free_nursery_uncopied(MVMThreadContext *executing_thread, MV
 void MVM_gc_collect_free_gen2_unmarked(MVMThreadContext *executing_thread, MVMThreadContext *tc, MVMint32 global_destruction);
 void MVM_gc_mark_collectable(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMCollectable *item);
 void MVM_gc_collect_free_stables(MVMThreadContext *tc);
+#endif // COLLECT_H

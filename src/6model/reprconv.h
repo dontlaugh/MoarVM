@@ -1,3 +1,6 @@
+#ifndef REPRCONV_H
+#define REPRCONV_H
+
 void MVM_repr_init(MVMThreadContext *tc, MVMObject *obj);
 MVM_PUBLIC MVMObject * MVM_repr_alloc(MVMThreadContext *tc, MVMObject *type);
 MVM_PUBLIC MVMObject * MVM_repr_alloc_init(MVMThreadContext *tc, MVMObject *type);
@@ -165,3 +168,4 @@ MVM_PUBLIC MVMObject * MVM_repr_casattr_o(MVMThreadContext *tc, MVMObject *objec
     MVMObject *boxed = MVM_repr_box_int((tc), (*((tc)->interp_cu))->body.hll_config->str_box_type, (val)); \
     MVM_repr_bind_key_o((tc), (obj), (key), boxed); \
 } while (0)
+#endif // REPRCONV_H

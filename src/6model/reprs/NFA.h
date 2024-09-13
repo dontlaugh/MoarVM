@@ -1,4 +1,6 @@
 /* NFA constants that are part of the NFA REPR API. */
+#ifndef NFA_H
+#define NFA_H
 #define MVM_NFA_EDGE_FATE              0
 #define MVM_NFA_EDGE_EPSILON           1
 #define MVM_NFA_EDGE_CODEPOINT         2
@@ -68,3 +70,4 @@ MVMObject * MVM_nfa_from_statelist(MVMThreadContext *tc, MVMObject *states, MVMO
 MVMObject * MVM_nfa_run_proto(MVMThreadContext *tc, MVMObject *nfa, MVMString *target, MVMint64 offset);
 void MVM_nfa_run_alt(MVMThreadContext *tc, MVMObject *nfa, MVMString *target,
     MVMint64 offset, MVMObject *bstack, MVMObject *cstack, MVMObject *labels);
+#endif // NFA_H

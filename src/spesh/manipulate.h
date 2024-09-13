@@ -1,3 +1,5 @@
+#ifndef MANIPULATE_H
+#define MANIPULATE_H
 MVM_PUBLIC void MVM_spesh_manipulate_delete_ins(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins);
 MVM_PUBLIC void MVM_spesh_manipulate_cleanup_ins_deps(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins);
 MVM_PUBLIC void MVM_spesh_manipulate_insert_ins(MVMThreadContext *tc, MVMSpeshBB *bb, MVMSpeshIns *previous, MVMSpeshIns *to_insert);
@@ -14,3 +16,4 @@ MVMuint16 MVM_spesh_manipulate_get_unique_reg(MVMThreadContext *tc, MVMSpeshGrap
 MVMuint16 MVM_spesh_manipulate_get_current_version(MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMuint16 orig);
 MVMSpeshBB *MVM_spesh_manipulate_split_BB_at(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins);
+#endif // MANIPULATE_H

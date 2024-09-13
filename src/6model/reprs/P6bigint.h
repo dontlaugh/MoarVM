@@ -1,3 +1,5 @@
+#ifndef P6BIGINT_H
+#define P6BIGINT_H
 #include "tommath.h"
 
 #define MVM_BIGINT_32_FLAG      0xFFFFFFFF
@@ -36,3 +38,4 @@ const MVMREPROps * MVMP6bigint_initialize(MVMThreadContext *tc);
 
 MVMint64 MVM_p6bigint_get_int64(MVMThreadContext *tc, MVMP6bigintBody *body);
 void MVM_p6bigint_store_as_mp_int(MVMThreadContext *tc, MVMP6bigintBody *body, MVMint64 value);
+#endif // P6BIGINT_H

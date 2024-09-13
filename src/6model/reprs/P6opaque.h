@@ -4,6 +4,9 @@
  * numbers, it will be the appropriate sized piece of memory to store them
  * right there in the object. Note that P6opaque does not do packed storage, so
  * an int2 gets as much space as an int. */
+#ifndef P6OPAQUE_H
+#define P6OPAQUE_H
+
 struct MVMP6opaqueBody {
     /* If we get mixed into, we may change size. If so, we can't really resize
      * the object, so instead we hang its post-resize form off this pointer.
@@ -141,3 +144,4 @@ void MVM_p6opaque_attr_offset_and_arg_type(MVMThreadContext *tc, MVMObject *type
 MVMuint16 MVM_p6opaque_get_bigint_offset(MVMThreadContext *tc, MVMSTable *st);
 MVMuint32 MVM_p6opaque_offset_to_attr_idx(MVMThreadContext *tc, MVMObject *type, size_t offset);
 void MVM_P6opaque_at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister *value, MVMuint16 kind);
+#endif // P6OPAQUE_H

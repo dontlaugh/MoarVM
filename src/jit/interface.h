@@ -1,4 +1,6 @@
 /* Function for getting effective (JIT/specialized/original) bytecode. */
+#ifndef INTERFACE_H
+#define INTERFACE_H
 MVM_STATIC_INLINE MVMuint8 * MVM_frame_effective_bytecode(MVMFrame *f) {
     MVMSpeshCandidate *spesh_cand = f->spesh_cand;
     if (spesh_cand)
@@ -40,3 +42,4 @@ MVMuint32 MVM_jit_code_get_active_inlines(MVMThreadContext *tc, MVMJitCode *code
 
 /* hackish interface */
 void MVM_jit_code_trampoline(MVMThreadContext *tc);
+#endif // INTERFACE_H

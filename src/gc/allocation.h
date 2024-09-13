@@ -1,3 +1,5 @@
+#ifndef ALLOCATION_H
+#define ALLOCATION_H
 #if !defined(MVM_CAN_UNALIGNED_INT64) || !defined(MVM_CAN_UNALIGNED_NUM64)
 #define MVM_ALIGN_SIZE(size) MVM_ALIGN_SECTION(size)
 #else
@@ -33,3 +35,4 @@ MVM_STATIC_INLINE void MVM_gc_allocate_gen2_default_clear(MVMThreadContext *tc) 
         MVM_oops(tc, "Cannot leave gen2 allocation without entering it");
     tc->allocate_in_gen2--;
 }
+#endif // ALLOCATION_H

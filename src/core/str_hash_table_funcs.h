@@ -4,6 +4,8 @@
  * load factor, or STR_MIN_SIZE_BASE_2 or MVM_HASH_INITIAL_BITS_IN_METADATA,
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
+#ifndef STR_HASH_TABLE_FUNCS_H
+#define STR_HASH_TABLE_FUNCS_H
 #define MVM_STR_HASH_LOAD_FACTOR 0.75
 MVM_STATIC_INLINE MVMuint32 MVM_str_hash_official_size(const struct MVMStrHashTableControl *control) {
     assert(!(control->cur_items == 0 && control->max_items == 0));
@@ -606,3 +608,4 @@ MVM_STATIC_INLINE MVMHashNumItems MVM_str_hash_entry_size(MVMThreadContext *tc,
 
     return control ? control->entry_size : 0;
 }
+#endif // STR_HASH_TABLE_FUNCS_H

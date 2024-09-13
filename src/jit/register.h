@@ -1,4 +1,7 @@
 /* Different places in which we can store stuff. */
+#ifndef REGISTER_H
+#define REGISTER_H
+
 typedef enum {
     MVM_JIT_STORAGE_NONE,
     MVM_JIT_STORAGE_GPR,  /* general purpose register */
@@ -28,3 +31,4 @@ void MVM_jit_arch_storage_for_arglist(MVMThreadContext *tc, MVMJitCompiler *comp
                                       MVMJitExprTree *tree, MVMint32 arglist_node,
                                       MVMJitStorageRef *storage);
 MVMJitStorageClass MVM_jit_arch_register_class(MVMuint8 register_id);
+#endif // REGISTER_H

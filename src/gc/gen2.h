@@ -1,4 +1,7 @@
 /* Represents the objects for a particular size class. */
+#ifndef GEN2_H
+#define GEN2_H
+
 struct MVMGen2SizeClass {
     /* Each page holds a certain number of collectables. We know
      * nothing of the size statically, so we'll work in bytes. */
@@ -71,3 +74,4 @@ void * MVM_gc_gen2_allocate_zeroed(MVMGen2Allocator *al, MVMuint32 size);
 void MVM_gc_gen2_destroy(MVMInstance *i, MVMGen2Allocator *allocator);
 void MVM_gc_gen2_transfer(MVMThreadContext *src, MVMThreadContext *dest);
 void MVM_gc_gen2_compact_overflows(MVMGen2Allocator *allocator);
+#endif // GEN2_H

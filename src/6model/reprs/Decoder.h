@@ -1,4 +1,7 @@
 /* Representation used for a VM-provided decoder. */
+#ifndef DECODER_H
+#define DECODER_H
+
 struct MVMDecoderBody {
     AO_t in_use;
     MVMDecodeStream *ds;
@@ -28,3 +31,4 @@ MVMString * MVM_decoder_take_line(MVMThreadContext *tc, MVMDecoder *decoder,
 MVMint64 MVM_decoder_bytes_available(MVMThreadContext *tc, MVMDecoder *decoder);
 MVMObject * MVM_decoder_take_bytes(MVMThreadContext *tc, MVMDecoder *decoder,
                                    MVMObject *buf_type, MVMint64 bytes);
+#endif // DECODER_H

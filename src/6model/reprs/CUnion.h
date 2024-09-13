@@ -1,4 +1,6 @@
 /* Attribute location flags. */
+#ifndef CUNION_H
+#define CUNION_H
 #define MVM_CUNION_ATTR_IN_STRUCT 0
 #define MVM_CUNION_ATTR_CSTRUCT   1
 #define MVM_CUNION_ATTR_CARRAY    2
@@ -85,3 +87,4 @@ struct MVMCUnionREPRData {
 
 /* Initializes the CUnion REPR. */
 const MVMREPROps * MVMCUnion_initialize(MVMThreadContext *tc);
+#endif // CUNION_H

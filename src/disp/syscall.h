@@ -1,3 +1,5 @@
+#ifndef SYSCALL_H
+#define SYSCALL_H
 #define MVM_DISP_SYSCALL_MAX_ARGS   8
 
 /* Information about a VM-provided call. */
@@ -36,3 +38,4 @@ struct MVMDispSysCall {
 void MVM_disp_syscall_setup(MVMThreadContext *tc);
 MVMDispSysCall * MVM_disp_syscall_find(MVMThreadContext *tc, MVMString *name);
 void MVM_disp_syscall_boolify_boxed_int_impl(MVMThreadContext *tc, MVMArgs arg_info);
+#endif // SYSCALL_H

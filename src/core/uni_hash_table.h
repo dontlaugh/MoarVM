@@ -42,6 +42,8 @@ Not all the optimisations described above are in place yet. Starting with
 "minimum viable product", with a design that should support adding them.
 
 */
+#ifndef UNI_HASH_TABLE_H
+#define UNI_HASH_TABLE_H
 
 struct MVMUniHashTableControl {
     MVMHashNumItems cur_items;
@@ -71,3 +73,4 @@ struct MVMUniHashEntry {
     MVMuint32 hash_val;
     MVMint32 value;
 };
+#endif // UNI_HASH_TABLE_H

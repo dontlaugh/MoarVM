@@ -1,4 +1,5 @@
-
+#ifndef UNICODE_GEN_H
+#define UNICODE_GEN_H
 
 struct MVMUnicodeNamedValue {
     const char *name;
@@ -270,3 +271,4 @@ typedef enum {
     MVM_UNICODE_PROPERTY_XID_START = 105,
     MVM_UNICODE_PROPERTY_Z = 106,
 } MVM_unicode_property_codes;
+#endif // UNICODE_GEN_H

@@ -1,5 +1,8 @@
 /* Representation for code in the VM. Holds an MVMStaticFrame along
  * with an optional outer pointer if this is a closure. */
+#ifndef MVMCODE_H
+#define MVMCODE_H
+
 struct MVMCodeBody {
     MVMStaticFrame *sf;
     MVMFrame       *outer;
@@ -20,3 +23,4 @@ const MVMREPROps * MVMCode_initialize(MVMThreadContext *tc);
 MVM_PUBLIC MVMObject * MVM_code_location(MVMThreadContext *tc, MVMObject *code);
 void MVM_code_location_out(MVMThreadContext *tc, MVMObject *code,
                            MVMString **file_out, MVMint32 *line_out);
+#endif // MVMCODE_H

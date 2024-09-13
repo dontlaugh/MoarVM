@@ -1,4 +1,7 @@
 /* Representation used for condition variables. */
+#ifndef CONDITIONVARIABLE_H
+#define CONDITIONVARIABLE_H
+
 struct MVMConditionVariableBody {
     /* The ReentrantMutex this condition variable is associated with. */
     MVMObject *mutex;
@@ -20,3 +23,4 @@ MVMObject * MVM_conditionvariable_from_lock(MVMThreadContext *tc, MVMReentrantMu
 void MVM_conditionvariable_wait(MVMThreadContext *tc, MVMConditionVariable *cv);
 void MVM_conditionvariable_signal_one(MVMThreadContext *tc, MVMConditionVariable *cv);
 void MVM_conditionvariable_signal_all(MVMThreadContext *tc, MVMConditionVariable *cv);
+#endif // CONDITIONVARIABLE_H

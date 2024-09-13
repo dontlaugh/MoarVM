@@ -1,3 +1,6 @@
+#ifndef ITERATOR_H
+#define ITERATOR_H
+
 struct MVMSpeshIterator {
     MVMSpeshGraph *graph;
     MVMSpeshBB    *bb;
@@ -9,3 +12,4 @@ void MVM_spesh_iterator_copy(MVMThreadContext *tc, MVMSpeshIterator *a, MVMSpesh
 MVMSpeshIns * MVM_spesh_iterator_next_ins(MVMThreadContext *tc, MVMSpeshIterator *iterator);
 MVMSpeshBB  * MVM_spesh_iterator_next_bb(MVMThreadContext *tc, MVMSpeshIterator *iterator);
 void MVM_spesh_iterator_skip_phi(MVMThreadContext *tc, MVMSpeshIterator *iterator);
+#endif // ITERATOR_H

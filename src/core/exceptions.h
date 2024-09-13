@@ -1,4 +1,6 @@
 /* Exception handler actions. */
+#ifndef EXCEPTIONS_H
+#define EXCEPTIONS_H
 #define MVM_EX_ACTION_GOTO                0
 #define MVM_EX_ACTION_GOTO_WITH_PAYLOAD   1
 #define MVM_EX_ACTION_INVOKE              2
@@ -113,3 +115,4 @@ void MVM_exception_returnafterunwind(MVMThreadContext *tc, MVMObject *ex);
 #define MVM_exitcode_gcnursery      17
 #define MVM_exitcode_threads        18
 #define MVM_exitcode_gcorch         19
+#endif // EXCEPTIONS_H

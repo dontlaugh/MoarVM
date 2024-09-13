@@ -1,3 +1,5 @@
+#ifndef GB2312_CODEINDEX_H
+#define GB2312_CODEINDEX_H
 #define GB2312_NULL -1
 
 /* Conversion tables are generated according to mapping from
@@ -7,7 +9,7 @@
 
  * Unicode indexes 1106 - 8212, 9795 - 12287, 12842 - 19967,
  * and 40865 - 65280 don't correspond to gb2312 codepoint.
- * To reduce code length and save memory, these intervals are omitted 
+ * To reduce code length and save memory, these intervals are omitted
  * in the conversion table and indexes are shifted in the function. */
 
 static MVMGrapheme32 gb2312_index_to_cp_record[87][94]=
@@ -1807,3 +1809,4 @@ static MVMint32 gb2312_cp_to_index(MVMGrapheme32 codepoint) {
     }
     return result == 0 ? GB2312_NULL : result;
 }
+#endif // GB2312_CODEINDEX_H

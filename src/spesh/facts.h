@@ -1,4 +1,7 @@
 /* Facts we might have about a particular SSA version of a register. */
+#ifndef FACTS_H
+#define FACTS_H
+
 struct MVMSpeshFacts {
     /* Flags indicating things we know. */
     MVMint32 flags;
@@ -59,3 +62,4 @@ void MVM_spesh_facts_object_facts(MVMThreadContext *tc, MVMSpeshGraph *g,
     MVMSpeshOperand tgt, MVMObject *obj);
 void MVM_spesh_facts_guard_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         MVMSpeshIns *ins);
+#endif // FACTS_H

@@ -1,4 +1,7 @@
 /* SC manipulation functions. */
+#ifndef SC_H
+#define SC_H
+
 MVMObject * MVM_sc_create(MVMThreadContext *tc, MVMString *handle);
 void MVM_sc_add_all_scs_entry(MVMThreadContext *tc, MVMSerializationContextBody *scb);
 void MVM_sc_all_scs_destroy(MVMThreadContext *tc);
@@ -180,3 +183,4 @@ MVM_STATIC_INLINE void MVM_SC_WB_ST(MVMThreadContext *tc, MVMSTable *st) {
     if (MVM_sc_get_idx_of_sc(&st->header) > 0)
         MVM_sc_wb_hit_st(tc, st);
 }
+#endif // SC_H

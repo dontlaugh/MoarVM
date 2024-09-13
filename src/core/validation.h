@@ -1,3 +1,5 @@
+#ifndef VALIDATION_H
+#define VALIDATION_H
 #define MVM_BC_ILLEGAL_OFFSET ((MVMuint32)-1)
 
 enum {
@@ -6,3 +8,4 @@ enum {
 };
 
 void MVM_validate_static_frame(MVMThreadContext *tc, MVMStaticFrame *static_frame);
+#endif // VALIDATION_H

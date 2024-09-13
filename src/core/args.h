@@ -1,4 +1,7 @@
 /* Container for arguments being passed to something to invoke it. */
+#ifndef ARGS_H
+#define ARGS_H
+
 struct MVMArgs {
     /* The callsite that describes the arguments. */
     MVMCallsite *callsite;
@@ -145,3 +148,4 @@ void MVM_args_bind_succeeded(MVMThreadContext *tc, MVMDispInlineCacheEntry **ice
 /* Required/optional constants. */
 #define MVM_ARG_OPTIONAL    0
 #define MVM_ARG_REQUIRED    1
+#endif // ARGS_H

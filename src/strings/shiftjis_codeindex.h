@@ -1,3 +1,5 @@
+#ifndef SHIFTJIS_CODEINDEX_H
+#define SHIFTJIS_CODEINDEX_H
 #define SHIFTJIS_NULL -1
 struct shiftjis_offset {
     MVMuint16 location;
@@ -7925,3 +7927,4 @@ static MVMint16 shift_jis_cp_to_index (MVMThreadContext *tc, MVMGrapheme32 codep
     }
 }
 /* End generated code */
+#endif // SHIFTJIS_CODEINDEX_H

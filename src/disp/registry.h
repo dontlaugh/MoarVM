@@ -1,4 +1,7 @@
 /* The definition of a dispatcher, stored in the registry. */
+#ifndef REGISTRY_H
+#define REGISTRY_H
+
 struct MVMDispDefinition {
     /* The ID of the dispatcher, used to look it up. */
     MVMString *id;
@@ -45,3 +48,4 @@ MVMDispDefinition * MVM_disp_registry_find(MVMThreadContext *tc, MVMString *id);
 void MVM_disp_registry_mark(MVMThreadContext *tc, MVMGCWorklist *worklist);
 void MVM_disp_registry_describe(MVMThreadContext *tc, MVMHeapSnapshotState *snapshot);
 void MVM_disp_registry_destroy(MVMThreadContext *tc);
+#endif // REGISTRY_H

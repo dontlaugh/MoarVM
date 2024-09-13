@@ -16,6 +16,8 @@
  */
 
 /* Kinds of grapheme we may hold in a string. */
+#ifndef MVMSTRING_H
+#define MVMSTRING_H
 typedef MVMint32 MVMGrapheme32;
 typedef MVMint8  MVMGraphemeASCII;
 typedef MVMint8  MVMGrapheme8;       /* Future use */
@@ -76,3 +78,4 @@ struct MVMString {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMString_initialize(MVMThreadContext *tc);
+#endif // MVMSTRING_H

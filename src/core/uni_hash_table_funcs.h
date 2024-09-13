@@ -4,6 +4,8 @@
  * load factor, or UNI_MIN_SIZE_BASE_2 or MVM_HASH_INITIAL_BITS_IN_METADATA,
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
+#ifndef UNI_HASH_TABLE_FUNCS_H
+#define UNI_HASH_TABLE_FUNCS_H
 #define MVM_UNI_HASH_LOAD_FACTOR 0.75
 MVM_STATIC_INLINE MVMuint32 MVM_uni_hash_official_size(const struct MVMUniHashTableControl *control) {
     return 1 << (MVMuint32)control->official_size_log2;
@@ -126,3 +128,4 @@ MVM_STATIC_INLINE struct MVMUniHashEntry *MVM_uni_hash_fetch(MVMThreadContext *t
         assert(ls.metadata < MVM_uni_hash_metadata(control) + MVM_uni_hash_official_size(control) + 256);
     }
 }
+#endif // UNI_HASH_TABLE_FUNCS_H

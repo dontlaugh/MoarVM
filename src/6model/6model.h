@@ -1,4 +1,6 @@
 /* Boolification mode flags. */
+#ifndef 6MODEL_H
+#define 6MODEL_H
 #define MVM_BOOL_MODE_CALL_METHOD                   0
 #define MVM_BOOL_MODE_UNBOX_INT                     1
 #define MVM_BOOL_MODE_UNBOX_NUM                     2
@@ -693,3 +695,4 @@ MVM_STATIC_INLINE char *MVM_6model_get_stable_debug_name(MVMThreadContext *tc, M
     return stable->debug_name ? stable->debug_name : "";
 }
 void MVM_6model_set_debug_name(MVMThreadContext *tc, MVMObject *type, MVMString *name);
+#endif // 6MODEL_H

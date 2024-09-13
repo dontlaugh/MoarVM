@@ -1,6 +1,8 @@
 /* Bitmap controling whether we throw on codepoints which don't have mappings (yet still
  * fit in one byte). If use loose we we pass through the codepoint unchanged if it fits
  * in one byte. */
+#ifndef WINDOWS1252_H
+#define WINDOWS1252_H
 #define MVM_ENCODING_PERMISSIVE 1
 #define MVM_ENCODING_CONFIG_STRICT(config) (!(config & MVM_ENCODING_PERMISSIVE))
 #define MVM_ENCODING_CONFIG_PERMISSIVE(config) (config & MVM_ENCODING_PERMISSIVE)
@@ -18,3 +20,4 @@ MVMString * MVM_string_windows1252_decode_config(MVMThreadContext *tc,
 MVMString * MVM_string_windows1251_decode_config(MVMThreadContext *tc,
         const MVMObject *result_type, char *windows125X_c, size_t bytes,
         MVMString *replacement, MVMint64 bitmap);
+#endif // WINDOWS1252_H

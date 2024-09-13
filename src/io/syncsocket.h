@@ -1,3 +1,5 @@
+#ifndef SYNCSOCKET_H
+#define SYNCSOCKET_H
 #define MVM_SOCKET_FAMILY_UNSPEC 0
 #define MVM_SOCKET_FAMILY_INET   1
 #define MVM_SOCKET_FAMILY_INET6  2
@@ -24,3 +26,4 @@ struct sockaddr * MVM_io_resolve_host_name(MVMThreadContext *tc,
         MVMuint16 family, MVMint64 type, MVMint64 protocol,
         MVMint32 passive);
 MVMString * MVM_io_get_hostname(MVMThreadContext *tc);
+#endif // SYNCSOCKET_H

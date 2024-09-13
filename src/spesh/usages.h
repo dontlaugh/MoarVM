@@ -1,4 +1,6 @@
 /* Option to enable checking of define/use chains for debugging purposes. */
+#ifndef USAGES_H
+#define USAGES_H
 #define MVM_SPESH_CHECK_DU 0
 
 /* Usage information, which is held per SSA written register. */
@@ -73,3 +75,4 @@ MVMuint32 MVM_spesh_usages_count(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
 #if MVM_SPESH_CHECK_DU
 void MVM_spesh_usages_check(MVMThreadContext *tc, MVMSpeshGraph *g);
 #endif
+#endif // USAGES_H

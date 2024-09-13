@@ -1,3 +1,5 @@
+#ifndef P6INT_H
+#define P6INT_H
 #define MVM_P6INT_C_TYPE_CHAR      -1
 #define MVM_P6INT_C_TYPE_SHORT     -2
 #define MVM_P6INT_C_TYPE_INT       -3
@@ -38,3 +40,4 @@ const MVMREPROps * MVMP6int_initialize(MVMThreadContext *tc);
 
 void MVMP6int_set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 value);
 MVMint64 MVMP6int_get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data);
+#endif // P6INT_H

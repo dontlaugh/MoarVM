@@ -1,4 +1,6 @@
 /* Pull in all of the core REPRs. */
+#ifndef REPRS_H
+#define REPRS_H
 #include "6model/reprs/MVMString.h"
 #include "6model/reprs/VMArray.h"
 #include "6model/reprs/MVMHash.h"
@@ -229,3 +231,4 @@ MVMStorageSpec MVM_REPR_DEFAULT_GET_VALUE_STORAGE_SPEC(MVMThreadContext *tc, MVM
 MVM_STATIC_INLINE MVMint32 MVM_code_iscode(MVMThreadContext *tc, MVMObject *code) {
     return REPR(code)->ID == MVM_REPR_ID_MVMCode && IS_CONCRETE(code);
 }
+#endif // REPRS_H

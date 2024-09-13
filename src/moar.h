@@ -1,4 +1,6 @@
 /* Configuration. */
+#ifndef __MOAR_H
+#define __MOAR_H
 #include "gen/config.h"
 
 #if MVM_HAS_PTHREAD_SETNAME_NP
@@ -392,5 +394,7 @@ AO_t AO_fetch_compare_and_swap_emulation(volatile AO_t *addr, AO_t old_val, AO_t
  * which the other atomic operation macros are used... */
 #define MVM_store(addr, new) AO_store_full((volatile AO_t *)(addr), (AO_t)(new))
 #define MVM_load(addr) AO_load_full((volatile AO_t *)(addr))
+
+#endif
 
 #endif

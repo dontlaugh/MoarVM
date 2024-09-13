@@ -1,3 +1,6 @@
+#ifndef COMPILE_H
+#define COMPILE_H
+
 struct MVMJitCode {
     void     (*func_ptr)(MVMThreadContext *tc, MVMCompUnit *cu, void * label);
     size_t     size;
@@ -51,3 +54,4 @@ void MVM_jit_compile_memory_copy(MVMThreadContext *tc, MVMJitCompiler *compiler,
                                  MVMJitTile *tile, MVMJitExprTree *tree);
 void MVM_jit_compile_guard(MVMThreadContext *tc, MVMJitCompiler *compiler,
                            MVMJitTile *tile, MVMJitExprTree *tree);
+#endif // COMPILE_H

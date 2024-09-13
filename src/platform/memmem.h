@@ -5,6 +5,8 @@
  * Windows, does not include any native memmem
  * MacOS has a memmem but is slower and originates from FreeBSD dated to 2005
  * Solaris doesn't seem to have memmem                                        */
+#ifndef MEMMEM_H
+#define MEMMEM_H
 
 #if defined(_WIN32) || defined(__APPLE__) || defined(__Darwin__) || defined(__sun)
 #include <stdlib.h>
@@ -22,3 +24,4 @@ void *memmem(const void *h0, size_t k, const void *n0, size_t l);
 
 /* Extended info:
  * In glibc, the Knuth-Morris-Pratt algorithm was added as of git tag glibc-2.8-44-g0caca71ac9 */
+#endif // MEMMEM_H

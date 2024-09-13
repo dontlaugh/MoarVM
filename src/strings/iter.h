@@ -1,4 +1,7 @@
 /* Grapheme iterator structure; iterates through graphemes in a string. */
+#ifndef ITER_H
+#define ITER_H
+
 struct MVMGraphemeIter {
     /* The blob we're currently iterating over. */
     union {
@@ -397,3 +400,4 @@ MVM_STATIC_INLINE MVMGrapheme32 MVM_string_gi_cached_get_grapheme(MVMThreadConte
     gic->last_location = index;
     return (gic->last_g = MVM_string_gi_get_grapheme(tc, &(gic->gi)));
 }
+#endif // ITER_H

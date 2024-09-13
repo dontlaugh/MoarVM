@@ -1,5 +1,8 @@
 /* The various "bootstrap" types, based straight off of some core
  * representations. They are used during the 6model bootstrap. */
+#ifndef INSTANCE_H
+#define INSTANCE_H
+
 struct MVMBootTypes {
     MVMObject *BOOTInt;
     MVMObject *BOOTNum;
@@ -574,3 +577,4 @@ struct MVMInstance {
 
     MVMEventSubscriptions subscriptions;
 };
+#endif // INSTANCE_H

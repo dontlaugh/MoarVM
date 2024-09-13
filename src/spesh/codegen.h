@@ -1,4 +1,7 @@
 /* The result produced from specializing bytecode. */
+#ifndef CODEGEN_H
+#define CODEGEN_H
+
 struct MVMSpeshCode {
     /* The specialized bytecode. */
     MVMuint8 *bytecode;
@@ -17,3 +20,4 @@ struct MVMSpeshCode {
 };
 
 MVMSpeshCode * MVM_spesh_codegen(MVMThreadContext *tc, MVMSpeshGraph *g);
+#endif // CODEGEN_H

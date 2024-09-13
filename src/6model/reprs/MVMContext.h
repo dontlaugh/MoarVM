@@ -3,6 +3,9 @@
  * done lazily so as to cope with inlines but also to cope with deopt taking
  * place. Terminal operations that actually resolve data will resolve the
  * path and then do the operation. */
+#ifndef MVMCONTEXT_H
+#define MVMCONTEXT_H
+
 struct MVMContextBody {
     /* The base frame that a reference was originally taken to via the
      * ctx op. We never inline this op, so know our starting point will
@@ -47,3 +50,4 @@ MVMObject * MVM_context_caller_lookup(MVMThreadContext *tc, MVMContext *ctx, MVM
 
 /* Compatibility shim for Rakudo ext ops. */
 #define MVM_frame_context_wrapper MVM_context_from_frame
+#endif // MVMCONTEXT_H

@@ -1,4 +1,7 @@
 /* Representation used for bootstrapping attributes. */
+#ifndef KNOWHOWATTRIBUTEREPR_H
+#define KNOWHOWATTRIBUTEREPR_H
+
 struct MVMKnowHOWAttributeREPRBody {
     /* The attribute's name. */
     MVMString *name;
@@ -16,3 +19,4 @@ struct MVMKnowHOWAttributeREPR {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMKnowHOWAttributeREPR_initialize(MVMThreadContext *tc);
+#endif // KNOWHOWATTRIBUTEREPR_H

@@ -1,4 +1,7 @@
 /* Bytecode annotation, post-resolution. */
+#ifndef BYTECODE_H
+#define BYTECODE_H
+
 struct MVMBytecodeAnnotation {
     MVMuint32 bytecode_offset;
     MVMuint32 filename_string_heap_index;
@@ -21,3 +24,4 @@ MVM_STATIC_INLINE const MVMOpInfo * MVM_bytecode_get_validated_op_info(MVMThread
         ? MVM_op_get_op(opcode)
         : MVM_ext_resolve_extop_record_in_cu(tc, cu, opcode);
 }
+#endif // BYTECODE_H

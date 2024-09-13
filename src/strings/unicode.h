@@ -1,3 +1,6 @@
+#ifndef UNICODE_H
+#define UNICODE_H
+
 MVMint32 MVM_unicode_lookup_by_name(MVMThreadContext *tc, MVMString *name);
 MVMint64 MVM_unicode_has_property_value(MVMThreadContext *tc, MVMGrapheme32 codepoint, MVMint64 property_code, MVMint64 property_value_code);
 MVMuint32 MVM_unicode_get_case_change(MVMThreadContext *tc, MVMCodepoint codepoint, MVMint32 case_, const MVMCodepoint **result);
@@ -12,3 +15,4 @@ MVMCodepoint MVM_unicode_find_primary_composite(MVMThreadContext *tc, MVMCodepoi
 #define MVM_unicode_case_change_type_fold  3
 
 void MVM_unicode_init(MVMThreadContext *tc);
+#endif // UNICODE_H

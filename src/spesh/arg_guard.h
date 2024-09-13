@@ -1,6 +1,9 @@
 /* Specializations are selected using argument guards. These are arranged in
  * a tree, which is walked by a small interpreter. In the future, it may also
  * be compiled into machine code. */
+#ifndef ARG_GUARD_H
+#define ARG_GUARD_H
+
 struct MVMSpeshArgGuard {
     /* The nodes making up the guard. */
     MVMSpeshArgGuardNode *nodes;
@@ -74,7 +77,7 @@ struct MVMSpeshArgGuardNode {
 };
 
 void MVM_spesh_arg_guard_regenerate(MVMThreadContext *tc, MVMSpeshArgGuard **guard_ptr,
-        MVMSpeshCandidate **candidates, MVMuint32 num_spesh_candidates); 
+        MVMSpeshCandidate **candidates, MVMuint32 num_spesh_candidates);
 MVMint32 MVM_spesh_arg_guard_run_types(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
     MVMCallsite *cs, MVMSpeshStatsType *types);
 MVMint32 MVM_spesh_arg_guard_run(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
@@ -87,3 +90,4 @@ void MVM_spesh_arg_guard_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState 
                                      MVMSpeshArgGuard *ag);
 void MVM_spesh_arg_guard_destroy(MVMThreadContext *tc, MVMSpeshArgGuard *ag, MVMuint32 safe);
 void MVM_spesh_arg_guard_discard(MVMThreadContext *tc, MVMStaticFrame *sf);
+#endif // ARG_GUARD_H

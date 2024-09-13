@@ -1,4 +1,6 @@
 /* Callsite argument flags. */
+#ifndef CALLSITE_H
+#define CALLSITE_H
 #define MVM_CALLSITE_ARG_TYPE_MASK       143
 #define MVM_CALLSITE_ARG_NAMED_FLAT_MASK 159
 typedef enum {
@@ -156,3 +158,4 @@ MVM_STATIC_INLINE const char * MVM_callsite_arg_type_name(MVMCallsiteFlags f) {
             return "unknown";
     }
 }
+#endif // CALLSITE_H

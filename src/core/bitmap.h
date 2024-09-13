@@ -1,4 +1,6 @@
 /* basic bitmap implementation */
+#ifndef BITMAP_H
+#define BITMAP_H
 typedef MVMuint64 MVMBitmap;
 
 /* Efficient find-first-set; on x86, using `bsf` primitive operation; something
@@ -76,3 +78,4 @@ MVM_STATIC_INLINE MVMBitmap MVM_bitmap_with_set(MVMBitmap bitmap, MVMuint8 bit) 
 MVM_STATIC_INLINE MVMBitmap MVM_bitmap_with_clear(MVMBitmap bitmap, MVMuint8 bit) {
     return bitmap & ~(1 << bit);
 }
+#endif // BITMAP_H

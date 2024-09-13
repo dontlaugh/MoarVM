@@ -23,6 +23,8 @@
  * fully resumed.
  * 
  */
+#ifndef DEBUGSERVER_H
+#define DEBUGSERVER_H
 
 typedef enum {
     MVM_DebugRequest_empty,
@@ -78,7 +80,7 @@ struct MVMDebugServerBreakpointTable {
 
 /* This struct holds all data used for communication between
  * the Debugserver and a thread.
- * 
+ *
  * * Invoke a code object
  */
 struct MVMDebugServerRequestData {
@@ -154,3 +156,4 @@ MVM_PUBLIC void MVM_debugserver_notify_unhandled_exception(MVMThreadContext *tc,
 
 MVM_PUBLIC void MVM_debugserver_register_line(MVMThreadContext *tc, char *filename, MVMuint32 filename_len, MVMuint32 line_no,  MVMuint32 *file_idx);
 MVM_PUBLIC MVMint32 MVM_debugserver_breakpoint_check(MVMThreadContext *tc, MVMuint32 file_idx, MVMuint32 line_no);
+#endif // DEBUGSERVER_H

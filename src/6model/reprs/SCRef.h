@@ -1,6 +1,8 @@
 /* A serialization context exists (optionally) per compilation unit.
  * It contains the declarative objects for the compilation unit, and
  * they are serialized if code is pre-compiled. */
+#ifndef SCREF_H
+#define SCREF_H
 
 struct MVMSerializationContextBody {
     /* The handle of this SC. */
@@ -69,3 +71,4 @@ struct MVMSerializationContext {
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMSCRef_initialize(MVMThreadContext *tc);
+#endif // SCREF_H

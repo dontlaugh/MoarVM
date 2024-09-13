@@ -1,6 +1,8 @@
 /* This file is generated from src/core/oplist by tools/update_ops.raku. */
 
 /* Op name defines. */
+#ifndef OPS_H
+#define OPS_H
 #define MVM_OP_no_op 0
 #define MVM_OP_const_i8 1
 #define MVM_OP_const_i16 2
@@ -981,3 +983,4 @@
 MVM_PUBLIC const MVMOpInfo * MVM_op_get_op(unsigned short op);
 MVM_PUBLIC MVMuint8 MVM_op_is_allowed_in_confprog(unsigned short op);
 MVM_PUBLIC const char * MVM_op_get_mark(unsigned short op);
+#endif // OPS_H

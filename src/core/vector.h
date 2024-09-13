@@ -1,4 +1,6 @@
 /* An as-small-as-possible dynamic array implementation. */
+#ifndef VECTOR_H
+#define VECTOR_H
 #define MVM_VECTOR_DECL(type, x) type *x; \
     size_t x ## _num; \
     size_t x ## _alloc
@@ -79,3 +81,4 @@
         (a ## _alloc) = (b ## _alloc); \
         (a ## _num) = (b ## _num); \
     } while (0)
+#endif // VECTOR_H

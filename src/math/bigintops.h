@@ -1,3 +1,6 @@
+#ifndef BIGINTOPS_H
+#define BIGINTOPS_H
+
 MVMObject * MVM_bigint_abs(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a);
 MVMObject * MVM_bigint_neg(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a);
 MVMObject * MVM_bigint_not(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a);
@@ -40,3 +43,4 @@ MVMObject * MVM_bigint_radix(MVMThreadContext *tc, MVMint64 radix, MVMString *st
 MVMint64 MVM_bigint_is_big(MVMThreadContext *tc, MVMObject *a);
 MVMint64 MVM_bigint_bool(MVMThreadContext *tc, MVMObject *a);
 MVMObject * MVM_coerce_sI(MVMThreadContext *tc, MVMString *s, MVMObject *type);
+#endif // BIGINTOPS_H

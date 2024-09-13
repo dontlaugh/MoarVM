@@ -1,3 +1,5 @@
+#ifndef GRAPH_H
+#define GRAPH_H
 #define MVMPhiNodeCacheSize             48
 #define MVMPhiNodeCacheSparseBegin      32
 
@@ -309,3 +311,4 @@ MVM_STATIC_INLINE MVMuint32 MVM_spesh_is_inc_dec_op(MVMuint16 opcode) {
            opcode == MVM_OP_inc_u || opcode == MVM_OP_dec_u;
 }
 int MVM_spesh_graph_ins_ends_bb(MVMThreadContext *tc, const MVMOpInfo *info);
+#endif // GRAPH_H

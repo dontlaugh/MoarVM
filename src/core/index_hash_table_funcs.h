@@ -4,6 +4,8 @@
  * load factor, or INDEX_MIN_SIZE_BASE_2 or MVM_HASH_INITIAL_BITS_IN_METADATA,
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
+#ifndef INDEX_HASH_TABLE_FUNCS_H
+#define INDEX_HASH_TABLE_FUNCS_H
 #define MVM_INDEX_HASH_LOAD_FACTOR 0.75
 MVM_STATIC_INLINE MVMuint32 MVM_index_hash_official_size(const struct MVMIndexHashTableControl *control) {
     return 1 << (MVMuint32)control->official_size_log2;
@@ -172,3 +174,4 @@ MVM_STATIC_INLINE int MVM_index_hash_built(MVMThreadContext *tc,
                                            MVMIndexHashTable *hashtable) {
     return !!hashtable->table;
 }
+#endif // INDEX_HASH_TABLE_FUNCS_H

@@ -1,5 +1,8 @@
 /* Representation for static code in the VM. Partially populated on first
  * call or usage. */
+#ifndef MVMSTATICFRAME_H
+#define MVMSTATICFRAME_H
+
 struct MVMStaticFrameBody {
     /* The start of the stream of bytecode for this routine. */
     MVMuint8 *bytecode;
@@ -161,3 +164,4 @@ const MVMREPROps * MVMStaticFrame_initialize(MVMThreadContext *tc);
 char * MVM_staticframe_file_location(MVMThreadContext *tc, MVMStaticFrame *sf);
 
 MVMuint32 MVM_get_lexical_by_name(MVMThreadContext *tc, MVMStaticFrame *sf, MVMString *name);
+#endif // MVMSTATICFRAME_H

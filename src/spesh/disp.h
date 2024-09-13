@@ -1,4 +1,7 @@
 /* Information held about a dispatch with resume initialization arguments. */
+#ifndef DISP_H
+#define DISP_H
+
 struct MVMSpeshResumeInit {
     /* The dispatch program. */
     MVMDispProgram *dp;
@@ -33,3 +36,4 @@ MVMOpInfo * MVM_spesh_disp_initialize_resumption_op_info(MVMThreadContext *tc,
 MVMCallsite * MVM_spesh_disp_callsite_for_dispatch_op(MVMuint16 opcode, MVMuint8 *args,
         MVMCompUnit *cu);
 int MVM_spesh_disp_optimize(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshPlanned *p, MVMSpeshIns *ins, MVMSpeshIns **next_ins);
+#endif // DISP_H

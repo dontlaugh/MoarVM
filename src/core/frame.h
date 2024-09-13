@@ -1,4 +1,6 @@
 /* Frame flags; provide some HLLs can alias. */
+#ifndef FRAME_H
+#define FRAME_H
 #define MVM_FRAME_FLAG_STATE_INIT       1 << 0
 #define MVM_FRAME_FLAG_EXIT_HAND_RUN    1 << 1
 #define MVM_FRAME_FLAG_HLL_1            1 << 3
@@ -176,3 +178,4 @@ MVMuint16 MVM_frame_translate_to_primspec(MVMThreadContext *tc, MVMuint16 kind);
 MVMuint16 MVM_frame_lexical_primspec(MVMThreadContext *tc, MVMFrame *f, MVMString *name);
 MVMFrameExtra * MVM_frame_extra(MVMThreadContext *tc, MVMFrame *f);
 MVMObject * MVM_frame_caller_code(MVMThreadContext *tc);
+#endif // FRAME_H

@@ -1,10 +1,13 @@
 /* Information about an allocation we are tracking in partial escape analysis. */
+#ifndef PEA_H
+#define PEA_H
+
 struct MVMSpeshPEAAllocation {
     /* The allocating instruction. */
     MVMSpeshIns *allocator;
 
     /* The allocated type. */
-   MVMObject *type; 
+   MVMObject *type;
 
     /* The set of indexes for registers we will hypothetically allocate for
      * the attributes of this type. */
@@ -73,3 +76,4 @@ struct MVMSpeshPEADeoptPoint {
 
 void MVM_spesh_pea(MVMThreadContext *tc, MVMSpeshGraph *g);
 void MVM_spesh_pea_destroy_deopt_info(MVMThreadContext *tc, MVMSpeshPEADeopt *deopt_pea);
+#endif // PEA_H

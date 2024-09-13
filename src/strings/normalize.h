@@ -4,6 +4,9 @@
  *  - The third bit tells us to go a step further and create synthetic codes
  *    for graphemes.
  */
+#ifndef NORMALIZE_H
+#define NORMALIZE_H
+
 typedef enum {
     MVM_NORMALIZE_NFD   = 0,
     MVM_NORMALIZE_NFKD  = 1,
@@ -206,3 +209,4 @@ MVM_STATIC_INLINE MVMGrapheme32 MVM_unicode_normalizer_translated_crlf(MVMThread
         ? '\n'
         : MVM_nfg_crlf_grapheme(tc);
 }
+#endif // NORMALIZE_H

@@ -1,4 +1,7 @@
 /* Body of a CArray. */
+#ifndef CARRAY_H
+#define CARRAY_H
+
 struct MVMCArrayBody {
     /* The storage of C-land elements. */
     void *storage;
@@ -50,3 +53,4 @@ struct MVMCArrayREPRData {
 
 /* Initializes the CArray REPR. */
 const MVMREPROps * MVMCArray_initialize(MVMThreadContext *tc);
+#endif // CARRAY_H

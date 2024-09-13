@@ -1,6 +1,8 @@
 /* Concurrent use of a VMArray is erroneous. This debugging option will
  * catch bad usages. (Eventually, we will refactor VMArray to not have
  * this issue.) */
+#ifndef VMARRAY_H
+#define VMARRAY_H
 #define MVM_ARRAY_CONC_DEBUG 0
 
 /* Representation used by VM-level arrays. Adopted from QRPA work by
@@ -34,7 +36,7 @@ struct MVMArrayBody {
 
 #if MVM_ARRAY_CONC_DEBUG
     AO_t in_use;
-#endif 
+#endif
 };
 struct MVMArray {
     MVMObject common;
@@ -80,3 +82,4 @@ void *MVM_VMArray_find_fast_impl_for_jit(MVMThreadContext *tc, MVMSTable *st, MV
 void MVM_VMArray_bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister value, MVMuint16 kind);
 
 void MVM_VMArray_push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, MVMuint16 kind);
+#endif // VMARRAY_H
