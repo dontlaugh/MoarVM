@@ -1,8 +1,8 @@
 
+# todo: rename this to moar_h
+config_h_inc = include_directories('.')
+
 subdir('gen')
-# TODO(cm): src/meson.build:6:0: ERROR: Non-existent build file 'src/6model/meson.build'
-#    work through each of these, add a meson.build
-#    to each, exporting sources or headers if need be
 subdir('6model')
 subdir('core')
 subdir('debug')
@@ -18,9 +18,9 @@ subdir('spesh')
 subdir('strings')
 
 
-srcs = ['main.c', 'moar.c']
+main_srcs = ['main.c', 'moar.c']
 
-moar_deps = [
+moar_thirdparty_deps = [
     dyncall_s_lib,
     mimalloc_lib,
     libuv_lib_a,
@@ -28,7 +28,24 @@ moar_deps = [
     libtommath_lib,
 ]
 
-executable('moar',
-           sources : srcs,
-           dependencies : moar_deps,
-           include_directories: [dynload_inc_dir])
+moar_deps = [
+    core_dep,
+    debug_dep,
+    gen_configh_dep,
+    gc_dep,
+    io_dep,
+    sixmodel_dep,  # includes repr? need .h from here?
+    sixmodel_reprs_dep,
+    disp_dep,
+    spesh_dep,
+    strings_dep,
+    math_dep,
+    profiler_dep,
+    instrument_dep,
+    platform_dep,
+]
+
+executable('moarvm',
+           sources : main_srcs,
+           dependencies : moar_thirdparty_deps + moar_deps,
+           include_directories: [dynload_inc_dir, include_directories('.')])

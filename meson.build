@@ -4,7 +4,6 @@ cmake = import('cmake')
 
 dyncall_subproject = cmake.subproject('dyncall')
 dyncall_s_lib = dyncall_subproject.dependency('dyncall_s')
-#dyncall_project_dir = dyncall_subproject.get_variable('CMAKE_ROOT')
 dynload_inc_dir = include_directories(['subprojects/dyncall/dynload',
                                        'subprojects/dyncall/dyncall',
                                        'subprojects/dyncall/dyncallback'])
@@ -17,18 +16,12 @@ mimalloc_lib = mimalloc_subproject.dependency('mimalloc')
 shared_library('mimalloc', dependencies : [mimalloc_lib])
 static_library('mimalloc-static', dependencies : [mimalloc_lib])
 
-# Note: we could use WrapDB package management for libuv;
 libuv_opts = cmake.subproject_options()
-# libuv_opts.add_cmake_defines({'LIBUV_BUILD_SHARED': true})
 libuv_subproject = cmake.subproject('libuv', options : libuv_opts)
 #message('CMake targets:\n - ' + '\n - '.join(libuv_subproject.target_list()))
-# if set LIBUV_BUILD_SHARED we can build a shared lib
-# libuv_lib = mimalloc_subproject.dependency('uv')
-# shared_library('libuv', dependencies : [libuv_lib])
 libuv_lib_a = libuv_subproject.dependency('uv_a')
 static_library('uv_a', dependencies : [libuv_lib_a])
 
-# Latest master of ryu has CMake support
 ryu_subproject = cmake.subproject('ryu')
 ryu_lib = ryu_subproject.dependency('ryu')
 static_library('ryu', dependencies : [ryu_lib])
@@ -116,5 +109,10 @@ conf_data.set('expect_likely', '__builtin_expect(!!(condition), 1)')
 conf_data.set('expect_unlikely', '__builtin_expect(!!(condition), 0)')
 conf_data.set('expect_condition', '__builtin_expect((condition), (expection))')
 
-
 subdir('src')
+
+
+#
+#LDFLAGS   =  -O3 -DNDEBUG -Wl,-rpath,"//home/coleman/Code/Raku/MoarVM/install/lib"
+#LDLIBS    =  -lm -lpthread -lrt -ldl
+#MAIN_LIBS = -L. -lmoar
