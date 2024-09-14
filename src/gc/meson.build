@@ -12,7 +12,11 @@ gc_srcs = [
   'worklist.c',
 ]
 
-gc_lib = static_library('debug', gc_srcs)
+gc_inc =  [include_directories('.', '..'), mimalloc_inc, dynload_inc_dir ]
 
-gc_dep = declare_dependency(link_with : gc_lib,
-                               include_directories : include_directories('.'))
+gc_deps_extra = [libuv_dep, dynload_s_lib, libtommath_lib, ryu_lib]
+
+gc_lib = static_library('gc_a', gc_srcs,  dependencies : gc_deps_extra,
+                        include_directories : gc_inc)
+
+gc_dep = declare_dependency(link_with : gc_lib, include_directories : gc_inc)

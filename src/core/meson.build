@@ -1,6 +1,6 @@
 
 
-srcs = files(
+core_srcs = files(
   'args.c',
   'bytecode.c',
   'bytecodedump.c',
@@ -21,7 +21,7 @@ srcs = files(
   'loadbytecode.c',
   'nativecall.c',
   'nativecall_dyncall.c',
-  'nativecall_libffi.c',
+#  'nativecall_libffi.c',   # TODO: add behind config option; an alternative to dyncall
   'ops.c',
   'ptr_hash_table.c',
   'regionalloc.c',
@@ -32,7 +32,12 @@ srcs = files(
   'validation.c',
 )
 
-core_lib = static_library('core', srcs)
+core_inc = [include_directories('.', '..'), mimalloc_inc, dynload_inc_dir ]
+
+core_deps_extra = [libuv_dep, dynload_s_lib, libtommath_lib, ryu_lib]
+
+core_lib = static_library('core_a', core_srcs, dependencies : core_deps_extra,
+                          include_directories : core_inc)
 
 core_dep = declare_dependency(link_with : core_lib,
-                             include_directories : include_directories('.'))
+                             include_directories : core_inc)

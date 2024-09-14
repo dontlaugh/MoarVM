@@ -22,7 +22,12 @@ strings_srcs = [
   'windows1252.c',
 ]
 
-strings_lib = static_library('strings', strings_srcs)
+strings_inc = [include_directories('.', '..'), mimalloc_inc, dynload_inc_dir , moar_src_inc,]
+
+strings_deps_extra = [ libuv_dep, dynload_s_lib, libtommath_lib, ryu_lib]
+
+strings_lib = static_library('strings_a', strings_srcs, dependencies : strings_deps_extra,
+                          include_directories : strings_inc)
 
 strings_dep = declare_dependency(link_with : strings_lib,
-                              include_directories : include_directories('.'))
+                              include_directories : strings_inc)

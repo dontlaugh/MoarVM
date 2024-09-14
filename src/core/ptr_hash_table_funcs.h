@@ -1,3 +1,4 @@
+#include <stdint.h>
 /* These are private. We need them out here for the inline functions. Use those.
  */
 /* See comments in hash_allocate_common (and elsewhere) before changing the

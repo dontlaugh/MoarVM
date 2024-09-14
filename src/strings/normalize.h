@@ -1,3 +1,4 @@
+
 /* Normalization modes. Numbers picked so that:
  *  - The LSB tells us whether to do canonical or compatibility normalization
  *  - The second bit tells us whether to do canonical normalization

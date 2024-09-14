@@ -1,4 +1,5 @@
-#include "stdint.h"
+
+#include <stdint.h>
 
 MVM_PUBLIC void MVM_telemetry_timestamp(MVMThreadContext *threadID, const char *description);
 

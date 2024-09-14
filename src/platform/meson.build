@@ -5,7 +5,7 @@ if host_machine.system() == 'windows'
     platform_impl_dep = platform_win32_dep
 else
     subdir('posix')
-    platform_impl_dep = platform_posix_dep
+    platform_impl_dep = posix_dep
 endif
 
 platform_srcs = [
@@ -15,8 +15,12 @@ platform_srcs = [
   'sys.c',
 ]
 
-platform_lib = static_library('platform', platform_srcs)
+platform_inc = [include_directories('.', '..'), mimalloc_inc, dynload_inc_dir, moar_src_inc]
+platform_deps_extra = [platform_impl_dep, libuv_dep, dynload_s_lib, libtommath_lib, ryu_lib ]
+
+platform_lib = static_library('platform', platform_srcs, dependencies : platform_deps_extra,
+                               include_directories : platform_inc)
 
 platform_dep = declare_dependency(link_with : platform_lib,
-                                        dependencies : [platform_impl_dep],
-                                        include_directories : include_directories('.'))
+                                        dependencies : platform_deps_extra,
+                                        include_directories : platform_inc)

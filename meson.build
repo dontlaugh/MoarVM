@@ -1,5 +1,15 @@
 project('MoarVM', 'c')
 
+# TODO: turn these back on after we get things compiling
+add_project_arguments('-Wno-missing-braces', language: 'c')
+add_project_arguments('-Wno-unused-function', language: 'c')
+add_project_arguments('-Wno-format', language: 'c')
+add_project_arguments('-Wno-implicit-function-declaration', language: 'c')
+add_project_arguments('-Wno-unused-const-variable', language: 'c')
+add_project_arguments('-Wno-unused-variable', language: 'c')
+add_project_arguments('-Wno-discarded-qualifiers', language: 'c')
+
+
 cmake = import('cmake')
 
 dyncall_subproject = cmake.subproject('dyncall')
@@ -31,6 +41,9 @@ static_library('ryu', dependencies : [ryu_lib])
 
 libtommath_subproject = subproject('libtommath')
 libtommath_lib = libtommath_subproject.get_variable('libtommath_dep')
+
+sha1_subproject = subproject('sha1')
+sha1_dep = sha1_subproject.get_variable('sha1_dep')
 
 
 #

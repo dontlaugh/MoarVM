@@ -1,9 +1,11 @@
 /* Configuration. */
-#include "gen/config.h"
+#include "config.h"
+
+
 
 #if MVM_HAS_PTHREAD_SETNAME_NP
 /* pthread_setname_np only exists if we set _GNU_SOURCE extremely early.
- * We will need to be vgilant to not accidentally use gnu extensions in
+ * We will need to be vigilant to not accidentally use gnu extensions in
  * other places without checking properly. */
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE

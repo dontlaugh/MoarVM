@@ -59,7 +59,7 @@ sixmodel_reprs_deps = [
 
 sixmodel_reprs_lib = static_library('sixmodel', sixmodel_reprs_srcs,
                                     dependencies : sixmodel_reprs_deps,
-                                    include_directories : [config_h_inc, dynload_inc_dir])
+                                    include_directories : [moar_src_inc, dynload_inc_dir])
 
 sixmodel_reprs_dep = declare_dependency(link_with : sixmodel_reprs_lib)
 

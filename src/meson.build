@@ -1,11 +1,11 @@
 
-# todo: rename this to moar_h
-subdir('gen')
-config_h_inc = include_directories('.')
+
+#subdir('gen')
+moar_src_inc = include_directories('.')
 
 subdir('6model')
 subdir('core')
-subdir('debug')
+#subdir('debug')  # needed?
 subdir('disp')
 subdir('gc')
 subdir('instrument')
@@ -13,12 +13,12 @@ subdir('io')
 subdir('jit')
 subdir('math')
 subdir('platform')
-subdir('profiler')
+#subdir('profiler')
 subdir('spesh')
 subdir('strings')
 
 
-main_srcs = ['main.c', 'moar.c']
+main_srcs = ['main.c', 'moar.c', 'config.c']  # todo: make config.c actually generated
 
 moar_thirdparty_deps = [
     dyncall_s_lib,
@@ -31,17 +31,17 @@ moar_thirdparty_deps = [
 
 moar_deps = [
     core_dep,
-    debug_dep,
-#    gen_configh_dep,    # doesn't exist on a clean checkout
+#    debug_dep,  # do we need this?
+    #gen_configh_dep,    # doesn't exist on a clean checkout
     gc_dep,
     io_dep,
-    sixmodel_dep,  # includes repr? need .h from here?
+    sixmodel_dep,
     sixmodel_reprs_dep,
     disp_dep,
     spesh_dep,
     strings_dep,
     math_dep,
-    profiler_dep,
+#    profiler_dep,
     instrument_dep,
     platform_dep,
 ]

@@ -1,4 +1,5 @@
 /* This file generated from tools/Generate-Collation-Data.raku */
+#include "moar.h"
 struct collation_key {
     MVMuint32 primary :16;
     MVMuint32 tertiary :5;
@@ -18,7 +19,7 @@ typedef struct sub_node sub_node;
 #define codepoint_sequence_no_max 3
 #define special_collation_keys_elems 10704
 /* Data from PropList.txt */
-MVM_STATIC_INLINE MVMuint32 is_unified_ideograph (MVMCodepoint cp) {
+static MVMuint32 is_unified_ideograph (MVMCodepoint cp) {
     return
        (0x3400  <= cp && cp <= 0x4DBF ) /* 3400..4DBF Unified_Ideograph # Lo [6592] CJK UNIFIED IDEOGRAPH-3400..CJK UNIFIED IDEOGRAPH-4DBF */
     || (0x4E00  <= cp && cp <= 0x9FFF ) /* 4E00..9FFF Unified_Ideograph # Lo [20992] CJK UNIFIED IDEOGRAPH-4E00..CJK UNIFIED IDEOGRAPH-9FFF */

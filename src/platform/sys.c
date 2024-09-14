@@ -1,5 +1,6 @@
-#include "moar.h"
-#include "platform/sys.h"
+// #include "moar.h"
+#include <stdint.h>
+#include "sys.h"
 
 MVMint64 MVM_platform_cpu_count(void) {
     int            count;
