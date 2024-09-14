@@ -84,7 +84,7 @@ struct MVMProfileGC {
     /* Which GC run does this belong to?
      * (Good to know in multithreaded situations where
      * some threads have their work stolen) */
-    AO_t gc_seq_num;
+    atomic_uintptr_t gc_seq_num;
 
     /* Nursery statistics. */
     uint32_t cleared_bytes;

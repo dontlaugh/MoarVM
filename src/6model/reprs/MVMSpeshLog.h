@@ -99,7 +99,7 @@ struct MVMSpeshLogBody {
      * thread sending a log until the spesh worker has processed it. */
     uv_mutex_t *block_mutex;
     uv_cond_t *block_condvar;
-    AO_t completed;
+    atomic_uintptr_t completed;
 };
 struct MVMSpeshLog {
     MVMObject common;

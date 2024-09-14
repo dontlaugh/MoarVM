@@ -389,10 +389,10 @@ struct MVMREPROps_Attribute {
         int64_t hint);
 
     /* Provided the attribute is a native integer of the architecture's atomic
-     * size or an object pointer, returns an AO_t * referencing it. This is only
+     * size or an object pointer, returns an atomic_uintptr_t * referencing it. This is only
      * valid until the next safepoint. If rebless is called on the object,
      * updates may be lost although memory safety must not be violated. */
-    AO_t * (*attribute_as_atomic) (MVMThreadContext *tc, MVMSTable *st,
+    atomic_uintptr_t * (*attribute_as_atomic) (MVMThreadContext *tc, MVMSTable *st,
         void *data, MVMObject *class_handle, MVMString *name, uint16_t kind);
 };
 struct MVMREPROps_Boxing {
@@ -519,13 +519,13 @@ struct MVMREPROps_Positional {
     MVMStorageSpec (*get_elem_storage_spec) (MVMThreadContext *tc, MVMSTable *st);
 
     /* Provided the array consists of integers of the architecture's atomic
-     * size, gets an AO_t * pointing to that element and valid until the next
+     * size, gets an atomic_uintptr_t * pointing to that element and valid until the next
      * safepoint. */
-    AO_t * (*pos_as_atomic) (MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+    atomic_uintptr_t * (*pos_as_atomic) (MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
         void *data, int64_t index);
 
     /* Multi-dim version of as_atomic. */
-    AO_t * (*pos_as_atomic_multidim) (MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+    atomic_uintptr_t * (*pos_as_atomic_multidim) (MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
         void *data, int64_t num_indices, int64_t *indices);
 
     void (*write_buf) (MVMThreadContext *tc, MVMSTable *st,

@@ -101,7 +101,7 @@ struct MVMThreadContext {
     void *nursery_alloc_limit;
 
     /* This thread's GC status. */
-    AO_t gc_status;
+    atomic_uintptr_t gc_status;
 
     /* The second GC generation allocator. */
     MVMGen2Allocator *gen2;
@@ -223,7 +223,7 @@ struct MVMThreadContext {
     /* How many spesh logs we can produce, inclusive of the current one.
      * Ensures the spesh worker isn't overwhelmed with data before it has a
      * change to produce some specializations. */
-    AO_t spesh_log_quota;
+    atomic_uintptr_t spesh_log_quota;
 
     /* The spesh stack simulation, perserved between processing logs. */
     MVMSpeshSimStack *spesh_sim_stack;
@@ -237,7 +237,7 @@ struct MVMThreadContext {
      * compilation unit. However, for things that EVAL or do a ton of BEGIN,
      * we risk high memory use. Use this to throttle it by limiting the number
      * of such extra logs that might exist at a time. */
-    AO_t num_compunit_extra_logs;
+    atomic_uintptr_t num_compunit_extra_logs;
 
     /* The current specialization correlation ID, used in logging. */
     uint32_t spesh_cid;
@@ -321,7 +321,7 @@ struct MVMThreadContext {
 MVMThreadContext * MVM_tc_create(MVMThreadContext *parent, MVMInstance *instance);
 void MVM_tc_destroy(MVMThreadContext *tc);
 void MVM_tc_set_ex_release_mutex(MVMThreadContext *tc, uv_mutex_t *mutex);
-void MVM_tc_set_ex_release_atomic(MVMThreadContext *tc, AO_t *flag);
+void MVM_tc_set_ex_release_atomic(MVMThreadContext *tc, atomic_uintptr_t *flag);
 void MVM_tc_release_ex_release_mutex(MVMThreadContext *tc);
 void MVM_tc_clear_ex_release_mutex(MVMThreadContext *tc);
 

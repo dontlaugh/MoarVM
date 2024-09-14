@@ -109,14 +109,14 @@ struct TelemetryRecord {
 
 // this is a ring buffer of telemetry events
 static struct TelemetryRecord recordBuffer[RECORD_BUFFER_SIZE];
-static AO_t recordBufferIndex = 0;
+static atomic_uintptr_t recordBufferIndex = 0;
 static unsigned int lastSerializedIndex = 0;
 static unsigned long long beginningEpoch = 0;
 static unsigned int telemetry_active = 0;
 
 static struct TelemetryRecord *newRecord()
 {
-    AO_t newBufferIndex, recordIndex;
+    atomic_uintptr_t newBufferIndex, recordIndex;
     struct TelemetryRecord *record;
 
     do {

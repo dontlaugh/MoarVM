@@ -24,7 +24,7 @@ GCC_DIAG_OFF(return-type)
 int64_t MVM_REPR_DEFAULT_IS_ATTRIBUTE_INITIALIZED(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, int64_t hint) {
     die_no_attrs(tc, st->REPR->name, MVM_6model_get_stable_debug_name(tc, st));
 }
-AO_t * MVM_REPR_DEFAULT_ATTRIBUTE_AS_ATOMIC(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, uint16_t kind) {
+atomic_uintptr_t * MVM_REPR_DEFAULT_ATTRIBUTE_AS_ATOMIC(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, uint16_t kind) {
     die_no_attrs(tc, st->REPR->name, MVM_6model_get_stable_debug_name(tc, st));
 }
 GCC_DIAG_ON(return-type)
@@ -131,11 +131,11 @@ GCC_DIAG_OFF(return-type)
 MVMStorageSpec MVM_REPR_DEFAULT_GET_ELEM_STORAGE_SPEC(MVMThreadContext *tc, MVMSTable *st) {
     die_no_pos(tc, st->REPR->name, MVM_6model_get_stable_debug_name(tc, st));
 }
-AO_t * MVM_REPR_DEFAULT_POS_AS_ATOMIC(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+atomic_uintptr_t * MVM_REPR_DEFAULT_POS_AS_ATOMIC(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
                                       void *data, int64_t index) {
     die_no_pos(tc, st->REPR->name, MVM_6model_get_stable_debug_name(tc, st));
 }
-AO_t * MVM_REPR_DEFAULT_POS_AS_ATOMIC_MULTIDIM(MVMThreadContext *tc, MVMSTable *st,
+atomic_uintptr_t * MVM_REPR_DEFAULT_POS_AS_ATOMIC_MULTIDIM(MVMThreadContext *tc, MVMSTable *st,
                                                MVMObject *root, void *data,
                                                int64_t num_indices, int64_t *indices) {
     die_no_pos(tc, st->REPR->name, MVM_6model_get_stable_debug_name(tc, st));

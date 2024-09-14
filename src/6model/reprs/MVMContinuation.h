@@ -19,7 +19,7 @@ struct MVMContinuationBody {
      * on continuations being one-shot, for example to know ->work can really
      * be cleared safely and that we'll never be running the same continuation
      * re-invocation on two threads at once). */
-    AO_t invoked;
+    atomic_uintptr_t invoked;
 
     /* If the continuationcontrol operation said to protect the tag, then we
      * keep it here so we can reinstate it. */

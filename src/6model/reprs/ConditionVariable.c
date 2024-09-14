@@ -124,7 +124,7 @@ MVMObject * MVM_conditionvariable_from_lock(MVMThreadContext *tc, MVMReentrantMu
  * releasing, waiting, and then re-acquiring the lock. */
 void MVM_conditionvariable_wait(MVMThreadContext *tc, MVMConditionVariable *cv) {
     MVMReentrantMutex *rm = (MVMReentrantMutex *)cv->body.mutex;
-    AO_t orig_rec_level;
+    atomic_uintptr_t orig_rec_level;
     unsigned int interval_id;
 
     if (MVM_load(&rm->body.holder_id) != tc->thread_id)

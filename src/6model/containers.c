@@ -1039,7 +1039,7 @@ void MVM_6model_container_atomic_store(MVMThreadContext *tc, MVMObject *cont, MV
     }
 }
 
-static AO_t * native_ref_as_atomic_i(MVMThreadContext *tc, MVMObject *cont) {
+static atomic_uintptr_t * native_ref_as_atomic_i(MVMThreadContext *tc, MVMObject *cont) {
     if (REPR(cont)->ID == MVM_REPR_ID_NativeRef && IS_CONCRETE(cont)) {
         MVMNativeRefREPRData *repr_data = (MVMNativeRefREPRData *)STABLE(cont)->REPR_data;
         if (repr_data->primitive_type == MVM_STORAGE_SPEC_BP_INT) {

@@ -33,9 +33,9 @@ struct MVMConfigurationProgram {
 
     int16_t entrypoints[MVM_PROGRAM_ENTRYPOINT_COUNT];
 
-    AO_t return_counts[16];
-    AO_t last_return_time[16];
-    AO_t invoke_counts[MVM_PROGRAM_ENTRYPOINT_COUNT];
+    atomic_uintptr_t return_counts[16];
+    atomic_uintptr_t last_return_time[16];
+    atomic_uintptr_t invoke_counts[MVM_PROGRAM_ENTRYPOINT_COUNT];
 
     uint8_t debugging_level;
 };

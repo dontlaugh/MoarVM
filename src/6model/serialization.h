@@ -100,7 +100,7 @@ struct MVMSerializationReader {
     uint32_t num_static_codes;
 
     /* Whether we're already working on these worklists. */
-    AO_t working;
+    atomic_uintptr_t working;
 
     /* Array of contexts (num_contexts in length). */
     MVMFrame **contexts;

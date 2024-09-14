@@ -25,7 +25,7 @@ struct MVMThreadBody {
     MVMThread *next;
 
     /* The current stage the thread is in (one of MVMThreadStages). */
-    AO_t stage;
+    atomic_uintptr_t stage;
 
     /* Thread's OS-level thread ID. */
     int64_t native_thread_id;

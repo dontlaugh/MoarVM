@@ -130,13 +130,13 @@ void MVM_tc_destroy(MVMThreadContext *tc) {
 
 /* Setting and clearing mutex to release on exception throw.
  * If the LSB of the mutex' address is set, it's not actually a mutex but a
- * simple flag (an AO_t) that will be cleared on release. */
+ * simple flag (an atomic_uintptr_t) that will be cleared on release. */
 void MVM_tc_set_ex_release_mutex(MVMThreadContext *tc, uv_mutex_t *mutex) {
     if (tc->ex_release_mutex)
         MVM_exception_throw_adhoc(tc, "Internal error: multiple ex_release_mutex");
     tc->ex_release_mutex = mutex;
 }
-void MVM_tc_set_ex_release_atomic(MVMThreadContext *tc, AO_t *flag) {
+void MVM_tc_set_ex_release_atomic(MVMThreadContext *tc, atomic_uintptr_t *flag) {
     if (tc->ex_release_mutex)
         MVM_exception_throw_adhoc(tc, "Internal error: multiple ex_release_mutex");
     tc->ex_release_mutex = (uv_mutex_t *)((uintptr_t)flag | 1);
@@ -144,7 +144,7 @@ void MVM_tc_set_ex_release_atomic(MVMThreadContext *tc, AO_t *flag) {
 void MVM_tc_release_ex_release_mutex(MVMThreadContext *tc) {
     if (tc->ex_release_mutex) {
         if (MVM_UNLIKELY((uintptr_t)tc->ex_release_mutex & 1)) {
-            *((AO_t*)((uintptr_t)tc->ex_release_mutex & ~(uintptr_t)1)) = 0;
+            *((atomic_uintptr_t*)((uintptr_t)tc->ex_release_mutex & ~(uintptr_t)1)) = 0;
         } else {
             uv_mutex_unlock(tc->ex_release_mutex);
         }

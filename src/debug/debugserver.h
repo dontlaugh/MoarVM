@@ -90,7 +90,7 @@ struct MVMDebugServerRequestData {
 
     MVMThreadContext *target_tc;
 
-    AO_t status;
+    atomic_uintptr_t status;
 
     union
     {

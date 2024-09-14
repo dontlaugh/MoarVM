@@ -480,7 +480,7 @@ static int64_t hint_for(MVMThreadContext *tc, MVMSTable *st, MVMObject *class_ke
 
 /* Gets an architecture atomic sized native integer attribute as an atomic
  * reference. */
-static AO_t * attribute_as_atomic(MVMThreadContext *tc, MVMSTable *st, void *data,
+static atomic_uintptr_t * attribute_as_atomic(MVMThreadContext *tc, MVMSTable *st, void *data,
                                   MVMObject *class_handle, MVMString *name,
                                   uint16_t kind) {
     MVMP6opaqueREPRData *repr_data = (MVMP6opaqueREPRData *)st->REPR_data;
@@ -496,14 +496,14 @@ static AO_t * attribute_as_atomic(MVMThreadContext *tc, MVMSTable *st, void *dat
             if (attr_st) {
                 const MVMStorageSpec *ss = attr_st->REPR->get_storage_spec(tc, attr_st);
                 if (ss->inlineable && ss->boxed_primitive == MVM_STORAGE_SPEC_BP_INT &&
-                        ss->bits / 8 == sizeof(AO_t))
-                    return (AO_t *)((char *)data + repr_data->attribute_offsets[slot]);
+                        ss->bits / 8 == sizeof(atomic_uintptr_t))
+                    return (atomic_uintptr_t *)((char *)data + repr_data->attribute_offsets[slot]);
             }
             MVM_exception_throw_adhoc(tc,
                 "Can only do an atomic integer operation on an atomicint attribute");
         }
         else if (kind == MVM_reg_obj) {
-            return (AO_t *)((char *)data + repr_data->attribute_offsets[slot]);
+            return (atomic_uintptr_t *)((char *)data + repr_data->attribute_offsets[slot]);
         }
         else {
             MVM_exception_throw_adhoc(tc,

@@ -6,10 +6,10 @@ struct MVMReentrantMutexBody {
     uv_mutex_t *mutex;
 
     /* Who currently holds the mutex, if anyone. */
-    AO_t holder_id;
+    atomic_uintptr_t holder_id;
 
     /* How many times we've taken the lock. */
-    AO_t lock_count;
+    atomic_uintptr_t lock_count;
 };
 struct MVMReentrantMutex {
     MVMObject common;

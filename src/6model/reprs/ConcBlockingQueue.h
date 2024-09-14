@@ -16,7 +16,7 @@ struct MVMConcBlockingQueueBody {
     MVMConcBlockingQueueNode *tail;
 
     /* Number of elements currently in the queue. */
-    AO_t elems;
+    atomic_uintptr_t elems;
 
     /* Locks and condition variables storage. */
     uv_mutex_t  head_lock;

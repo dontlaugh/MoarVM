@@ -779,7 +779,7 @@ static MVMStorageSpec get_elem_storage_spec(MVMThreadContext *tc, MVMSTable *st)
     return spec;
 }
 
-static AO_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable *st,
+static atomic_uintptr_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable *st,
                                      MVMObject *root, void *data,
                                      int64_t num_indices, int64_t *indices) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
@@ -787,12 +787,12 @@ static AO_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable *st,
         MVMMultiDimArrayBody *body = (MVMMultiDimArrayBody *)data;
         size_t flat_index = indices_to_flat_index(tc, repr_data->num_dimensions,
             body->dimensions, indices);
-        if (sizeof(AO_t) == 8 && (repr_data->slot_type == MVM_ARRAY_I64 ||
+        if (sizeof(atomic_uintptr_t) == 8 && (repr_data->slot_type == MVM_ARRAY_I64 ||
                 repr_data->slot_type == MVM_ARRAY_U64))
-            return (AO_t *)&(body->slots.i64[flat_index]);
-        if (sizeof(AO_t) == 4 && (repr_data->slot_type == MVM_ARRAY_I32 ||
+            return (atomic_uintptr_t *)&(body->slots.i64[flat_index]);
+        if (sizeof(atomic_uintptr_t) == 4 && (repr_data->slot_type == MVM_ARRAY_I32 ||
                 repr_data->slot_type == MVM_ARRAY_U32))
-            return (AO_t *)&(body->slots.i32[flat_index]);
+            return (atomic_uintptr_t *)&(body->slots.i32[flat_index]);
         MVM_exception_throw_adhoc(tc,
             "Can only do integer atomic operation on native integer array element of atomic size");
     }
@@ -803,7 +803,7 @@ static AO_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable *st,
     }
 }
 
-static AO_t * pos_as_atomic(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+static atomic_uintptr_t * pos_as_atomic(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
                             void *data, int64_t index) {
     return pos_as_atomic_multidim(tc, st, root, data, 1, &index);
 }

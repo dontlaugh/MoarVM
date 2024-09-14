@@ -1,6 +1,6 @@
 /* Representation used for a VM-provided decoder. */
 struct MVMDecoderBody {
-    AO_t in_use;
+    atomic_uintptr_t in_use;
     MVMDecodeStream *ds;
     MVMDecodeStreamSeparators *sep_spec;
 };

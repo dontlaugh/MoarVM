@@ -28,7 +28,7 @@ static uint32_t signal_one_thread(MVMThreadContext *tc, MVMThreadContext *to_sig
      * thread may change between the two ways we try to twiddle it). */
     unsigned int had_suspend_request = 0;
     while (1) {
-        AO_t current = MVM_load(&to_signal->gc_status);
+        atomic_uintptr_t current = MVM_load(&to_signal->gc_status);
         switch (AO_READ(current)) {
             case MVMGCStatus_NONE:
                 /* Try to set it from running to interrupted - the common case. */
@@ -373,7 +373,7 @@ void MVM_gc_mark_thread_unblocked(MVMThreadContext *tc) {
  * these cases are handled in MVM_gc_mark_thread_unblocked. Note that this
  * relies on a thread itself only ever calling block/unblock. */
 int32_t MVM_gc_is_thread_blocked(MVMThreadContext *tc) {
-    AO_t gc_status = MVM_load(&(tc->gc_status)) & MVMGCSTATUS_MASK;
+    atomic_uintptr_t gc_status = MVM_load(&(tc->gc_status)) & MVMGCSTATUS_MASK;
     return gc_status == MVMGCStatus_UNABLE ||
            gc_status == MVMGCStatus_STOLEN;
 }

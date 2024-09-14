@@ -1095,7 +1095,7 @@ static MVMStorageSpec get_elem_storage_spec(MVMThreadContext *tc, MVMSTable *st)
     return spec;
 }
 
-static AO_t * pos_as_atomic(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+static atomic_uintptr_t * pos_as_atomic(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
                             void *data, int64_t index) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
@@ -1106,17 +1106,17 @@ static AO_t * pos_as_atomic(MVMThreadContext *tc, MVMSTable *st, MVMObject *root
     if (index < 0 || (uint64_t)index >= body->elems)
         MVM_exception_throw_adhoc(tc, "Index out of bounds in atomic operation on array");
 
-    if (sizeof(AO_t) == 8 && (repr_data->slot_type == MVM_ARRAY_I64 ||
+    if (sizeof(atomic_uintptr_t) == 8 && (repr_data->slot_type == MVM_ARRAY_I64 ||
             repr_data->slot_type == MVM_ARRAY_U64))
-        return (AO_t *)&(body->slots.i64[body->start + index]);
-    if (sizeof(AO_t) == 4 && (repr_data->slot_type == MVM_ARRAY_I32 ||
+        return (atomic_uintptr_t *)&(body->slots.i64[body->start + index]);
+    if (sizeof(atomic_uintptr_t) == 4 && (repr_data->slot_type == MVM_ARRAY_I32 ||
             repr_data->slot_type == MVM_ARRAY_U32))
-        return (AO_t *)&(body->slots.i32[body->start + index]);
+        return (atomic_uintptr_t *)&(body->slots.i32[body->start + index]);
     MVM_exception_throw_adhoc(tc,
         "Can only do integer atomic operation on native integer array element of atomic size");
 }
 
-static AO_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+static atomic_uintptr_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
                                      void *data, int64_t num_indices, int64_t *indices) {
     if (num_indices != 1)
         MVM_exception_throw_adhoc(tc,

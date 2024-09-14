@@ -141,7 +141,7 @@ static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void
 static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     MVMConcBlockingQueueBody *body = *(MVMConcBlockingQueueBody**)data;
     MVMConcBlockingQueueNode *add;
-    AO_t orig_elems;
+    atomic_uintptr_t orig_elems;
     MVMObject *to_add = value.o;
     unsigned int interval_id;
 

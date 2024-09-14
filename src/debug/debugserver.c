@@ -691,7 +691,7 @@ static void request_all_threads_suspend(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
     cur_thread = vm->threads;
     while (cur_thread) {
         if (is_thread_id_eligible(vm, cur_thread->body.thread_id)) {
-            AO_t current = MVM_load(&cur_thread->body.tc->gc_status);
+            atomic_uintptr_t current = MVM_load(&cur_thread->body.tc->gc_status);
             if (current == MVMGCStatus_NONE || current == MVMGCStatus_UNABLE) {
                 int32_t result = request_thread_suspends(dtc, ctx, argument, cur_thread);
                 if (result == 1) {
@@ -716,7 +716,7 @@ static int32_t request_thread_resumes(MVMThreadContext *dtc, cmp_ctx_t *ctx, req
     MVMThread *to_do = thread ? thread : find_thread_by_id(vm, argument->thread_id);
     MVMThreadContext *tc = to_do ? to_do->body.tc : NULL;
     int32_t is_one = !argument || argument->type != MT_ResumeAll;
-    AO_t current;
+    atomic_uintptr_t current;
 
     if (!tc) {
         return 1;
@@ -787,7 +787,7 @@ static void request_all_threads_resume(MVMThreadContext *dtc, cmp_ctx_t *ctx, re
     MVMROOT(dtc, cur_thread) {
         while (cur_thread) {
             if (cur_thread != dtc->thread_obj) {
-                AO_t current = MVM_load(&cur_thread->body.tc->gc_status);
+                atomic_uintptr_t current = MVM_load(&cur_thread->body.tc->gc_status);
                 if (current == (MVMGCStatus_UNABLE | MVMSuspendState_SUSPENDED) ||
                         current == (MVMGCStatus_UNABLE | MVMSuspendState_SUSPEND_REQUEST) ||
                         current == (MVMGCStatus_INTERRUPT | MVMSuspendState_SUSPEND_REQUEST) ||
@@ -956,7 +956,7 @@ static void send_thread_info(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data
         cmp_write_bool(ctx, cur_thread->body.app_lifetime);
 
         cmp_write_str(ctx, "suspended", 9);
-        AO_t curr_gc_status = MVM_load(&cur_thread->body.tc->gc_status);
+        atomic_uintptr_t curr_gc_status = MVM_load(&cur_thread->body.tc->gc_status);
         cmp_write_bool(ctx, (curr_gc_status & MVMSUSPENDSTATUS_MASK) != MVMSuspendState_NONE);
 
         cmp_write_str(ctx, "num_locks", 9);

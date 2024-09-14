@@ -26,7 +26,7 @@ struct MVMJitCode {
     uint32_t      spill_size;
     uint32_t      seq_nr;
 
-    AO_t ref_cnt;
+    atomic_uintptr_t ref_cnt;
 };
 
 MVMJitCode* MVM_jit_compile_graph(MVMThreadContext *tc, MVMJitGraph *graph);

@@ -136,7 +136,7 @@ struct MVMInstance {
     MVMThreadContext *main_thread;
 
     /* The ID to allocate the next-created thread. */
-    AO_t next_user_thread_id;
+    atomic_uintptr_t next_user_thread_id;
 
     /* MVMThreads completed starting, running, and/or exited. Modifications
      * and walks that need an accurate picture of it protected by mutex. */
@@ -161,7 +161,7 @@ struct MVMInstance {
 
     /* The current GC run sequence number. May wrap around over time; that
      * is fine since only equality ever matters. */
-    AO_t gc_seq_number;
+    atomic_uintptr_t gc_seq_number;
 
     /* Mutex used to protect GC orchestration state, and held to wait on or
      * signal condition variable changes. */
@@ -169,17 +169,17 @@ struct MVMInstance {
 
     /* The number of threads that vote for starting GC, and condition variable
      * for when it changes. */
-    AO_t gc_start;
+    atomic_uintptr_t gc_start;
     uv_cond_t cond_gc_start;
 
     /* The number of threads that still need to vote for considering GC done,
      * and condition variable for when it changes. */
-    AO_t gc_finish;
+    atomic_uintptr_t gc_finish;
     uv_cond_t cond_gc_finish;
 
     /* Whether the coordinator considers all in-trays clear, and condition
      * variable for when it changes. */
-    AO_t gc_intrays_clearing;
+    atomic_uintptr_t gc_intrays_clearing;
     uv_cond_t cond_gc_intrays_clearing;
 
     /* Condition variable for threads that were marked blocked for GC, but
@@ -189,11 +189,11 @@ struct MVMInstance {
 
     /* Whether the coordinator considers the run to be fully completed,
      * including cleanup of exited threads. */
-    AO_t gc_completed;
+    atomic_uintptr_t gc_completed;
     uv_cond_t cond_gc_completed;
 
     /* The number of threads that have yet to acknowledge the finish. */
-    AO_t gc_ack;
+    atomic_uintptr_t gc_ack;
 
     /* Linked list (via forwarder) of STables to free. */
     MVMSTable *stables_to_free;
@@ -208,7 +208,7 @@ struct MVMInstance {
 
     /* How many bytes of data have we promoted from the nursery to gen2
      * since we last did a full collection? */
-    AO_t gc_promoted_bytes_since_last_full;
+    atomic_uintptr_t gc_promoted_bytes_since_last_full;
 
     /* The thread that is "to blame" for the current GC run (e.g. the one
      * that filled its nursery fastest). */
@@ -420,7 +420,7 @@ struct MVMInstance {
     uv_mutex_t mutex_int_const_cache;
 
     /* Next type cache ID, to go in STable. */
-    AO_t cur_type_cache_id;
+    atomic_uintptr_t cur_type_cache_id;
 
     /* Cached backend config hash. */
     MVMObject *cached_backend_config;
@@ -428,7 +428,7 @@ struct MVMInstance {
     /* Interned callsites. */
     MVMCallsiteInterns *callsite_interns;
     uv_mutex_t          mutex_callsite_interns;
-    AO_t                num_callsite_interns;
+    atomic_uintptr_t                num_callsite_interns;
 
     /* Normal Form Grapheme state (synthetics table, lookup, etc.). */
     MVMNFGState *nfg;

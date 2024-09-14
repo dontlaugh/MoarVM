@@ -33,7 +33,7 @@ struct MVMArrayBody {
     } slots;
 
 #if MVM_ARRAY_CONC_DEBUG
-    AO_t in_use;
+    atomic_uintptr_t in_use;
 #endif 
 };
 struct MVMArray {
