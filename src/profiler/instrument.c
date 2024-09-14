@@ -8,7 +8,7 @@ typedef struct {
 } NodeWorklist;
 
 /* Adds an instruction to log an allocation. */
-static void add_allocation_logging_at_location(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins, MVMSpeshIns *location) {
+static void add_allocation_logging_at_location(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins, MVMSpeshIns *location) {
     MVMSpeshIns *alloc_ins = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
     alloc_ins->info        = MVM_op_get_op(MVM_OP_prof_allocated);
     alloc_ins->operands    = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshOperand));
@@ -16,11 +16,11 @@ static void add_allocation_logging_at_location(MVMThreadContext *tc, MVMSpeshGra
     MVM_spesh_manipulate_insert_ins(tc, bb, location, alloc_ins);
 }
 
-static void add_allocation_logging(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void add_allocation_logging(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     add_allocation_logging_at_location(tc, g, bb, ins, ins);
 }
 
-static void add_nativecall_logging(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void add_nativecall_logging(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshIns *enter_ins = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
     MVMSpeshIns *exit_ins  = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
 
@@ -35,7 +35,7 @@ static void add_nativecall_logging(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSp
     MVM_spesh_manipulate_insert_ins(tc, bb, ins, exit_ins);
 }
 
-static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
+static void instrument_graph(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     /* Insert entry instruction. */
     MVMSpeshBB *bb         = g->entry->linear_next;
     MVMSpeshIns *enter_ins = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
@@ -317,7 +317,7 @@ static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
 }
 
 /* Adds instrumented versions of the unspecialized bytecode. */
-static void add_instrumentation(MVMThreadContext *tc, MVMStaticFrame *sf) {
+static void add_instrumentation(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     MVMSpeshCode  *sc;
     MVMStaticFrameInstrumentation *ins;
     MVMSpeshGraph *sg = MVM_spesh_graph_create(tc, sf, 1, 0);
@@ -337,7 +337,7 @@ static void add_instrumentation(MVMThreadContext *tc, MVMStaticFrame *sf) {
 
 /* Instruments a static frame for profiling, or uses an existing
  * instrumentation if it exists. */
-void MVM_profile_instrument(MVMThreadContext *tc, MVMStaticFrame *sf) {
+void MVM_profile_instrument(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     if (!sf->body.instrumentation || sf->body.bytecode != sf->body.instrumentation->instrumented_bytecode) {
         /* Handle main, non-specialized, bytecode. */
         if (!sf->body.instrumentation)
@@ -354,7 +354,7 @@ void MVM_profile_instrument(MVMThreadContext *tc, MVMStaticFrame *sf) {
 }
 
 /* Ensures we're no longer in instrumented code. */
-void MVM_profile_ensure_uninstrumented(MVMThreadContext *tc, MVMStaticFrame *sf) {
+void MVM_profile_ensure_uninstrumented(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     /* XXX due to multithreading trouble, just turning instrumentation off by
      * switching bytecode back does not work. Profiling instrumentation is
      * safe to keep around with only a small performance penalty, and CTW
@@ -363,7 +363,7 @@ void MVM_profile_ensure_uninstrumented(MVMThreadContext *tc, MVMStaticFrame *sf)
 }
 
 /* Starts instrumented profiling. */
-void MVM_profile_instrumented_start(MVMThreadContext *tc, MVMObject *config) {
+void MVM_profile_instrumented_start(struct MVMThreadContext *tc, MVMObject *config) {
     /* Wait for specialization thread to stop working, so it won't trip over
      * bytecode instrumentation, then enable profiling. */
     MVM_gc_mark_thread_blocked(tc);
@@ -377,19 +377,19 @@ void MVM_profile_instrumented_start(MVMThreadContext *tc, MVMObject *config) {
 }
 
 /* Simple allocation functions. */
-static MVMObject * new_array(MVMThreadContext *tc) {
+static MVMObject * new_array(struct MVMThreadContext *tc) {
     return MVM_repr_alloc_init(tc, MVM_hll_current(tc)->slurpy_array_type);
 }
-static MVMObject * new_hash(MVMThreadContext *tc) {
+static MVMObject * new_hash(struct MVMThreadContext *tc) {
     return MVM_repr_alloc_init(tc, MVM_hll_current(tc)->slurpy_hash_type);
 }
-static MVMObject * box_i(MVMThreadContext *tc, int64_t i) {
+static MVMObject * box_i(struct MVMThreadContext *tc, int64_t i) {
     return MVM_repr_box_int(tc, MVM_hll_current(tc)->int_box_type, i);
 }
-static MVMObject * box_s(MVMThreadContext *tc, MVMString *s) {
+static MVMObject * box_s(struct MVMThreadContext *tc, MVMString *s) {
     return MVM_repr_box_str(tc, MVM_hll_current(tc)->str_box_type, s);
 }
-static MVMString * str(MVMThreadContext *tc, const char *buf) {
+static MVMString * str(struct MVMThreadContext *tc, const char *buf) {
     return MVM_string_ascii_decode_nt(tc, tc->instance->VMString, buf);
 }
 
@@ -448,12 +448,12 @@ typedef struct {
 } ProfDumpStrs;
 
 typedef struct {
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     ProfDumpStrs *pds;
     MVMObject *types_array;
 } ProfTcPdsStruct;
 
-static MVMObject * insert_if_not_exists(MVMThreadContext *tc, ProfDumpStrs *pds, MVMObject *storage, int64_t key) {
+static MVMObject * insert_if_not_exists(struct MVMThreadContext *tc, ProfDumpStrs *pds, MVMObject *storage, int64_t key) {
     uint64_t index;
     MVMObject *result;
     MVMObject *type_info_hash;
@@ -476,12 +476,12 @@ static MVMObject * insert_if_not_exists(MVMThreadContext *tc, ProfDumpStrs *pds,
     return result;
 }
 
-static void bind_extra_info(MVMThreadContext *tc, MVMObject *storage, MVMString *key, MVMObject *value) {
+static void bind_extra_info(struct MVMThreadContext *tc, MVMObject *storage, MVMString *key, MVMObject *value) {
     MVMObject *hash = MVM_repr_at_pos_o(tc, storage, 1);
     MVM_repr_bind_key_o(tc, hash, key, value);
 }
 
-static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds, const MVMProfileCallNode *pcn, MVMObject *types_array);
+static MVMObject * dump_call_graph_node(struct MVMThreadContext *tc, ProfDumpStrs *pds, const MVMProfileCallNode *pcn, MVMObject *types_array);
 static MVMObject * dump_call_graph_node_loop(ProfTcPdsStruct *tcpds, const MVMProfileCallNode *pcn) {
     uint32_t i;
     uint64_t exclusive_time = pcn->total_time;
@@ -531,7 +531,7 @@ static MVMObject * dump_call_graph_node_loop(ProfTcPdsStruct *tcpds, const MVMPr
     return node_hash;
 }
 
-static void add_type_to_types_array(MVMThreadContext *tc, ProfDumpStrs *pds, MVMObject *type, MVMObject *types_array) {
+static void add_type_to_types_array(struct MVMThreadContext *tc, ProfDumpStrs *pds, MVMObject *type, MVMObject *types_array) {
     MVMObject *type_info  = insert_if_not_exists(tc, pds, types_array, (int64_t)(uintptr_t)type);
 
     if (type_info) {
@@ -544,7 +544,7 @@ static void add_type_to_types_array(MVMThreadContext *tc, ProfDumpStrs *pds, MVM
 }
 
 /* Dumps a call graph node. */
-static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
+static MVMObject * dump_call_graph_node(struct MVMThreadContext *tc, ProfDumpStrs *pds,
                                         const MVMProfileCallNode *pcn, MVMObject *types_array) {
     MVMObject *node_hash  = new_hash(tc);
     uint32_t  i;
@@ -719,8 +719,8 @@ static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
 }
 
 /* Dumps data from a single thread. */
-static MVMObject * dump_thread_data(MVMThreadContext *tc, ProfDumpStrs *pds,
-                                    MVMThreadContext *othertc,
+static MVMObject * dump_thread_data(struct MVMThreadContext *tc, ProfDumpStrs *pds,
+                                    struct MVMThreadContext *othertc,
                                     const MVMProfileThreadData *ptd,
                                     MVMObject *types_data) {
     MVMObject *thread_hash = new_hash(tc);
@@ -828,7 +828,7 @@ static MVMObject * dump_thread_data(MVMThreadContext *tc, ProfDumpStrs *pds,
     return thread_hash;
 }
 
-void MVM_profile_dump_instrumented_data(MVMThreadContext *tc) {
+void MVM_profile_dump_instrumented_data(struct MVMThreadContext *tc) {
     if (tc->prof_data && tc->prof_data->collected_data) {
         ProfDumpStrs pds;
         MVMThread *thread;
@@ -908,7 +908,7 @@ void MVM_profile_dump_instrumented_data(MVMThreadContext *tc) {
         thread = tc->instance->threads;
 
         while (thread) {
-            MVMThreadContext *othertc = thread->body.tc;
+            struct MVMThreadContext *othertc = thread->body.tc;
             /* Check for othertc to exist because joining threads nulls out
              * the tc entry in the thread object. */
             if (othertc && othertc->prof_data && othertc != tc) {
@@ -930,7 +930,7 @@ void MVM_profile_dump_instrumented_data(MVMThreadContext *tc) {
 }
 
 /* Dumps data from all threads into an array of per-thread data. */
-static MVMObject * dump_data(MVMThreadContext *tc) {
+static MVMObject * dump_data(struct MVMThreadContext *tc) {
     MVMObject *collected_data;
 
     /* Build up threads array. */
@@ -949,7 +949,7 @@ static MVMObject * dump_data(MVMThreadContext *tc) {
 }
 
 /* Ends profiling, builds the result data structure, and returns it. */
-MVMObject * MVM_profile_instrumented_end(MVMThreadContext *tc) {
+MVMObject * MVM_profile_instrumented_end(struct MVMThreadContext *tc) {
 
     /* Disable profiling. */
     MVM_gc_mark_thread_blocked(tc);
@@ -966,7 +966,7 @@ MVMObject * MVM_profile_instrumented_end(MVMThreadContext *tc) {
 }
 
 
-static void mark_gc_entries(MVMThreadContext *tc, MVMProfileThreadData *ptd, MVMGCWorklist *worklist) {
+static void mark_gc_entries(struct MVMThreadContext *tc, MVMProfileThreadData *ptd, MVMGCWorklist *worklist) {
     uint32_t gci;
     for (gci = 0; gci < ptd->num_gcs; gci++) {
         MVMProfileGC *gc = &(ptd->gcs[gci]);
@@ -976,7 +976,7 @@ static void mark_gc_entries(MVMThreadContext *tc, MVMProfileThreadData *ptd, MVM
         }
     }
 }
-void MVM_profile_instrumented_mark_data(MVMThreadContext *tc, MVMGCWorklist *worklist) {
+void MVM_profile_instrumented_mark_data(struct MVMThreadContext *tc, MVMGCWorklist *worklist) {
     if (tc->prof_data) {
         MVMProfileThreadData *ptd = tc->prof_data;
         uint32_t index;
@@ -992,7 +992,7 @@ void MVM_profile_instrumented_mark_data(MVMThreadContext *tc, MVMGCWorklist *wor
     }
 }
 
-static void MVM_profile_free_nodes(MVMThreadContext *tc, MVMProfileCallNode *node, MVMProfileCallNode ***seen, size_t *seen_num, size_t *seen_alloc) {
+static void MVM_profile_free_nodes(struct MVMThreadContext *tc, MVMProfileCallNode *node, MVMProfileCallNode ***seen, size_t *seen_num, size_t *seen_alloc) {
     for (uint32_t i = 0; i < node->num_succ; i++) {
         int found = 0;
         for (size_t j = 0; j < *seen_num; j++)
@@ -1009,7 +1009,7 @@ static void MVM_profile_free_nodes(MVMThreadContext *tc, MVMProfileCallNode *nod
     MVM_free(node);
 }
 
-void MVM_profile_free_node(MVMThreadContext *tc, MVMProfileCallNode *node) {
+void MVM_profile_free_node(struct MVMThreadContext *tc, MVMProfileCallNode *node) {
     MVM_VECTOR_DECL(MVMProfileCallNode*, nodes);
     MVM_VECTOR_INIT(nodes, 0);
 
@@ -1018,7 +1018,7 @@ void MVM_profile_free_node(MVMThreadContext *tc, MVMProfileCallNode *node) {
     MVM_VECTOR_DESTROY(nodes);
 }
 
-void MVM_profile_instrumented_free_data(MVMThreadContext *tc) {
+void MVM_profile_instrumented_free_data(struct MVMThreadContext *tc) {
     if (tc->prof_data) {
         MVMProfileThreadData *ptd = tc->prof_data;
         MVMProfileCallNode *node = ptd->call_graph;
@@ -1036,7 +1036,7 @@ void MVM_profile_instrumented_free_data(MVMThreadContext *tc) {
     }
 }
 
-static void dump_callgraph_node(MVMThreadContext *tc, MVMProfileCallNode *n, uint16_t depth) {
+static void dump_callgraph_node(struct MVMThreadContext *tc, MVMProfileCallNode *n, uint16_t depth) {
     uint16_t dc = depth;
     uint32_t idx;
     char *name = NULL;
@@ -1056,7 +1056,7 @@ static void dump_callgraph_node(MVMThreadContext *tc, MVMProfileCallNode *n, uin
     }
 }
 
-void MVM_dump_callgraph(MVMThreadContext *tc) {
+void MVM_dump_callgraph(struct MVMThreadContext *tc) {
     MVMProfileThreadData *ptd = tc->prof_data;
     MVMProfileCallNode *pcn = ptd->call_graph;
     fprintf(stderr, "\n----------\nCall Graph of TC %p\n\n", tc);

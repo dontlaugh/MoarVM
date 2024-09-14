@@ -14,10 +14,10 @@ typedef struct {
 } WorkToPass;
 
 /* Forward decls. */
-static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, WorkToPass *wtp, uint8_t gen);
-static void pass_work_item(MVMThreadContext *tc, WorkToPass *wtp, MVMCollectable **item_ptr);
-static void pass_leftover_work(MVMThreadContext *tc, WorkToPass *wtp);
-static void add_in_tray_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist);
+static void process_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, WorkToPass *wtp, uint8_t gen);
+static void pass_work_item(struct MVMThreadContext *tc, WorkToPass *wtp, MVMCollectable **item_ptr);
+static void pass_leftover_work(struct MVMThreadContext *tc, WorkToPass *wtp);
+static void add_in_tray_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist);
 
 /* The size of the nursery that a new thread should get. The main thread will
  * get a full-size one right away. */
@@ -49,7 +49,7 @@ uint32_t MVM_gc_new_thread_nursery_size(MVMInstance *i) {
  *
  * Note that it adds the roots and processes them in phases, to try to avoid
  * building up a huge worklist. */
-void MVM_gc_collect(MVMThreadContext *tc, uint8_t what_to_do, uint8_t gen) {
+void MVM_gc_collect(struct MVMThreadContext *tc, uint8_t what_to_do, uint8_t gen) {
     /* Create a GC worklist. */
     MVMGCWorklist *worklist = MVM_gc_worklist_create(tc, gen != MVMGCGenerations_Nursery);
 
@@ -161,7 +161,7 @@ void MVM_gc_collect(MVMThreadContext *tc, uint8_t what_to_do, uint8_t gen) {
 }
 
 /* Processes the current worklist. */
-static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, WorkToPass *wtp, uint8_t gen) {
+static void process_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, WorkToPass *wtp, uint8_t gen) {
     MVMGen2Allocator  *gen2;
     MVMCollectable   **item_ptr;
     MVMCollectable    *new_addr;
@@ -346,7 +346,7 @@ static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, Work
 }
 
 /* Marks a collectable item (object, type object, STable). */
-void MVM_gc_mark_collectable(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMCollectable *new_addr) {
+void MVM_gc_mark_collectable(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMCollectable *new_addr) {
     uint16_t i;
     uint32_t sc_idx;
 
@@ -414,11 +414,11 @@ void MVM_gc_mark_collectable(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMC
 }
 
 /* Adds a chunk of work to another thread's in-tray. */
-static void push_work_to_thread_in_tray(MVMThreadContext *tc, uint32_t target, MVMGCPassedWork *work) {
+static void push_work_to_thread_in_tray(struct MVMThreadContext *tc, uint32_t target, MVMGCPassedWork *work) {
     MVMGCPassedWork * volatile *target_tray;
 
     /* Locate the thread to pass the work to. */
-    MVMThreadContext *target_tc = NULL;
+    struct MVMThreadContext *target_tc = NULL;
     if (target == 1) {
         /* It's going to the main thread. */
         target_tc = tc->instance->main_thread;
@@ -448,7 +448,7 @@ static void push_work_to_thread_in_tray(MVMThreadContext *tc, uint32_t target, M
 
 /* Adds work to list of items to pass over to another thread, and if we
  * reach the pass threshold then does the passing. */
-static void pass_work_item(MVMThreadContext *tc, WorkToPass *wtp, MVMCollectable **item_ptr) {
+static void pass_work_item(struct MVMThreadContext *tc, WorkToPass *wtp, MVMCollectable **item_ptr) {
     ThreadWork *target_info = NULL;
     uint32_t   target      = (*item_ptr)->owner;
     uint32_t   j;
@@ -490,7 +490,7 @@ static void pass_work_item(MVMThreadContext *tc, WorkToPass *wtp, MVMCollectable
 }
 
 /* Passes all work for other threads that we've got left in our to-pass list. */
-static void pass_leftover_work(MVMThreadContext *tc, WorkToPass *wtp) {
+static void pass_leftover_work(struct MVMThreadContext *tc, WorkToPass *wtp) {
     uint32_t j;
     for (j = 0; j < wtp->num_target_threads; j++)
         if (wtp->target_work[j].work)
@@ -499,7 +499,7 @@ static void pass_leftover_work(MVMThreadContext *tc, WorkToPass *wtp) {
 }
 
 /* Takes work in a thread's in-tray, if any, and adds it to the worklist. */
-static void add_in_tray_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist) {
+static void add_in_tray_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist) {
     MVMGCPassedWork * volatile *in_tray = &tc->gc_in_tray;
     MVMGCPassedWork *head;
 
@@ -527,7 +527,7 @@ static void add_in_tray_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklis
 }
 
 /* Save dead STable pointers to delete later.. */
-static void MVM_gc_collect_enqueue_stable_for_deletion(MVMThreadContext *tc, MVMSTable *st) {
+static void MVM_gc_collect_enqueue_stable_for_deletion(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMSTable *old_head;
 #ifdef MVM_USE_OVERFLOW_SERIALIZATION_INDEX
     assert(!(st->header.flags1 & MVM_CF_SERIALZATION_INDEX_ALLOCATED));
@@ -542,7 +542,7 @@ static void MVM_gc_collect_enqueue_stable_for_deletion(MVMThreadContext *tc, MVM
  * need to do some additional freeing, however. This goes through the
  * fromspace and does any needed work to free uncopied things (this may
  * run in parallel with the mutator, which will be operating on tospace). */
-void MVM_gc_collect_free_nursery_uncopied(MVMThreadContext *executing_thread, MVMThreadContext *tc, void *limit) {
+void MVM_gc_collect_free_nursery_uncopied(struct MVMThreadContext *executing_thread, struct MVMThreadContext *tc, void *limit) {
     /* We start scanning the fromspace, and keep going until we hit
      * the end of the area allocated in it. */
     void *scan = tc->nursery_fromspace;
@@ -614,7 +614,7 @@ void MVM_gc_collect_free_nursery_uncopied(MVMThreadContext *executing_thread, MV
 }
 
 /* Free STables (in any thread/generation!) queued to be freed. */
-void MVM_gc_collect_free_stables(MVMThreadContext *tc) {
+void MVM_gc_collect_free_stables(struct MVMThreadContext *tc) {
 #if MVM_GC_DEBUG < 3
     MVMSTable *st = tc->instance->stables_to_free;
     while (st) {
@@ -629,7 +629,7 @@ void MVM_gc_collect_free_stables(MVMThreadContext *tc) {
 
 /* Goes through the unmarked objects in the second generation heap and builds
  * free lists out of them. Also does any required finalization. */
-void MVM_gc_collect_free_gen2_unmarked(MVMThreadContext *executing_thread, MVMThreadContext *tc, int32_t global_destruction) {
+void MVM_gc_collect_free_gen2_unmarked(struct MVMThreadContext *executing_thread, struct MVMThreadContext *tc, int32_t global_destruction) {
     /* Visit each of the size class bins. */
     MVMGen2Allocator *gen2 = tc->gen2;
     uint32_t bin, obj_size, page, i;

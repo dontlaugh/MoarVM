@@ -171,33 +171,33 @@ struct MVMSerializationWriter {
 };
 
 /* Core serialize and deserialize functions. */
-void MVM_serialization_deserialize(MVMThreadContext *tc, MVMSerializationContext *sc,
+void MVM_serialization_deserialize(struct MVMThreadContext *tc, MVMSerializationContext *sc,
     MVMObject *string_heap, MVMObject *codes_static, MVMObject *repo_conflicts,
     MVMString *data);
-MVMString * MVM_sha1(MVMThreadContext *tc, MVMString *str);
-MVMObject * MVM_serialization_serialize(MVMThreadContext *tc, MVMSerializationContext *sc,
+MVMString * MVM_sha1(struct MVMThreadContext *tc, MVMString *str);
+MVMObject * MVM_serialization_serialize(struct MVMThreadContext *tc, MVMSerializationContext *sc,
     MVMObject *empty_string_heap, MVMObject *type);
 
 /* Functions for demanding an object/STable/code be made available (that is,
  * by lazily deserializing it). */
-MVMObject * MVM_serialization_demand_object(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
-MVMSTable * MVM_serialization_demand_stable(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
-MVMObject * MVM_serialization_demand_code(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
+MVMObject * MVM_serialization_demand_object(struct MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
+MVMSTable * MVM_serialization_demand_stable(struct MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
+MVMObject * MVM_serialization_demand_code(struct MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
 
 /* Reader/writer functions. */
-int64_t MVM_serialization_read_int64(MVMThreadContext *tc, MVMSerializationReader *reader);
-int64_t MVM_serialization_read_int(MVMThreadContext *tc, MVMSerializationReader *reader);
-double MVM_serialization_read_num(MVMThreadContext *tc, MVMSerializationReader *reader);
-MVMString * MVM_serialization_read_str(MVMThreadContext *tc, MVMSerializationReader *reader);
-void * MVM_serialization_read_ptr(MVMThreadContext *tc, MVMSerializationReader *reader, size_t *size);
-char * MVM_serialization_read_cstr(MVMThreadContext *tc, MVMSerializationReader *reader, size_t *len);
-MVM_PUBLIC MVMObject * MVM_serialization_read_ref(MVMThreadContext *tc, MVMSerializationReader *reader);
-MVMSTable * MVM_serialization_read_stable_ref(MVMThreadContext *tc, MVMSerializationReader *reader);
-void MVM_serialization_force_stable(MVMThreadContext *tc, MVMSerializationReader *reader, MVMSTable *st);
-void MVM_serialization_write_int(MVMThreadContext *tc, MVMSerializationWriter *writer, int64_t value);
-void MVM_serialization_write_num(MVMThreadContext *tc, MVMSerializationWriter *writer, double value);
-void MVM_serialization_write_str(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMString *value);
-void MVM_serialization_write_ptr(MVMThreadContext *tc, MVMSerializationWriter *writer, const void *ptr, size_t size);
-void MVM_serialization_write_cstr(MVMThreadContext *tc, MVMSerializationWriter *writer, const char *cstr);
-MVM_PUBLIC void MVM_serialization_write_ref(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMObject *ref);
-void MVM_serialization_write_stable_ref(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMSTable *st);
+int64_t MVM_serialization_read_int64(struct MVMThreadContext *tc, MVMSerializationReader *reader);
+int64_t MVM_serialization_read_int(struct MVMThreadContext *tc, MVMSerializationReader *reader);
+double MVM_serialization_read_num(struct MVMThreadContext *tc, MVMSerializationReader *reader);
+MVMString * MVM_serialization_read_str(struct MVMThreadContext *tc, MVMSerializationReader *reader);
+void * MVM_serialization_read_ptr(struct MVMThreadContext *tc, MVMSerializationReader *reader, size_t *size);
+char * MVM_serialization_read_cstr(struct MVMThreadContext *tc, MVMSerializationReader *reader, size_t *len);
+ MVMObject * MVM_serialization_read_ref(struct MVMThreadContext *tc, MVMSerializationReader *reader);
+MVMSTable * MVM_serialization_read_stable_ref(struct MVMThreadContext *tc, MVMSerializationReader *reader);
+void MVM_serialization_force_stable(struct MVMThreadContext *tc, MVMSerializationReader *reader, MVMSTable *st);
+void MVM_serialization_write_int(struct MVMThreadContext *tc, MVMSerializationWriter *writer, int64_t value);
+void MVM_serialization_write_num(struct MVMThreadContext *tc, MVMSerializationWriter *writer, double value);
+void MVM_serialization_write_str(struct MVMThreadContext *tc, MVMSerializationWriter *writer, MVMString *value);
+void MVM_serialization_write_ptr(struct MVMThreadContext *tc, MVMSerializationWriter *writer, const void *ptr, size_t size);
+void MVM_serialization_write_cstr(struct MVMThreadContext *tc, MVMSerializationWriter *writer, const char *cstr);
+ void MVM_serialization_write_ref(struct MVMThreadContext *tc, MVMSerializationWriter *writer, MVMObject *ref);
+void MVM_serialization_write_stable_ref(struct MVMThreadContext *tc, MVMSerializationWriter *writer, MVMSTable *st);

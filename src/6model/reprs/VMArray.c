@@ -4,7 +4,7 @@
 /* This representation's function pointer table. */
 static const MVMREPROps VMArray_this_repr;
 
-MVM_STATIC_INLINE void enter_single_user(MVMThreadContext *tc, MVMArrayBody *arr) {
+static inline void enter_single_user(struct MVMThreadContext *tc, MVMArrayBody *arr) {
 #if MVM_ARRAY_CONC_DEBUG
     if (!MVM_trycas(&(arr->in_use), 0, 1)) {
         MVM_dump_backtrace(tc);
@@ -12,7 +12,7 @@ MVM_STATIC_INLINE void enter_single_user(MVMThreadContext *tc, MVMArrayBody *arr
     }
 #endif
 }
-static void exit_single_user(MVMThreadContext *tc, MVMArrayBody *arr) {
+static void exit_single_user(struct MVMThreadContext *tc, MVMArrayBody *arr) {
 #if MVM_ARRAY_CONC_DEBUG
     arr->in_use = 0;
 #endif
@@ -23,7 +23,7 @@ static void exit_single_user(MVMThreadContext *tc, MVMArrayBody *arr) {
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable        *st = MVM_gc_allocate_stable(tc, &VMArray_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -45,7 +45,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 /* Copies the body of one object to another. The result has the space
  * needed for the current number of elements, which may not be the
  * entire allocated slot size. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *src_body  = (MVMArrayBody *)src;
     MVMArrayBody     *dest_body = (MVMArrayBody *)dest;
@@ -65,7 +65,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 }
 
 /* Adds held objects to the GC worklist. */
-static void VMArray_gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void VMArray_gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     uint64_t         elems     = body->elems;
@@ -109,13 +109,13 @@ static void VMArray_gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVM
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMArray *arr = (MVMArray *)obj;
     MVM_free(arr->body.slots.any);
 }
 
 /* Marks the representation data in an STable.*/
-static void gc_mark_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMGCWorklist *worklist) {
+static void gc_mark_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMGCWorklist *worklist) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     if (repr_data == NULL)
         return;
@@ -123,7 +123,7 @@ static void gc_mark_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMGCWorklist
 }
 
 /* Frees the representation data in an STable.*/
-static void gc_free_repr_data(MVMThreadContext *tc, MVMSTable *st) {
+static void gc_free_repr_data(struct MVMThreadContext *tc, MVMSTable *st) {
     MVM_free(st->REPR_data);
 }
 
@@ -139,11 +139,11 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
-void MVM_VMArray_at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind) {
+void MVM_VMArray_at_pos(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     uint64_t        real_index;
@@ -263,7 +263,7 @@ void MVM_VMArray_at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
     }
 }
 
-static uint64_t zero_slots(MVMThreadContext *tc, MVMArrayBody *body,
+static uint64_t zero_slots(struct MVMThreadContext *tc, MVMArrayBody *body,
         uint64_t elems, uint64_t ssize, uint8_t slot_type) {
     switch (slot_type) {
         case MVM_ARRAY_OBJ:
@@ -308,7 +308,7 @@ static uint64_t zero_slots(MVMThreadContext *tc, MVMArrayBody *body,
     return elems;
 }
 
-static void set_size_internal(MVMThreadContext *tc, MVMArrayBody *body, uint64_t n, MVMArrayREPRData *repr_data) {
+static void set_size_internal(struct MVMThreadContext *tc, MVMArrayBody *body, uint64_t n, MVMArrayREPRData *repr_data) {
     uint64_t   elems = body->elems;
     uint64_t   start = body->start;
     uint64_t   ssize = body->ssize;
@@ -381,7 +381,7 @@ static void set_size_internal(MVMThreadContext *tc, MVMArrayBody *body, uint64_t
     body->elems = n;
 }
 
-void MVM_VMArray_bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister value, uint16_t kind) {
+void MVM_VMArray_bind_pos(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister value, uint16_t kind) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     uint64_t        real_index;
@@ -466,12 +466,12 @@ void MVM_VMArray_bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, 
     exit_single_user(tc, body);
 }
 
-static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t elems(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMArrayBody *body = (MVMArrayBody *)data;
     return body->elems;
 }
 
-static void set_elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t count) {
+static void set_elems(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t count) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     enter_single_user(tc, body);
@@ -479,7 +479,7 @@ static void set_elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void
     exit_single_user(tc, body);
 }
 
-void MVM_VMArray_push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
+void MVM_VMArray_push(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     enter_single_user(tc, body);
@@ -551,7 +551,7 @@ void MVM_VMArray_push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void
     exit_single_user(tc, body);
 }
 
-static void pop(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
+static void pop(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     const uint64_t slot        = body->start + body->elems - 1;
@@ -630,7 +630,7 @@ static void pop(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data
     exit_single_user(tc, body);
 }
 
-static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
+static void unshift(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
 
@@ -729,7 +729,7 @@ static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
     exit_single_user(tc, body);
 }
 
-static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
+static void shift(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
 
@@ -836,7 +836,7 @@ static uint16_t slot_type_to_kind(uint8_t slot_type) {
     }
 }
 
-static void copy_elements(MVMThreadContext *tc, MVMObject *src, MVMObject *dest, int64_t s_offset, int64_t d_offset, int64_t elems) {
+static void copy_elements(struct MVMThreadContext *tc, MVMObject *src, MVMObject *dest, int64_t s_offset, int64_t d_offset, int64_t elems) {
     MVMArrayBody     *s_body      = (MVMArrayBody *)OBJECT_BODY(src);
     MVMArrayBody     *d_body      = (MVMArrayBody *)OBJECT_BODY(dest);
     MVMArrayREPRData *s_repr_data = REPR(src)->ID == MVM_REPR_ID_VMArray
@@ -872,7 +872,7 @@ static void copy_elements(MVMThreadContext *tc, MVMObject *src, MVMObject *dest,
     }
 }
 
-static void aslice(MVMThreadContext *tc, MVMSTable *st, MVMObject *src, void *data, MVMObject *dest, int64_t start, int64_t end) {
+static void aslice(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *src, void *data, MVMObject *dest, int64_t start, int64_t end) {
     MVMArrayBody     *s_body      = (MVMArrayBody *)data;
     MVMArrayBody     *d_body      = (MVMArrayBody *)OBJECT_BODY(dest);
     MVMArrayREPRData *d_repr_data = STABLE(dest)->REPR_data;
@@ -891,7 +891,7 @@ static void aslice(MVMThreadContext *tc, MVMSTable *st, MVMObject *src, void *da
     copy_elements(tc, src, dest, start, 0, elems);
 }
 
-static void write_buf(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, char *from, int64_t offset, uint64_t count) {
+static void write_buf(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, char *from, int64_t offset, uint64_t count) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     uint64_t start = body->start;
@@ -915,7 +915,7 @@ static void write_buf(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void
     memcpy(body->slots.u8 + (start + offset) * repr_data->elem_size, from, count);
 }
 
-static int64_t read_buf(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t offset, uint64_t count) {
+static int64_t read_buf(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t offset, uint64_t count) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     int64_t start = body->start;
@@ -941,7 +941,7 @@ static int64_t read_buf(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 
 /* This whole splice optimization can be optimized for the case we have two
  * MVMArray representation objects. */
-static void asplice(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *from, int64_t offset, uint64_t count) {
+static void asplice(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *from, int64_t offset, uint64_t count) {
     MVMArrayREPRData *repr_data   = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *body        = (MVMArrayBody *)data;
 
@@ -1024,31 +1024,31 @@ static void asplice(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
     copy_elements(tc, from, root, 0, offset, elems1);
 }
 
-static void at_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_indices, int64_t *indices, MVMRegister *result, uint16_t kind) {
+static void at_pos_multidim(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_indices, int64_t *indices, MVMRegister *result, uint16_t kind) {
     if (num_indices != 1)
         MVM_exception_throw_adhoc(tc, "A dynamic array can only be indexed with a single dimension");
     MVM_VMArray_at_pos(tc, st, root, data, indices[0], result, kind);
 }
 
-static void bind_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_indices, int64_t *indices, MVMRegister value, uint16_t kind) {
+static void bind_pos_multidim(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_indices, int64_t *indices, MVMRegister value, uint16_t kind) {
     if (num_indices != 1)
         MVM_exception_throw_adhoc(tc, "A dynamic array can only be indexed with a single dimension");
     MVM_VMArray_bind_pos(tc, st, root, data, indices[0], value, kind);
 }
 
-static void dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t *num_dimensions, int64_t **dimensions) {
+static void dimensions(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t *num_dimensions, int64_t **dimensions) {
     MVMArrayBody *body = (MVMArrayBody *)data;
     *num_dimensions = 1;
     *dimensions = (int64_t *) &(body->elems);
 }
 
-static void set_dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_dimensions, int64_t *dimensions) {
+static void set_dimensions(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_dimensions, int64_t *dimensions) {
     if (num_dimensions != 1)
         MVM_exception_throw_adhoc(tc, "A dynamic array can only have a single dimension");
     set_elems(tc, st, root, data, dimensions[0]);
 }
 
-static MVMStorageSpec get_elem_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static MVMStorageSpec get_elem_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMStorageSpec spec;
 
@@ -1095,7 +1095,7 @@ static MVMStorageSpec get_elem_storage_spec(MVMThreadContext *tc, MVMSTable *st)
     return spec;
 }
 
-static atomic_uintptr_t * pos_as_atomic(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+static atomic_uintptr_t * pos_as_atomic(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
                             void *data, int64_t index) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
@@ -1116,7 +1116,7 @@ static atomic_uintptr_t * pos_as_atomic(MVMThreadContext *tc, MVMSTable *st, MVM
         "Can only do integer atomic operation on native integer array element of atomic size");
 }
 
-static atomic_uintptr_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+static atomic_uintptr_t * pos_as_atomic_multidim(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
                                      void *data, int64_t num_indices, int64_t *indices) {
     if (num_indices != 1)
         MVM_exception_throw_adhoc(tc,
@@ -1125,7 +1125,7 @@ static atomic_uintptr_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable
 }
 
 /* Compose the representation. */
-static void spec_to_repr_data(MVMThreadContext *tc, MVMArrayREPRData *repr_data, const MVMStorageSpec *spec) {
+static void spec_to_repr_data(struct MVMThreadContext *tc, MVMArrayREPRData *repr_data, const MVMStorageSpec *spec) {
     switch (spec->boxed_primitive) {
         case MVM_STORAGE_SPEC_BP_UINT64:
         case MVM_STORAGE_SPEC_BP_INT:
@@ -1221,7 +1221,7 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMArrayREPRData *repr_data,
             break;
     }
 }
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
     MVMStringConsts         str_consts = tc->instance->str_consts;
     MVMArrayREPRData * const repr_data = (MVMArrayREPRData *)st->REPR_data;
 
@@ -1237,18 +1237,18 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMArray);
 }
 
 /* Serializes the REPR data. */
-static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
+static void serialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
     MVM_serialization_write_ref(tc, writer, repr_data->elem_type);
 }
 
 /* Deserializes representation data. */
-static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)MVM_malloc(sizeof(MVMArrayREPRData));
 
     MVMObject *type = MVM_serialization_read_ref(tc, reader);
@@ -1265,7 +1265,7 @@ static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerial
     }
 }
 
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *) st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     uint64_t i;
@@ -1329,7 +1329,7 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
     }
 }
 
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *) st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     uint64_t i;
@@ -1380,7 +1380,7 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
 }
 
 /* Bytecode specialization for this REPR. */
-static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void spesh(struct MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     switch (ins->info->opcode) {
     case MVM_OP_create: {
         if (!(st->mode_flags & MVM_FINALIZE_TYPE)) {
@@ -1416,13 +1416,13 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *) st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     return body->ssize * repr_data->elem_size;
 }
 
-static void describe_refs (MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
+static void describe_refs (struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *) st->REPR_data;
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     uint64_t         elems     = body->elems;
@@ -1454,13 +1454,13 @@ static void describe_refs (MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMST
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMArray_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMArray_initialize(struct MVMThreadContext *tc) {
     return &VMArray_this_repr;
 }
 
 /* devirtualized versions of bind_pos */
 
-static void vmarray_bind_pos_int64(MVMThreadContext *tc, MVMSTable *st, void *data, int64_t index, MVMRegister value) {
+static void vmarray_bind_pos_int64(struct MVMThreadContext *tc, MVMSTable *st, void *data, int64_t index, MVMRegister value) {
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     uint64_t        real_index;
 
@@ -1485,7 +1485,7 @@ static void vmarray_bind_pos_int64(MVMThreadContext *tc, MVMSTable *st, void *da
 
 /* devirtualized versions of at_pos */
 
-static void vmarray_at_pos_int64(MVMThreadContext *tc, MVMSTable *st, void *data, int64_t index, MVMRegister *value) {
+static void vmarray_at_pos_int64(struct MVMThreadContext *tc, MVMSTable *st, void *data, int64_t index, MVMRegister *value) {
     MVMArrayBody     *body      = (MVMArrayBody *)data;
     uint64_t        real_index;
 
@@ -1506,7 +1506,7 @@ static void vmarray_at_pos_int64(MVMThreadContext *tc, MVMSTable *st, void *data
 
 /* devirtualization dispatch function for the JIT to use */
 
-void *MVM_VMArray_find_fast_impl_for_jit(MVMThreadContext *tc, MVMSTable *st, int16_t op, uint16_t kind) {
+void *MVM_VMArray_find_fast_impl_for_jit(struct MVMThreadContext *tc, MVMSTable *st, int16_t op, uint16_t kind) {
     MVMArrayREPRData *repr_data = (MVMArrayREPRData *)st->REPR_data;
 
     switch (op) {

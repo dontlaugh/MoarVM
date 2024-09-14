@@ -2,6 +2,7 @@
 #define MVMSUSPENDSTATUS_MASK 12
 
 #define MVM_NUM_TEMP_BIGINTS 3
+#include <stdatomic.h>
 #include "tommath.h"
 
 /* Possible values for the thread execution interrupt flag. */
@@ -318,12 +319,12 @@ struct MVMThreadContext {
     MVMArgs *mark_args;
 };
 
-MVMThreadContext * MVM_tc_create(MVMThreadContext *parent, MVMInstance *instance);
-void MVM_tc_destroy(MVMThreadContext *tc);
-void MVM_tc_set_ex_release_mutex(MVMThreadContext *tc, uv_mutex_t *mutex);
-void MVM_tc_set_ex_release_atomic(MVMThreadContext *tc, atomic_uintptr_t *flag);
-void MVM_tc_release_ex_release_mutex(MVMThreadContext *tc);
-void MVM_tc_clear_ex_release_mutex(MVMThreadContext *tc);
+struct MVMThreadContext * MVM_tc_create(struct MVMThreadContext *parent, MVMInstance *instance);
+void MVM_tc_destroy(struct MVMThreadContext *tc);
+void MVM_tc_set_ex_release_mutex(struct MVMThreadContext *tc, uv_mutex_t *mutex);
+void MVM_tc_set_ex_release_atomic(struct MVMThreadContext *tc, atomic_uintptr_t *flag);
+void MVM_tc_release_ex_release_mutex(struct MVMThreadContext *tc);
+void MVM_tc_clear_ex_release_mutex(struct MVMThreadContext *tc);
 
 /* UV always defines this for Win32 but not Unix. Which is fine, as we can probe
  * for it on Unix more easily than on Win32. */
@@ -333,13 +334,13 @@ void MVM_tc_clear_ex_release_mutex(MVMThreadContext *tc);
 
 #ifdef MVM_THREAD_LOCAL
 
-extern MVM_THREAD_LOCAL MVMThreadContext *MVM_running_threads_context;
+extern MVM_THREAD_LOCAL struct MVMThreadContext *MVM_running_threads_context;
 
-MVM_STATIC_INLINE MVMThreadContext *MVM_get_running_threads_context(void) {
+static inline struct MVMThreadContext *MVM_get_running_threads_context(void) {
     return MVM_running_threads_context;
 }
 
-MVM_STATIC_INLINE void MVM_set_running_threads_context(MVMThreadContext *tc) {
+static inline void MVM_set_running_threads_context(struct MVMThreadContext *tc) {
     MVM_running_threads_context = tc;
 }
 
@@ -348,11 +349,11 @@ MVM_STATIC_INLINE void MVM_set_running_threads_context(MVMThreadContext *tc) {
 /* Fallback to an implememtation using UV's APIs (pretty much pthreads) */
 extern uv_key_t MVM_running_threads_context_key;
 
-MVM_STATIC_INLINE MVMThreadContext *MVM_get_running_threads_context(void) {
+static inline struct MVMThreadContext *MVM_get_running_threads_context(void) {
     return uv_key_get(&MVM_running_threads_context_key);
 }
 
-MVM_STATIC_INLINE void MVM_set_running_threads_context(MVMThreadContext *tc) {
+static inline void MVM_set_running_threads_context(struct MVMThreadContext *tc) {
     uv_key_set(&MVM_running_threads_context_key, tc);
 }
 

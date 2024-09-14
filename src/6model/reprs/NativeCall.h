@@ -25,4 +25,4 @@ struct MVMNativeCall {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMNativeCall_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMNativeCall_initialize(struct MVMThreadContext *tc);

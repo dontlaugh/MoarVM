@@ -11,7 +11,7 @@
     MVMThread *cur_thread = check_tc->instance->threads; \
     if (c) { \
         while (cur_thread) { \
-            MVMThreadContext *thread_tc = cur_thread->body.tc; \
+            struct MVMThreadContext *thread_tc = cur_thread->body.tc; \
             if (thread_tc && thread_tc->nursery_fromspace && \
                     (char *)(c) >= (char *)thread_tc->nursery_fromspace && \
                     (char *)(c) < (char *)thread_tc->nursery_fromspace + \

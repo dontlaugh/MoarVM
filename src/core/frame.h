@@ -10,10 +10,10 @@
  * return to be intercepted in some way, for things that need to do multiple
  * calls into the runloop in some C-managed process. Essentially, instead of
  * nested runloops, you just re-work the C code in question into CPS. */
-typedef void (* MVMSpecialReturn)(MVMThreadContext *tc, void *data);
+typedef void (* MVMSpecialReturn)(struct MVMThreadContext *tc, void *data);
 
 /* Function pointer for marking the special return handler data. */
-typedef void (* MVMSpecialReturnMark)(MVMThreadContext *tc, void *data,
+typedef void (* MVMSpecialReturnMark)(struct MVMThreadContext *tc, void *data,
                                       MVMGCWorklist *worklist);
 
 /* This represents an call frame, aka invocation record. It may exist either on
@@ -119,60 +119,60 @@ struct MVMFrameExtra {
 /* Checks if a frame is allocated on a call stack or on the heap. If it is on
  * the call stack, then it will have zeroed flags (since heap-allocated frames
  * always have the "I'm a heap frame" bit set - MVM_CF_FRAME). */
-MVM_STATIC_INLINE uint32_t MVM_FRAME_IS_ON_CALLSTACK(MVMThreadContext *tc, MVMFrame *frame) {
+static inline uint32_t MVM_FRAME_IS_ON_CALLSTACK(struct MVMThreadContext *tc, MVMFrame *frame) {
     return frame->header.flags1 == 0;
 }
 
 /* Forces a frame to the callstack if needed. Done as a static inline to make
  * the quite common case where nothing is needed cheaper. */
-MVM_PUBLIC MVMFrame * MVM_frame_move_to_heap(MVMThreadContext *tc, MVMFrame *frame);
-MVM_STATIC_INLINE MVMFrame * MVM_frame_force_to_heap(MVMThreadContext *tc, MVMFrame *frame) {
+ MVMFrame * MVM_frame_move_to_heap(struct MVMThreadContext *tc, MVMFrame *frame);
+static inline MVMFrame * MVM_frame_force_to_heap(struct MVMThreadContext *tc, MVMFrame *frame) {
     return MVM_FRAME_IS_ON_CALLSTACK(tc, frame)
         ? MVM_frame_move_to_heap(tc, frame)
         : frame;
 }
 
-MVMFrame * MVM_frame_debugserver_move_to_heap(MVMThreadContext *tc, MVMThreadContext *owner, MVMFrame *frame);
+MVMFrame * MVM_frame_debugserver_move_to_heap(struct MVMThreadContext *tc, struct MVMThreadContext *owner, MVMFrame *frame);
 
-MVMRegister * MVM_frame_initial_work(MVMThreadContext *tc, uint16_t *local_types,
+MVMRegister * MVM_frame_initial_work(struct MVMThreadContext *tc, uint16_t *local_types,
                                      uint16_t num_locals);
-void MVM_frame_dispatch(MVMThreadContext *tc, MVMCode *code, MVMArgs args, int32_t spesh_cand);
-MVM_PUBLIC void MVM_frame_dispatch_zero_args(MVMThreadContext *tc, MVMCode *code);
-void MVM_frame_dispatch_from_c(MVMThreadContext *tc, MVMCode *code,
+void MVM_frame_dispatch(struct MVMThreadContext *tc, MVMCode *code, MVMArgs args, int32_t spesh_cand);
+ void MVM_frame_dispatch_zero_args(struct MVMThreadContext *tc, MVMCode *code);
+void MVM_frame_dispatch_from_c(struct MVMThreadContext *tc, MVMCode *code,
         MVMCallStackArgsFromC *args_record, MVMRegister *return_value,
         MVMReturnType return_type);
-MVMFrame * MVM_frame_create_context_only(MVMThreadContext *tc, MVMStaticFrame *static_frame,
+MVMFrame * MVM_frame_create_context_only(struct MVMThreadContext *tc, MVMStaticFrame *static_frame,
         MVMObject *code_ref);
-void MVM_frame_setup_deopt(MVMThreadContext *tc, MVMFrame *frame, MVMStaticFrame *static_frame,
+void MVM_frame_setup_deopt(struct MVMThreadContext *tc, MVMFrame *frame, MVMStaticFrame *static_frame,
         MVMCode *code_ref);
-MVM_PUBLIC uint64_t MVM_frame_try_return(MVMThreadContext *tc);
-MVM_PUBLIC uint64_t MVM_frame_try_return_no_exit_handlers(MVMThreadContext *tc);
-void MVM_frame_unwind_to(MVMThreadContext *tc, MVMFrame *frame, uint8_t *abs_addr,
+ uint64_t MVM_frame_try_return(struct MVMThreadContext *tc);
+ uint64_t MVM_frame_try_return_no_exit_handlers(struct MVMThreadContext *tc);
+void MVM_frame_unwind_to(struct MVMThreadContext *tc, MVMFrame *frame, uint8_t *abs_addr,
                          uint32_t rel_addr, MVMObject *return_value, void *jit_return_label);
-MVM_PUBLIC void MVM_frame_destroy(MVMThreadContext *tc, MVMFrame *frame);
-MVM_PUBLIC MVMObject * MVM_frame_get_code_object(MVMThreadContext *tc, MVMCode *code);
-MVM_PUBLIC void MVM_frame_capturelex(MVMThreadContext *tc, MVMObject *code);
-MVM_PUBLIC void MVM_frame_capture_inner(MVMThreadContext *tc, MVMObject *code);
-MVM_PUBLIC MVMObject * MVM_frame_takeclosure(MVMThreadContext *tc, MVMObject *code);
-MVM_PUBLIC MVMObject * MVM_frame_vivify_lexical(MVMThreadContext *tc, MVMFrame *f, uint16_t idx);
-MVM_PUBLIC int MVM_frame_find_lexical_by_name(MVMThreadContext *tc, MVMString *name, uint16_t type, MVMRegister *result);
-MVM_PUBLIC void MVM_frame_bind_lexical_by_name(MVMThreadContext *tc, MVMString *name, uint16_t type, MVMRegister value);
-void MVM_frame_find_lexical_by_name_outer(MVMThreadContext *tc, MVMString *name, MVMRegister *result);
-MVM_PUBLIC int MVM_frame_find_lexical_by_name_rel(MVMThreadContext *tc, MVMString *name, MVMFrame *cur_frame, MVMRegister *result);
-MVMRegister * MVM_frame_lexical_lookup_using_frame_walker(MVMThreadContext *tc,
+ void MVM_frame_destroy(struct MVMThreadContext *tc, MVMFrame *frame);
+ MVMObject * MVM_frame_get_code_object(struct MVMThreadContext *tc, MVMCode *code);
+ void MVM_frame_capturelex(struct MVMThreadContext *tc, MVMObject *code);
+ void MVM_frame_capture_inner(struct MVMThreadContext *tc, MVMObject *code);
+ MVMObject * MVM_frame_takeclosure(struct MVMThreadContext *tc, MVMObject *code);
+ MVMObject * MVM_frame_vivify_lexical(struct MVMThreadContext *tc, MVMFrame *f, uint16_t idx);
+ int MVM_frame_find_lexical_by_name(struct MVMThreadContext *tc, MVMString *name, uint16_t type, MVMRegister *result);
+ void MVM_frame_bind_lexical_by_name(struct MVMThreadContext *tc, MVMString *name, uint16_t type, MVMRegister value);
+void MVM_frame_find_lexical_by_name_outer(struct MVMThreadContext *tc, MVMString *name, MVMRegister *result);
+ int MVM_frame_find_lexical_by_name_rel(struct MVMThreadContext *tc, MVMString *name, MVMFrame *cur_frame, MVMRegister *result);
+MVMRegister * MVM_frame_lexical_lookup_using_frame_walker(struct MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw, MVMString *name, uint16_t type);
-MVM_PUBLIC MVMRegister * MVM_frame_find_lexical_by_name_rel_caller(MVMThreadContext *tc, MVMString *name, MVMFrame *cur_caller_frame);
-MVMRegister * MVM_frame_find_dynamic_using_frame_walker(MVMThreadContext *tc,
+ MVMRegister * MVM_frame_find_lexical_by_name_rel_caller(struct MVMThreadContext *tc, MVMString *name, MVMFrame *cur_caller_frame);
+MVMRegister * MVM_frame_find_dynamic_using_frame_walker(struct MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw, MVMString *name, uint16_t *type, MVMFrame *initial_frame,
         int32_t vivify, MVMFrame **found_frame);
-MVMRegister * MVM_frame_find_contextual_by_name(MVMThreadContext *tc, MVMString *name, uint16_t *type, MVMFrame *cur_frame, int32_t vivify, MVMFrame **found_frame);
-void MVM_frame_getdynlex_with_frame_walker(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
+MVMRegister * MVM_frame_find_contextual_by_name(struct MVMThreadContext *tc, MVMString *name, uint16_t *type, MVMFrame *cur_frame, int32_t vivify, MVMFrame **found_frame);
+void MVM_frame_getdynlex_with_frame_walker(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
         MVMString *name, MVMRegister *result);
-void MVM_frame_getdynlex(MVMThreadContext *tc, MVMString *name, MVMFrame *cur_frame, MVMRegister *result);
-void MVM_frame_binddynlex(MVMThreadContext *tc, MVMString *name, MVMObject *value, MVMFrame *cur_frame);
-MVMRegister * MVM_frame_lexical(MVMThreadContext *tc, MVMFrame *f, MVMString *name);
-MVM_PUBLIC MVMRegister * MVM_frame_try_get_lexical(MVMThreadContext *tc, MVMFrame *f, MVMString *name, uint16_t type);
-uint16_t MVM_frame_translate_to_primspec(MVMThreadContext *tc, uint16_t kind);
-uint16_t MVM_frame_lexical_primspec(MVMThreadContext *tc, MVMFrame *f, MVMString *name);
-MVMFrameExtra * MVM_frame_extra(MVMThreadContext *tc, MVMFrame *f);
-MVMObject * MVM_frame_caller_code(MVMThreadContext *tc);
+void MVM_frame_getdynlex(struct MVMThreadContext *tc, MVMString *name, MVMFrame *cur_frame, MVMRegister *result);
+void MVM_frame_binddynlex(struct MVMThreadContext *tc, MVMString *name, MVMObject *value, MVMFrame *cur_frame);
+MVMRegister * MVM_frame_lexical(struct MVMThreadContext *tc, MVMFrame *f, MVMString *name);
+ MVMRegister * MVM_frame_try_get_lexical(struct MVMThreadContext *tc, MVMFrame *f, MVMString *name, uint16_t type);
+uint16_t MVM_frame_translate_to_primspec(struct MVMThreadContext *tc, uint16_t kind);
+uint16_t MVM_frame_lexical_primspec(struct MVMThreadContext *tc, MVMFrame *f, MVMString *name);
+MVMFrameExtra * MVM_frame_extra(struct MVMThreadContext *tc, MVMFrame *f);
+MVMObject * MVM_frame_caller_code(struct MVMThreadContext *tc);

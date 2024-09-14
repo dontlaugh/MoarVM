@@ -82,13 +82,13 @@ struct MVMNFGTrieNodeEntry {
 #define MVM_GRAPHEME_MAX_CODEPOINTS 1024
 
 /* Functions related to grapheme handling. */
-MVMGrapheme32 MVM_nfg_codes_to_grapheme(MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes);
-MVMGrapheme32 MVM_nfg_codes_to_grapheme_utf8_c8(MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes);
-MVMGrapheme32 MVM_nfg_crlf_grapheme(MVMThreadContext *tc);
-MVMNFGSynthetic * MVM_nfg_get_synthetic_info(MVMThreadContext *tc, MVMGrapheme32 synth);
-uint32_t MVM_nfg_get_case_change(MVMThreadContext *tc, MVMGrapheme32 codepoint, int32_t case_, MVMGrapheme32 **result);
-int32_t MVM_nfg_is_concat_stable(MVMThreadContext *tc, MVMString *a, MVMString *b);
+MVMGrapheme32 MVM_nfg_codes_to_grapheme(struct MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes);
+MVMGrapheme32 MVM_nfg_codes_to_grapheme_utf8_c8(struct MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes);
+MVMGrapheme32 MVM_nfg_crlf_grapheme(struct MVMThreadContext *tc);
+MVMNFGSynthetic * MVM_nfg_get_synthetic_info(struct MVMThreadContext *tc, MVMGrapheme32 synth);
+uint32_t MVM_nfg_get_case_change(struct MVMThreadContext *tc, MVMGrapheme32 codepoint, int32_t case_, MVMGrapheme32 **result);
+int32_t MVM_nfg_is_concat_stable(struct MVMThreadContext *tc, MVMString *a, MVMString *b);
 
 /* NFG subsystem initialization and cleanup. */
-void MVM_nfg_init(MVMThreadContext *tc);
-void MVM_nfg_destroy(MVMThreadContext *tc);
+void MVM_nfg_init(struct MVMThreadContext *tc);
+void MVM_nfg_destroy(struct MVMThreadContext *tc);

@@ -1,5 +1,5 @@
 /* Function for getting effective (JIT/specialized/original) bytecode. */
-MVM_STATIC_INLINE uint8_t * MVM_frame_effective_bytecode(MVMFrame *f) {
+static inline uint8_t * MVM_frame_effective_bytecode(MVMFrame *f) {
     MVMSpeshCandidate *spesh_cand = f->spesh_cand;
     if (spesh_cand)
         return spesh_cand->body.jitcode ? spesh_cand->body.jitcode->bytecode : spesh_cand->body.bytecode;
@@ -7,7 +7,7 @@ MVM_STATIC_INLINE uint8_t * MVM_frame_effective_bytecode(MVMFrame *f) {
 }
 
 /* Debugging assertion to check if JIT code is within a region. */
-MVM_STATIC_INLINE void MVM_jit_code_assert_within_region(MVMThreadContext *tc, MVMJitCode *code,
+static inline void MVM_jit_code_assert_within_region(struct MVMThreadContext *tc, MVMJitCode *code,
         void *address) {
 #if MVM_JIT_DEBUG
     int32_t ofs = (char*)address - (char*)code->func_ptr;
@@ -22,7 +22,7 @@ MVM_STATIC_INLINE void MVM_jit_code_assert_within_region(MVMThreadContext *tc, M
 /* Set the position in the currently executing frame. Done as a static inline
  * since in non-debug builds this is pretty much a single memory write, so the
  * call cost would dominate. */
-MVM_STATIC_INLINE void MVM_jit_code_set_cur_frame_position(MVMThreadContext *tc, MVMJitCode *code,
+static inline void MVM_jit_code_set_cur_frame_position(struct MVMThreadContext *tc, MVMJitCode *code,
         void *position) {
     MVM_jit_code_assert_within_region(tc, code, position);
     assert(tc->jit_return_address != NULL);
@@ -30,13 +30,13 @@ MVM_STATIC_INLINE void MVM_jit_code_set_cur_frame_position(MVMThreadContext *tc,
     *tc->jit_return_address = position;
 }
 
-void MVM_jit_code_enter(MVMThreadContext *tc, MVMJitCode *code, MVMCompUnit *cu);
-void * MVM_jit_code_get_current_position(MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame);
-void MVM_jit_code_set_current_position(MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame, void *position);
-uint32_t MVM_jit_code_get_active_deopt_idx(MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame);
+void MVM_jit_code_enter(struct MVMThreadContext *tc, MVMJitCode *code, MVMCompUnit *cu);
+void * MVM_jit_code_get_current_position(struct MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame);
+void MVM_jit_code_set_current_position(struct MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame, void *position);
+uint32_t MVM_jit_code_get_active_deopt_idx(struct MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame);
 /* split iterators because we don't want to allocate on this path */
-uint32_t MVM_jit_code_get_active_handlers(MVMThreadContext *tc, MVMJitCode *code, void *current_position, uint32_t i);
-uint32_t MVM_jit_code_get_active_inlines(MVMThreadContext *tc, MVMJitCode *code, void *current_position, uint32_t i);
+uint32_t MVM_jit_code_get_active_handlers(struct MVMThreadContext *tc, MVMJitCode *code, void *current_position, uint32_t i);
+uint32_t MVM_jit_code_get_active_inlines(struct MVMThreadContext *tc, MVMJitCode *code, void *current_position, uint32_t i);
 
 /* hackish interface */
-void MVM_jit_code_trampoline(MVMThreadContext *tc);
+void MVM_jit_code_trampoline(struct MVMThreadContext *tc);

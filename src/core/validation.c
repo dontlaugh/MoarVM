@@ -12,7 +12,7 @@
 #define GET_I16(pc, idx)    *((int16_t *)(pc + idx))
 #define GET_UI16(pc, idx)   *((uint16_t *)(pc + idx))
 
-MVM_STATIC_INLINE uint32_t GET_UI32(const uint8_t *pc, int32_t idx) {
+static inline uint32_t GET_UI32(const uint8_t *pc, int32_t idx) {
     uint32_t retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
@@ -29,7 +29,7 @@ enum {
 };
 
 typedef struct {
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     MVMCompUnit      *cu;
     MVMStaticFrame   *frame;
     uint32_t         loc_count;
@@ -120,7 +120,7 @@ static void ensure_no_remaining_args(Validator *val) {
 }
 
 
-MVM_STATIC_INLINE const MVMOpInfo * get_info(Validator *val, uint16_t opcode) {
+static inline const MVMOpInfo * get_info(Validator *val, uint16_t opcode) {
     const MVMOpInfo *info;
 
     if (opcode < MVM_OP_EXT_BASE) {
@@ -148,7 +148,7 @@ MVM_STATIC_INLINE const MVMOpInfo * get_info(Validator *val, uint16_t opcode) {
 }
 
 
-MVM_STATIC_INLINE void read_op(Validator *val) {
+static inline void read_op(Validator *val) {
     uint16_t  opcode;
     const MVMOpInfo *info;
     uint32_t  pos;
@@ -540,7 +540,7 @@ terminate_seq:
 
 
 /* Validate that a static frame's bytecode is executable by the interpreter. */
-void MVM_validate_static_frame(MVMThreadContext *tc,
+void MVM_validate_static_frame(struct MVMThreadContext *tc,
         MVMStaticFrame *static_frame) {
     MVMStaticFrameBody *fb = &static_frame->body;
     Validator val[1];

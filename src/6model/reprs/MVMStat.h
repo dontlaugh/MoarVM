@@ -11,5 +11,5 @@ struct MVMStat {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMStat_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMStat_initialize(struct MVMThreadContext *tc);
 

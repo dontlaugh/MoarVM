@@ -13,7 +13,7 @@
 typedef struct {
     int               signum;
     uv_signal_t       handle;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int               work_idx;
     MVMObject        *setup_notify_queue;
     MVMObject        *setup_notify_schedulee;
@@ -22,7 +22,7 @@ typedef struct {
 /* Signal callback; dispatches schedulee to the queue. */
 static void signal_cb(uv_signal_t *handle, int sig_num) {
     SignalInfo       *si  = (SignalInfo *)handle->data;
-    MVMThreadContext *tc  = si->tc;
+    struct MVMThreadContext *tc  = si->tc;
     MVMObject        *arr = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
     MVMAsyncTask     *t   = MVM_io_eventloop_get_active_work(tc, si->work_idx);
     MVM_repr_push_o(tc, arr, t->body.schedulee);
@@ -35,7 +35,7 @@ static void signal_cb(uv_signal_t *handle, int sig_num) {
 }
 
 /* Sets the signal handler up on the event loop. */
-static void setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     SignalInfo *si = (SignalInfo *)data;
     uv_signal_init(loop, &si->handle);
     si->work_idx    = MVM_io_eventloop_add_active_work(tc, async_task);
@@ -58,7 +58,7 @@ static void free_on_close_cb(uv_handle_t *handle) {
     MVM_io_eventloop_remove_active_work(si->tc, &(si->work_idx));
 }
 
-static void cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void cancel(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     SignalInfo *si = (SignalInfo *)data;
     if (si->work_idx >= 0) {
         if (!uv_is_closing((uv_handle_t *)&(si->handle)))
@@ -67,14 +67,14 @@ static void cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task,
     }
 }
 
-static void gc_mark(MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
     SignalInfo *si = (SignalInfo *)data;
     MVM_gc_worklist_add(tc, worklist, &si->setup_notify_queue);
     MVM_gc_worklist_add(tc, worklist, &si->setup_notify_schedulee);
 }
 
 /* Frees data associated with a signal async task. */
-static void gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data)
         MVM_free(data);
 }
@@ -258,7 +258,7 @@ static void populate_sig_values(int8_t *sig_vals) {
 
 #define SIG_SHIFT(s) (1 << ((s) - 1))
 
-static void populate_instance_valid_sigs(MVMThreadContext *tc, int8_t *sig_vals) {
+static void populate_instance_valid_sigs(struct MVMThreadContext *tc, int8_t *sig_vals) {
     uint64_t valid_sigs = 0;
     int8_t i;
 
@@ -272,7 +272,7 @@ static void populate_instance_valid_sigs(MVMThreadContext *tc, int8_t *sig_vals)
     tc->instance->valid_sigs = valid_sigs;
 }
 
-MVMObject * MVM_io_get_signals(MVMThreadContext *tc) {
+MVMObject * MVM_io_get_signals(struct MVMThreadContext *tc) {
     MVMInstance  * const instance = tc->instance;
     MVMHLLConfig *       hll      = MVM_hll_current(tc);
     MVMObject    *       sig_arr;
@@ -316,7 +316,7 @@ MVMObject * MVM_io_get_signals(MVMThreadContext *tc) {
 
 /* Register a new signal handler. */
 MVMObject * MVM_io_signal_handle(
-    MVMThreadContext *tc,
+    struct MVMThreadContext *tc,
     MVMObject *setup_notify_queue, MVMObject *setup_notify_schedulee,
     MVMObject *queue, MVMObject *schedulee,
     int64_t signal,

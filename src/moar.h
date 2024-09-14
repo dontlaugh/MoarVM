@@ -1,4 +1,5 @@
 /* Configuration. */
+#pragma once
 #include "config.h"
 
 
@@ -44,7 +45,6 @@
 
 #ifdef MVM_USE_C11_ATOMICS
 #include <stdatomic.h>
-typedef atomic_uintptr_t atomic_uintptr_t;
 
 /* clang and gcc disagree on rvalue semantics of atomic types
  * clang refuses to implicitly assign the value of an atomic variable to the
@@ -124,13 +124,13 @@ typedef double   MVMnum64;
 #define MVM_ALIGN_SECTION(offset) (((offset) + (MVM_ALIGN_SECTION_MASK)) & ~(MVM_ALIGN_SECTION_MASK))
 
 #if defined MVM_BUILD_SHARED
-#  define MVM_PUBLIC  MVM_DLL_EXPORT
+#  define   MVM_DLL_EXPORT
 #  define MVM_PRIVATE MVM_DLL_LOCAL
 #elif defined MVM_SHARED
-#  define MVM_PUBLIC  MVM_DLL_IMPORT
+#  define   MVM_DLL_IMPORT
 #  define MVM_PRIVATE MVM_DLL_LOCAL
 #else
-#  define MVM_PUBLIC
+#  define 
 #  define MVM_PRIVATE
 #endif
 
@@ -146,7 +146,7 @@ typedef double   MVMnum64;
 
 /* Returns non-zero for success. Use for both atomic_uintptr_t numbers and pointers. */
 #ifdef MVM_USE_C11_ATOMICS
-MVM_STATIC_INLINE int
+static inline int
 MVM_trycas_AO(volatile atomic_uintptr_t *addr, uintptr_t old, const uintptr_t new) {
     return atomic_compare_exchange_strong(addr, &old, new);
 }
@@ -164,7 +164,7 @@ MVM_trycas_AO(volatile atomic_uintptr_t *addr, uintptr_t old, const uintptr_t ne
 typedef MVMuint32 MVMHashNumItems;
 typedef MVMuint64 MVMHashv;
 
-MVM_PUBLIC MVMint32 MVM_jit_support(void);
+ MVMint32 MVM_jit_support(void);
 
 /* Headers for various other data structures and APIs. */
 #include "6model/6model.h"
@@ -308,28 +308,28 @@ MVM_PUBLIC MVMint32 MVM_jit_support(void);
 #include "instrument/crossthreadwrite.h"
 #include "instrument/line_coverage.h"
 
-MVMObject *MVM_backend_config(MVMThreadContext *tc);
+MVMObject *MVM_backend_config(struct MVMThreadContext *tc);
 
 /* Top level VM API functions. */
-MVM_PUBLIC MVMInstance * MVM_vm_create_instance(void);
-MVM_PUBLIC void MVM_vm_run_file(MVMInstance *instance, const char *filename);
-MVM_PUBLIC void MVM_vm_run_bytecode(MVMInstance *instance, MVMuint8 *bytes, MVMuint32 size);
-MVM_PUBLIC void MVM_vm_dump_file(MVMInstance *instance, const char *filename);
-MVM_PUBLIC MVM_NO_RETURN void MVM_vm_exit(MVMInstance *instance) MVM_NO_RETURN_ATTRIBUTE;
-MVM_PUBLIC void MVM_vm_destroy_instance(MVMInstance *instance);
-MVM_PUBLIC void MVM_vm_set_clargs(MVMInstance *instance, int argc, char **argv);
-MVM_PUBLIC void MVM_vm_set_exec_name(MVMInstance *instance, const char *exec_name);
-MVM_PUBLIC void MVM_vm_set_prog_name(MVMInstance *instance, const char *prog_name);
-MVM_PUBLIC void MVM_vm_set_lib_path(MVMInstance *instance, int count, const char **lib_path);
+ MVMInstance * MVM_vm_create_instance(void);
+ void MVM_vm_run_file(MVMInstance *instance, const char *filename);
+ void MVM_vm_run_bytecode(MVMInstance *instance, MVMuint8 *bytes, MVMuint32 size);
+ void MVM_vm_dump_file(MVMInstance *instance, const char *filename);
+ MVM_NO_RETURN void MVM_vm_exit(MVMInstance *instance) MVM_NO_RETURN_ATTRIBUTE;
+ void MVM_vm_destroy_instance(MVMInstance *instance);
+ void MVM_vm_set_clargs(MVMInstance *instance, int argc, char **argv);
+ void MVM_vm_set_exec_name(MVMInstance *instance, const char *exec_name);
+ void MVM_vm_set_prog_name(MVMInstance *instance, const char *prog_name);
+ void MVM_vm_set_lib_path(MVMInstance *instance, int count, const char **lib_path);
 
-MVM_PUBLIC void MVM_vm_event_subscription_configure(MVMThreadContext *tc, MVMObject *queue, MVMObject *config);
+ void MVM_vm_event_subscription_configure(struct MVMThreadContext *tc, MVMObject *queue, MVMObject *config);
 
 /* Returns absolute executable path. */
-MVM_PUBLIC int MVM_exepath(char* buffer, size_t* size);
+ int MVM_exepath(char* buffer, size_t* size);
 
 #ifdef _WIN32
 /* Reopens STDIN, STDOUT, STDERR to the 'NUL' device. */
-MVM_PUBLIC int MVM_set_std_handles_to_nul(void);
+ int MVM_set_std_handles_to_nul(void);
 #endif
 
 #ifdef MVM_USE_C11_ATOMICS
@@ -344,7 +344,7 @@ MVM_PUBLIC int MVM_set_std_handles_to_nul(void);
  *      if the first comparison succeeds; returns the original value of *addr;
  *       cannot fail spuriously.
  */
-MVM_STATIC_INLINE uintptr_t
+static inline uintptr_t
 MVM_cas(volatile atomic_uintptr_t *addr, uintptr_t old, const uintptr_t new) {
     /* If *addr == old then { does exchange, returns true }
      * else { writes old value to &old, returns false }

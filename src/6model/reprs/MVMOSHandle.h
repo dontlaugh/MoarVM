@@ -16,4 +16,4 @@ struct MVMOSHandle {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMOSHandle_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMOSHandle_initialize(struct MVMThreadContext *tc);

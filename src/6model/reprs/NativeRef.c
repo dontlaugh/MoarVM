@@ -5,7 +5,7 @@ static const MVMREPROps NativeRef_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &NativeRef_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,17 +18,17 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot copy object with repr MVMNativeRef");
 }
 
 /* Set the size of objects on the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMNativeRef);
 }
 
 /* Serializes the REPR data. */
-static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
+static void serialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
     MVMNativeRefREPRData *repr_data = (MVMNativeRefREPRData *)st->REPR_data;
     if (repr_data) {
         MVM_serialization_write_int(tc, writer, repr_data->primitive_type);
@@ -43,7 +43,7 @@ static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializ
 }
 
 /* Deserializes REPR data. */
-static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     MVMNativeRefREPRData *repr_data = MVM_malloc(sizeof(MVMNativeRefREPRData));
     repr_data->primitive_type = MVM_serialization_read_int(tc, reader);
     repr_data->ref_kind       = MVM_serialization_read_int(tc, reader);
@@ -52,7 +52,7 @@ static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerial
 }
 
 /* Called by the VM to mark any GCable items. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMNativeRefBody *ref = (MVMNativeRefBody *)data;
     MVMNativeRefREPRData *repr_data = (MVMNativeRefREPRData *)st->REPR_data;
     switch (repr_data->ref_kind) {
@@ -75,7 +75,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Frees the representation data, if any. */
-static void gc_free_repr_data(MVMThreadContext *tc, MVMSTable *st) {
+static void gc_free_repr_data(struct MVMThreadContext *tc, MVMSTable *st) {
     MVM_free(st->REPR_data);
 }
 
@@ -88,12 +88,12 @@ static const MVMStorageSpec storage_spec = {
     0,                          /* can_box */
     0,                          /* is_unsigned */
 };
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
     MVMStringConsts *str_consts = &(tc->instance->str_consts);
     MVMObject *info = MVM_repr_at_key_o(tc, info_hash, str_consts->nativeref);
     if (IS_CONCRETE(info)) {
@@ -142,11 +142,11 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMNativeRef_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMNativeRef_initialize(struct MVMThreadContext *tc) {
     return &NativeRef_this_repr;
 }
 
-static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void spesh(struct MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMNativeRefREPRData * repr_data = (MVMNativeRefREPRData *)st->REPR_data;
 
     if (!repr_data)
@@ -186,7 +186,7 @@ static const MVMREPROps NativeRef_this_repr = {
 
 /* Validates the given type is a native reference of the required primitive
  * type and reference kind. */
-void MVM_nativeref_ensure(MVMThreadContext *tc, MVMObject *type, uint16_t wantprim, uint16_t wantkind, char *guilty) {
+void MVM_nativeref_ensure(struct MVMThreadContext *tc, MVMObject *type, uint16_t wantprim, uint16_t wantkind, char *guilty) {
     if (REPR(type)->ID == MVM_REPR_ID_NativeRef) {
         MVMNativeRefREPRData *repr_data = (MVMNativeRefREPRData *)STABLE(type)->REPR_data;
         if (!repr_data)
@@ -202,7 +202,7 @@ void MVM_nativeref_ensure(MVMThreadContext *tc, MVMObject *type, uint16_t wantpr
 }
 
 /* Creation of native references for lexicals. */
-static MVMObject * lex_ref(MVMThreadContext *tc, MVMObject *type, MVMFrame *f,
+static MVMObject * lex_ref(struct MVMThreadContext *tc, MVMObject *type, MVMFrame *f,
                            uint16_t env_idx, uint16_t reg_type) {
     MVMNativeRef *ref;
     MVMROOT(tc, f) {
@@ -215,7 +215,7 @@ static MVMObject * lex_ref(MVMThreadContext *tc, MVMObject *type, MVMFrame *f,
 }
 
 /* Creation of native references for lexicals. */
-static MVMFrame * get_lexical_outer(MVMThreadContext *tc, uint16_t outers) {
+static MVMFrame * get_lexical_outer(struct MVMThreadContext *tc, uint16_t outers) {
     MVMFrame *f = tc->cur_frame;
     while (outers) {
         if (!f)
@@ -225,7 +225,7 @@ static MVMFrame * get_lexical_outer(MVMThreadContext *tc, uint16_t outers) {
     }
     return f;
 }
-MVMObject * MVM_nativeref_lex_i(MVMThreadContext *tc, uint16_t outers, uint16_t idx) {
+MVMObject * MVM_nativeref_lex_i(struct MVMThreadContext *tc, uint16_t outers, uint16_t idx) {
     MVMObject *ref_type;
     MVM_frame_force_to_heap(tc, tc->cur_frame);
     ref_type = MVM_hll_current(tc)->int_lex_ref;
@@ -244,7 +244,7 @@ MVMObject * MVM_nativeref_lex_i(MVMThreadContext *tc, uint16_t outers, uint16_t 
     }
     MVM_exception_throw_adhoc(tc, "No int lexical reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_lex_u(MVMThreadContext *tc, uint16_t outers, uint16_t idx) {
+MVMObject * MVM_nativeref_lex_u(struct MVMThreadContext *tc, uint16_t outers, uint16_t idx) {
     MVMObject *ref_type;
     MVM_frame_force_to_heap(tc, tc->cur_frame);
     ref_type = MVM_hll_current(tc)->uint_lex_ref;
@@ -261,7 +261,7 @@ MVMObject * MVM_nativeref_lex_u(MVMThreadContext *tc, uint16_t outers, uint16_t 
     }
     MVM_exception_throw_adhoc(tc, "No uint lexical reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_lex_n(MVMThreadContext *tc, uint16_t outers, uint16_t idx) {
+MVMObject * MVM_nativeref_lex_n(struct MVMThreadContext *tc, uint16_t outers, uint16_t idx) {
     MVMObject *ref_type;
     MVM_frame_force_to_heap(tc, tc->cur_frame);
     ref_type = MVM_hll_current(tc)->num_lex_ref;
@@ -277,7 +277,7 @@ MVMObject * MVM_nativeref_lex_n(MVMThreadContext *tc, uint16_t outers, uint16_t 
     }
     MVM_exception_throw_adhoc(tc, "No num lexical reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_lex_s(MVMThreadContext *tc, uint16_t outers, uint16_t idx) {
+MVMObject * MVM_nativeref_lex_s(struct MVMThreadContext *tc, uint16_t outers, uint16_t idx) {
     MVMObject *ref_type;
     MVM_frame_force_to_heap(tc, tc->cur_frame);
     ref_type = MVM_hll_current(tc)->str_lex_ref;
@@ -293,7 +293,7 @@ MVMObject * MVM_nativeref_lex_s(MVMThreadContext *tc, uint16_t outers, uint16_t 
     MVM_exception_throw_adhoc(tc, "No str lexical reference type registered for current HLL");
 }
 #define LEXREF_ANY_INT -1
-static MVMObject * lexref_by_name(MVMThreadContext *tc, MVMObject *type, MVMString *name, int16_t kind) {
+static MVMObject * lexref_by_name(struct MVMThreadContext *tc, MVMObject *type, MVMString *name, int16_t kind) {
     MVMFrame *cur_frame = tc->cur_frame;
     while (cur_frame != NULL) {
         uint32_t idx = MVM_get_lexical_by_name(tc, cur_frame->static_info, name);
@@ -334,7 +334,7 @@ static MVMObject * lexref_by_name(MVMThreadContext *tc, MVMObject *type, MVMStri
             c_name);
     }
 }
-MVMObject * MVM_nativeref_lex_name_i(MVMThreadContext *tc, MVMString *name) {
+MVMObject * MVM_nativeref_lex_name_i(struct MVMThreadContext *tc, MVMString *name) {
     MVMObject *ref_type;
     MVMROOT(tc, name) {
         MVM_frame_force_to_heap(tc, tc->cur_frame);
@@ -345,7 +345,7 @@ MVMObject * MVM_nativeref_lex_name_i(MVMThreadContext *tc, MVMString *name) {
         return lexref_by_name(tc, ref_type, name, LEXREF_ANY_INT);
     MVM_exception_throw_adhoc(tc, "No int lexical reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_lex_name_u(MVMThreadContext *tc, MVMString *name) {
+MVMObject * MVM_nativeref_lex_name_u(struct MVMThreadContext *tc, MVMString *name) {
     MVMObject *ref_type;
     MVMROOT(tc, name) {
         MVM_frame_force_to_heap(tc, tc->cur_frame);
@@ -356,7 +356,7 @@ MVMObject * MVM_nativeref_lex_name_u(MVMThreadContext *tc, MVMString *name) {
         return lexref_by_name(tc, ref_type, name, LEXREF_ANY_INT);
     MVM_exception_throw_adhoc(tc, "No uint lexical reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_lex_name_n(MVMThreadContext *tc, MVMString *name) {
+MVMObject * MVM_nativeref_lex_name_n(struct MVMThreadContext *tc, MVMString *name) {
     MVMObject *ref_type;
     MVMROOT(tc, name) {
         MVM_frame_force_to_heap(tc, tc->cur_frame);
@@ -366,7 +366,7 @@ MVMObject * MVM_nativeref_lex_name_n(MVMThreadContext *tc, MVMString *name) {
         return lexref_by_name(tc, ref_type, name, MVM_reg_num64);
     MVM_exception_throw_adhoc(tc, "No num lexical reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_lex_name_s(MVMThreadContext *tc, MVMString *name) {
+MVMObject * MVM_nativeref_lex_name_s(struct MVMThreadContext *tc, MVMString *name) {
     MVMObject *ref_type;
     MVMROOT(tc, name) {
         MVM_frame_force_to_heap(tc, tc->cur_frame);
@@ -378,7 +378,7 @@ MVMObject * MVM_nativeref_lex_name_s(MVMThreadContext *tc, MVMString *name) {
 }
 
 /* Creation of native references for attributes. */
-static MVMObject * attrref(MVMThreadContext *tc, MVMObject *type, MVMObject *obj, MVMObject *class_handle, MVMString *name) {
+static MVMObject * attrref(struct MVMThreadContext *tc, MVMObject *type, MVMObject *obj, MVMObject *class_handle, MVMString *name) {
     MVMNativeRef *ref;
     MVMROOT3(tc, obj, class_handle, name) {
         ref = (MVMNativeRef *)MVM_gc_allocate_object(tc, STABLE(type));
@@ -388,25 +388,25 @@ static MVMObject * attrref(MVMThreadContext *tc, MVMObject *type, MVMObject *obj
     }
     return (MVMObject *)ref;
 }
-MVMObject * MVM_nativeref_attr_i(MVMThreadContext *tc, MVMObject *obj, MVMObject *class_handle, MVMString *name) {
+MVMObject * MVM_nativeref_attr_i(struct MVMThreadContext *tc, MVMObject *obj, MVMObject *class_handle, MVMString *name) {
     MVMObject *ref_type = MVM_hll_current(tc)->int_attr_ref;
     if (ref_type)
         return attrref(tc, ref_type, obj, class_handle, name);
     MVM_exception_throw_adhoc(tc, "No int attribute reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_attr_u(MVMThreadContext *tc, MVMObject *obj, MVMObject *class_handle, MVMString *name) {
+MVMObject * MVM_nativeref_attr_u(struct MVMThreadContext *tc, MVMObject *obj, MVMObject *class_handle, MVMString *name) {
     MVMObject *ref_type = MVM_hll_current(tc)->uint_attr_ref;
     if (ref_type)
         return attrref(tc, ref_type, obj, class_handle, name);
     MVM_exception_throw_adhoc(tc, "No uint attribute reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_attr_n(MVMThreadContext *tc, MVMObject *obj, MVMObject *class_handle, MVMString *name) {
+MVMObject * MVM_nativeref_attr_n(struct MVMThreadContext *tc, MVMObject *obj, MVMObject *class_handle, MVMString *name) {
     MVMObject *ref_type = MVM_hll_current(tc)->num_attr_ref;
     if (ref_type)
         return attrref(tc, ref_type, obj, class_handle, name);
     MVM_exception_throw_adhoc(tc, "No num attribute reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_attr_s(MVMThreadContext *tc, MVMObject *obj, MVMObject *class_handle, MVMString *name) {
+MVMObject * MVM_nativeref_attr_s(struct MVMThreadContext *tc, MVMObject *obj, MVMObject *class_handle, MVMString *name) {
     MVMObject *ref_type = MVM_hll_current(tc)->str_attr_ref;
     if (ref_type)
         return attrref(tc, ref_type, obj, class_handle, name);
@@ -414,7 +414,7 @@ MVMObject * MVM_nativeref_attr_s(MVMThreadContext *tc, MVMObject *obj, MVMObject
 }
 
 /* Creation of native references for positionals. */
-static MVMObject * posref(MVMThreadContext *tc, MVMObject *type, MVMObject *obj, int64_t idx) {
+static MVMObject * posref(struct MVMThreadContext *tc, MVMObject *type, MVMObject *obj, int64_t idx) {
     MVMNativeRef *ref;
     MVMROOT(tc, obj) {
         ref = (MVMNativeRef *)MVM_gc_allocate_object(tc, STABLE(type));
@@ -423,25 +423,25 @@ static MVMObject * posref(MVMThreadContext *tc, MVMObject *type, MVMObject *obj,
     }
     return (MVMObject *)ref;
 }
-MVMObject * MVM_nativeref_pos_i(MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
+MVMObject * MVM_nativeref_pos_i(struct MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
     MVMObject *ref_type = MVM_hll_current(tc)->int_pos_ref;
     if (ref_type)
         return posref(tc, ref_type, obj, idx);
     MVM_exception_throw_adhoc(tc, "No int positional reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_pos_u(MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
+MVMObject * MVM_nativeref_pos_u(struct MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
     MVMObject *ref_type = MVM_hll_current(tc)->uint_pos_ref;
     if (ref_type)
         return posref(tc, ref_type, obj, idx);
     MVM_exception_throw_adhoc(tc, "No uint positional reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_pos_n(MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
+MVMObject * MVM_nativeref_pos_n(struct MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
     MVMObject *ref_type = MVM_hll_current(tc)->num_pos_ref;
     if (ref_type)
         return posref(tc, ref_type, obj, idx);
     MVM_exception_throw_adhoc(tc, "No num positional reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_pos_s(MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
+MVMObject * MVM_nativeref_pos_s(struct MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
     MVMObject *ref_type = MVM_hll_current(tc)->str_pos_ref;
     if (ref_type)
         return posref(tc, ref_type, obj, idx);
@@ -449,7 +449,7 @@ MVMObject * MVM_nativeref_pos_s(MVMThreadContext *tc, MVMObject *obj, int64_t id
 }
 
 /* Creation of native references for multi-dimensional positionals. */
-static MVMObject * md_posref(MVMThreadContext *tc, MVMObject *type, MVMObject *obj, MVMObject *indices) {
+static MVMObject * md_posref(struct MVMThreadContext *tc, MVMObject *type, MVMObject *obj, MVMObject *indices) {
     MVMNativeRef *ref;
     MVMROOT2(tc, obj, indices) {
         ref = (MVMNativeRef *)MVM_gc_allocate_object(tc, STABLE(type));
@@ -458,25 +458,25 @@ static MVMObject * md_posref(MVMThreadContext *tc, MVMObject *type, MVMObject *o
     }
     return (MVMObject *)ref;
 }
-MVMObject * MVM_nativeref_multidim_i(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
+MVMObject * MVM_nativeref_multidim_i(struct MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
     MVMObject *ref_type = MVM_hll_current(tc)->int_multidim_ref;
     if (ref_type)
         return md_posref(tc, ref_type, obj, indices);
     MVM_exception_throw_adhoc(tc, "No int multidim positional reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_multidim_u(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
+MVMObject * MVM_nativeref_multidim_u(struct MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
     MVMObject *ref_type = MVM_hll_current(tc)->uint_multidim_ref;
     if (ref_type)
         return md_posref(tc, ref_type, obj, indices);
     MVM_exception_throw_adhoc(tc, "No int multidim positional reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_multidim_n(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
+MVMObject * MVM_nativeref_multidim_n(struct MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
     MVMObject *ref_type = MVM_hll_current(tc)->num_multidim_ref;
     if (ref_type)
         return md_posref(tc, ref_type, obj, indices);
     MVM_exception_throw_adhoc(tc, "No num multidim positional reference type registered for current HLL");
 }
-MVMObject * MVM_nativeref_multidim_s(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
+MVMObject * MVM_nativeref_multidim_s(struct MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
     MVMObject *ref_type = MVM_hll_current(tc)->str_multidim_ref;
     if (ref_type)
         return md_posref(tc, ref_type, obj, indices);
@@ -488,7 +488,7 @@ MVMObject * MVM_nativeref_multidim_s(MVMThreadContext *tc, MVMObject *obj, MVMOb
  * they are more suited to calling from optimized code. The checking path is
  * in the native ref container implementation, in containers.c; after checks,
  * they delegate here. */
-int64_t MVM_nativeref_read_lex_i(MVMThreadContext *tc, MVMObject *ref_obj) {
+int64_t MVM_nativeref_read_lex_i(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMRegister *var = &(ref->body.u.lex.frame->env[ref->body.u.lex.env_idx]);
     switch (ref->body.u.lex.type) {
@@ -510,7 +510,7 @@ int64_t MVM_nativeref_read_lex_i(MVMThreadContext *tc, MVMObject *ref_obj) {
             return var->i64;
     }
 }
-double MVM_nativeref_read_lex_n(MVMThreadContext *tc, MVMObject *ref_obj) {
+double MVM_nativeref_read_lex_n(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMRegister *var = &(ref->body.u.lex.frame->env[ref->body.u.lex.env_idx]);
     switch (ref->body.u.lex.type) {
@@ -520,65 +520,65 @@ double MVM_nativeref_read_lex_n(MVMThreadContext *tc, MVMObject *ref_obj) {
             return var->n64;
     }
 }
-MVMString * MVM_nativeref_read_lex_s(MVMThreadContext *tc, MVMObject *ref_obj) {
+MVMString * MVM_nativeref_read_lex_s(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return ref->body.u.lex.frame->env[ref->body.u.lex.env_idx].s;
 }
-int64_t MVM_nativeref_read_attribute_i(MVMThreadContext *tc, MVMObject *ref_obj) {
+int64_t MVM_nativeref_read_attribute_i(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_get_attr_i(tc, ref->body.u.attribute.obj,
         ref->body.u.attribute.class_handle, ref->body.u.attribute.name, MVM_NO_HINT);
 }
-uint64_t MVM_nativeref_read_attribute_u(MVMThreadContext *tc, MVMObject *ref_obj) {
+uint64_t MVM_nativeref_read_attribute_u(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_get_attr_u(tc, ref->body.u.attribute.obj,
         ref->body.u.attribute.class_handle, ref->body.u.attribute.name, MVM_NO_HINT);
 }
-double MVM_nativeref_read_attribute_n(MVMThreadContext *tc, MVMObject *ref_obj) {
+double MVM_nativeref_read_attribute_n(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_get_attr_n(tc, ref->body.u.attribute.obj,
         ref->body.u.attribute.class_handle, ref->body.u.attribute.name, MVM_NO_HINT);
 }
-MVMString * MVM_nativeref_read_attribute_s(MVMThreadContext *tc, MVMObject *ref_obj) {
+MVMString * MVM_nativeref_read_attribute_s(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_get_attr_s(tc, ref->body.u.attribute.obj,
         ref->body.u.attribute.class_handle, ref->body.u.attribute.name, MVM_NO_HINT);
 }
-int64_t MVM_nativeref_read_positional_i(MVMThreadContext *tc, MVMObject *ref_obj) {
+int64_t MVM_nativeref_read_positional_i(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_at_pos_i(tc, ref->body.u.positional.obj, ref->body.u.positional.idx);
 }
-uint64_t MVM_nativeref_read_positional_u(MVMThreadContext *tc, MVMObject *ref_obj) {
+uint64_t MVM_nativeref_read_positional_u(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_at_pos_u(tc, ref->body.u.positional.obj, ref->body.u.positional.idx);
 }
-double MVM_nativeref_read_positional_n(MVMThreadContext *tc, MVMObject *ref_obj) {
+double MVM_nativeref_read_positional_n(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_at_pos_n(tc, ref->body.u.positional.obj, ref->body.u.positional.idx);
 }
-MVMString * MVM_nativeref_read_positional_s(MVMThreadContext *tc, MVMObject *ref_obj) {
+MVMString * MVM_nativeref_read_positional_s(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_at_pos_s(tc, ref->body.u.positional.obj, ref->body.u.positional.idx);
 }
-int64_t MVM_nativeref_read_multidim_i(MVMThreadContext *tc, MVMObject *ref_obj) {
+int64_t MVM_nativeref_read_multidim_i(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_at_pos_multidim_i(tc, ref->body.u.multidim.obj, ref->body.u.multidim.indices);
 }
-uint64_t MVM_nativeref_read_multidim_u(MVMThreadContext *tc, MVMObject *ref_obj) {
+uint64_t MVM_nativeref_read_multidim_u(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_at_pos_multidim_u(tc, ref->body.u.multidim.obj, ref->body.u.multidim.indices);
 }
-double MVM_nativeref_read_multidim_n(MVMThreadContext *tc, MVMObject *ref_obj) {
+double MVM_nativeref_read_multidim_n(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_at_pos_multidim_n(tc, ref->body.u.multidim.obj, ref->body.u.multidim.indices);
 }
-MVMString * MVM_nativeref_read_multidim_s(MVMThreadContext *tc, MVMObject *ref_obj) {
+MVMString * MVM_nativeref_read_multidim_s(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     return MVM_repr_at_pos_multidim_s(tc, ref->body.u.multidim.obj, ref->body.u.multidim.indices);
 }
 
 /* Reference write functions. Same (non-checking) rules as the reads above. */
-void MVM_nativeref_write_lex_i(MVMThreadContext *tc, MVMObject *ref_obj, int64_t value) {
+void MVM_nativeref_write_lex_i(struct MVMThreadContext *tc, MVMObject *ref_obj, int64_t value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMRegister *var = &(ref->body.u.lex.frame->env[ref->body.u.lex.env_idx]);
     switch (ref->body.u.lex.type) {
@@ -602,7 +602,7 @@ void MVM_nativeref_write_lex_i(MVMThreadContext *tc, MVMObject *ref_obj, int64_t
             break;
     }
 }
-void MVM_nativeref_write_lex_u(MVMThreadContext *tc, MVMObject *ref_obj, uint64_t value) {
+void MVM_nativeref_write_lex_u(struct MVMThreadContext *tc, MVMObject *ref_obj, uint64_t value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMRegister *var = &(ref->body.u.lex.frame->env[ref->body.u.lex.env_idx]);
     switch (ref->body.u.lex.type) {
@@ -626,7 +626,7 @@ void MVM_nativeref_write_lex_u(MVMThreadContext *tc, MVMObject *ref_obj, uint64_
             break;
     }
 }
-void MVM_nativeref_write_lex_n(MVMThreadContext *tc, MVMObject *ref_obj, double value) {
+void MVM_nativeref_write_lex_n(struct MVMThreadContext *tc, MVMObject *ref_obj, double value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMRegister *var = &(ref->body.u.lex.frame->env[ref->body.u.lex.env_idx]);
     switch (ref->body.u.lex.type) {
@@ -638,69 +638,69 @@ void MVM_nativeref_write_lex_n(MVMThreadContext *tc, MVMObject *ref_obj, double 
             break;
     }
 }
-void MVM_nativeref_write_lex_s(MVMThreadContext *tc, MVMObject *ref_obj, MVMString *value) {
+void MVM_nativeref_write_lex_s(struct MVMThreadContext *tc, MVMObject *ref_obj, MVMString *value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVM_ASSIGN_REF(tc, &(ref->body.u.lex.frame->header),
         ref->body.u.lex.frame->env[ref->body.u.lex.env_idx].s, value);
 }
-void MVM_nativeref_write_attribute_i(MVMThreadContext *tc, MVMObject *ref_obj, int64_t value) {
+void MVM_nativeref_write_attribute_i(struct MVMThreadContext *tc, MVMObject *ref_obj, int64_t value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMRegister r;
     r.i64 = value;
     MVM_repr_bind_attr_inso(tc, ref->body.u.attribute.obj, ref->body.u.attribute.class_handle,
         ref->body.u.attribute.name, MVM_NO_HINT, r, MVM_reg_int64);
 }
-void MVM_nativeref_write_attribute_u(MVMThreadContext *tc, MVMObject *ref_obj, uint64_t value) {
+void MVM_nativeref_write_attribute_u(struct MVMThreadContext *tc, MVMObject *ref_obj, uint64_t value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMRegister r;
     r.u64 = value;
     MVM_repr_bind_attr_inso(tc, ref->body.u.attribute.obj, ref->body.u.attribute.class_handle,
         ref->body.u.attribute.name, MVM_NO_HINT, r, MVM_reg_uint64);
 }
-void MVM_nativeref_write_attribute_n(MVMThreadContext *tc, MVMObject *ref_obj, double value) {
+void MVM_nativeref_write_attribute_n(struct MVMThreadContext *tc, MVMObject *ref_obj, double value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMRegister r;
     r.n64 = value;
     MVM_repr_bind_attr_inso(tc, ref->body.u.attribute.obj, ref->body.u.attribute.class_handle,
         ref->body.u.attribute.name, MVM_NO_HINT, r, MVM_reg_num64);
 }
-void MVM_nativeref_write_attribute_s(MVMThreadContext *tc, MVMObject *ref_obj, MVMString *value) {
+void MVM_nativeref_write_attribute_s(struct MVMThreadContext *tc, MVMObject *ref_obj, MVMString *value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMRegister r;
     r.s = value;
     MVM_repr_bind_attr_inso(tc, ref->body.u.attribute.obj, ref->body.u.attribute.class_handle,
         ref->body.u.attribute.name, MVM_NO_HINT, r, MVM_reg_str);
 }
-void MVM_nativeref_write_positional_i(MVMThreadContext *tc, MVMObject *ref_obj, int64_t value) {
+void MVM_nativeref_write_positional_i(struct MVMThreadContext *tc, MVMObject *ref_obj, int64_t value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVM_repr_bind_pos_i(tc, ref->body.u.positional.obj, ref->body.u.positional.idx, value);
 }
-void MVM_nativeref_write_positional_u(MVMThreadContext *tc, MVMObject *ref_obj, uint64_t value) {
+void MVM_nativeref_write_positional_u(struct MVMThreadContext *tc, MVMObject *ref_obj, uint64_t value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVM_repr_bind_pos_u(tc, ref->body.u.positional.obj, ref->body.u.positional.idx, value);
 }
-void MVM_nativeref_write_positional_n(MVMThreadContext *tc, MVMObject *ref_obj, double value) {
+void MVM_nativeref_write_positional_n(struct MVMThreadContext *tc, MVMObject *ref_obj, double value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVM_repr_bind_pos_n(tc, ref->body.u.positional.obj, ref->body.u.positional.idx, value);
 }
-void MVM_nativeref_write_positional_s(MVMThreadContext *tc, MVMObject *ref_obj, MVMString *value) {
+void MVM_nativeref_write_positional_s(struct MVMThreadContext *tc, MVMObject *ref_obj, MVMString *value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVM_repr_bind_pos_s(tc, ref->body.u.positional.obj, ref->body.u.positional.idx, value);
 }
 
-void MVM_nativeref_write_multidim_i(MVMThreadContext *tc, MVMObject *ref_obj, int64_t value) {
+void MVM_nativeref_write_multidim_i(struct MVMThreadContext *tc, MVMObject *ref_obj, int64_t value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVM_repr_bind_pos_multidim_i(tc, ref->body.u.multidim.obj, ref->body.u.multidim.indices, value);
 }
-void MVM_nativeref_write_multidim_u(MVMThreadContext *tc, MVMObject *ref_obj, uint64_t value) {
+void MVM_nativeref_write_multidim_u(struct MVMThreadContext *tc, MVMObject *ref_obj, uint64_t value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVM_repr_bind_pos_multidim_u(tc, ref->body.u.multidim.obj, ref->body.u.multidim.indices, value);
 }
-void MVM_nativeref_write_multidim_n(MVMThreadContext *tc, MVMObject *ref_obj, double value) {
+void MVM_nativeref_write_multidim_n(struct MVMThreadContext *tc, MVMObject *ref_obj, double value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVM_repr_bind_pos_multidim_n(tc, ref->body.u.multidim.obj, ref->body.u.multidim.indices, value);
 }
-void MVM_nativeref_write_multidim_s(MVMThreadContext *tc, MVMObject *ref_obj, MVMString *value) {
+void MVM_nativeref_write_multidim_s(struct MVMThreadContext *tc, MVMObject *ref_obj, MVMString *value) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVM_repr_bind_pos_multidim_s(tc, ref->body.u.multidim.obj, ref->body.u.multidim.indices, value);
 }
@@ -708,7 +708,7 @@ void MVM_nativeref_write_multidim_s(MVMThreadContext *tc, MVMObject *ref_obj, MV
 /* Functions to turn native integer references into an atomic_uintptr_t * that can be used
  * in an atomic operation. The reference *must* be used and discarded *before*
  * the next safepoint, after which it could become invalidated. */
-atomic_uintptr_t * MVM_nativeref_as_atomic_lex_i(MVMThreadContext *tc, MVMObject *ref_obj) {
+atomic_uintptr_t * MVM_nativeref_as_atomic_lex_i(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMRegister *var = &(ref->body.u.lex.frame->env[ref->body.u.lex.env_idx]);
     if (sizeof(atomic_uintptr_t) == 8 && ref->body.u.lex.type == MVM_reg_int64)
@@ -718,19 +718,19 @@ atomic_uintptr_t * MVM_nativeref_as_atomic_lex_i(MVMThreadContext *tc, MVMObject
     MVM_exception_throw_adhoc(tc,
         "Cannot atomic load from an integer lexical not of the machine's native size");
 }
-atomic_uintptr_t * MVM_nativeref_as_atomic_attribute_i(MVMThreadContext *tc, MVMObject *ref_obj) {
+atomic_uintptr_t * MVM_nativeref_as_atomic_attribute_i(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMObject *obj = ref->body.u.attribute.obj;
     return REPR(obj)->attr_funcs.attribute_as_atomic(tc, STABLE(obj), OBJECT_BODY(obj),
         ref->body.u.attribute.class_handle, ref->body.u.attribute.name, MVM_reg_int64);
 }
-atomic_uintptr_t * MVM_nativeref_as_atomic_positional_i(MVMThreadContext *tc, MVMObject *ref_obj) {
+atomic_uintptr_t * MVM_nativeref_as_atomic_positional_i(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMObject *obj = ref->body.u.positional.obj;
     return REPR(obj)->pos_funcs.pos_as_atomic(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         ref->body.u.positional.idx);
 }
-atomic_uintptr_t * MVM_nativeref_as_atomic_multidim_i(MVMThreadContext *tc, MVMObject *ref_obj) {
+atomic_uintptr_t * MVM_nativeref_as_atomic_multidim_i(struct MVMThreadContext *tc, MVMObject *ref_obj) {
     MVMNativeRef *ref = (MVMNativeRef *)ref_obj;
     MVMObject *obj = ref->body.u.multidim.obj;
     int64_t num_indices;

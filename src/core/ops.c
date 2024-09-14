@@ -15604,19 +15604,19 @@ static const uint8_t MVM_op_allowed_in_confprog[] = {
     0x0, 0x0, 0x0, 0x2,
     0xA,};
 
-MVM_PUBLIC const MVMOpInfo * MVM_op_get_op(unsigned short op) {
+ const MVMOpInfo * MVM_op_get_op(unsigned short op) {
     if (op >= MVM_op_counts)
         return NULL;
     return &MVM_op_infos[op];
 }
 
-MVM_PUBLIC uint8_t MVM_op_is_allowed_in_confprog(unsigned short op) {
+ uint8_t MVM_op_is_allowed_in_confprog(unsigned short op) {
     if (op > last_op_allowed)
         return 0;
     return !!(MVM_op_allowed_in_confprog[op / 8] & (1 << (op % 8)));
 }
 
-MVM_PUBLIC const char *MVM_op_get_mark(unsigned short op) {
+ const char *MVM_op_get_mark(unsigned short op) {
     if (op > 838 && op < MVM_OP_EXT_BASE) {
         return ".s";
     } else if (op == 23) {

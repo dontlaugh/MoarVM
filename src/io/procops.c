@@ -51,7 +51,7 @@ static char * ANSIToUTF8(uint16_t acp, const char * str)
     return result;
 }
 
-MVM_PUBLIC char **
+ char **
 MVM_UnicodeToUTF8_argv(const int argc, wchar_t **wargv)
 {
     int i;
@@ -66,7 +66,7 @@ MVM_UnicodeToUTF8_argv(const int argc, wchar_t **wargv)
 
 #endif
 
-MVMObject * MVM_proc_getenvhash(MVMThreadContext *tc) {
+MVMObject * MVM_proc_getenvhash(struct MVMThreadContext *tc) {
     MVMInstance * const instance = tc->instance;
     MVMObject   *       env_hash;
 
@@ -171,7 +171,7 @@ typedef enum {
 
 /* Info we convey about an async spawn task. */
 typedef struct {
-    MVMThreadContext  *tc;
+    struct MVMThreadContext  *tc;
     int                work_idx;
     MVMObject         *handle;
     MVMObject         *callbacks;
@@ -204,14 +204,14 @@ typedef struct {
     MVMObject        *buf_data;
     uv_write_t       *req;
     uv_buf_t          buf;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int               work_idx;
 } SpawnWriteInfo;
 
 /* Completion handler for an asynchronous write. */
 static void on_write(uv_write_t *req, int status) {
     SpawnWriteInfo   *wi  = (SpawnWriteInfo *)req->data;
-    MVMThreadContext *tc  = wi->tc;
+    struct MVMThreadContext *tc  = wi->tc;
     MVMObject        *arr = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
     MVMAsyncTask     *t   = MVM_io_eventloop_get_active_work(tc, wi->work_idx);
     MVM_repr_push_o(tc, arr, t->body.schedulee);
@@ -240,7 +240,7 @@ static void on_write(uv_write_t *req, int status) {
 }
 
 /* Does setup work for an asynchronous write. */
-static void write_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void write_setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     MVMIOAsyncProcessData *handle_data;
     MVMAsyncTask          *spawn_task;
     MVMArray              *buffer;
@@ -293,14 +293,14 @@ static void write_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_
 }
 
 /* Marks objects for a write task. */
-static void write_gc_mark(MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
+static void write_gc_mark(struct MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
     SpawnWriteInfo *wi = (SpawnWriteInfo *)data;
     MVM_gc_worklist_add(tc, worklist, &wi->handle);
     MVM_gc_worklist_add(tc, worklist, &wi->buf_data);
 }
 
 /* Frees info for a write task. */
-static void write_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void write_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data)
         MVM_free(data);
 }
@@ -314,7 +314,7 @@ static const MVMAsyncTaskOps write_op_table = {
     write_gc_free
 };
 
-static MVMAsyncTask * write_bytes(MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
+static MVMAsyncTask * write_bytes(struct MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
                                   MVMObject *schedulee, MVMObject *buffer, MVMObject *async_type) {
     MVMAsyncTask *task;
     SpawnWriteInfo    *wi;
@@ -353,13 +353,13 @@ static MVMAsyncTask * write_bytes(MVMThreadContext *tc, MVMOSHandle *h, MVMObjec
 }
 
 /* Marks an async handle. */
-static void proc_async_gc_mark(MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
+static void proc_async_gc_mark(struct MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
     MVMIOAsyncProcessData *apd = (MVMIOAsyncProcessData *)data;
     if (data)
         MVM_gc_worklist_add(tc, worklist, &(apd->async_task));
 }
 
-static void proc_async_gc_free(MVMThreadContext *tc, MVMObject *root, void *data) {
+static void proc_async_gc_free(struct MVMThreadContext *tc, MVMObject *root, void *data) {
     if (data)
         MVM_free(data);
 }
@@ -368,7 +368,7 @@ static void proc_async_gc_free(MVMThreadContext *tc, MVMObject *root, void *data
 static void close_cb(uv_handle_t *handle) {
     MVM_free(handle);
 }
-static void close_perform(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void close_perform(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     uv_close((uv_handle_t *)data, close_cb);
 }
 
@@ -381,7 +381,7 @@ static const MVMAsyncTaskOps close_op_table = {
     NULL
 };
 
-static void deferred_close_perform(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data);
+static void deferred_close_perform(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data);
 
 static const MVMAsyncTaskOps deferred_close_op_table = {
     deferred_close_perform,
@@ -391,7 +391,7 @@ static const MVMAsyncTaskOps deferred_close_op_table = {
     NULL
 };
 
-static int64_t close_stdin(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t close_stdin(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncProcessData *handle_data = (MVMIOAsyncProcessData *)h->body.data;
     MVMAsyncTask          *spawn_task  = (MVMAsyncTask *)handle_data->async_task;
     SpawnInfo             *si          = spawn_task ? (SpawnInfo *)spawn_task->body.data : NULL;
@@ -420,7 +420,7 @@ static int64_t close_stdin(MVMThreadContext *tc, MVMOSHandle *h) {
     return 0;
 }
 
-static void deferred_close_perform(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void deferred_close_perform(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     SpawnInfo *si = (SpawnInfo *) data;
     MVMOSHandle *h = (MVMOSHandle *) si->handle;
 
@@ -440,7 +440,7 @@ static void deferred_close_perform(MVMThreadContext *tc, uv_loop_t *loop, MVMObj
     }
 }
 
-static MVMObject * get_async_task_handle(MVMThreadContext *tc, MVMOSHandle *h) {
+static MVMObject * get_async_task_handle(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncProcessData *handle_data = (MVMIOAsyncProcessData *)h->body.data;
     return handle_data->async_task;
 }
@@ -472,7 +472,7 @@ static void spawn_async_close(uv_handle_t *handle) {
 static void async_spawn_on_exit(uv_process_t *req, int64_t exit_status, int term_signal) {
     /* Check we've got a callback to fire. */
     SpawnInfo        *si  = (SpawnInfo *)req->data;
-    MVMThreadContext *tc  = si->tc;
+    struct MVMThreadContext *tc  = si->tc;
     MVMObject *done_cb = MVM_repr_at_key_o(tc, si->callbacks,
         tc->instance->str_consts.done);
     MVMOSHandle *os_handle;
@@ -522,7 +522,7 @@ static void async_spawn_on_exit(uv_process_t *req, int64_t exit_status, int term
     #define MIN(x,y) ((x)<(y)?(x):(y))
 #endif
 
-MVM_STATIC_INLINE void adjust_nursery(MVMThreadContext *tc, size_t read_buffer_size) {
+static inline void adjust_nursery(struct MVMThreadContext *tc, size_t read_buffer_size) {
     int adjustment = MIN(read_buffer_size, 32768) & ~0x7;
     if (adjustment && (char *)tc->nursery_alloc_limit - adjustment > (char *)tc->nursery_alloc) {
         tc->nursery_alloc_limit = (char *)(tc->nursery_alloc_limit) - adjustment;
@@ -538,7 +538,7 @@ MVM_STATIC_INLINE void adjust_nursery(MVMThreadContext *tc, size_t read_buffer_s
 static void on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
     SpawnInfo *si = (SpawnInfo *)handle->data;
     size_t size   = si->last_read ? si->last_read : 64;
-    MVMThreadContext *tc = si->tc;
+    struct MVMThreadContext *tc = si->tc;
 
     if (size < 128) {
         size = 128;
@@ -556,7 +556,7 @@ static void on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) 
 /* Read functions for stdout/stderr/merged. */
 static void async_read(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf, SpawnInfo *si,
                        MVMObject *callback, uint32_t seq_number, int64_t *permit) {
-    MVMThreadContext *tc  = si->tc;
+    struct MVMThreadContext *tc  = si->tc;
     MVMObject *arr;
     MVMAsyncTask *t;
     MVMROOT(tc, callback) {
@@ -656,14 +656,14 @@ static void async_spawn_merge_bytes_read(uv_stream_t *handle, ssize_t nread, con
 }
 
 /* Actually spawns an async task. This runs in the event loop thread. */
-static int64_t get_pipe_fd(MVMThreadContext *tc, uv_pipe_t *pipe) {
+static int64_t get_pipe_fd(struct MVMThreadContext *tc, uv_pipe_t *pipe) {
     uv_os_fd_t fd;
     if (uv_fileno((uv_handle_t *)pipe, &fd) == 0)
         return (int64_t)fd;
     else
         return 0;
 }
-static void spawn_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void spawn_setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     int64_t spawn_result;
 
     /* Process info setup. */
@@ -858,7 +858,7 @@ static void spawn_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_
 }
 
 /* Permits provide the back-pressure mechanism for the readers. */
-static void spawn_permit(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data,
+static void spawn_permit(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data,
                          int64_t channel, int64_t permits) {
     SpawnInfo *si = (SpawnInfo *)data;
     if (si->work_idx < 0)
@@ -922,7 +922,7 @@ static void spawn_permit(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async
 }
 
 /* On cancel, kill the process. */
-static void spawn_cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void spawn_cancel(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     /* Locate handle. */
     SpawnInfo             *si      = (SpawnInfo *)data;
     MVMOSHandle           *handle  = (MVMOSHandle *)si->handle;
@@ -942,14 +942,14 @@ static void spawn_cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async
 }
 
 /* Marks objects for a spawn task. */
-static void spawn_gc_mark(MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
+static void spawn_gc_mark(struct MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
     SpawnInfo *si = (SpawnInfo *)data;
     MVM_gc_worklist_add(tc, worklist, &si->handle);
     MVM_gc_worklist_add(tc, worklist, &si->callbacks);
 }
 
 /* Frees info for a spawn task. */
-static void spawn_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void spawn_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data) {
         SpawnInfo *si = (SpawnInfo *)data;
         if (si->prog) {
@@ -990,7 +990,7 @@ static const MVMAsyncTaskOps spawn_op_table = {
 };
 
 /* Spawn a process asynchronously. */
-MVMObject * MVM_proc_spawn_async(MVMThreadContext *tc, MVMObject *queue, MVMString *prog,
+MVMObject * MVM_proc_spawn_async(struct MVMThreadContext *tc, MVMObject *queue, MVMString *prog,
                                  MVMObject *argv, MVMString *cwd, MVMObject *env,
                                  MVMObject *callbacks) {
     MVMAsyncTask  *task;
@@ -1066,7 +1066,7 @@ MVMObject * MVM_proc_spawn_async(MVMThreadContext *tc, MVMObject *queue, MVMStri
 }
 
 /* Kills an asynchronously spawned process. */
-void MVM_proc_kill_async(MVMThreadContext *tc, MVMObject *handle_obj, int64_t signal) {
+void MVM_proc_kill_async(struct MVMThreadContext *tc, MVMObject *handle_obj, int64_t signal) {
     /* Ensure it's a handle for a process. */
     if (REPR(handle_obj)->ID == MVM_REPR_ID_MVMOSHandle) {
         MVMOSHandle *handle = (MVMOSHandle *)handle_obj;
@@ -1082,7 +1082,7 @@ void MVM_proc_kill_async(MVMThreadContext *tc, MVMObject *handle_obj, int64_t si
 }
 
 /* Get the current process ID. */
-int64_t MVM_proc_getpid(MVMThreadContext *tc) {
+int64_t MVM_proc_getpid(struct MVMThreadContext *tc) {
 #ifdef _WIN32
     return _getpid();
 #else
@@ -1091,35 +1091,35 @@ int64_t MVM_proc_getpid(MVMThreadContext *tc) {
 }
 
 /* Get the process ID of the parent process */
-int64_t MVM_proc_getppid(MVMThreadContext *tc) {
+int64_t MVM_proc_getppid(struct MVMThreadContext *tc) {
     return uv_os_getppid();
 }
 
 /* generates a random int64 */
-int64_t MVM_proc_rand_i(MVMThreadContext *tc) {
+int64_t MVM_proc_rand_i(struct MVMThreadContext *tc) {
     return (int64_t)jfs64_generate_uint64(tc->rand_state);
 }
 
 /* generates a number between 0 and 1 */
-double MVM_proc_rand_n(MVMThreadContext *tc) {
+double MVM_proc_rand_n(struct MVMThreadContext *tc) {
     return ((jfs64_generate_uint64(tc->rand_state) >> 11) * (1.0 / 9007199254740992.0));
 }
 
-double MVM_proc_randscale_n(MVMThreadContext *tc, double scale) {
+double MVM_proc_randscale_n(struct MVMThreadContext *tc, double scale) {
     return ((jfs64_generate_uint64(tc->rand_state) >> 11) * (1.0 / 9007199254740992.0)) * scale;
 }
 
 /* seed random number generator */
-void MVM_proc_seed(MVMThreadContext *tc, int64_t seed) {
+void MVM_proc_seed(struct MVMThreadContext *tc, int64_t seed) {
     jfs64_init(tc->rand_state, (uint64_t)seed);
 }
 
 /* gets the system time since the epoch in nanoseconds */
-uint64_t MVM_proc_time(MVMThreadContext *tc) {
+uint64_t MVM_proc_time(struct MVMThreadContext *tc) {
     return MVM_platform_now();
 }
 
-MVMString * MVM_executable_name(MVMThreadContext *tc) {
+MVMString * MVM_executable_name(struct MVMThreadContext *tc) {
     MVMInstance * const instance = tc->instance;
     if (instance->exec_name)
         return MVM_string_utf8_c8_decode(tc,
@@ -1129,7 +1129,7 @@ MVMString * MVM_executable_name(MVMThreadContext *tc) {
         return tc->instance->str_consts.empty;
 }
 
-MVMObject * MVM_proc_clargs(MVMThreadContext *tc) {
+MVMObject * MVM_proc_clargs(struct MVMThreadContext *tc) {
     MVMInstance * const instance = tc->instance;
     MVMObject            *clargs = instance->clargs;
     if (!clargs) {
@@ -1162,7 +1162,7 @@ MVMObject * MVM_proc_clargs(MVMThreadContext *tc) {
 
 /* Gets resource usage statistics, so far as they are portably available (see
  * libuv docs) and puts them into an integer array. */
-void MVM_proc_getrusage(MVMThreadContext *tc, MVMObject *result) {
+void MVM_proc_getrusage(struct MVMThreadContext *tc, MVMObject *result) {
     uv_rusage_t usage;
     int r;
     if ((r = uv_getrusage(&usage)) > 0)
@@ -1229,7 +1229,7 @@ The simplest way of doing this that I can see is:
 
 */
 
-int64_t MVM_proc_fork(MVMThreadContext *tc) {
+int64_t MVM_proc_fork(struct MVMThreadContext *tc) {
     MVMInstance *instance = tc->instance;
     const char *error = NULL;
     int64_t pid = -1;

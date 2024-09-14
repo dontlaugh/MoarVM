@@ -43,7 +43,7 @@ static MVMCallsiteEntry obj_obj_obj_arg_flags[] = { MVM_CALLSITE_ARG_OBJ,
 static MVMCallsite     obj_obj_obj_callsite = { obj_obj_obj_arg_flags, 3, 3, 3, 0, 0, NULL };
 
 /* Intern common callsites at startup. */
-void MVM_callsite_initialize_common(MVMThreadContext *tc) {
+void MVM_callsite_initialize_common(struct MVMThreadContext *tc) {
     /* Initialize the intern storage. */
     MVMCallsiteInterns *interns = tc->instance->callsite_interns;
     interns->max_arity = MVM_INTERN_ARITY_SOFT_LIMIT - 1;
@@ -79,7 +79,7 @@ void MVM_callsite_initialize_common(MVMThreadContext *tc) {
 }
 
 /* Obtain one of the common callsites. */
-MVM_PUBLIC MVMCallsite * MVM_callsite_get_common(MVMThreadContext *tc, MVMCommonCallsiteID id) {
+ MVMCallsite * MVM_callsite_get_common(struct MVMThreadContext *tc, MVMCommonCallsiteID id) {
     switch (id) {
         case MVM_CALLSITE_ID_ZERO_ARITY:
             return &zero_arity_callsite;
@@ -109,7 +109,7 @@ MVM_PUBLIC MVMCallsite * MVM_callsite_get_common(MVMThreadContext *tc, MVMCommon
 }
 
 /* Checks if two callsites are equal. */
-static int32_t callsites_equal(MVMThreadContext *tc, MVMCallsite *cs1, MVMCallsite *cs2,
+static int32_t callsites_equal(struct MVMThreadContext *tc, MVMCallsite *cs1, MVMCallsite *cs2,
                                 int32_t num_flags, int32_t num_nameds) {
     if (num_flags && memcmp(cs1->arg_flags, cs2->arg_flags, num_flags))
         return 0;
@@ -123,7 +123,7 @@ static int32_t callsites_equal(MVMThreadContext *tc, MVMCallsite *cs1, MVMCallsi
 }
 
 /* GC marks a callsite (really, just its named args). */
-void MVM_callsite_mark(MVMThreadContext *tc, MVMCallsite *cs, MVMGCWorklist *worklist,
+void MVM_callsite_mark(struct MVMThreadContext *tc, MVMCallsite *cs, MVMGCWorklist *worklist,
         MVMHeapSnapshotState *snapshot) {
     uint32_t num_names = MVM_callsite_num_nameds(tc, cs);
     uint32_t i;
@@ -146,7 +146,7 @@ void MVM_callsite_destroy(MVMCallsite *cs) {
 }
 
 /* Copies the named args of one callsite into another. */
-static void copy_nameds(MVMThreadContext *tc, MVMCallsite *to, const MVMCallsite *from) {
+static void copy_nameds(struct MVMThreadContext *tc, MVMCallsite *to, const MVMCallsite *from) {
     if (from->arg_names) {
         uint32_t num_names = MVM_callsite_num_nameds(tc, from);
         size_t memory_area = num_names * sizeof(MVMString *);
@@ -159,7 +159,7 @@ static void copy_nameds(MVMThreadContext *tc, MVMCallsite *to, const MVMCallsite
 }
 
 /* Copy a callsite. */
-MVMCallsite * MVM_callsite_copy(MVMThreadContext *tc, const MVMCallsite *cs) {
+MVMCallsite * MVM_callsite_copy(struct MVMThreadContext *tc, const MVMCallsite *cs) {
     MVMCallsite *copy = MVM_malloc(sizeof(MVMCallsite));
 
     if (cs->flag_count) {
@@ -186,7 +186,7 @@ MVMCallsite * MVM_callsite_copy(MVMThreadContext *tc, const MVMCallsite *cs) {
  * just use it as the interned one. If steal is set to false, and we want
  * to intern the callsite, then we should make a copy of it and intern
  * that. */
-static uint32_t find_interned_callsite(MVMThreadContext *tc, MVMCallsite **cs_ptr,
+static uint32_t find_interned_callsite(struct MVMThreadContext *tc, MVMCallsite **cs_ptr,
         uint32_t steal) {
     MVMCallsiteInterns *interns    = tc->instance->callsite_interns;
     MVMCallsite        *cs         = *cs_ptr;
@@ -214,7 +214,7 @@ static uint32_t find_interned_callsite(MVMThreadContext *tc, MVMCallsite **cs_pt
     }
     return 0;
 }
-MVM_PUBLIC void MVM_callsite_intern(MVMThreadContext *tc, MVMCallsite **cs_ptr,
+ void MVM_callsite_intern(struct MVMThreadContext *tc, MVMCallsite **cs_ptr,
         uint32_t force, uint32_t steal) {
     MVMCallsiteInterns *interns    = tc->instance->callsite_interns;
     MVMCallsite        *cs         = *cs_ptr;
@@ -311,7 +311,7 @@ MVM_PUBLIC void MVM_callsite_intern(MVMThreadContext *tc, MVMCallsite **cs_ptr,
 }
 
 /* GC marks all of the interned callsites (they may reference strings). */
-void MVM_callsite_mark_interns(MVMThreadContext *tc, MVMGCWorklist *worklist,
+void MVM_callsite_mark_interns(struct MVMThreadContext *tc, MVMGCWorklist *worklist,
         MVMHeapSnapshotState *snapshot) {
     MVMCallsiteInterns *interns = tc->instance->callsite_interns;
     uint32_t i;
@@ -361,10 +361,10 @@ void MVM_callsite_cleanup_interns(MVMInstance *instance) {
 
 /* Produce a new callsite consisting of the current one with a positional
  * argument dropped. It will be interned if possible. */
-MVMCallsite * MVM_callsite_drop_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx) {
+MVMCallsite * MVM_callsite_drop_positional(struct MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx) {
     return MVM_callsite_drop_positionals(tc, cs, idx, 1);
 }
-MVMCallsite * MVM_callsite_drop_positionals(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx, uint32_t count) {
+MVMCallsite * MVM_callsite_drop_positionals(struct MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx, uint32_t count) {
     /* Can only do this with positional arguments and non-flattening callsite. */
     if (idx + count - 1 >= cs->num_pos)
         MVM_exception_throw_adhoc(tc, "Cannot drop positional in callsite: index out of range");
@@ -399,7 +399,7 @@ MVMCallsite * MVM_callsite_drop_positionals(MVMThreadContext *tc, MVMCallsite *c
 /* Produce a new callsite consisting of the current one with a positional
  * argument inserted. It will be interned if possible. */
 /* TODO figure out if we want interning here or not */
-MVMCallsite * MVM_callsite_insert_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
+MVMCallsite * MVM_callsite_insert_positional(struct MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
         MVMCallsiteFlags flag) {
     /* Can only do this with positional arguments and non-flattening callsite. */
     if (idx > cs->num_pos)
@@ -437,7 +437,7 @@ MVMCallsite * MVM_callsite_insert_positional(MVMThreadContext *tc, MVMCallsite *
 
 /* Produce a new callsite consisting of the current one with a positional
  * argument inserted. */
-MVMCallsite * MVM_callsite_replace_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
+MVMCallsite * MVM_callsite_replace_positional(struct MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
         MVMCallsiteFlags flag) {
     /* Can only do this with positional arguments and non-flattening callsite. */
     if (idx > cs->num_pos)

@@ -1,9 +1,9 @@
 #include "moar.h"
 
-int MVM_ext_load(MVMThreadContext *tc, MVMString *lib, MVMString *ext) {
+int MVM_ext_load(struct MVMThreadContext *tc, MVMString *lib, MVMString *ext) {
     MVMString *colon, *prefix, *name;
     MVMDLLSym *sym;
-    void (*init)(MVMThreadContext *);
+    void (*init)(struct MVMThreadContext *);
 
     MVMROOT2(tc, lib, ext) {
         colon = MVM_string_ascii_decode_nt(
@@ -43,13 +43,13 @@ int MVM_ext_load(MVMThreadContext *tc, MVMString *lib, MVMString *ext) {
     uv_mutex_unlock(&tc->instance->mutex_ext_registry);
 
     /* Call extension's initializer */
-    init = (void (*)(MVMThreadContext *))sym->body.address;
+    init = (void (*)(struct MVMThreadContext *))sym->body.address;
     init(tc);
 
     return 1;
 }
 
-int MVM_ext_register_extop(MVMThreadContext *tc, const char *cname,
+int MVM_ext_register_extop(struct MVMThreadContext *tc, const char *cname,
         MVMExtOpFunc func, uint8_t num_operands, uint8_t operands[],
         MVMExtOpSpesh *spesh, MVMExtOpFactDiscover *discover, uint32_t flags) {
     /* This MVMString ends up being permarooted, so if we create it in gen2 we
@@ -179,7 +179,7 @@ int MVM_ext_register_extop(MVMThreadContext *tc, const char *cname,
     return 1;
 }
 
-const MVMOpInfo * MVM_ext_resolve_extop_record(MVMThreadContext *tc,
+const MVMOpInfo * MVM_ext_resolve_extop_record(struct MVMThreadContext *tc,
         MVMExtOpRecord *record) {
 
     /* Already resolved. */
@@ -212,7 +212,7 @@ const MVMOpInfo * MVM_ext_resolve_extop_record(MVMThreadContext *tc,
     return record->info;
 }
 
-const MVMOpInfo * MVM_ext_resolve_extop_record_in_cu(MVMThreadContext *tc, MVMCompUnit *cu,
+const MVMOpInfo * MVM_ext_resolve_extop_record_in_cu(struct MVMThreadContext *tc, MVMCompUnit *cu,
         uint16_t opcode) {
     uint16_t       index  = opcode - MVM_OP_EXT_BASE;
     MVMExtOpRecord *record = &cu->body.extops[index];

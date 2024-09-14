@@ -3,7 +3,7 @@
 /* Delegatory functions that assert we have a capable handle, then delegate
  * through the IO table to the correct operation. */
 
-static MVMOSHandle * verify_is_handle(MVMThreadContext *tc, MVMObject *oshandle, const char *op) {
+static MVMOSHandle * verify_is_handle(struct MVMThreadContext *tc, MVMObject *oshandle, const char *op) {
     if (REPR(oshandle)->ID != MVM_REPR_ID_MVMOSHandle)
         MVM_exception_throw_adhoc(tc, "%s requires an object with REPR MVMOSHandle (got %s with REPR %s)", op, MVM_6model_get_debug_name(tc, oshandle), REPR(oshandle)->name);
     if (!IS_CONCRETE(oshandle))
@@ -11,7 +11,7 @@ static MVMOSHandle * verify_is_handle(MVMThreadContext *tc, MVMObject *oshandle,
     return (MVMOSHandle *)oshandle;
 }
 
-static uv_mutex_t * acquire_mutex(MVMThreadContext *tc, MVMOSHandle *handle) {
+static uv_mutex_t * acquire_mutex(struct MVMThreadContext *tc, MVMOSHandle *handle) {
     uv_mutex_t *mutex = handle->body.mutex;
     MVM_gc_mark_thread_blocked(tc);
     uv_mutex_lock(mutex);
@@ -20,12 +20,12 @@ static uv_mutex_t * acquire_mutex(MVMThreadContext *tc, MVMOSHandle *handle) {
     return mutex;
 }
 
-static void release_mutex(MVMThreadContext *tc, uv_mutex_t *mutex) {
+static void release_mutex(struct MVMThreadContext *tc, uv_mutex_t *mutex) {
     uv_mutex_unlock(mutex);
     MVM_tc_clear_ex_release_mutex(tc);
 }
 
-int64_t MVM_io_close(MVMThreadContext *tc, MVMObject *oshandle) {
+int64_t MVM_io_close(struct MVMThreadContext *tc, MVMObject *oshandle) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "close");
     if (handle->body.ops->closable) {
         int64_t ret;
@@ -40,7 +40,7 @@ int64_t MVM_io_close(MVMThreadContext *tc, MVMObject *oshandle) {
         MVM_exception_throw_adhoc(tc, "Cannot close this kind of handle");
 }
 
-int64_t MVM_io_is_tty(MVMThreadContext *tc, MVMObject *oshandle) {
+int64_t MVM_io_is_tty(struct MVMThreadContext *tc, MVMObject *oshandle) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "istty");
     /* We need the extra check on is_tty because it is NULL for pipes. */
     if (handle->body.ops->introspection && handle->body.ops->introspection->is_tty) {
@@ -57,7 +57,7 @@ int64_t MVM_io_is_tty(MVMThreadContext *tc, MVMObject *oshandle) {
     }
 }
 
-int64_t MVM_io_fileno(MVMThreadContext *tc, MVMObject *oshandle) {
+int64_t MVM_io_fileno(struct MVMThreadContext *tc, MVMObject *oshandle) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "get native descriptor");
     if (handle->body.ops->introspection) {
         int64_t ret;
@@ -73,7 +73,7 @@ int64_t MVM_io_fileno(MVMThreadContext *tc, MVMObject *oshandle) {
     }
 }
 
-void MVM_io_seek(MVMThreadContext *tc, MVMObject *oshandle, int64_t offset, int64_t flag) {
+void MVM_io_seek(struct MVMThreadContext *tc, MVMObject *oshandle, int64_t offset, int64_t flag) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "seek");
     if (handle->body.ops->seekable) {
         MVMROOT(tc, handle) {
@@ -86,7 +86,7 @@ void MVM_io_seek(MVMThreadContext *tc, MVMObject *oshandle, int64_t offset, int6
         MVM_exception_throw_adhoc(tc, "Cannot seek this kind of handle");
 }
 
-int64_t MVM_io_tell(MVMThreadContext *tc, MVMObject *oshandle) {
+int64_t MVM_io_tell(struct MVMThreadContext *tc, MVMObject *oshandle) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "tell");
     if (handle->body.ops->seekable) {
         int64_t result;
@@ -101,7 +101,7 @@ int64_t MVM_io_tell(MVMThreadContext *tc, MVMObject *oshandle) {
         MVM_exception_throw_adhoc(tc, "Cannot tell this kind of handle");
 }
 
-void MVM_io_read_bytes(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *result, int64_t length) {
+void MVM_io_read_bytes(struct MVMThreadContext *tc, MVMObject *oshandle, MVMObject *result, int64_t length) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "read bytes");
     uint64_t bytes_read;
     char *buf;
@@ -133,7 +133,7 @@ void MVM_io_read_bytes(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *res
     ((MVMArray *)result)->body.elems    = bytes_read;
 }
 
-void MVM_io_write_bytes(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *buffer) {
+void MVM_io_write_bytes(struct MVMThreadContext *tc, MVMObject *oshandle, MVMObject *buffer) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "write bytes");
     char *output;
     uint64_t output_size;
@@ -165,7 +165,7 @@ void MVM_io_write_bytes(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *bu
         MVM_exception_throw_adhoc(tc, "Cannot write bytes to this kind of handle");
 }
 
-void MVM_io_write_bytes_c(MVMThreadContext *tc, MVMObject *oshandle, char *output,
+void MVM_io_write_bytes_c(struct MVMThreadContext *tc, MVMObject *oshandle, char *output,
                           uint64_t output_size) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "write bytes");
     if (handle->body.ops->sync_writable) {
@@ -179,7 +179,7 @@ void MVM_io_write_bytes_c(MVMThreadContext *tc, MVMObject *oshandle, char *outpu
         MVM_exception_throw_adhoc(tc, "Cannot write bytes to this kind of handle");
 }
 
-MVMObject * MVM_io_read_bytes_async(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *queue,
+MVMObject * MVM_io_read_bytes_async(struct MVMThreadContext *tc, MVMObject *oshandle, MVMObject *queue,
                                     MVMObject *schedulee, MVMObject *buf_type, MVMObject *async_type) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "read bytes asynchronously");
     if (handle->body.ops->async_readable) {
@@ -196,7 +196,7 @@ MVMObject * MVM_io_read_bytes_async(MVMThreadContext *tc, MVMObject *oshandle, M
         MVM_exception_throw_adhoc(tc, "Cannot read bytes asynchronously from this kind of handle");
 }
 
-MVMObject * MVM_io_write_bytes_async(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *queue,
+MVMObject * MVM_io_write_bytes_async(struct MVMThreadContext *tc, MVMObject *oshandle, MVMObject *queue,
                                      MVMObject *schedulee, MVMObject *buffer, MVMObject *async_type) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "write buffer asynchronously");
     if (buffer == NULL)
@@ -215,7 +215,7 @@ MVMObject * MVM_io_write_bytes_async(MVMThreadContext *tc, MVMObject *oshandle, 
         MVM_exception_throw_adhoc(tc, "Cannot write bytes asynchronously to this kind of handle");
 }
 
-MVMObject * MVM_io_write_bytes_to_async(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *queue,
+MVMObject * MVM_io_write_bytes_to_async(struct MVMThreadContext *tc, MVMObject *oshandle, MVMObject *queue,
                                         MVMObject *schedulee, MVMObject *buffer, MVMObject *async_type,
                                         MVMString *host, int64_t port) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "write buffer asynchronously to destination");
@@ -235,7 +235,7 @@ MVMObject * MVM_io_write_bytes_to_async(MVMThreadContext *tc, MVMObject *oshandl
         MVM_exception_throw_adhoc(tc, "Cannot write bytes to a destination asynchronously to this kind of handle");
 }
 
-int64_t MVM_io_eof(MVMThreadContext *tc, MVMObject *oshandle) {
+int64_t MVM_io_eof(struct MVMThreadContext *tc, MVMObject *oshandle) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "eof");
     if (handle->body.ops->sync_readable) {
         int64_t result;
@@ -250,7 +250,7 @@ int64_t MVM_io_eof(MVMThreadContext *tc, MVMObject *oshandle) {
         MVM_exception_throw_adhoc(tc, "Cannot eof this kind of handle");
 }
 
-int64_t MVM_io_lock(MVMThreadContext *tc, MVMObject *oshandle, int64_t flag) {
+int64_t MVM_io_lock(struct MVMThreadContext *tc, MVMObject *oshandle, int64_t flag) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "lock");
     if (handle->body.ops->lockable) {
         int64_t result;
@@ -265,7 +265,7 @@ int64_t MVM_io_lock(MVMThreadContext *tc, MVMObject *oshandle, int64_t flag) {
         MVM_exception_throw_adhoc(tc, "Cannot lock this kind of handle");
 }
 
-void MVM_io_unlock(MVMThreadContext *tc, MVMObject *oshandle) {
+void MVM_io_unlock(struct MVMThreadContext *tc, MVMObject *oshandle) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "unlock");
     if (handle->body.ops->lockable) {
         MVMROOT(tc, handle) {
@@ -278,7 +278,7 @@ void MVM_io_unlock(MVMThreadContext *tc, MVMObject *oshandle) {
         MVM_exception_throw_adhoc(tc, "Cannot unlock this kind of handle");
 }
 
-void MVM_io_flush(MVMThreadContext *tc, MVMObject *oshandle, int32_t sync) {
+void MVM_io_flush(struct MVMThreadContext *tc, MVMObject *oshandle, int32_t sync) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "flush");
     if (handle->body.ops->sync_writable) {
         MVMROOT(tc, handle) {
@@ -291,7 +291,7 @@ void MVM_io_flush(MVMThreadContext *tc, MVMObject *oshandle, int32_t sync) {
         MVM_exception_throw_adhoc(tc, "Cannot flush this kind of handle");
 }
 
-void MVM_io_truncate(MVMThreadContext *tc, MVMObject *oshandle, int64_t offset) {
+void MVM_io_truncate(struct MVMThreadContext *tc, MVMObject *oshandle, int64_t offset) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "truncate");
     if (handle->body.ops->sync_writable) {
         MVMROOT(tc, handle) {
@@ -304,7 +304,7 @@ void MVM_io_truncate(MVMThreadContext *tc, MVMObject *oshandle, int64_t offset) 
         MVM_exception_throw_adhoc(tc, "Cannot truncate this kind of handle");
 }
 
-void MVM_io_connect(MVMThreadContext *tc, MVMObject *oshandle, MVMString *host, int64_t port, uint16_t family) {
+void MVM_io_connect(struct MVMThreadContext *tc, MVMObject *oshandle, MVMString *host, int64_t port, uint16_t family) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "connect");
     if (handle->body.ops->sockety) {
         MVMROOT2(tc, host, handle) {
@@ -317,7 +317,7 @@ void MVM_io_connect(MVMThreadContext *tc, MVMObject *oshandle, MVMString *host, 
         MVM_exception_throw_adhoc(tc, "Cannot connect this kind of handle");
 }
 
-void MVM_io_bind(MVMThreadContext *tc, MVMObject *oshandle, MVMString *host, int64_t port, uint16_t family, int32_t backlog) {
+void MVM_io_bind(struct MVMThreadContext *tc, MVMObject *oshandle, MVMString *host, int64_t port, uint16_t family, int32_t backlog) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "bind");
     if (handle->body.ops->sockety) {
         MVMROOT2(tc, host, handle) {
@@ -330,7 +330,7 @@ void MVM_io_bind(MVMThreadContext *tc, MVMObject *oshandle, MVMString *host, int
         MVM_exception_throw_adhoc(tc, "Cannot bind this kind of handle");
 }
 
-int64_t MVM_io_getport(MVMThreadContext *tc, MVMObject *oshandle) {
+int64_t MVM_io_getport(struct MVMThreadContext *tc, MVMObject *oshandle) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "getport");
     if (handle->body.ops->sockety) {
         int64_t result;
@@ -345,7 +345,7 @@ int64_t MVM_io_getport(MVMThreadContext *tc, MVMObject *oshandle) {
         MVM_exception_throw_adhoc(tc, "Cannot getport for this kind of handle");
 }
 
-MVMObject * MVM_io_accept(MVMThreadContext *tc, MVMObject *oshandle) {
+MVMObject * MVM_io_accept(struct MVMThreadContext *tc, MVMObject *oshandle) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "accept");
     if (handle->body.ops->sockety) {
         MVMObject *result;
@@ -360,7 +360,7 @@ MVMObject * MVM_io_accept(MVMThreadContext *tc, MVMObject *oshandle) {
         MVM_exception_throw_adhoc(tc, "Cannot accept this kind of handle");
 }
 
-void MVM_io_set_buffer_size(MVMThreadContext *tc, MVMObject *oshandle, int64_t size) {
+void MVM_io_set_buffer_size(struct MVMThreadContext *tc, MVMObject *oshandle, int64_t size) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "set buffer size");
     if (handle->body.ops->set_buffer_size) {
         MVMROOT(tc, handle) {
@@ -373,7 +373,7 @@ void MVM_io_set_buffer_size(MVMThreadContext *tc, MVMObject *oshandle, int64_t s
         MVM_exception_throw_adhoc(tc, "Cannot set buffer size on this kind of handle");
 }
 
-MVMObject * MVM_io_get_async_task_handle(MVMThreadContext *tc, MVMObject *oshandle) {
+MVMObject * MVM_io_get_async_task_handle(struct MVMThreadContext *tc, MVMObject *oshandle) {
     MVMOSHandle *handle = verify_is_handle(tc, oshandle, "get async task handle");
     if (handle->body.ops->get_async_task_handle) {
         MVMObject *ath;
@@ -388,7 +388,7 @@ MVMObject * MVM_io_get_async_task_handle(MVMThreadContext *tc, MVMObject *oshand
         MVM_exception_throw_adhoc(tc, "Cannot get async task handle from this kind of handle");
 }
 
-void MVM_io_flush_standard_handles(MVMThreadContext *tc) {
+void MVM_io_flush_standard_handles(struct MVMThreadContext *tc) {
     MVM_io_flush(tc, tc->instance->stdout_handle, 0);
     MVM_io_flush(tc, tc->instance->stderr_handle, 0);
 }

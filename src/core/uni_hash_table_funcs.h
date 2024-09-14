@@ -5,7 +5,7 @@
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
 #define MVM_UNI_HASH_LOAD_FACTOR 0.75
-MVM_STATIC_INLINE uint32_t MVM_uni_hash_official_size(const struct MVMUniHashTableControl *control) {
+static inline uint32_t MVM_uni_hash_official_size(const struct MVMUniHashTableControl *control) {
     return 1 << (uint32_t)control->official_size_log2;
 }
 /* -1 because...
@@ -15,29 +15,29 @@ MVM_STATIC_INLINE uint32_t MVM_uni_hash_official_size(const struct MVMUniHashTab
  * probe distance of 2 is the first extra bucket beyond the official allocation
  * probe distance of 255 is the 254th beyond the official allocation.
  */
-MVM_STATIC_INLINE uint32_t MVM_uni_hash_allocated_items(const struct MVMUniHashTableControl *control) {
+static inline uint32_t MVM_uni_hash_allocated_items(const struct MVMUniHashTableControl *control) {
     return MVM_uni_hash_official_size(control) + control->max_probe_distance_limit - 1;
 }
-MVM_STATIC_INLINE uint32_t MVM_uni_hash_max_items(const struct MVMUniHashTableControl *control) {
+static inline uint32_t MVM_uni_hash_max_items(const struct MVMUniHashTableControl *control) {
     return MVM_uni_hash_official_size(control) * MVM_UNI_HASH_LOAD_FACTOR;
 }
-MVM_STATIC_INLINE uint8_t *MVM_uni_hash_metadata(const struct MVMUniHashTableControl *control) {
+static inline uint8_t *MVM_uni_hash_metadata(const struct MVMUniHashTableControl *control) {
     return (uint8_t *) control + sizeof(struct MVMUniHashTableControl);
 }
-MVM_STATIC_INLINE uint8_t *MVM_uni_hash_entries(const struct MVMUniHashTableControl *control) {
+static inline uint8_t *MVM_uni_hash_entries(const struct MVMUniHashTableControl *control) {
     return (uint8_t *) control - sizeof(struct MVMUniHashEntry);
 }
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
  * which you allocated (heap, stack, inside another struct, wherever) */
-void MVM_uni_hash_demolish(MVMThreadContext *tc, MVMUniHashTable *hashtable);
+void MVM_uni_hash_demolish(struct MVMThreadContext *tc, MVMUniHashTable *hashtable);
 /* and then free memory if you allocated it */
 
-void MVM_uni_hash_build(MVMThreadContext *tc,
+void MVM_uni_hash_build(struct MVMThreadContext *tc,
                         struct MVMUniHashTable *hashtable,
                         uint32_t entries);
 
-MVM_STATIC_INLINE int MVM_uni_hash_is_empty(MVMThreadContext *tc,
+static inline int MVM_uni_hash_is_empty(struct MVMThreadContext *tc,
                                             MVMUniHashTable *hashtable) {
     struct MVMUniHashTableControl *control = hashtable->table;
     return !control || control->cur_items == 0;
@@ -46,7 +46,7 @@ MVM_STATIC_INLINE int MVM_uni_hash_is_empty(MVMThreadContext *tc,
 /* Unicode names (etc) are not under the control of an external attacker [:-)]
  * so we don't need a cryptographic hash function here. I'm assuming that
  * 32 bit FNV1a is good enough and fast enough to be useful. */
-MVM_STATIC_INLINE uint32_t MVM_uni_hash_code(const char *key, size_t len) {
+static inline uint32_t MVM_uni_hash_code(const char *key, size_t len) {
     const char *const end = key + len;
     uint32_t hash = 0x811c9dc5;
     while (key < end) {
@@ -58,7 +58,7 @@ MVM_STATIC_INLINE uint32_t MVM_uni_hash_code(const char *key, size_t len) {
     return hash * 0x9e3779b7;
 }
 
-MVM_STATIC_INLINE struct MVM_hash_loop_state
+static inline struct MVM_hash_loop_state
 MVM_uni_hash_create_loop_state(struct MVMUniHashTableControl *control,
                                uint32_t hash_val) {
     struct MVM_hash_loop_state retval;
@@ -84,12 +84,12 @@ MVM_uni_hash_create_loop_state(struct MVMUniHashTableControl *control,
 
 /* UNCONDITIONALLY creates a new hash entry with the given key and value.
  * Doesn't check if the key already exists. Use with care. */
-void MVM_uni_hash_insert(MVMThreadContext *tc,
+void MVM_uni_hash_insert(struct MVMThreadContext *tc,
                          MVMUniHashTable *hashtable,
                          const char *key,
                          int32_t value);
 
-MVM_STATIC_INLINE struct MVMUniHashEntry *MVM_uni_hash_fetch(MVMThreadContext *tc,
+static inline struct MVMUniHashEntry *MVM_uni_hash_fetch(struct MVMThreadContext *tc,
                                                               MVMUniHashTable *hashtable,
                                                               const char *key) {
     if (MVM_uni_hash_is_empty(tc, hashtable)) {

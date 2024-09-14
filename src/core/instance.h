@@ -133,7 +133,7 @@ struct MVMInstance {
      ************************************************************************/
 
     /* The main thread. */
-    MVMThreadContext *main_thread;
+    struct MVMThreadContext *main_thread;
 
     /* The ID to allocate the next-created thread. */
     atomic_uintptr_t next_user_thread_id;
@@ -212,7 +212,7 @@ struct MVMInstance {
 
     /* The thread that is "to blame" for the current GC run (e.g. the one
      * that filled its nursery fastest). */
-    MVMThreadContext *thread_to_blame_for_gc;
+    struct MVMThreadContext *thread_to_blame_for_gc;
 
     /* Persistent object ID hash, used to give nursery objects a lifetime
      * unique ID. Plus a lock to protect it. */

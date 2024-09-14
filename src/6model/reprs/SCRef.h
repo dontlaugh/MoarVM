@@ -68,4 +68,4 @@ struct MVMSerializationContext {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMSCRef_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMSCRef_initialize(struct MVMThreadContext *tc);

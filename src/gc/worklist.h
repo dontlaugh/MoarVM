@@ -108,10 +108,10 @@ do { \
         NULL)
 
 /* Various functions for worklist manipulation. */
-MVMGCWorklist * MVM_gc_worklist_create(MVMThreadContext *tc, uint8_t include_gen2);
-MVM_PUBLIC void MVM_gc_worklist_add_slow(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMCollectable **item);
-void MVM_gc_worklist_presize_for(MVMThreadContext *tc, MVMGCWorklist *worklist, int32_t items);
-void MVM_gc_worklist_destroy(MVMThreadContext *tc, MVMGCWorklist *worklist);
+MVMGCWorklist * MVM_gc_worklist_create(struct MVMThreadContext *tc, uint8_t include_gen2);
+ void MVM_gc_worklist_add_slow(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMCollectable **item);
+void MVM_gc_worklist_presize_for(struct MVMThreadContext *tc, MVMGCWorklist *worklist, int32_t items);
+void MVM_gc_worklist_destroy(struct MVMThreadContext *tc, MVMGCWorklist *worklist);
 
 /* The number of pointers we assume the list may need to hold initially;
  * it will be resized as needed. */

@@ -5,7 +5,7 @@ static const MVMREPROps CPointer_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &CPointer_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,17 +18,17 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
 }
 
 /* Copies to the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMCPointerBody *src_body = (MVMCPointerBody *)src;
     MVMCPointerBody *dest_body = (MVMCPointerBody *)dest;
     dest_body->ptr = src_body->ptr;
 }
 
-static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
+static void set_int(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
     MVMCPointerBody *body = (MVMCPointerBody *)OBJECT_BODY(root);
 #if MVM_PTR_SIZE == 4
     body->ptr = (void *)(int32_t)value;
@@ -37,7 +37,7 @@ static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
 #endif
 }
 
-static int64_t get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static int64_t get_int(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMCPointerBody *body = (MVMCPointerBody *)OBJECT_BODY(root);
 #if MVM_PTR_SIZE == 4
     return (int64_t)(int32_t)body->ptr;
@@ -46,7 +46,7 @@ static int64_t get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
 #endif
 }
 
-static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t value) {
+static void set_uint(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t value) {
     MVMCPointerBody *body = (MVMCPointerBody *)OBJECT_BODY(root);
 #if MVM_PTR_SIZE == 4
     body->ptr = (void *)(uint32_t)value;
@@ -55,7 +55,7 @@ static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
 #endif
 }
 
-static uint64_t get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t get_uint(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMCPointerBody *body = (MVMCPointerBody *)OBJECT_BODY(root);
 #if MVM_PTR_SIZE == 4
     return (uint64_t)(uint32_t)body->ptr;
@@ -75,15 +75,15 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMCPointer);
 }
 
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMCPointerBody *body = (MVMCPointerBody *)data;
     int64_t value;
 
@@ -101,7 +101,7 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 
 }
 
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMCPointerBody *body = (MVMCPointerBody *)data;
     MVM_serialization_write_int(tc, writer,
 #if MVM_PTR_SIZE == 4
@@ -113,7 +113,7 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMCPointer_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMCPointer_initialize(struct MVMThreadContext *tc) {
     return &CPointer_this_repr;
 }
 

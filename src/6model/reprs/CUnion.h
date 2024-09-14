@@ -84,4 +84,4 @@ struct MVMCUnionREPRData {
 };
 
 /* Initializes the CUnion REPR. */
-const MVMREPROps * MVMCUnion_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMCUnion_initialize(struct MVMThreadContext *tc);

@@ -5,7 +5,7 @@ static const MVMREPROps MVMString_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &MVMString_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,7 +18,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMStringBody *src_body     = (MVMStringBody *)src;
     MVMStringBody *dest_body    = (MVMStringBody *)dest;
     dest_body->storage_type     = src_body->storage_type;
@@ -60,7 +60,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 }
 
 /* Adds held objects to the GC worklist. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMStringBody *body = (MVMStringBody *)data;
     if (body->storage_type == MVM_STRING_STRAND) {
         MVMStringStrand *strands = body->storage.strands;
@@ -71,7 +71,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMString *str = (MVMString *)obj;
     if (str->body.storage_type != MVM_STRING_IN_SITU_8 && str->body.storage_type != MVM_STRING_IN_SITU_32)
         MVM_free(str->body.storage.any_ptr);
@@ -88,17 +88,17 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMStringBody *body = (MVMStringBody *)data;
     switch (body->storage_type) {
         case MVM_STRING_GRAPHEME_32:
@@ -114,7 +114,7 @@ static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) 
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMString_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMString_initialize(struct MVMThreadContext *tc) {
     return &MVMString_this_repr;
 }
 

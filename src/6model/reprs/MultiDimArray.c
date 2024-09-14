@@ -19,7 +19,7 @@ static size_t flat_size(MVMMultiDimArrayREPRData *repr_data, int64_t *dimensions
 
 /* Takes a number of dimensions, indices we were passed, and dimension sizes.
  * Computes the offset into flat space. */
-MVM_STATIC_INLINE size_t indices_to_flat_index(MVMThreadContext *tc, int64_t num_dimensions, int64_t *dimensions, int64_t *indices) {
+static inline size_t indices_to_flat_index(struct MVMThreadContext *tc, int64_t num_dimensions, int64_t *dimensions, int64_t *indices) {
     int64_t multiplier = 1;
     size_t   result     = 0;
     int64_t i;
@@ -41,7 +41,7 @@ MVM_STATIC_INLINE size_t indices_to_flat_index(MVMThreadContext *tc, int64_t num
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &MultiDimArray_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -55,7 +55,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 
 /* Allocates the mutli-dimensional array and sets up its dimensions array with
  * all zeroes, for later filling. */
-static MVMObject * allocate(MVMThreadContext *tc, MVMSTable *st) {
+static MVMObject * allocate(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (repr_data) {
         MVMObject *obj = MVM_gc_allocate_object(tc, st);
@@ -69,7 +69,7 @@ static MVMObject * allocate(MVMThreadContext *tc, MVMSTable *st) {
 }
 
 /* Composes the representation. */
-static void spec_to_repr_data(MVMThreadContext *tc, MVMMultiDimArrayREPRData *repr_data, const MVMStorageSpec *spec) {
+static void spec_to_repr_data(struct MVMThreadContext *tc, MVMMultiDimArrayREPRData *repr_data, const MVMStorageSpec *spec) {
     switch (spec->boxed_primitive) {
         case MVM_STORAGE_SPEC_BP_INT:
             if (spec->is_unsigned) {
@@ -202,7 +202,7 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMMultiDimArrayREPRData *re
             repr_data->elem_size = sizeof(MVMObject *);
     }
 }
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *repr_info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *repr_info) {
     MVMStringConsts          *str_consts = &(tc->instance->str_consts);
     MVMMultiDimArrayREPRData *repr_data;
 
@@ -241,7 +241,7 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *repr_info) {
 }
 
 /* Copies to the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     MVMMultiDimArrayBody     *src_body  = (MVMMultiDimArrayBody *)src;
     MVMMultiDimArrayBody     *dest_body = (MVMMultiDimArrayBody *)dest;
@@ -256,7 +256,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 }
 
 /* Adds held objects to the GC worklist. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMMultiDimArrayBody *body = (MVMMultiDimArrayBody *)data;
     if (body->slots.any) {
         MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
@@ -280,7 +280,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMMultiDimArray *arr = (MVMMultiDimArray *)obj;
     if (arr->body.slots.any)
         MVM_free(arr->body.slots.any);
@@ -288,7 +288,7 @@ static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
 }
 
 /* Marks the representation data in an STable.*/
-static void gc_mark_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMGCWorklist *worklist) {
+static void gc_mark_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMGCWorklist *worklist) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (repr_data == NULL)
         return;
@@ -296,7 +296,7 @@ static void gc_mark_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMGCWorklist
 }
 
 /* Free representation data. */
-static void gc_free_repr_data(MVMThreadContext *tc, MVMSTable *st) {
+static void gc_free_repr_data(struct MVMThreadContext *tc, MVMSTable *st) {
     MVM_free(st->REPR_data);
 }
 
@@ -309,12 +309,12 @@ static const MVMStorageSpec storage_spec = {
     0,                          /* can_box */
     0,                          /* is_unsigned */
 };
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Serializes the data held in the array. */
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     MVMMultiDimArrayBody     *body      = (MVMMultiDimArrayBody *)data;
     int64_t i, flat_elems;
@@ -370,7 +370,7 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
 }
 
 /* Deserializes the data held in the array. */
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     MVMMultiDimArrayBody     *body      = (MVMMultiDimArrayBody *)data;
     int64_t i, flat_elems;
@@ -429,7 +429,7 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 }
 
 /* Serializes the REPR data. */
-static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
+static void serialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (repr_data) {
         MVM_serialization_write_int(tc, writer, repr_data->num_dimensions);
@@ -441,7 +441,7 @@ static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializ
 }
 
 /* Deserializes the REPR data. */
-static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     int64_t num_dims;
 
     num_dims = MVM_serialization_read_int(tc, reader);
@@ -467,30 +467,30 @@ static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerial
     }
 }
 
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMMultiDimArray);
 }
 
-static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
+static void push(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     MVM_exception_throw_adhoc(tc, "Cannot push onto a fixed dimension array");
 }
-static void pop(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
+static void pop(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     MVM_exception_throw_adhoc(tc, "Cannot pop a fixed dimension array");
 }
-static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
+static void unshift(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     MVM_exception_throw_adhoc(tc, "Cannot unshift onto a fixed dimension array");
 }
-static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
+static void shift(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     MVM_exception_throw_adhoc(tc, "Cannot shift a fixed dimension array");
 }
-static void aslice(MVMThreadContext *tc, MVMSTable *st, MVMObject *src, void *data, MVMObject *dest, int64_t start, int64_t end) {
+static void aslice(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *src, void *data, MVMObject *dest, int64_t start, int64_t end) {
     MVM_exception_throw_adhoc(tc, "Cannot slice a multidim array");
 }
-static void asplice(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *from, int64_t offset, uint64_t count) {
+static void asplice(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *from, int64_t offset, uint64_t count) {
     MVM_exception_throw_adhoc(tc, "Cannot splice a fixed dimension array");
 }
 
-static void at_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_indices, int64_t *indices, MVMRegister *value, uint16_t kind) {
+static void at_pos_multidim(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_indices, int64_t *indices, MVMRegister *value, uint16_t kind) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (num_indices == repr_data->num_dimensions) {
         MVMMultiDimArrayBody *body = (MVMMultiDimArrayBody *)data;
@@ -582,7 +582,7 @@ static void at_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root
     }
 }
 
-static void bind_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_indices, int64_t *indices, MVMRegister value, uint16_t kind) {
+static void bind_pos_multidim(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_indices, int64_t *indices, MVMRegister value, uint16_t kind) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (num_indices == repr_data->num_dimensions) {
         MVMMultiDimArrayBody *body = (MVMMultiDimArrayBody *)data;
@@ -675,7 +675,7 @@ static void bind_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *ro
     }
 }
 
-static void dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t *num_dimensions, int64_t **dimensions) {
+static void dimensions(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t *num_dimensions, int64_t **dimensions) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (repr_data) {
         MVMMultiDimArrayBody *body = (MVMMultiDimArrayBody *)data;
@@ -688,7 +688,7 @@ static void dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
     }
 }
 
-static void set_dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_dimensions, int64_t *dimensions) {
+static void set_dimensions(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_dimensions, int64_t *dimensions) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (num_dimensions == repr_data->num_dimensions) {
         /* Note that we use an atomic operation at the point of allocation.
@@ -713,26 +713,26 @@ static void set_dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
     }
 }
 
-static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind) {
+static void at_pos(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind) {
     at_pos_multidim(tc, st, root, data, 1, &index, value, kind);
 }
 
-static void bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister value, uint16_t kind) {
+static void bind_pos(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister value, uint16_t kind) {
     bind_pos_multidim(tc, st, root, data, 1, &index, value, kind);
 }
 
-static void set_elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t count) {
+static void set_elems(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t count) {
     set_dimensions(tc, st, root, data, 1, (int64_t *)&count);
 }
 
-static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t elems(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     int64_t  _;
     int64_t *dims;
     dimensions(tc, st, root, data, &_, &dims);
     return (uint64_t)dims[0];
 }
 
-static MVMStorageSpec get_elem_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static MVMStorageSpec get_elem_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     MVMStorageSpec spec;
 
@@ -779,7 +779,7 @@ static MVMStorageSpec get_elem_storage_spec(MVMThreadContext *tc, MVMSTable *st)
     return spec;
 }
 
-static atomic_uintptr_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable *st,
+static atomic_uintptr_t * pos_as_atomic_multidim(struct MVMThreadContext *tc, MVMSTable *st,
                                      MVMObject *root, void *data,
                                      int64_t num_indices, int64_t *indices) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
@@ -803,14 +803,14 @@ static atomic_uintptr_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable
     }
 }
 
-static atomic_uintptr_t * pos_as_atomic(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+static atomic_uintptr_t * pos_as_atomic(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
                             void *data, int64_t index) {
     return pos_as_atomic_multidim(tc, st, root, data, 1, &index);
 }
 
 
 /* Initializes the representation. */
-const MVMREPROps * MVMMultiDimArray_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMMultiDimArray_initialize(struct MVMThreadContext *tc) {
     return &MultiDimArray_this_repr;
 }
 

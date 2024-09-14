@@ -2,7 +2,7 @@
 #include "jit/internal.h"
 #include "platform/io.h"
 
-void MVM_jit_dump_bytecode(MVMThreadContext *tc, MVMJitCode *code) {
+void MVM_jit_dump_bytecode(struct MVMThreadContext *tc, MVMJitCode *code) {
     char filename[1024];
     FILE * dump;
     snprintf(filename, sizeof(filename), "%s/moar-jit-%04d.bin",
@@ -22,7 +22,7 @@ void MVM_jit_dump_bytecode(MVMThreadContext *tc, MVMJitCode *code) {
 }
 
 
-static void dump_tree(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
+static void dump_tree(struct MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
                       MVMJitExprTree *tree, int32_t node) {
     MVMJitExprInfo *info   = MVM_JIT_EXPR_INFO(tree, node);
     const char *op_name = MVM_jit_expr_operator_name(tc, tree->nodes[node]);
@@ -50,14 +50,14 @@ static void dump_tree(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
             node, indent, op_name, nargs, info->size);
 }
 
-static void ascend_tree(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
+static void ascend_tree(struct MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
                         MVMJitExprTree *tree, int32_t node) {
     uint32_t *depth = traverser->data;
     (*depth)--;
 }
 
 
-static void write_graphviz_node(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
+static void write_graphviz_node(struct MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
                                 MVMJitExprTree *tree, int32_t node) {
     FILE *graph_file       = traverser->data;
     const char *op_name    = MVM_jit_expr_operator_name(tc, tree->nodes[node]);
@@ -87,7 +87,7 @@ static void write_graphviz_node(MVMThreadContext *tc, MVMJitTreeTraverser *trave
 }
 
 
-void MVM_jit_dump_expr_tree(MVMThreadContext *tc, MVMJitExprTree *tree) {
+void MVM_jit_dump_expr_tree(struct MVMThreadContext *tc, MVMJitExprTree *tree) {
     MVMJitTreeTraverser traverser;
     FILE *log = tc->instance->spesh_log_fh;
     if (!log)
@@ -107,7 +107,7 @@ void MVM_jit_dump_expr_tree(MVMThreadContext *tc, MVMJitExprTree *tree) {
                  "===============================\n\n");
 }
 
-void MVM_jit_dump_tile_list(MVMThreadContext *tc, MVMJitTileList *list) {
+void MVM_jit_dump_tile_list(struct MVMThreadContext *tc, MVMJitTileList *list) {
     uint32_t i, j;
     FILE *f = tc->instance->spesh_log_fh;
     if (!f)

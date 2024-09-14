@@ -9,7 +9,7 @@ struct MVMTracked {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMTracked_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMTracked_initialize(struct MVMThreadContext *tc);
 
 /* Operations for creating MVMTracked objects. */
-MVMObject * MVM_tracked_create(MVMThreadContext *tc, MVMRegister value, MVMCallsiteFlags kind);
+MVMObject * MVM_tracked_create(struct MVMThreadContext *tc, MVMRegister value, MVMCallsiteFlags kind);

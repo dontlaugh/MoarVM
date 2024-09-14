@@ -15,4 +15,4 @@ struct MVMKnowHOWREPR {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMKnowHOWREPR_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMKnowHOWREPR_initialize(struct MVMThreadContext *tc);

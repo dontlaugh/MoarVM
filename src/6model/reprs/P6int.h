@@ -34,7 +34,7 @@ struct MVMP6intREPRData {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMP6int_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMP6int_initialize(struct MVMThreadContext *tc);
 
-void MVMP6int_set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value);
-int64_t MVMP6int_get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data);
+void MVMP6int_set_int(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value);
+int64_t MVMP6int_get_int(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data);

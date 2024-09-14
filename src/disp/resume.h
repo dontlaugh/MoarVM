@@ -67,13 +67,13 @@ struct MVMDispResumptionState {
     MVMDispResumptionState *next;
 };
 
-uint32_t MVM_disp_resume_find_topmost(MVMThreadContext *tc, MVMDispResumptionData *data,
+uint32_t MVM_disp_resume_find_topmost(struct MVMThreadContext *tc, MVMDispResumptionData *data,
         uint32_t exhausted);
-uint32_t MVM_disp_resume_find_caller(MVMThreadContext *tc, MVMDispResumptionData *data,
+uint32_t MVM_disp_resume_find_caller(struct MVMThreadContext *tc, MVMDispResumptionData *data,
         uint32_t exhausted);
-MVMRegister MVM_disp_resume_get_init_arg(MVMThreadContext *tc, MVMDispResumptionData *data,
+MVMRegister MVM_disp_resume_get_init_arg(struct MVMThreadContext *tc, MVMDispResumptionData *data,
         uint32_t arg_idx);
-void MVM_disp_resume_mark_resumption_state(MVMThreadContext *tc, MVMDispResumptionState *res_state,
+void MVM_disp_resume_mark_resumption_state(struct MVMThreadContext *tc, MVMDispResumptionState *res_state,
         MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
-void MVM_disp_resume_destroy_resumption_state(MVMThreadContext *tc,
+void MVM_disp_resume_destroy_resumption_state(struct MVMThreadContext *tc,
         MVMDispResumptionState *res_state);

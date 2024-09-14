@@ -27,43 +27,43 @@ struct MVMJitCompiler {
 /* Declarations for architecture-specific codegen stuff */
 int32_t MVM_jit_support(void);
 const unsigned char * MVM_jit_actions(void);
-void MVM_jit_emit_prologue(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg);
-void MVM_jit_emit_epilogue(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg);
-void MVM_jit_emit_primitive(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_emit_prologue(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg);
+void MVM_jit_emit_epilogue(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg);
+void MVM_jit_emit_primitive(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                             MVMJitGraph *jg, MVMJitPrimitive *prim);
-void MVM_jit_emit_call_c(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
+void MVM_jit_emit_call_c(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
                          MVMJitCallC *call_spec);
-void MVM_jit_emit_branch(MVMThreadContext *tc, MVMJitCompiler *compiler, int32_t label);
-void MVM_jit_emit_conditional_branch(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_emit_branch(struct MVMThreadContext *tc, MVMJitCompiler *compiler, int32_t label);
+void MVM_jit_emit_conditional_branch(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                                      int32_t cond, int32_t label, uint8_t test_type);
-void MVM_jit_emit_block_branch(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
+void MVM_jit_emit_block_branch(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
                                MVMJitBranch *branch_spec);
-void MVM_jit_emit_label(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
+void MVM_jit_emit_label(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
                         int32_t label);
-void MVM_jit_emit_guard(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
+void MVM_jit_emit_guard(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
                         MVMJitGuard *guard);
-void MVM_jit_emit_jumplist(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
+void MVM_jit_emit_jumplist(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
                            MVMJitJumpList *jumplist);
-void MVM_jit_emit_control(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_emit_control(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                           MVMJitControl *ctrl, MVMJitTile *tile);
-void MVM_jit_emit_data(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitData *data);
+void MVM_jit_emit_data(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitData *data);
 
-void MVM_jit_emit_load(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_emit_load(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                        int8_t reg_dst, MVMJitStorageClass mem_cls, int32_t mem_src, int32_t size);
-void MVM_jit_emit_store(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_emit_store(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                         MVMJitStorageClass mem_cls, int32_t mem_pos, int8_t reg_src, int32_t size);
-void MVM_jit_emit_copy(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_emit_copy(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                        int8_t dst_reg, int8_t src_num);
-void MVM_jit_emit_marker(MVMThreadContext *tc, MVMJitCompiler *compiler, int32_t num);
-void MVM_jit_emit_deopt_check(MVMThreadContext *tc, MVMJitCompiler *compiler);
-void MVM_jit_emit_runbytecode(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitRunByteCode *runcode);
-void MVM_jit_emit_runccode(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitRunCCode *runcode);
-void MVM_jit_emit_runnativecall(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitRunNativeCall *runcode);
-void MVM_jit_emit_dispatch(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitDispatch *dispatch);
-void MVM_jit_emit_istype(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitIsType *istype);
+void MVM_jit_emit_marker(struct MVMThreadContext *tc, MVMJitCompiler *compiler, int32_t num);
+void MVM_jit_emit_deopt_check(struct MVMThreadContext *tc, MVMJitCompiler *compiler);
+void MVM_jit_emit_runbytecode(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitRunByteCode *runcode);
+void MVM_jit_emit_runccode(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitRunCCode *runcode);
+void MVM_jit_emit_runnativecall(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitRunNativeCall *runcode);
+void MVM_jit_emit_dispatch(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitDispatch *dispatch);
+void MVM_jit_emit_istype(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitIsType *istype);
 
-uint32_t MVM_jit_spill_memory_select(MVMThreadContext *tc, MVMJitCompiler *compiler, int8_t reg_type);
-void MVM_jit_spill_memory_release(MVMThreadContext *tc, MVMJitCompiler *compiler, uint32_t pos, int8_t reg_type);
+uint32_t MVM_jit_spill_memory_select(struct MVMThreadContext *tc, MVMJitCompiler *compiler, int8_t reg_type);
+void MVM_jit_spill_memory_release(struct MVMThreadContext *tc, MVMJitCompiler *compiler, uint32_t pos, int8_t reg_type);
 
 
 

@@ -3,7 +3,7 @@
 /* Decodes the specified number of bytes of latin1 into an NFG string,
  * creating a result of the specified type. The type must have the MVMString
  * REPR. */
-MVMString * MVM_string_latin1_decode(MVMThreadContext *tc, const MVMObject *result_type,
+MVMString * MVM_string_latin1_decode(struct MVMThreadContext *tc, const MVMObject *result_type,
                                      char *latin1_c, size_t bytes) {
     uint8_t  *latin1 = (uint8_t *)latin1_c;
     MVMString *result;
@@ -67,7 +67,7 @@ MVMString * MVM_string_latin1_decode(MVMThreadContext *tc, const MVMObject *resu
 
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-uint32_t MVM_string_latin1_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_latin1_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                     const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps) {
     uint32_t count = 0, total = 0;
@@ -155,7 +155,7 @@ uint32_t MVM_string_latin1_decodestream(MVMThreadContext *tc, MVMDecodeStream *d
 /* Encodes the specified substring to latin-1. Anything outside of latin-1 range
  * will become a ?. The result string is NULL terminated, but the specified
  * size is the non-null part. */
-char * MVM_string_latin1_encode_substr(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length,
+char * MVM_string_latin1_encode_substr(struct MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length,
         MVMString *replacement, int32_t translate_newlines) {
     /* Latin-1 is a single byte encoding, but \r\n is a 2-byte grapheme, so we
      * may have to resize as we go. */
@@ -226,7 +226,7 @@ char * MVM_string_latin1_encode_substr(MVMThreadContext *tc, MVMString *str, uin
 /* Encodes the specified string to latin-1. Anything outside of latin-1 range
  * will become a ?. The result string is NULL terminated, but the specified
  * size is the non-null part. */
-char * MVM_string_latin1_encode(MVMThreadContext *tc, MVMString *str, uint64_t *output_size,
+char * MVM_string_latin1_encode(struct MVMThreadContext *tc, MVMString *str, uint64_t *output_size,
         int32_t translate_newlines) {
     return MVM_string_latin1_encode_substr(tc, str, output_size, 0, -1, NULL, translate_newlines);
 }

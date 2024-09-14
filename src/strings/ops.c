@@ -7,7 +7,7 @@
 #define MAX_GRAPHEMES     0xFFFFFFFFLL
 
 #if MVM_DEBUG_STRANDS
-static void check_strand_sanity(MVMThreadContext *tc, MVMString *s) {
+static void check_strand_sanity(struct MVMThreadContext *tc, MVMString *s) {
     MVMGraphemeIter gi;
     uint32_t       len;
     MVM_string_gi_init(tc, &gi, s);
@@ -26,9 +26,9 @@ static void check_strand_sanity(MVMThreadContext *tc, MVMString *s) {
 #define STRAND_CHECK(tc, s)
 #endif
 
-static MVMString * re_nfg(MVMThreadContext *tc, MVMString *in);
+static MVMString * re_nfg(struct MVMThreadContext *tc, MVMString *in);
 #if MVM_DEBUG_NFG
-static char * NFG_check_make_debug_string (MVMThreadContext *tc, MVMGrapheme32 g) {
+static char * NFG_check_make_debug_string (struct MVMThreadContext *tc, MVMGrapheme32 g) {
     char *result = NULL;
     char *picked = NULL;
     if (g == '\r')
@@ -66,15 +66,15 @@ static char * NFG_check_make_debug_string (MVMThreadContext *tc, MVMGrapheme32 g
     }
     return result;
 }
-static char * NFG_checker (MVMThreadContext *tc, MVMString *orig, char *varname);
-void NFG_check (MVMThreadContext *tc, MVMString *orig, char *varname) {
+static char * NFG_checker (struct MVMThreadContext *tc, MVMString *orig, char *varname);
+void NFG_check (struct MVMThreadContext *tc, MVMString *orig, char *varname) {
     char *out = NFG_checker(tc, orig, varname);
     char *waste[2] = { out, NULL };
     if (!out)
         return;
     MVM_exception_throw_adhoc_free(tc, waste, "%s", out);
 }
-static char * NFG_checker (MVMThreadContext *tc, MVMString *orig, char *varname) {
+static char * NFG_checker (struct MVMThreadContext *tc, MVMString *orig, char *varname) {
     MVMString *renorm = NULL;
     MVMStringIndex orig_graphs = MVM_string_graphs(tc, orig),
                    renorm_graphs = -1;
@@ -117,7 +117,7 @@ static char * NFG_checker (MVMThreadContext *tc, MVMString *orig, char *varname)
     }
     return NULL;
 }
-void NFG_check_concat (MVMThreadContext *tc, MVMString *result, MVMString *a, MVMString *b, char *varname) {
+void NFG_check_concat (struct MVMThreadContext *tc, MVMString *result, MVMString *a, MVMString *b, char *varname) {
     char *a_out = NFG_checker(tc, a, "string ‘a’");
     char *b_out = NFG_checker(tc, b, "string ‘b’");
     char *out = NFG_checker(tc, result, varname);
@@ -158,16 +158,16 @@ void NFG_check_concat (MVMThreadContext *tc, MVMString *result, MVMString *a, MV
 }
 #endif
 
-MVM_STATIC_INLINE int64_t string_equal_at_ignore_case_INTERNAL_loop(MVMThreadContext *tc, void *Hs_or_gic, MVMString *needle_fc, int64_t H_start, int64_t H_graphs, int64_t n_fc_graphs, int ignoremark, int ignorecase, int is_gic);
-static int64_t knuth_morris_pratt_string_index (MVMThreadContext *tc, MVMString *needle, MVMString *Haystack, int64_t H_offset);
+static inline int64_t string_equal_at_ignore_case_INTERNAL_loop(struct MVMThreadContext *tc, void *Hs_or_gic, MVMString *needle_fc, int64_t H_start, int64_t H_graphs, int64_t n_fc_graphs, int ignoremark, int ignorecase, int is_gic);
+static int64_t knuth_morris_pratt_string_index (struct MVMThreadContext *tc, MVMString *needle, MVMString *Haystack, int64_t H_offset);
 
 /* Allocates strand storage. */
-static MVMStringStrand * allocate_strands(MVMThreadContext *tc, uint16_t num_strands) {
+static MVMStringStrand * allocate_strands(struct MVMThreadContext *tc, uint16_t num_strands) {
     return MVM_malloc(num_strands * sizeof(MVMStringStrand));
 }
 
 /* Copies strands from one strand string to another. */
-static void copy_strands(MVMThreadContext *tc, const MVMString *from, uint16_t from_offset,
+static void copy_strands(struct MVMThreadContext *tc, const MVMString *from, uint16_t from_offset,
         MVMString *to, uint16_t to_offset, uint16_t num_strands) {
     assert(from->body.storage_type == MVM_STRING_STRAND);
     assert(to->body.storage_type == MVM_STRING_STRAND);
@@ -177,7 +177,7 @@ static void copy_strands(MVMThreadContext *tc, const MVMString *from, uint16_t f
         num_strands * sizeof(MVMStringStrand));
 }
 /* Move strands inside the same strand string. */
-static void move_strands(MVMThreadContext *tc, const MVMString *from, uint16_t from_offset,
+static void move_strands(struct MVMThreadContext *tc, const MVMString *from, uint16_t from_offset,
         MVMString *to, uint16_t to_offset, uint16_t num_strands) {
     assert(from->body.storage_type == MVM_STRING_STRAND);
     assert(to->body.storage_type == MVM_STRING_STRAND);
@@ -189,12 +189,12 @@ static void move_strands(MVMThreadContext *tc, const MVMString *from, uint16_t f
 
 #define can_fit_into_8bit(g) ((-128 <= (g) && (g) <= 127))
 
-MVM_STATIC_INLINE int can_fit_into_ascii (MVMGrapheme32 g) {
+static inline int can_fit_into_ascii (MVMGrapheme32 g) {
     return 0 <= g && g <= 127;
 }
 /* If a string is currently using 32bit storage, turn it into using
  * 8 bit storage. Doesn't do any checks at all. */
-static void turn_32bit_into_8bit_unchecked(MVMThreadContext *tc, MVMString *str) {
+static void turn_32bit_into_8bit_unchecked(struct MVMThreadContext *tc, MVMString *str) {
     MVMGrapheme32 *old_buf = str->body.storage.blob_32;
     MVMStringIndex i;
     MVMGrapheme8 *dest_buf = NULL;
@@ -221,7 +221,7 @@ static void turn_32bit_into_8bit_unchecked(MVMThreadContext *tc, MVMString *str)
  * have any branching or funcion calls. `i` is not used outside the loop
  * `val` is allowed as biwise OR works with the vectorization well.
  * NOTE: GraphemeIter is not modified by this function. */
-static int string_can_be_8bit(MVMThreadContext *tc, MVMGraphemeIter *gi_orig, MVMStringIndex num_graphs) {
+static int string_can_be_8bit(struct MVMThreadContext *tc, MVMGraphemeIter *gi_orig, MVMStringIndex num_graphs) {
     MVMStringIndex pos = 0;
     MVMGraphemeIter gi;
     memcpy(&gi, gi_orig, sizeof(MVMGraphemeIter));
@@ -251,7 +251,7 @@ static int string_can_be_8bit(MVMThreadContext *tc, MVMGraphemeIter *gi_orig, MV
  * unallocated. This function will allocate the space for the blob and iterate
  * the supplied grapheme iterator for the length of body.num_graphs. Very fast
  * since compilers will convert them to SIMD vector operations. */
-static void iterate_gi_into_string(MVMThreadContext *tc, MVMGraphemeIter *gi, MVMString *result, MVMString *orig, MVMStringIndex num) {
+static void iterate_gi_into_string(struct MVMThreadContext *tc, MVMGraphemeIter *gi, MVMString *result, MVMString *orig, MVMStringIndex num) {
     MVMGrapheme8   *result8   = NULL;
     MVMGrapheme32 *result32   = NULL;
     MVMStringIndex result_graphs = MVM_string_graphs_nocheck(tc, result);
@@ -428,7 +428,7 @@ static void iterate_gi_into_string(MVMThreadContext *tc, MVMGraphemeIter *gi, MV
     } \
 }
 /* Collapses a bunch of strands into a single blob string. */
-static MVMString * collapse_strands(MVMThreadContext *tc, MVMString *orig) {
+static MVMString * collapse_strands(struct MVMThreadContext *tc, MVMString *orig) {
     MVMString      *result = NULL;
     size_t graphs_so_far = 0;
 
@@ -479,7 +479,7 @@ static MVMString * collapse_strands(MVMThreadContext *tc, MVMString *orig) {
  * much, much, smarter thing in the future that doesn't involve all of this
  * copying and allocation and re-doing the whole string, but cases like this
  * should be fairly rare anyway, so go with simplicity for now. */
-static MVMString * re_nfg(MVMThreadContext *tc, MVMString *in) {
+static MVMString * re_nfg(struct MVMThreadContext *tc, MVMString *in) {
     MVMNormalizer norm;
     MVMCodepointIter ci;
     int32_t ready;
@@ -530,7 +530,7 @@ static MVMString * re_nfg(MVMThreadContext *tc, MVMString *in) {
 }
 
 /* Returns nonzero if two substrings are equal, doesn't check bounds */
-int64_t MVM_string_substrings_equal_nocheck(MVMThreadContext *tc, MVMString *a,
+int64_t MVM_string_substrings_equal_nocheck(struct MVMThreadContext *tc, MVMString *a,
         int64_t starta, int64_t length, MVMString *b, int64_t startb) {
     int64_t i;
 
@@ -613,11 +613,11 @@ int64_t MVM_string_substrings_equal_nocheck(MVMThreadContext *tc, MVMString *a,
         return 1;
     }
 }
-static int64_t MVM_string_memmem_grapheme32 (MVMThreadContext *tc, MVMGrapheme32 *H_blob32, MVMGrapheme32 *n_blob32, int64_t H_start, MVMStringIndex H_graphs, MVMStringIndex n_graphs) {
+static int64_t MVM_string_memmem_grapheme32 (struct MVMThreadContext *tc, MVMGrapheme32 *H_blob32, MVMGrapheme32 *n_blob32, int64_t H_start, MVMStringIndex H_graphs, MVMStringIndex n_graphs) {
     MVMGrapheme32 * rtrn = memmem_uint32(H_blob32 + H_start, H_graphs - H_start, n_blob32, n_graphs);
     return rtrn == NULL ? -1 : rtrn - H_blob32;
 }
-static int64_t MVM_string_memmem_grapheme32str (MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t H_start, MVMStringIndex H_graphs, MVMStringIndex n_graphs) {
+static int64_t MVM_string_memmem_grapheme32str (struct MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t H_start, MVMStringIndex H_graphs, MVMStringIndex n_graphs) {
     MVMGrapheme32 *needle_buf = NULL;
     int64_t rtrn;
     if (needle->body.storage_type != MVM_STRING_GRAPHEME_32) {
@@ -642,7 +642,7 @@ static int64_t MVM_string_memmem_grapheme32str (MVMThreadContext *tc, MVMString 
     return rtrn;
 }
 /* Returns the location of one string in another or -1  */
-int64_t MVM_string_index(MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start) {
+int64_t MVM_string_index(struct MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start) {
     size_t index           = (size_t)start;
     MVMStringIndex H_graphs, n_graphs;
     MVM_string_check_arg(tc, Haystack, "index search target");
@@ -748,7 +748,7 @@ int64_t MVM_string_index(MVMThreadContext *tc, MVMString *Haystack, MVMString *n
 }
 
 /* Returns the location of one string in another or -1  */
-int64_t MVM_string_index_from_end(MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start) {
+int64_t MVM_string_index_from_end(struct MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start) {
     int64_t result = -1;
     size_t index;
     MVMStringIndex H_graphs, n_graphs;
@@ -795,7 +795,7 @@ int64_t MVM_string_index_from_end(MVMThreadContext *tc, MVMString *Haystack, MVM
 }
 
 /* Returns a substring of the given string */
-MVMString * MVM_string_substring(MVMThreadContext *tc, MVMString *a, int64_t offset, int64_t length) {
+MVMString * MVM_string_substring(struct MVMThreadContext *tc, MVMString *a, int64_t offset, int64_t length) {
     MVMString *result;
     int64_t   start_pos, end_pos;
 
@@ -876,7 +876,7 @@ MVMString * MVM_string_substring(MVMThreadContext *tc, MVMString *a, int64_t off
     return result;
 }
 
-MVMString * MVM_string_replace(MVMThreadContext *tc, MVMString *original, int64_t start, int64_t count, MVMString *replacement) {
+MVMString * MVM_string_replace(struct MVMThreadContext *tc, MVMString *original, int64_t start, int64_t count, MVMString *replacement) {
     /* XXX this could probably be done more efficiently directly. */
     MVMString *first_part = NULL;
     MVMString *rest_part  = NULL;
@@ -898,12 +898,12 @@ MVMString * MVM_string_replace(MVMThreadContext *tc, MVMString *original, int64_
     return result;
 }
 
-static MVMString * string_from_strand_at_index(MVMThreadContext *tc, MVMString *a, uint16_t index) {
+static MVMString * string_from_strand_at_index(struct MVMThreadContext *tc, MVMString *a, uint16_t index) {
     MVMStringStrand *ss = &(a->body.storage.strands[index]);
     return MVM_string_substring(tc, ss->blob_string, ss->start, ss->end - ss->start);
 }
 
-static uint32_t final_strand_match_with_repetition_count(MVMThreadContext *tc, MVMString *a, MVMString *b) {
+static uint32_t final_strand_match_with_repetition_count(struct MVMThreadContext *tc, MVMString *a, MVMString *b) {
     if (a->body.storage_type == MVM_STRING_STRAND) {
         MVMStringStrand *sa = &(a->body.storage.strands[a->body.num_strands - 1]);
         /* If the final strand of a eq b, we'll just increment the final strand of a's repetitions. */
@@ -932,7 +932,7 @@ static uint32_t final_strand_match_with_repetition_count(MVMThreadContext *tc, M
 }
 
 /* Append one string to another. */
-MVMString * MVM_string_concatenate(MVMThreadContext *tc, MVMString *a, MVMString *b) {
+MVMString * MVM_string_concatenate(struct MVMThreadContext *tc, MVMString *a, MVMString *b) {
     MVMString *result = NULL, *renormalized_section = NULL;
     uint32_t renormalized_section_graphs = 0, consumed_a = 0, consumed_b = 0;
     uint32_t  agraphs, bgraphs;
@@ -1155,7 +1155,7 @@ MVMString * MVM_string_concatenate(MVMThreadContext *tc, MVMString *a, MVMString
     return re_nfg(tc, result);
 }
 
-MVMString * MVM_string_repeat(MVMThreadContext *tc, MVMString *a, int64_t count) {
+MVMString * MVM_string_repeat(struct MVMThreadContext *tc, MVMString *a, int64_t count) {
     MVMString *result = NULL;
     uint32_t  agraphs;
     uint64_t  total_graphs;
@@ -1221,13 +1221,13 @@ MVMString * MVM_string_repeat(MVMThreadContext *tc, MVMString *a, int64_t count)
     return result;
 }
 
-void MVM_string_say(MVMThreadContext *tc, MVMString *a) {
+void MVM_string_say(struct MVMThreadContext *tc, MVMString *a) {
     MVM_string_check_arg(tc, a, "say");
     MVM_string_print(tc, MVM_string_concatenate(tc, a,
         tc->instance->str_consts.platform_newline));
 }
 
-void MVM_string_print(MVMThreadContext *tc, MVMString *a) {
+void MVM_string_print(struct MVMThreadContext *tc, MVMString *a) {
     uint64_t encoded_size;
     char *encoded;
     MVM_string_check_arg(tc, a, "print");
@@ -1236,7 +1236,7 @@ void MVM_string_print(MVMThreadContext *tc, MVMString *a) {
     MVM_free(encoded);
 }
 /* Meant to be pased in a MVMNormalizer of type MVM_NORMALIZE_NFD */
-static MVMGrapheme32 ord_getbasechar (MVMThreadContext *tc, MVMGrapheme32 g) {
+static MVMGrapheme32 ord_getbasechar (struct MVMThreadContext *tc, MVMGrapheme32 g) {
     /* If we get a synthetic, extract the base codepoint and call ord_getbasechar again */
     if (g < 0) {
         MVMNFGSynthetic *synth = MVM_nfg_get_synthetic_info(tc, g);
@@ -1257,7 +1257,7 @@ static MVMGrapheme32 ord_getbasechar (MVMThreadContext *tc, MVMGrapheme32 g) {
     }
 }
 /* Tests whether one string a has the other string b as a substring at that index */
-int64_t MVM_string_equal_at(MVMThreadContext *tc, MVMString *a, MVMString *b, int64_t offset) {
+int64_t MVM_string_equal_at(struct MVMThreadContext *tc, MVMString *a, MVMString *b, int64_t offset) {
 
     MVMStringIndex agraphs, bgraphs;
 
@@ -1281,7 +1281,7 @@ int64_t MVM_string_equal_at(MVMThreadContext *tc, MVMString *a, MVMString *b, in
  * MVMStringIndex in length, we could have some weird results. */
 
 /* ignoremark is 0 for normal operation and 1 for ignoring diacritics */
-MVM_STATIC_INLINE int64_t string_equal_at_ignore_case_INTERNAL_loop(MVMThreadContext *tc, void *Hs_or_gic, MVMString *needle_fc, int64_t H_start, int64_t H_graphs, int64_t n_fc_graphs, int ignoremark, int ignorecase, int is_gic) {
+static inline int64_t string_equal_at_ignore_case_INTERNAL_loop(struct MVMThreadContext *tc, void *Hs_or_gic, MVMString *needle_fc, int64_t H_start, int64_t H_graphs, int64_t n_fc_graphs, int ignoremark, int ignorecase, int is_gic) {
     uint32_t H_fc_cps;
     /* An additional needle offset which is used only when codepoints expand
      * when casefolded. The offset is the number of additional codepoints that
@@ -1340,7 +1340,7 @@ MVM_STATIC_INLINE int64_t string_equal_at_ignore_case_INTERNAL_loop(MVMThreadCon
  * Sometimes there is a difference in length of a string before and after foldcase,
  * because of this we must compare this differently than just foldcasing both
  * strings to ensure the offset is correct */
-static int64_t string_equal_at_ignore_case(MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t H_offset, int ignoremark, int ignorecase) {
+static int64_t string_equal_at_ignore_case(struct MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t H_offset, int ignoremark, int ignorecase) {
     /* Foldcase version of needle */
     MVMString *needle_fc = NULL;
     MVMStringIndex H_graphs = MVM_string_graphs(tc, Haystack);
@@ -1378,7 +1378,7 @@ static int64_t string_equal_at_ignore_case(MVMThreadContext *tc, MVMString *Hays
  * numbers. It must be able to store at least 1/2 the length of the needle,
  * though possibly more (though I am not sure it's possible for it to be more than
  * 1/2). */
-static void knuth_morris_pratt_process_pattern (MVMThreadContext *tc, MVMString *pat, int16_t *next, MVMStringIndex pat_graphs) {
+static void knuth_morris_pratt_process_pattern (struct MVMThreadContext *tc, MVMString *pat, int16_t *next, MVMStringIndex pat_graphs) {
     int64_t i = 0;
     int64_t j = next[0] = -1;
     while (i < pat_graphs) {
@@ -1395,7 +1395,7 @@ static void knuth_morris_pratt_process_pattern (MVMThreadContext *tc, MVMString 
     }
 }
 
-static int64_t knuth_morris_pratt_string_index (MVMThreadContext *tc, MVMString *needle, MVMString *Haystack, int64_t H_offset) {
+static int64_t knuth_morris_pratt_string_index (struct MVMThreadContext *tc, MVMString *needle, MVMString *Haystack, int64_t H_offset) {
     int64_t needle_offset = 0;
     int64_t text_offset   = H_offset;
     MVMStringIndex Haystack_graphs = MVM_string_graphs_nocheck(tc, Haystack);
@@ -1454,7 +1454,7 @@ static int64_t knuth_morris_pratt_string_index (MVMThreadContext *tc, MVMString 
     if (next_is_malloced) MVM_free(next);
     return -1;
 }
-static int64_t string_index_ignore_case(MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start, int ignoremark, int ignorecase) {
+static int64_t string_index_ignore_case(struct MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start, int ignoremark, int ignorecase) {
     /* Foldcase version of needle */
     MVMString *needle_fc = NULL;
     MVMStringIndex n_fc_graphs;
@@ -1502,26 +1502,26 @@ static int64_t string_index_ignore_case(MVMThreadContext *tc, MVMString *Haystac
     return -1;
 }
 
-int64_t MVM_string_equal_at_ignore_case(MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t H_offset) {
+int64_t MVM_string_equal_at_ignore_case(struct MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t H_offset) {
     return string_equal_at_ignore_case(tc, Haystack, needle, H_offset, 0, 1);
 }
-int64_t MVM_string_index_ignore_case(MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start) {
+int64_t MVM_string_index_ignore_case(struct MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start) {
     return string_index_ignore_case(tc, Haystack, needle, start, 0, 1);
 }
-int64_t MVM_string_equal_at_ignore_mark(MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t H_offset) {
+int64_t MVM_string_equal_at_ignore_mark(struct MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t H_offset) {
     return string_equal_at_ignore_case(tc, Haystack, needle, H_offset, 1, 0);
 }
-int64_t MVM_string_index_ignore_mark(MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start) {
+int64_t MVM_string_index_ignore_mark(struct MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start) {
     return string_index_ignore_case(tc, Haystack, needle, start, 1, 0);
 }
-int64_t MVM_string_equal_at_ignore_case_ignore_mark(MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t H_offset) {
+int64_t MVM_string_equal_at_ignore_case_ignore_mark(struct MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t H_offset) {
     return string_equal_at_ignore_case(tc, Haystack, needle, H_offset, 1, 1);
 }
-int64_t MVM_string_index_ignore_case_ignore_mark(MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start) {
+int64_t MVM_string_index_ignore_case_ignore_mark(struct MVMThreadContext *tc, MVMString *Haystack, MVMString *needle, int64_t start) {
     return string_index_ignore_case(tc, Haystack, needle, start, 1, 1);
 }
 
-MVMGrapheme32 MVM_string_ord_at(MVMThreadContext *tc, MVMString *s, int64_t offset) {
+MVMGrapheme32 MVM_string_ord_at(struct MVMThreadContext *tc, MVMString *s, int64_t offset) {
     MVMStringIndex agraphs;
     MVMGrapheme32 g;
 
@@ -1537,7 +1537,7 @@ MVMGrapheme32 MVM_string_ord_at(MVMThreadContext *tc, MVMString *s, int64_t offs
 }
 
 /* Gets the base character at a grapheme position, ignoring things like diacritics */
-MVMGrapheme32 MVM_string_ord_basechar_at(MVMThreadContext *tc, MVMString *s, int64_t offset) {
+MVMGrapheme32 MVM_string_ord_basechar_at(struct MVMThreadContext *tc, MVMString *s, int64_t offset) {
     MVMStringIndex agraphs;
 
     MVM_string_check_arg(tc, s, "ord_basechar_at");
@@ -1551,7 +1551,7 @@ MVMGrapheme32 MVM_string_ord_basechar_at(MVMThreadContext *tc, MVMString *s, int
 
 
 /* Compares two strings for equality. */
-int64_t MVM_string_equal(MVMThreadContext *tc, MVMString *a, MVMString *b) {
+int64_t MVM_string_equal(struct MVMThreadContext *tc, MVMString *a, MVMString *b) {
     MVMStringIndex agraphs, bgraphs;
 
     MVM_string_check_arg(tc, a, "equal");
@@ -1574,7 +1574,7 @@ int64_t MVM_string_equal(MVMThreadContext *tc, MVMString *a, MVMString *b) {
 }
 
 /* more general form of has_at; compares two substrings for equality */
-int64_t MVM_string_have_at(MVMThreadContext *tc, MVMString *a,
+int64_t MVM_string_have_at(struct MVMThreadContext *tc, MVMString *a,
         int64_t starta, int64_t length, MVMString *b, int64_t startb) {
 
     MVM_string_check_arg(tc, a, "have_at");
@@ -1591,7 +1591,7 @@ int64_t MVM_string_have_at(MVMThreadContext *tc, MVMString *a,
 }
 
 /* Returns the grapheme at a given index of the string */
-int64_t MVM_string_get_grapheme_at(MVMThreadContext *tc, MVMString *a, int64_t index) {
+int64_t MVM_string_get_grapheme_at(struct MVMThreadContext *tc, MVMString *a, int64_t index) {
     MVMStringIndex agraphs;
 
     MVM_string_check_arg(tc, a, "grapheme_at");
@@ -1606,7 +1606,7 @@ int64_t MVM_string_get_grapheme_at(MVMThreadContext *tc, MVMString *a, int64_t i
 }
 
 /* Finds the location of a grapheme in a string.  Useful for small character class lookup */
-int64_t MVM_string_index_of_grapheme(MVMThreadContext *tc, MVMString *a, MVMGrapheme32 grapheme) {
+int64_t MVM_string_index_of_grapheme(struct MVMThreadContext *tc, MVMString *a, MVMGrapheme32 grapheme) {
     size_t index = -1;
     MVMGraphemeIter gi;
 
@@ -1622,8 +1622,8 @@ int64_t MVM_string_index_of_grapheme(MVMThreadContext *tc, MVMString *a, MVMGrap
 }
 
 /* Case change functions. */
-int64_t MVM_string_grapheme_is_cclass(MVMThreadContext *tc, int64_t cclass, MVMGrapheme32 g);
-static MVMString * do_case_change(MVMThreadContext *tc, MVMString *s, int32_t type, char *error) {
+int64_t MVM_string_grapheme_is_cclass(struct MVMThreadContext *tc, int64_t cclass, MVMGrapheme32 g);
+static MVMString * do_case_change(struct MVMThreadContext *tc, MVMString *s, int32_t type, char *error) {
     int64_t sgraphs;
     MVM_string_check_arg(tc, s, error);
     sgraphs = MVM_string_graphs_nocheck(tc, s);
@@ -1757,19 +1757,19 @@ static MVMString * do_case_change(MVMThreadContext *tc, MVMString *s, int32_t ty
     STRAND_CHECK(tc, s);
     return s;
 }
-MVMString * MVM_string_uc(MVMThreadContext *tc, MVMString *s) {
+MVMString * MVM_string_uc(struct MVMThreadContext *tc, MVMString *s) {
     return do_case_change(tc, s, MVM_unicode_case_change_type_upper, "uc");
 }
-MVMString * MVM_string_lc(MVMThreadContext *tc, MVMString *s) {
+MVMString * MVM_string_lc(struct MVMThreadContext *tc, MVMString *s) {
     return do_case_change(tc, s, MVM_unicode_case_change_type_lower, "lc");
 }
-MVMString * MVM_string_tc(MVMThreadContext *tc, MVMString *s) {
+MVMString * MVM_string_tc(struct MVMThreadContext *tc, MVMString *s) {
     return do_case_change(tc, s, MVM_unicode_case_change_type_title, "tc");
 }
-MVMString * MVM_string_fc(MVMThreadContext *tc, MVMString *s) {
+MVMString * MVM_string_fc(struct MVMThreadContext *tc, MVMString *s) {
     return do_case_change(tc, s, MVM_unicode_case_change_type_fold, "fc");
 }
-char * MVM_string_encoding_cname(MVMThreadContext *tc, int64_t code);
+char * MVM_string_encoding_cname(struct MVMThreadContext *tc, int64_t code);
 /* "Strict"ly (if possible) decodes a C buffer to an MVMString, dependent on the
  * encoding type flag. Unlike MVM_string_decode, it will not pass through
  * codepoints which have no official mapping. `config` can be set to 1 to indicate
@@ -1780,7 +1780,7 @@ char * MVM_string_encoding_cname(MVMThreadContext *tc, int64_t code);
  * For now windows-1252 and windows-1251 are the only ones this makes a difference
  * on. And it is mostly irrelevant for utf8/utf8-c8 encodings since they can
  * already represent all codepoints below 0x10FFFF */
-MVMString * MVM_string_decode_config(MVMThreadContext *tc,
+MVMString * MVM_string_decode_config(struct MVMThreadContext *tc,
         const MVMObject *type_object, char *Cbuf, int64_t byte_length,
         int64_t encoding_flag, MVMString *replacement, int64_t config) {
     switch(encoding_flag) {
@@ -1817,14 +1817,14 @@ MVMString * MVM_string_decode_config(MVMThreadContext *tc,
 }
 /* Strictly decodes a C buffer to an MVMString, dependent on the encoding type flag.
  * See the comments above MVM_string_decode_config() above for more details. */
-MVMString * MVM_string_decode(MVMThreadContext *tc,
+MVMString * MVM_string_decode(struct MVMThreadContext *tc,
         const MVMObject *type_object, char *Cbuf, int64_t byte_length, int64_t encoding_flag) {
     return MVM_string_decode_config(tc, type_object, Cbuf, byte_length, encoding_flag, NULL, MVM_ENCODING_PERMISSIVE);
 }
 
 /* Strictly encodes an MVMString to a C buffer, dependent on the encoding type flag.
  * See comments for MVM_string_decode_config() above for more details. */
-char * MVM_string_encode_config(MVMThreadContext *tc, MVMString *s, int64_t start,
+char * MVM_string_encode_config(struct MVMThreadContext *tc, MVMString *s, int64_t start,
         int64_t length, uint64_t *output_size, int64_t encoding_flag,
         MVMString *replacement, int32_t translate_newlines, uint8_t config) {
     switch(encoding_flag) {
@@ -1859,7 +1859,7 @@ char * MVM_string_encode_config(MVMThreadContext *tc, MVMString *s, int64_t star
                 MVM_exception_throw_adhoc(tc, "unable to handle %s encoding in MVM_string_encode_config", MVM_string_encoding_cname(tc, encoding_flag));
     }
 }
-char * MVM_string_encode(MVMThreadContext *tc, MVMString *s, int64_t start,
+char * MVM_string_encode(struct MVMThreadContext *tc, MVMString *s, int64_t start,
         int64_t length, uint64_t *output_size, int64_t encoding_flag,
         MVMString *replacement, int32_t translate_newlines) {
     return MVM_string_encode_config(tc, s, start, length, output_size, encoding_flag, replacement, translate_newlines, MVM_ENCODING_PERMISSIVE);
@@ -1867,7 +1867,7 @@ char * MVM_string_encode(MVMThreadContext *tc, MVMString *s, int64_t start,
 
 /* Strictly encodes a string, and writes the encoding string into the supplied Buf
  * instance, which should be an integer array with MVMArray REPR. */
-MVMObject * MVM_string_encode_to_buf_config(MVMThreadContext *tc, MVMString *s, MVMString *enc_name,
+MVMObject * MVM_string_encode_to_buf_config(struct MVMThreadContext *tc, MVMString *s, MVMString *enc_name,
         MVMObject *buf, MVMString *replacement, int64_t config) {
     uint64_t output_size;
     uint8_t *encoded;
@@ -1918,13 +1918,13 @@ MVMObject * MVM_string_encode_to_buf_config(MVMThreadContext *tc, MVMString *s, 
 
     return buf;
 }
-MVMObject * MVM_string_encode_to_buf(MVMThreadContext *tc, MVMString *s, MVMString *enc_name,
+MVMObject * MVM_string_encode_to_buf(struct MVMThreadContext *tc, MVMString *s, MVMString *enc_name,
         MVMObject *buf, MVMString *replacement) {
     return MVM_string_encode_to_buf_config(tc, s, enc_name, buf, replacement, MVM_ENCODING_PERMISSIVE);
 }
 /* Decodes a string using the data from the specified Buf. Decodes "strict" by
  * default, but optionally can be "permissive". */
-MVMString * MVM_string_decode_from_buf_config(MVMThreadContext *tc, MVMObject *buf,
+MVMString * MVM_string_decode_from_buf_config(struct MVMThreadContext *tc, MVMObject *buf,
         MVMString *enc_name, MVMString *replacement, int64_t config) {
     MVMArrayREPRData *buf_rd;
     uint8_t encoding_flag;
@@ -1958,11 +1958,11 @@ MVMString * MVM_string_decode_from_buf_config(MVMThreadContext *tc, MVMObject *b
         ((MVMArray *)buf)->body.elems * elem_size,
         encoding_flag, replacement, config);
 }
-MVMString * MVM_string_decode_from_buf(MVMThreadContext *tc, MVMObject *buf, MVMString *enc_name) {
+MVMString * MVM_string_decode_from_buf(struct MVMThreadContext *tc, MVMObject *buf, MVMString *enc_name) {
     return MVM_string_decode_from_buf_config(tc, buf, enc_name, NULL, MVM_ENCODING_PERMISSIVE);
 }
 
-MVMObject * MVM_string_split(MVMThreadContext *tc, MVMString *separator, MVMString *input) {
+MVMObject * MVM_string_split(struct MVMThreadContext *tc, MVMString *separator, MVMString *input) {
     MVMObject *result = NULL;
     MVMStringIndex start, end, sep_length;
     MVMHLLConfig *hll = MVM_hll_current(tc);
@@ -2006,7 +2006,7 @@ MVMObject * MVM_string_split(MVMThreadContext *tc, MVMString *separator, MVMStri
     return result;
 }
 /* Used in the MVM_string_join function. Moved here to simplify the code */
-static void copy_to_32bit (MVMThreadContext *tc, MVMString *source,
+static void copy_to_32bit (struct MVMThreadContext *tc, MVMString *source,
     MVMString *dest, int64_t *position, MVMGraphemeIter *gi) {
     /* Add source. */
     switch (source->body.storage_type) {
@@ -2038,12 +2038,12 @@ static void copy_to_32bit (MVMThreadContext *tc, MVMString *source,
  * combined in a concatenation: here we only care about two states, whether we need to
  * run re_nfg afterward or not. Essentially we treat `2` (force renormalization) the
  * same as 0 (codepoints should not break between them). */
-MVM_STATIC_INLINE int nfg_is_join_stable(MVMThreadContext *tc, MVMString *a, MVMString *b) {
+static inline int nfg_is_join_stable(struct MVMThreadContext *tc, MVMString *a, MVMString *b) {
     int temp = MVM_nfg_is_concat_stable(tc, a, b);
     return temp == 2 ? 0 : temp;
 }
 /* Used in MVM_string_join to check stability of adding the next piece */
-MVM_STATIC_INLINE void join_check_stability(MVMThreadContext *tc, MVMString *piece,
+static inline void join_check_stability(struct MVMThreadContext *tc, MVMString *piece,
     MVMString *separator, MVMString **pieces, int32_t *concats_stable, int64_t num_pieces, int64_t sgraphs, int64_t piece_index) {
     if (!sgraphs) {
         /* If there's no separator and one piece is The Empty String we
@@ -2066,7 +2066,7 @@ MVM_STATIC_INLINE void join_check_stability(MVMThreadContext *tc, MVMString *pie
         }
     }
 }
-MVM_STATIC_INLINE MVMString * join_get_str_from_pos(MVMThreadContext *tc, MVMObject *array, int64_t index, int64_t is_str_array) {
+static inline MVMString * join_get_str_from_pos(struct MVMThreadContext *tc, MVMObject *array, int64_t index, int64_t is_str_array) {
     if (is_str_array) {
         MVMString *piece = MVM_repr_at_pos_s(tc, array, index);
         if (piece)
@@ -2079,14 +2079,14 @@ MVM_STATIC_INLINE MVMString * join_get_str_from_pos(MVMThreadContext *tc, MVMObj
     }
     return (MVMString*)NULL;
 }
-MVMString * MVM_string_ascii_from_buf_nocheck(MVMThreadContext *tc, MVMGrapheme8 *buf, MVMStringIndex len) {
+MVMString * MVM_string_ascii_from_buf_nocheck(struct MVMThreadContext *tc, MVMGrapheme8 *buf, MVMStringIndex len) {
     MVMString *result = (MVMString *)MVM_repr_alloc_init(tc, tc->instance->VMString);
     result->body.num_graphs     = len;
     result->body.storage_type   = MVM_STRING_GRAPHEME_ASCII;
     result->body.storage.blob_8 = buf;
     return result;
 }
-MVMString * MVM_string_join(MVMThreadContext *tc, MVMString *separator, MVMObject *input) {
+MVMString * MVM_string_join(struct MVMThreadContext *tc, MVMString *separator, MVMObject *input) {
     MVMString  *result = NULL;
     MVMString **pieces = NULL;
     int64_t    elems, num_pieces, sgraphs, i, is_str_array, total_graphs;
@@ -2261,7 +2261,7 @@ MVMString * MVM_string_join(MVMThreadContext *tc, MVMString *separator, MVMObjec
 
 /* Returning nonzero means it found the char at the position specified in 'a' in 'Haystack'.
  * For character enumerations in regexes. */
-int64_t MVM_string_char_at_in_string(MVMThreadContext *tc, MVMString *a, int64_t offset, MVMString *Haystack) {
+int64_t MVM_string_char_at_in_string(struct MVMThreadContext *tc, MVMString *a, int64_t offset, MVMString *Haystack) {
     uint32_t     H_graphs;
     MVMGrapheme32 search;
 
@@ -2322,7 +2322,7 @@ int64_t MVM_string_char_at_in_string(MVMThreadContext *tc, MVMString *a, int64_t
     return -1;
 }
 
-int64_t MVM_string_offset_has_unicode_property_value(MVMThreadContext *tc, MVMString *s, int64_t offset, int64_t property_code, int64_t property_value_code) {
+int64_t MVM_string_offset_has_unicode_property_value(struct MVMThreadContext *tc, MVMString *s, int64_t offset, int64_t property_code, int64_t property_value_code) {
     MVMGrapheme32 g;
     MVMCodepoint  cp;
 
@@ -2343,7 +2343,7 @@ int64_t MVM_string_offset_has_unicode_property_value(MVMThreadContext *tc, MVMSt
  * representing the exact same graphemes but without strands. Otherwise,
  * returns the input string. Intended for strings that will be indexed
  * into heavily (when evaluating regexes, for example). */
-MVMString * MVM_string_indexing_optimized(MVMThreadContext *tc, MVMString *s) {
+MVMString * MVM_string_indexing_optimized(struct MVMThreadContext *tc, MVMString *s) {
     MVM_string_check_arg(tc, s, "indexingoptimized");
     if (s->body.storage_type == MVM_STRING_STRAND)
         return collapse_strands(tc, s);
@@ -2353,7 +2353,7 @@ MVMString * MVM_string_indexing_optimized(MVMThreadContext *tc, MVMString *s) {
 
 /* Escapes a string, replacing various chars like \n with \\n. Can no doubt be
  * further optimized. */
-MVMString * MVM_string_escape(MVMThreadContext *tc, MVMString *s) {
+MVMString * MVM_string_escape(struct MVMThreadContext *tc, MVMString *s) {
     MVMString      *res     = NULL;
     MVMStringIndex  spos    = 0;
     MVMStringIndex  bpos    = 0;
@@ -2426,7 +2426,7 @@ MVMString * MVM_string_escape(MVMThreadContext *tc, MVMString *s) {
 }
 
 /* Takes a string and reverses its characters. */
-MVMString * MVM_string_flip(MVMThreadContext *tc, MVMString *s) {
+MVMString * MVM_string_flip(struct MVMThreadContext *tc, MVMString *s) {
     MVMString      *res     = NULL;
     MVMStringIndex  spos    = 0;
     MVMStringIndex  sgraphs;
@@ -2483,7 +2483,7 @@ MVMString * MVM_string_flip(MVMThreadContext *tc, MVMString *s) {
 
 /* Compares two strings, returning -1, 0 or 1 to indicate less than,
  * equal or greater than. */
-int64_t MVM_string_compare(MVMThreadContext *tc, MVMString *a, MVMString *b) {
+int64_t MVM_string_compare(struct MVMThreadContext *tc, MVMString *a, MVMString *b) {
     MVMStringIndex alen, blen, i = 0, scanlen;
     MVMGraphemeIter gi_a, gi_b;
 
@@ -2690,16 +2690,16 @@ int64_t MVM_string_compare(MVMThreadContext *tc, MVMString *a, MVMString *b) {
     return res;\
 
 /* Takes two strings and AND's their characters. */
-MVMString * MVM_string_bitand(MVMThreadContext *tc, MVMString *a, MVMString *b) {
+MVMString * MVM_string_bitand(struct MVMThreadContext *tc, MVMString *a, MVMString *b) {
     MVM_STRING_BITOP( & , 0, "bitwise and")
 }
 
 /* Takes two strings and OR's their characters. */
-MVMString * MVM_string_bitor(MVMThreadContext *tc, MVMString *a, MVMString *b) {
+MVMString * MVM_string_bitor(struct MVMThreadContext *tc, MVMString *a, MVMString *b) {
     MVM_STRING_BITOP( | , 1, "bitwise or")
 }
 /* Takes two strings and XOR's their characters. */
-MVMString * MVM_string_bitxor(MVMThreadContext *tc, MVMString *a, MVMString *b) {
+MVMString * MVM_string_bitxor(struct MVMThreadContext *tc, MVMString *a, MVMString *b) {
     MVM_STRING_BITOP( ^ , 1, "bitwise xor");
 }
 
@@ -2722,7 +2722,7 @@ MVMString * MVM_string_bitxor(MVMThreadContext *tc, MVMString *a, MVMString *b) 
 
 #include "strings/unicode_prop_macros.h"
 /* Checks if the specified grapheme is in the given character class. */
-int64_t MVM_string_grapheme_is_cclass(MVMThreadContext *tc, int64_t cclass, MVMGrapheme32 g) {
+int64_t MVM_string_grapheme_is_cclass(struct MVMThreadContext *tc, int64_t cclass, MVMGrapheme32 g) {
     /* If it's a synthetic, then grab the base codepoint. */
     MVMCodepoint cp;
     if (0 <= g)
@@ -2817,7 +2817,7 @@ int64_t MVM_string_grapheme_is_cclass(MVMThreadContext *tc, int64_t cclass, MVMG
 
 /* Checks if the character at the specified offset is a member of the
  * indicated character class. */
-int64_t MVM_string_is_cclass(MVMThreadContext *tc, int64_t cclass, MVMString *s, int64_t offset) {
+int64_t MVM_string_is_cclass(struct MVMThreadContext *tc, int64_t cclass, MVMString *s, int64_t offset) {
     MVM_string_check_arg(tc, s, "is_cclass");
     if (MVM_UNLIKELY(offset < 0 || MVM_string_graphs_nocheck(tc, s) <= offset))
         return 0;
@@ -2825,7 +2825,7 @@ int64_t MVM_string_is_cclass(MVMThreadContext *tc, int64_t cclass, MVMString *s,
 }
 
 /* Searches for the next char that is in the specified character class. */
-int64_t MVM_string_find_cclass(MVMThreadContext *tc, int64_t cclass, MVMString *s, int64_t offset, int64_t count) {
+int64_t MVM_string_find_cclass(struct MVMThreadContext *tc, int64_t cclass, MVMString *s, int64_t offset, int64_t count) {
     MVMGraphemeIter gi;
     int64_t        length, end, pos;
 
@@ -2869,7 +2869,7 @@ int64_t MVM_string_find_cclass(MVMThreadContext *tc, int64_t cclass, MVMString *
 }
 
 /* Searches for the next char that is not in the specified character class. */
-int64_t MVM_string_find_not_cclass(MVMThreadContext *tc, int64_t cclass, MVMString *s, int64_t offset, int64_t count) {
+int64_t MVM_string_find_not_cclass(struct MVMThreadContext *tc, int64_t cclass, MVMString *s, int64_t offset, int64_t count) {
     MVMGraphemeIter gi;
     int64_t        length, end, pos;
 
@@ -2934,13 +2934,13 @@ static struct encoding_name_struct encoding_names[MVM_encoding_type_MAX] = {
     { NULL, "gb18030", MVM_encoding_type_gb18030 }           /* 12 */
 };
 
-char * MVM_string_encoding_cname(MVMThreadContext *tc, int64_t encoding) {
+char * MVM_string_encoding_cname(struct MVMThreadContext *tc, int64_t encoding) {
     if (encoding < MVM_encoding_type_MIN || MVM_encoding_type_MAX < encoding)
         return "Unknown";
     return encoding_names[encoding-1].encoding_cname;
 }
 
-uint8_t MVM_string_find_encoding(MVMThreadContext *tc, MVMString *name) {
+uint8_t MVM_string_find_encoding(struct MVMThreadContext *tc, MVMString *name) {
     int i;
     MVM_string_check_arg(tc, name, "find encoding");
     if (MVM_UNLIKELY(!encoding_name_init)) {
@@ -2971,7 +2971,7 @@ uint8_t MVM_string_find_encoding(MVMThreadContext *tc, MVMString *name) {
 /* Turns a codepoint into a string. If required uses the normalizer to ensure
  * that we get a valid NFG string (NFG is a superset of NFC, and singleton
  * decompositions exist). */
-MVMString * MVM_string_chr(MVMThreadContext *tc, int64_t cp) {
+MVMString * MVM_string_chr(struct MVMThreadContext *tc, int64_t cp) {
     MVMString *s = NULL;
     MVMGrapheme32 g;
 
@@ -3023,7 +3023,7 @@ typedef union {
  * If this isn't set, MVM_MAYBE_TO_LITTLE_ENDIAN_32 does nothing (the default).
  * This would mainly be useful for debugging or if there were some other reason
  * someone cared that hashes were identical on different endian platforms */
-uint64_t MVM_string_compute_hash_code(MVMThreadContext *tc, MVMString *s) {
+uint64_t MVM_string_compute_hash_code(struct MVMThreadContext *tc, MVMString *s) {
 #if defined(MVM_HASH_FORCE_LITTLE_ENDIAN)
     const uint64_t key[2] = {
         MVM_MAYBE_TO_LITTLE_ENDIAN_64(tc->instance->hashSecrets[0]),

@@ -43,8 +43,6 @@
 #define MVM_HAS_FN_MALLOC_TRIM 1
 #endif
 
-/* How this compiler does static inline functions. */
-#define MVM_STATIC_INLINE static __inline__
 
 #if 1
 /* How this compiler declares thread local storage. */

@@ -19,7 +19,7 @@ struct MVMThreadBody {
     uv_thread_t thread;
 
     /* The thread context for the thread. */
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
 
     /* Next in tc's threads list. */
     MVMThread *next;
@@ -44,4 +44,4 @@ struct MVMThread {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMThread_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMThread_initialize(struct MVMThreadContext *tc);

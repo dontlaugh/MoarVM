@@ -4,7 +4,7 @@
  * as adding/removing/replacing instructions. */
 
 /* Deletes an instruction, and does any fact changes as a result. */
-void MVM_spesh_manipulate_delete_ins(MVMThreadContext *tc, MVMSpeshGraph *g,
+void MVM_spesh_manipulate_delete_ins(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                                      MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshIns *prev, *next;
 
@@ -116,7 +116,7 @@ void MVM_spesh_manipulate_delete_ins(MVMThreadContext *tc, MVMSpeshGraph *g,
  * dead, and also decrement the usage counts on anything that is read. This is
  * called by MVM_spesh_manipulate_delete_ins, but provided separately for when
  * an instruction goes away by virtue of a whole basic block dying. */ 
-void MVM_spesh_manipulate_cleanup_ins_deps(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+void MVM_spesh_manipulate_cleanup_ins_deps(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     int16_t opcode = ins->info->opcode;
     if (opcode == MVM_SSA_PHI) {
         int32_t i;
@@ -144,7 +144,7 @@ void MVM_spesh_manipulate_cleanup_ins_deps(MVMThreadContext *tc, MVMSpeshGraph *
 
 /* Inserts an instruction after the specified instruction, or at the start of
  * the basic block if the instruction is NULL. */
-void MVM_spesh_manipulate_insert_ins(MVMThreadContext *tc, MVMSpeshBB *bb, MVMSpeshIns *previous, MVMSpeshIns *to_insert) {
+void MVM_spesh_manipulate_insert_ins(struct MVMThreadContext *tc, MVMSpeshBB *bb, MVMSpeshIns *previous, MVMSpeshIns *to_insert) {
     /* Do the insertion. */
     MVMSpeshIns *next;
     if (previous) {
@@ -184,7 +184,7 @@ void MVM_spesh_manipulate_insert_ins(MVMThreadContext *tc, MVMSpeshBB *bb, MVMSp
 }
 
 /* Inserts a goto. */
-void MVM_spesh_manipulate_insert_goto(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins, MVMSpeshBB *target) {
+void MVM_spesh_manipulate_insert_goto(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins, MVMSpeshBB *target) {
     MVMSpeshIns *inserted_goto = MVM_spesh_alloc(tc, g, sizeof( MVMSpeshIns ));
     MVMSpeshOperand *operands  = MVM_spesh_alloc(tc, g, sizeof( MVMSpeshOperand ));
     inserted_goto->info        = MVM_op_get_op(MVM_OP_goto);
@@ -195,7 +195,7 @@ void MVM_spesh_manipulate_insert_goto(MVMThreadContext *tc, MVMSpeshGraph *g, MV
 
 /* Adds a successor to a basic block, also adding to the list of
  * predecessors of the added successor. */
-void MVM_spesh_manipulate_add_successor(MVMThreadContext *tc, MVMSpeshGraph *g,
+void MVM_spesh_manipulate_add_successor(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                                         MVMSpeshBB *bb, MVMSpeshBB *succ) {
     MVMSpeshBB **new_succ, **new_pred;
 
@@ -218,7 +218,7 @@ void MVM_spesh_manipulate_add_successor(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 /* Removes a successor to a basic block, also removing it from the list of
  * predecessors. */
-void MVM_spesh_manipulate_remove_successor(MVMThreadContext *tc, MVMSpeshBB *bb, MVMSpeshBB *succ) {
+void MVM_spesh_manipulate_remove_successor(struct MVMThreadContext *tc, MVMSpeshBB *bb, MVMSpeshBB *succ) {
     MVMSpeshBB ** const   bb_succ = bb->succ;
     MVMSpeshBB ** const succ_pred = succ->pred;
     const uint16_t   bb_num_succ = --bb->num_succ;
@@ -262,7 +262,7 @@ void MVM_spesh_manipulate_remove_successor(MVMThreadContext *tc, MVMSpeshBB *bb,
 
 /* Removes successors from a basic block that point to handlers.
    Useful for optimizations that turn throwish ops into non-throwing ones. */
-void MVM_spesh_manipulate_remove_handler_successors(MVMThreadContext *tc, MVMSpeshBB *bb) {
+void MVM_spesh_manipulate_remove_handler_successors(struct MVMThreadContext *tc, MVMSpeshBB *bb) {
     int i;
     for (i = 0; i < bb->num_handler_succ; i++) {
         MVM_spesh_manipulate_remove_successor(tc, bb, bb->handler_succ[i]);
@@ -271,7 +271,7 @@ void MVM_spesh_manipulate_remove_handler_successors(MVMThreadContext *tc, MVMSpe
     bb->num_handler_succ = 0;
 }
 
-static void ensure_more_temps(MVMThreadContext *tc, MVMSpeshGraph *g) {
+static void ensure_more_temps(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     if (g->num_temps == g->alloc_temps) {
         MVMSpeshTemporary *new_temps;
         g->alloc_temps += 4;
@@ -286,7 +286,7 @@ static void ensure_more_temps(MVMThreadContext *tc, MVMSpeshGraph *g) {
  * Will only actually extend the frame if needed; if an existing temporary
  * was requested and then released, then it will just use a new version of
  * that. */
-static void grow_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t orig) {
+static void grow_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t orig) {
     MVMSpeshFacts *new_fact_row = MVM_spesh_alloc(tc, g,
         (g->fact_counts[orig] + 1) * sizeof(MVMSpeshFacts));
     memcpy(new_fact_row, g->facts[orig],
@@ -294,7 +294,7 @@ static void grow_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t orig) {
     g->facts[orig] = new_fact_row;
     g->fact_counts[orig]++;
 }
-static MVMSpeshOperand make_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t kind,
+static MVMSpeshOperand make_temp_reg(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t kind,
         uint16_t reuse) {
     MVMSpeshOperand   result;
     MVMSpeshFacts   **new_facts;
@@ -371,12 +371,12 @@ static MVMSpeshOperand make_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, uin
 
 /* Gets a temporary register, adding it to the set of registers of the
  * frame. */
-MVMSpeshOperand MVM_spesh_manipulate_get_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t kind) {
+MVMSpeshOperand MVM_spesh_manipulate_get_temp_reg(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t kind) {
     return make_temp_reg(tc, g, kind, 1);
 }
 
 /* Releases a temporary register, so it can be used again later. */
-void MVM_spesh_manipulate_release_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand temp) {
+void MVM_spesh_manipulate_release_temp_reg(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand temp) {
     uint16_t i;
     for (i = 0; i < g->num_temps; i++) {
         if (g->temps[i].orig == temp.reg.orig && g->temps[i].used_i == temp.reg.i) {
@@ -393,7 +393,7 @@ void MVM_spesh_manipulate_release_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *
 /* Gets a new SSA version of a register, allocating facts for it. Returns an
  * MVMSpeshOperand representing the new version along with the local it's a
  * version of. */
-MVMSpeshOperand MVM_spesh_manipulate_new_version(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t orig) {
+MVMSpeshOperand MVM_spesh_manipulate_new_version(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t orig) {
     uint32_t i;
 
     /* Grow the facts table to hold the new version, bumping the versions
@@ -418,7 +418,7 @@ MVMSpeshOperand MVM_spesh_manipulate_new_version(MVMThreadContext *tc, MVMSpeshG
  * reads of the SSA value dominated by (and including) the specified instruction
  * will use a new version. Returns the new version, which will at that point
  * lack a writer; a writer should be inserted for it. */
-MVMSpeshOperand MVM_spesh_manipulate_split_version(MVMThreadContext *tc, MVMSpeshGraph *g,
+MVMSpeshOperand MVM_spesh_manipulate_split_version(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                                                    MVMSpeshOperand split, MVMSpeshBB *bb,
                                                    MVMSpeshIns *at) {
     MVMSpeshOperand new_version = MVM_spesh_manipulate_new_version(tc, g, split.reg.orig);
@@ -456,12 +456,12 @@ MVMSpeshOperand MVM_spesh_manipulate_split_version(MVMThreadContext *tc, MVMSpes
 /* Gets a frame-unique register, adding it to the set of registers of the
  * frame. This does not hand back a particular version, it just selects the
  * unversioned register. */
-uint16_t MVM_spesh_manipulate_get_unique_reg(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t kind) {
+uint16_t MVM_spesh_manipulate_get_unique_reg(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t kind) {
     return make_temp_reg(tc, g, kind, 0).reg.orig;
 }
 
 /* Get the current version of an SSA temporary. */
-uint16_t MVM_spesh_manipulate_get_current_version(MVMThreadContext *tc, MVMSpeshGraph *g,
+uint16_t MVM_spesh_manipulate_get_current_version(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         uint16_t orig) {
     uint32_t i;
     for (i = 0; i < g->num_temps; i++)
@@ -470,7 +470,7 @@ uint16_t MVM_spesh_manipulate_get_current_version(MVMThreadContext *tc, MVMSpesh
     MVM_oops(tc, "Could not find register version for %d", orig);
 }
 
-MVMSpeshBB *MVM_spesh_manipulate_split_BB_at(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+MVMSpeshBB *MVM_spesh_manipulate_split_BB_at(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshBB *new_bb = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshBB));
     MVMSpeshBB *linear_next = bb->linear_next;
 

@@ -30,20 +30,20 @@ struct MVMContext {
 #define MVM_CTX_TRAV_CALLER_SKIP_THUNKS     4
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMContext_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMContext_initialize(struct MVMThreadContext *tc);
 
 /* Functions for working with an MVMContext. */
-MVM_PUBLIC MVMObject * MVM_context_from_frame(MVMThreadContext *tc, MVMFrame *f);
-MVMObject * MVM_context_from_frame_non_traversable(MVMThreadContext *tc, MVMFrame *f);
-MVMObject * MVM_context_apply_traversal(MVMThreadContext *tc, MVMContext *ctx, uint8_t traversal);
-MVMFrame * MVM_context_get_frame(MVMThreadContext *tc, MVMContext *ctx);
-MVMFrame * MVM_context_get_frame_or_outer(MVMThreadContext *tc, MVMContext *ctx);
-MVMObject * MVM_context_lexicals_as_hash(MVMThreadContext *tc, MVMContext *ctx);
-int64_t MVM_context_lexical_primspec(MVMThreadContext *tc, MVMContext *ctx, MVMString *name);
-MVMObject * MVM_context_get_code(MVMThreadContext *tc, MVMContext *ctx);
-MVMObject * MVM_context_lexical_lookup(MVMThreadContext *tc, MVMContext *ctx, MVMString *name);
-void MVM_context_dynamic_lookup(MVMThreadContext *tc, MVMContext *ctx, MVMString *name, MVMRegister *result);
-MVMObject * MVM_context_caller_lookup(MVMThreadContext *tc, MVMContext *ctx, MVMString *name);
+ MVMObject * MVM_context_from_frame(struct MVMThreadContext *tc, MVMFrame *f);
+MVMObject * MVM_context_from_frame_non_traversable(struct MVMThreadContext *tc, MVMFrame *f);
+MVMObject * MVM_context_apply_traversal(struct MVMThreadContext *tc, MVMContext *ctx, uint8_t traversal);
+MVMFrame * MVM_context_get_frame(struct MVMThreadContext *tc, MVMContext *ctx);
+MVMFrame * MVM_context_get_frame_or_outer(struct MVMThreadContext *tc, MVMContext *ctx);
+MVMObject * MVM_context_lexicals_as_hash(struct MVMThreadContext *tc, MVMContext *ctx);
+int64_t MVM_context_lexical_primspec(struct MVMThreadContext *tc, MVMContext *ctx, MVMString *name);
+MVMObject * MVM_context_get_code(struct MVMThreadContext *tc, MVMContext *ctx);
+MVMObject * MVM_context_lexical_lookup(struct MVMThreadContext *tc, MVMContext *ctx, MVMString *name);
+void MVM_context_dynamic_lookup(struct MVMThreadContext *tc, MVMContext *ctx, MVMString *name, MVMRegister *result);
+MVMObject * MVM_context_caller_lookup(struct MVMThreadContext *tc, MVMContext *ctx, MVMString *name);
 
 /* Compatibility shim for Rakudo ext ops. */
 #define MVM_frame_context_wrapper MVM_context_from_frame

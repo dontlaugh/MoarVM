@@ -4,7 +4,7 @@
  *  as it's something that can be harmlessly added to the end of a number */
 
 #define END_OF_NUM ' '
-static int is_whitespace(MVMThreadContext *tc, MVMCodepoint cp) {
+static int is_whitespace(struct MVMThreadContext *tc, MVMCodepoint cp) {
     if (cp <= '~') {
         if (cp == ' ' || (cp <= 13 && cp >= 9))
             return 1;
@@ -14,7 +14,7 @@ static int is_whitespace(MVMThreadContext *tc, MVMCodepoint cp) {
      return MVM_unicode_codepoint_has_property_value(tc, cp, MVM_UNICODE_PROPERTY_WHITE_SPACE, 1);
 }
 
-static int cp_value(MVMThreadContext *tc, MVMCodepoint cp) {
+static int cp_value(struct MVMThreadContext *tc, MVMCodepoint cp) {
     if (cp >= '0' && cp <= '9') return cp - '0'; /* fast-path for ASCII 0..9 */
     else if (cp >= 'a' && cp <= 'z') return cp - 'a' + 10;
     else if (cp >= 'A' && cp <= 'Z') return cp - 'A' + 10;
@@ -35,7 +35,7 @@ static int cp_value(MVMThreadContext *tc, MVMCodepoint cp) {
     return -1;
 }
 
-static int get_cp(MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp) {
+static int get_cp(struct MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp) {
     if (!MVM_string_ci_has_more(tc, ci)) {
         *cp = END_OF_NUM; // FIXME pick a safe value
         return 1;
@@ -46,20 +46,20 @@ static int get_cp(MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp) 
     }
 }
 
-MVM_NO_RETURN static void parse_error(MVMThreadContext *tc, MVMString *s, const char* reason) MVM_NO_RETURN_ATTRIBUTE;
-MVM_NO_RETURN static void parse_error(MVMThreadContext *tc, MVMString *s, const char* reason) {
+MVM_NO_RETURN static void parse_error(struct MVMThreadContext *tc, MVMString *s, const char* reason) MVM_NO_RETURN_ATTRIBUTE;
+MVM_NO_RETURN static void parse_error(struct MVMThreadContext *tc, MVMString *s, const char* reason) {
     char* got = MVM_string_utf8_c8_encode_C_string(tc, s);
     char *waste[] = { got, NULL };
     MVM_exception_throw_adhoc_free(tc, waste, "Can't convert '%s' to num: %s", got, reason);
 }
 
-static void skip_whitespace(MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp) {
+static void skip_whitespace(struct MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp) {
     while (is_whitespace(tc, *cp)) {
         if (get_cp(tc, ci, cp)) return;
     }
 }
 
-static int parse_sign(MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp) {
+static int parse_sign(struct MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp) {
     // Handle any leading +/-/− sign
     int has_minus = (*cp == '-' || *cp == 8722); // '-', '−'
 
@@ -70,7 +70,7 @@ static int parse_sign(MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *
     return (has_minus ? -1 : 1);
 }
 
-static double parse_decimal_integer(MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp, MVMString* s) {
+static double parse_decimal_integer(struct MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp, MVMString* s) {
     int ends_with_underscore = 0;
     double value = 0;
     int digit;
@@ -87,7 +87,7 @@ static double parse_decimal_integer(MVMThreadContext *tc, MVMCodepointIter *ci, 
     return value;
 }
 
-static double parse_int_frac_exp(MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp, MVMString* s, double radix, int leading_zero) {
+static double parse_int_frac_exp(struct MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp, MVMString* s, double radix, int leading_zero) {
     /*
      * What we do here is extract the digits from the original string,
      * effectively stripping off underscores and converting fancy Unicode
@@ -176,7 +176,7 @@ static double parse_int_frac_exp(MVMThreadContext *tc, MVMCodepointIter *ci, MVM
     return result;
 }
 
-static int match_word(MVMThreadContext *tc,  MVMCodepointIter *ci, MVMCodepoint *cp, char word[3], MVMString *s) {
+static int match_word(struct MVMThreadContext *tc,  MVMCodepointIter *ci, MVMCodepoint *cp, char word[3], MVMString *s) {
     if (*cp == word[0]) {
         get_cp(tc, ci, cp);
         if (*cp == word[1]) {
@@ -197,7 +197,7 @@ static int match_word(MVMThreadContext *tc,  MVMCodepointIter *ci, MVMCodepoint 
 }
 
 
-static double parse_simple_number(MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp, MVMString *s) {
+static double parse_simple_number(struct MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp, MVMString *s) {
     double sign;
     /* Handle NaN here, to make later parsing simpler */
 
@@ -273,7 +273,7 @@ static double parse_simple_number(MVMThreadContext *tc, MVMCodepointIter *ci, MV
     }
 }
 
-static double parse_real(MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp, MVMString *s) {
+static double parse_real(struct MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoint *cp, MVMString *s) {
     double result = parse_simple_number(tc, ci, cp, s);
     double denom;
 
@@ -286,7 +286,7 @@ static double parse_real(MVMThreadContext *tc, MVMCodepointIter *ci, MVMCodepoin
     return result;
 }
 
-double MVM_coerce_s_n(MVMThreadContext *tc, MVMString *s) {
+double MVM_coerce_s_n(struct MVMThreadContext *tc, MVMString *s) {
     MVMCodepointIter ci;
     MVMCodepoint cp;
     double  n = 123;

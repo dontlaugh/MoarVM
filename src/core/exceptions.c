@@ -8,13 +8,13 @@
 static int crash_on_error = 0;
 
 /* Function for getting effective (specialized or not) frame handlers. */
-MVM_STATIC_INLINE MVMFrameHandler * MVM_frame_effective_handlers(MVMFrame *f) {
+static inline MVMFrameHandler * MVM_frame_effective_handlers(MVMFrame *f) {
     MVMSpeshCandidate *spesh_cand = f->spesh_cand;
     return spesh_cand ? spesh_cand->body.handlers : f->static_info->body.handlers;
 }
 
 /* Maps ID of exception category to its name. */
-static const char * cat_name(MVMThreadContext *tc, int32_t cat) {
+static const char * cat_name(struct MVMThreadContext *tc, int32_t cat) {
     switch (cat) {
         case MVM_EX_CAT_CATCH:
             return "catch";
@@ -51,7 +51,7 @@ static const char * cat_name(MVMThreadContext *tc, int32_t cat) {
  * so we don't re-trigger the same exception handler. Note: We have static
  * handlers that get reused, so also check for the same handler being in
  * the same frame, otherwise we consider the handler as being another one. */
-static uint8_t in_handler_stack(MVMThreadContext *tc, MVMFrameHandler *fh, MVMFrame *f) {
+static uint8_t in_handler_stack(struct MVMThreadContext *tc, MVMFrameHandler *fh, MVMFrame *f) {
     if (tc->active_handlers) {
         MVMActiveHandler *ah = tc->active_handlers;
         while (ah) {
@@ -66,7 +66,7 @@ static uint8_t in_handler_stack(MVMThreadContext *tc, MVMFrameHandler *fh, MVMFr
 /* Checks if a frame is still active. Naively, we could scan the call stack
  * for it, but since we always clean up ->work when a frame is removed from
  * the call stack we can do it in O(1) that way. */
-static uint8_t in_caller_chain(MVMThreadContext *tc, MVMFrame *f_maybe) {
+static uint8_t in_caller_chain(struct MVMThreadContext *tc, MVMFrame *f_maybe) {
     return f_maybe->work ? 1 : 0;
 }
 
@@ -96,7 +96,7 @@ static int32_t handler_can_handle(MVMFrame *f, MVMFrameHandler *fh, uint32_t cat
  * dynamic scope becomes lexical so far as the optimized bytecode is
  * concerned, then this just needs a scan of the table without any further
  * checks being needed. */
-static int32_t search_frame_handlers_dyn(MVMThreadContext *tc, MVMFrame *f,
+static int32_t search_frame_handlers_dyn(struct MVMThreadContext *tc, MVMFrame *f,
                                           uint32_t cat, MVMObject *payload,
                                           LocatedHandler *lh) {
     uint32_t  i;
@@ -166,7 +166,7 @@ static int32_t search_frame_handlers_dyn(MVMThreadContext *tc, MVMFrame *f,
  * lexical capture may not be inlined, so we only need to consider the topmost
  * frame's handlers, not anything it might have inlined into it.
  */
-static int32_t search_frame_handlers_lex(MVMThreadContext *tc, MVMFrame *f,
+static int32_t search_frame_handlers_lex(struct MVMThreadContext *tc, MVMFrame *f,
                                           uint32_t cat, MVMObject *payload,
                                           LocatedHandler *lh,
                                           uint32_t *skip_first_inlinee,
@@ -278,7 +278,7 @@ static int32_t search_frame_handlers_lex(MVMThreadContext *tc, MVMFrame *f,
 
 /* Searches for a handler of the specified category, relative to the given
  * starting frame, searching according to the chosen mode. */
-static LocatedHandler search_for_handler_from(MVMThreadContext *tc, MVMFrame *f,
+static LocatedHandler search_for_handler_from(struct MVMThreadContext *tc, MVMFrame *f,
         uint8_t mode, uint32_t cat, MVMObject *payload) {
     uint32_t skip_first_inlinee = 0;
     LocatedHandler lh;
@@ -346,9 +346,9 @@ static LocatedHandler search_for_handler_from(MVMThreadContext *tc, MVMFrame *f,
  * an exception object already, it will be used; NULL can be passed if there
  * is not one, meaning it will be created if needed (based on the category
  * parameter; if ex_obj is passed, the category is not used). */
-static void unwind_after_handler(MVMThreadContext *tc, void *sr_data);
-static void cleanup_active_handler(MVMThreadContext *tc, void *sr_data);
-static void run_handler(MVMThreadContext *tc, LocatedHandler lh, MVMObject *ex_obj,
+static void unwind_after_handler(struct MVMThreadContext *tc, void *sr_data);
+static void cleanup_active_handler(struct MVMThreadContext *tc, void *sr_data);
+static void run_handler(struct MVMThreadContext *tc, LocatedHandler lh, MVMObject *ex_obj,
                         uint32_t category, MVMObject *payload) {
     switch (lh.handler->action) {
     case MVM_EX_ACTION_GOTO_WITH_PAYLOAD:
@@ -427,7 +427,7 @@ static void run_handler(MVMThreadContext *tc, LocatedHandler lh, MVMObject *ex_o
 }
 
 /* Unwinds after a handler. */
-static void unwind_after_handler(MVMThreadContext *tc, void *sr_data) {
+static void unwind_after_handler(struct MVMThreadContext *tc, void *sr_data) {
     MVMFrame     *frame;
     MVMException *exception;
     uint32_t     goto_offset;
@@ -469,7 +469,7 @@ static void unwind_after_handler(MVMThreadContext *tc, void *sr_data) {
 }
 
 /* Cleans up an active handler record if we unwind over it. */
-static void cleanup_active_handler(MVMThreadContext *tc, void *sr_data) {
+static void cleanup_active_handler(struct MVMThreadContext *tc, void *sr_data) {
     /* Get active handler; sanity check (though it's possible other cases
      * should be supported). */
     MVMActiveHandler *ah = *((MVMActiveHandler **)sr_data);
@@ -481,7 +481,7 @@ static void cleanup_active_handler(MVMThreadContext *tc, void *sr_data) {
     MVM_free(ah);
 }
 
-char * MVM_exception_backtrace_line(MVMThreadContext *tc, MVMFrame *cur_frame,
+char * MVM_exception_backtrace_line(struct MVMThreadContext *tc, MVMFrame *cur_frame,
                                     uint16_t not_top, uint8_t *throw_address) {
     MVMString *filename = cur_frame->static_info->body.cu->body.filename;
     MVMString *name = cur_frame->static_info->body.name;
@@ -528,7 +528,7 @@ char * MVM_exception_backtrace_line(MVMThreadContext *tc, MVMFrame *cur_frame,
 }
 
 /* Returns a list of hashes containing file, line, sub and annotations. */
-MVMObject * MVM_exception_backtrace(MVMThreadContext *tc, MVMObject *ex_obj) {
+MVMObject * MVM_exception_backtrace(struct MVMThreadContext *tc, MVMObject *ex_obj) {
     MVMFrame *cur_frame;
     MVMSpeshFrameWalker fw;
     MVMObject *arr = NULL, *annotations = NULL, *row = NULL, *value = NULL;
@@ -615,7 +615,7 @@ MVMObject * MVM_exception_backtrace(MVMThreadContext *tc, MVMObject *ex_obj) {
 }
 
 /* Returns the lines (backtrace) of an exception-object as an array. */
-MVMObject * MVM_exception_backtrace_strings(MVMThreadContext *tc, MVMObject *ex_obj) {
+MVMObject * MVM_exception_backtrace_strings(struct MVMThreadContext *tc, MVMObject *ex_obj) {
     MVMException *ex;
     MVMFrame *cur_frame;
     MVMObject *arr;
@@ -648,7 +648,7 @@ MVMObject * MVM_exception_backtrace_strings(MVMThreadContext *tc, MVMObject *ex_
 }
 
 /* Dumps a backtrace relative to the current frame to stderr. */
-void MVM_dump_backtrace(MVMThreadContext *tc) {
+void MVM_dump_backtrace(struct MVMThreadContext *tc) {
     MVMFrame *cur_frame = tc->cur_frame;
     uint32_t count = 0;
     MVMROOT(tc, cur_frame) {
@@ -663,7 +663,7 @@ void MVM_dump_backtrace(MVMThreadContext *tc) {
 }
 
 /* Panic over an unhandled exception throw by category. */
-static void panic_unhandled_cat(MVMThreadContext *tc, uint32_t cat) {
+static void panic_unhandled_cat(struct MVMThreadContext *tc, uint32_t cat) {
     /* If it's a control exception, try promoting it to a catch one. */
     if (cat != MVM_EX_CAT_CATCH) {
         MVM_exception_throw_adhoc(tc, "No exception handler located for %s",
@@ -686,7 +686,7 @@ static void panic_unhandled_cat(MVMThreadContext *tc, uint32_t cat) {
 }
 
 /* Panic over an unhandled exception object. */
-static void panic_unhandled_ex(MVMThreadContext *tc, MVMException *ex) {
+static void panic_unhandled_ex(struct MVMThreadContext *tc, MVMException *ex) {
     char *backtrace;
 
     /* If a debug session is running, notify the client. */
@@ -716,13 +716,13 @@ static void panic_unhandled_ex(MVMThreadContext *tc, MVMException *ex) {
 
 /* Checks if we're throwing lexically, and - if yes - if the current HLL has
  * a handler for unlocated lexical handlers. */
-static int32_t use_lexical_handler_hll_error(MVMThreadContext *tc, uint8_t mode) {
+static int32_t use_lexical_handler_hll_error(struct MVMThreadContext *tc, uint8_t mode) {
     return (mode == MVM_EX_THROW_LEX || mode == MVM_EX_THROW_LEX_CALLER) &&
         !MVM_is_null(tc, (MVMObject *)MVM_hll_current(tc)->lexical_handler_not_found_error);
 }
 
 /* Invokes the HLL's handler for unresolved lexical throws. */
-static void invoke_lexical_handler_hll_error(MVMThreadContext *tc, int64_t cat, LocatedHandler lh) {
+static void invoke_lexical_handler_hll_error(struct MVMThreadContext *tc, int64_t cat, LocatedHandler lh) {
     MVMCode *handler = MVM_hll_current(tc)->lexical_handler_not_found_error;
     MVMCallStackArgsFromC *args_record = MVM_callstack_allocate_args_from_c(tc,
             MVM_callsite_get_common(tc, MVM_CALLSITE_ID_INT_INT));
@@ -736,7 +736,7 @@ static void invoke_lexical_handler_hll_error(MVMThreadContext *tc, int64_t cat, 
  * be put into resume_result. Leaves the interpreter in a state where it
  * will next run the instruction of the handler. If there is no handler,
  * it will panic and exit with a backtrace. */
-void MVM_exception_throwcat(MVMThreadContext *tc, uint8_t mode, uint32_t cat, MVMRegister *resume_result) {
+void MVM_exception_throwcat(struct MVMThreadContext *tc, uint8_t mode, uint32_t cat, MVMRegister *resume_result) {
     LocatedHandler lh = search_for_handler_from(tc, tc->cur_frame, mode, cat, NULL);
     if (lh.frame == NULL) {
         if (use_lexical_handler_hll_error(tc, mode)) {
@@ -748,7 +748,7 @@ void MVM_exception_throwcat(MVMThreadContext *tc, uint8_t mode, uint32_t cat, MV
     run_handler(tc, lh, NULL, cat, NULL);
 }
 
-void MVM_exception_die(MVMThreadContext *tc, MVMString *str, MVMRegister *rr) {
+void MVM_exception_die(struct MVMThreadContext *tc, MVMString *str, MVMRegister *rr) {
     MVMException *ex;
     MVMROOT(tc, str) {
         ex = (MVMException *)MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTException);
@@ -762,7 +762,7 @@ void MVM_exception_die(MVMThreadContext *tc, MVMString *str, MVMRegister *rr) {
  * the handler resumes, the resumption result will be put into resume_result.
  * Leaves the interpreter in a state where it will next run the instruction of
  * the handler. If there is no handler, it will panic and exit with a backtrace. */
-void MVM_exception_throwobj(MVMThreadContext *tc, uint8_t mode, MVMObject *ex_obj, MVMRegister *resume_result) {
+void MVM_exception_throwobj(struct MVMThreadContext *tc, uint8_t mode, MVMObject *ex_obj, MVMRegister *resume_result) {
     LocatedHandler  lh;
     MVMException   *ex;
 
@@ -806,7 +806,7 @@ void MVM_exception_throwobj(MVMThreadContext *tc, uint8_t mode, MVMObject *ex_ob
 
 /* Throws an exception of the specified category and with the specified payload.
  * If a goto or payload handler exists, then no exception object will be created. */
-void MVM_exception_throwpayload(MVMThreadContext *tc, uint8_t mode, uint32_t cat, MVMObject *payload, MVMRegister *resume_result) {
+void MVM_exception_throwpayload(struct MVMThreadContext *tc, uint8_t mode, uint32_t cat, MVMObject *payload, MVMRegister *resume_result) {
     LocatedHandler lh = search_for_handler_from(tc, tc->cur_frame, mode, cat, NULL);
     if (lh.frame == NULL) {
         if (use_lexical_handler_hll_error(tc, mode)) {
@@ -818,7 +818,7 @@ void MVM_exception_throwpayload(MVMThreadContext *tc, uint8_t mode, uint32_t cat
     run_handler(tc, lh, NULL, cat, payload);
 }
 
-void MVM_exception_resume(MVMThreadContext *tc, MVMObject *ex_obj) {
+void MVM_exception_resume(struct MVMThreadContext *tc, MVMObject *ex_obj) {
     MVMException *ex;
     if (IS_CONCRETE(ex_obj) && REPR(ex_obj)->ID == MVM_REPR_ID_MVMException)
         ex = (MVMException *)ex_obj;
@@ -869,7 +869,7 @@ MVM_NO_RETURN void MVM_panic_allocation_failed(size_t len) {
 
 /* A kinder MVM_panic() that doesn't assume our memory is corrupted (but does kill the
  * process to indicate that we've made an error */
-MVM_NO_RETURN void MVM_oops(MVMThreadContext *tc, const char *messageFormat, ...) {
+MVM_NO_RETURN void MVM_oops(struct MVMThreadContext *tc, const char *messageFormat, ...) {
     va_list args;
     fprintf(stderr, "MoarVM oops%s: ",
             !tc ? " with NULL tc" :
@@ -892,7 +892,7 @@ MVM_NO_RETURN void MVM_oops(MVMThreadContext *tc, const char *messageFormat, ...
 }
 
 /* Throws an ad-hoc (untyped) exception. */
-MVM_NO_RETURN void MVM_exception_throw_adhoc(MVMThreadContext *tc, const char *messageFormat, ...) {
+MVM_NO_RETURN void MVM_exception_throw_adhoc(struct MVMThreadContext *tc, const char *messageFormat, ...) {
     va_list args;
     va_start(args, messageFormat);
     MVM_exception_throw_adhoc_free_va(tc, NULL, messageFormat, args);
@@ -900,13 +900,13 @@ MVM_NO_RETURN void MVM_exception_throw_adhoc(MVMThreadContext *tc, const char *m
 }
 
 /* Throws an ad-hoc (untyped) exception. */
-MVM_NO_RETURN void MVM_exception_throw_adhoc_va(MVMThreadContext *tc, const char *messageFormat, va_list args) {
+MVM_NO_RETURN void MVM_exception_throw_adhoc_va(struct MVMThreadContext *tc, const char *messageFormat, va_list args) {
     MVM_exception_throw_adhoc_free_va(tc, NULL, messageFormat, args);
 }
 
 /* Throws an ad-hoc (untyped) exception, taking a NULL-terminated array of
  * char pointers to deallocate after message construction. */
-MVM_NO_RETURN void MVM_exception_throw_adhoc_free(MVMThreadContext *tc, char **waste, const char *messageFormat, ...) {
+MVM_NO_RETURN void MVM_exception_throw_adhoc_free(struct MVMThreadContext *tc, char **waste, const char *messageFormat, ...) {
     va_list args;
     va_start(args, messageFormat);
     MVM_exception_throw_adhoc_free_va(tc, waste, messageFormat, args);
@@ -915,7 +915,7 @@ MVM_NO_RETURN void MVM_exception_throw_adhoc_free(MVMThreadContext *tc, char **w
 
 /* Throws an ad-hoc (untyped) exception, taking a NULL-terminated array of
  * char pointers to deallocate after message construction. */
-MVM_NO_RETURN void MVM_exception_throw_adhoc_free_va(MVMThreadContext *tc, char **waste, const char *messageFormat, va_list args) {
+MVM_NO_RETURN void MVM_exception_throw_adhoc_free_va(struct MVMThreadContext *tc, char **waste, const char *messageFormat, va_list args) {
     LocatedHandler lh;
     MVMException *ex;
     const char *special = !tc ? " with NULL tc"
@@ -1005,14 +1005,14 @@ void MVM_crash_on_error(void) {
     crash_on_error = 1;
 }
 
-int32_t MVM_get_exception_category(MVMThreadContext *tc, MVMObject *ex) {
+int32_t MVM_get_exception_category(struct MVMThreadContext *tc, MVMObject *ex) {
     if (IS_CONCRETE(ex) && REPR(ex)->ID == MVM_REPR_ID_MVMException)
         return ((MVMException *)ex)->body.category;
     else
         MVM_exception_throw_adhoc(tc, "getexcategory needs a VMException, got %s (%s)", REPR(ex)->name, MVM_6model_get_debug_name(tc, ex));
 }
 
-MVMObject * MVM_get_exception_payload(MVMThreadContext *tc, MVMObject *ex) {
+MVMObject * MVM_get_exception_payload(struct MVMThreadContext *tc, MVMObject *ex) {
     MVMObject *result;
     if (IS_CONCRETE(ex) && REPR(ex)->ID == MVM_REPR_ID_MVMException)
         result = ((MVMException *)ex)->body.payload;
@@ -1023,14 +1023,14 @@ MVMObject * MVM_get_exception_payload(MVMThreadContext *tc, MVMObject *ex) {
     return result;
 }
 
-MVMString * MVM_get_exception_message(MVMThreadContext *tc, MVMObject *ex) {
+MVMString * MVM_get_exception_message(struct MVMThreadContext *tc, MVMObject *ex) {
     if (IS_CONCRETE(ex) && REPR(ex)->ID == MVM_REPR_ID_MVMException)
         return ((MVMException *)ex)->body.message;
     else
         MVM_exception_throw_adhoc(tc, "getexmessage needs a VMException, got %s (%s)", REPR(ex)->name, MVM_6model_get_debug_name(tc, ex));
 }
 
-void MVM_bind_exception_message(MVMThreadContext *tc, MVMObject *ex, MVMString *message) {
+void MVM_bind_exception_message(struct MVMThreadContext *tc, MVMObject *ex, MVMString *message) {
     if (IS_CONCRETE(ex) && REPR(ex)->ID == MVM_REPR_ID_MVMException) {
         MVM_ASSIGN_REF(tc, &(ex->header), ((MVMException *)ex)->body.message,
             message);
@@ -1040,7 +1040,7 @@ void MVM_bind_exception_message(MVMThreadContext *tc, MVMObject *ex, MVMString *
     }
 }
 
-void MVM_bind_exception_payload(MVMThreadContext *tc, MVMObject *ex, MVMObject *payload) {
+void MVM_bind_exception_payload(struct MVMThreadContext *tc, MVMObject *ex, MVMObject *payload) {
     if (IS_CONCRETE(ex) && REPR(ex)->ID == MVM_REPR_ID_MVMException) {
         MVM_ASSIGN_REF(tc, &(ex->header), ((MVMException *)ex)->body.payload,
                 payload);
@@ -1050,13 +1050,13 @@ void MVM_bind_exception_payload(MVMThreadContext *tc, MVMObject *ex, MVMObject *
     }
 }
 
-void MVM_bind_exception_category(MVMThreadContext *tc, MVMObject *ex, int32_t category) {
+void MVM_bind_exception_category(struct MVMThreadContext *tc, MVMObject *ex, int32_t category) {
     if (IS_CONCRETE(ex) && REPR(ex)->ID == MVM_REPR_ID_MVMException)
         ((MVMException *)ex)->body.category = category;
     else
         MVM_exception_throw_adhoc(tc, "bindexcategory needs a VMException, got %s (%s)", REPR(ex)->name, MVM_6model_get_debug_name(tc, ex));
 }
-void MVM_exception_returnafterunwind(MVMThreadContext *tc, MVMObject *ex) {
+void MVM_exception_returnafterunwind(struct MVMThreadContext *tc, MVMObject *ex) {
     if (IS_CONCRETE(ex) && REPR(ex)->ID == MVM_REPR_ID_MVMException)
         ((MVMException *)ex)->body.return_after_unwind = 1;
     else

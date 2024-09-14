@@ -70,7 +70,7 @@ struct MVMDispProgramOutcome {
                 /* The code object to invoke. Marked. */
                 MVMCode *code;
                 /* The C function to be invoked. */
-                void (*c_func) (MVMThreadContext *tc, MVMArgs arg_info);
+                void (*c_func) (struct MVMThreadContext *tc, MVMArgs arg_info);
 
                 /* The native call site to be invoked. */
                 MVMNativeCall *site;
@@ -619,90 +619,90 @@ struct MVMDispProgramResumptionInitValue {
 };
 
 /* Functions called during the recording. */
-void MVM_disp_program_run_dispatch(MVMThreadContext *tc, MVMDispDefinition *disp,
+void MVM_disp_program_run_dispatch(struct MVMThreadContext *tc, MVMDispDefinition *disp,
         MVMArgs arg_info, MVMDispInlineCacheEntry **ic_entry_ptr,
         MVMDispInlineCacheEntry *ic_entry, MVMStaticFrame *update_sf);
-int64_t MVM_disp_program_record_get_inline_cache_size(MVMThreadContext *tc);
-void MVM_disp_program_record_do_not_install(MVMThreadContext *tc);
-MVMHLLConfig * MVM_disp_program_record_get_hll(MVMThreadContext *tc);
-MVMObject * MVM_disp_program_record_track_arg(MVMThreadContext *tc, MVMObject *capture,
+int64_t MVM_disp_program_record_get_inline_cache_size(struct MVMThreadContext *tc);
+void MVM_disp_program_record_do_not_install(struct MVMThreadContext *tc);
+MVMHLLConfig * MVM_disp_program_record_get_hll(struct MVMThreadContext *tc);
+MVMObject * MVM_disp_program_record_track_arg(struct MVMThreadContext *tc, MVMObject *capture,
         uint32_t index);
-MVMObject * MVM_disp_program_record_track_attr(MVMThreadContext *tc, MVMObject *tracked,
+MVMObject * MVM_disp_program_record_track_attr(struct MVMThreadContext *tc, MVMObject *tracked,
         MVMObject *class_handle, MVMString *name);
-MVMObject * MVM_disp_program_record_track_unbox_int(MVMThreadContext *tc, MVMObject *tracked);
-MVMObject * MVM_disp_program_record_track_unbox_num(MVMThreadContext *tc, MVMObject *tracked);
-MVMObject * MVM_disp_program_record_track_unbox_str(MVMThreadContext *tc, MVMObject *tracked);
-MVMObject * MVM_disp_program_record_track_how(MVMThreadContext *tc, MVMObject *tracked);
-void MVM_disp_program_record_guard_type(MVMThreadContext *tc, MVMObject *tracked);
-void MVM_disp_program_record_guard_concreteness(MVMThreadContext *tc, MVMObject *tracked);
-void MVM_disp_program_record_guard_literal(MVMThreadContext *tc, MVMObject *tracked);
-void MVM_disp_program_record_guard_not_literal_obj(MVMThreadContext *tc,
+MVMObject * MVM_disp_program_record_track_unbox_int(struct MVMThreadContext *tc, MVMObject *tracked);
+MVMObject * MVM_disp_program_record_track_unbox_num(struct MVMThreadContext *tc, MVMObject *tracked);
+MVMObject * MVM_disp_program_record_track_unbox_str(struct MVMThreadContext *tc, MVMObject *tracked);
+MVMObject * MVM_disp_program_record_track_how(struct MVMThreadContext *tc, MVMObject *tracked);
+void MVM_disp_program_record_guard_type(struct MVMThreadContext *tc, MVMObject *tracked);
+void MVM_disp_program_record_guard_concreteness(struct MVMThreadContext *tc, MVMObject *tracked);
+void MVM_disp_program_record_guard_literal(struct MVMThreadContext *tc, MVMObject *tracked);
+void MVM_disp_program_record_guard_not_literal_obj(struct MVMThreadContext *tc,
        MVMObject *tracked, MVMObject *object);
-void MVM_disp_program_record_guard_hll(MVMThreadContext *tc, MVMObject *tracked);
-MVMObject * MVM_disp_program_record_index_lookup_table(MVMThreadContext *tc,
+void MVM_disp_program_record_guard_hll(struct MVMThreadContext *tc, MVMObject *tracked);
+MVMObject * MVM_disp_program_record_index_lookup_table(struct MVMThreadContext *tc,
        MVMObject *lookup_hash, MVMObject *tracked_key);
-MVMObject * MVM_disp_program_record_index_tracked_lookup_table(MVMThreadContext *tc,
+MVMObject * MVM_disp_program_record_index_tracked_lookup_table(struct MVMThreadContext *tc,
        MVMObject *tracked_lookup_hash, MVMObject *tracked_key);
-MVMObject * MVM_disp_program_record_capture_drop_arg(MVMThreadContext *tc, MVMObject *capture,
+MVMObject * MVM_disp_program_record_capture_drop_arg(struct MVMThreadContext *tc, MVMObject *capture,
         uint32_t index);
-MVMObject * MVM_disp_program_record_capture_drop_args(MVMThreadContext *tc, MVMObject *capture,
+MVMObject * MVM_disp_program_record_capture_drop_args(struct MVMThreadContext *tc, MVMObject *capture,
         uint32_t index, uint32_t count);
-MVMObject * MVM_disp_program_record_capture_insert_constant_arg(MVMThreadContext *tc,
+MVMObject * MVM_disp_program_record_capture_insert_constant_arg(struct MVMThreadContext *tc,
         MVMObject *capture, uint32_t index, MVMCallsiteFlags kind, MVMRegister value);
-int64_t MVM_disp_program_record_capture_is_arg_literal(MVMThreadContext *tc,
+int64_t MVM_disp_program_record_capture_is_arg_literal(struct MVMThreadContext *tc,
         MVMObject *capture, uint32_t index);
-MVMObject * MVM_disp_program_record_capture_insert_arg(MVMThreadContext *tc,
+MVMObject * MVM_disp_program_record_capture_insert_arg(struct MVMThreadContext *tc,
         MVMObject *capture, uint32_t index, MVMObject *tracked);
-MVMObject * MVM_disp_program_record_capture_replace_arg(MVMThreadContext *tc,
+MVMObject * MVM_disp_program_record_capture_replace_arg(struct MVMThreadContext *tc,
         MVMObject *capture, uint32_t idx, MVMObject *tracked);
-MVMObject * MVM_disp_program_record_capture_replace_literal_arg(MVMThreadContext *tc,
+MVMObject * MVM_disp_program_record_capture_replace_literal_arg(struct MVMThreadContext *tc,
         MVMObject *capture, uint32_t idx, MVMCallsiteFlags kind, MVMRegister value);
-void MVM_disp_program_record_set_resume_init_args(MVMThreadContext *tc, MVMObject *capture);
-MVMObject * MVM_disp_program_record_get_resume_init_args(MVMThreadContext *tc);
-void MVM_disp_program_record_set_resume_state(MVMThreadContext *tc, MVMObject *tracked);
-void MVM_disp_program_record_set_resume_state_literal(MVMThreadContext *tc, MVMObject *new_state);
-MVMObject * MVM_disp_program_record_get_resume_state(MVMThreadContext *tc);
-MVMObject * MVM_disp_program_record_track_resume_state(MVMThreadContext *tc);
-void MVM_disp_program_record_resume(MVMThreadContext *tc, MVMObject *capture);
-void MVM_disp_program_record_resume_caller(MVMThreadContext *tc, MVMObject *capture);
-void MVM_disp_program_record_delegate(MVMThreadContext *tc, MVMString *dispatcher_id,
+void MVM_disp_program_record_set_resume_init_args(struct MVMThreadContext *tc, MVMObject *capture);
+MVMObject * MVM_disp_program_record_get_resume_init_args(struct MVMThreadContext *tc);
+void MVM_disp_program_record_set_resume_state(struct MVMThreadContext *tc, MVMObject *tracked);
+void MVM_disp_program_record_set_resume_state_literal(struct MVMThreadContext *tc, MVMObject *new_state);
+MVMObject * MVM_disp_program_record_get_resume_state(struct MVMThreadContext *tc);
+MVMObject * MVM_disp_program_record_track_resume_state(struct MVMThreadContext *tc);
+void MVM_disp_program_record_resume(struct MVMThreadContext *tc, MVMObject *capture);
+void MVM_disp_program_record_resume_caller(struct MVMThreadContext *tc, MVMObject *capture);
+void MVM_disp_program_record_delegate(struct MVMThreadContext *tc, MVMString *dispatcher_id,
         MVMObject *capture);
-int32_t MVM_disp_program_record_next_resumption(MVMThreadContext *tc, MVMObject *with_args);
-void MVM_disp_program_record_resume_on_bind_failure(MVMThreadContext *tc, uint32_t flag);
-void MVM_disp_program_record_resume_after_bind(MVMThreadContext *tc, uint32_t failure_flag,
+int32_t MVM_disp_program_record_next_resumption(struct MVMThreadContext *tc, MVMObject *with_args);
+void MVM_disp_program_record_resume_on_bind_failure(struct MVMThreadContext *tc, uint32_t flag);
+void MVM_disp_program_record_resume_after_bind(struct MVMThreadContext *tc, uint32_t failure_flag,
         uint32_t success_flag);
-void MVM_disp_program_record_result_constant(MVMThreadContext *tc, MVMCallsiteFlags kind,
+void MVM_disp_program_record_result_constant(struct MVMThreadContext *tc, MVMCallsiteFlags kind,
         MVMRegister value);
-void MVM_disp_program_record_result_tracked_value(MVMThreadContext *tc, MVMObject *tracked);
-void MVM_disp_program_record_code_constant(MVMThreadContext *tc, MVMCode *result, MVMObject *capture);
-void MVM_disp_program_record_c_code_constant(MVMThreadContext *tc, MVMCFunction *result,
+void MVM_disp_program_record_result_tracked_value(struct MVMThreadContext *tc, MVMObject *tracked);
+void MVM_disp_program_record_code_constant(struct MVMThreadContext *tc, MVMCode *result, MVMObject *capture);
+void MVM_disp_program_record_c_code_constant(struct MVMThreadContext *tc, MVMCFunction *result,
         MVMObject *capture);
-void MVM_disp_program_record_foreign_code_constant(MVMThreadContext *tc,
+void MVM_disp_program_record_foreign_code_constant(struct MVMThreadContext *tc,
         MVMNativeCall *result, MVMObject *capture);
-void MVM_disp_program_record_tracked_code(MVMThreadContext *tc, MVMObject *tracked,
+void MVM_disp_program_record_tracked_code(struct MVMThreadContext *tc, MVMObject *tracked,
         MVMObject *capture);
-void MVM_disp_program_record_tracked_c_code(MVMThreadContext *tc, MVMObject *tracked,
+void MVM_disp_program_record_tracked_c_code(struct MVMThreadContext *tc, MVMObject *tracked,
         MVMObject *capture);
-uint32_t MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatchRecord* record);
+uint32_t MVM_disp_program_record_end(struct MVMThreadContext *tc, MVMCallStackDispatchRecord* record);
 
 /* Functions to run dispatch programs. */
-int64_t MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
+int64_t MVM_disp_program_run(struct MVMThreadContext *tc, MVMDispProgram *dp,
         MVMCallStackDispatchRun *disp_run, int32_t spesh_cid,
         uint32_t bytecode_offset, uint32_t dp_index);
 
 /* Memory management of dispatch programs. */
-void MVM_disp_program_mark(MVMThreadContext *tc, MVMDispProgram *dp, MVMGCWorklist *worklist,
+void MVM_disp_program_mark(struct MVMThreadContext *tc, MVMDispProgram *dp, MVMGCWorklist *worklist,
         MVMHeapSnapshotState *snapshot);
-void MVM_disp_program_mark_recording(MVMThreadContext *tc, MVMDispProgramRecording *rec,
+void MVM_disp_program_mark_recording(struct MVMThreadContext *tc, MVMDispProgramRecording *rec,
         MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
-void MVM_disp_program_mark_run_temps(MVMThreadContext *tc, MVMDispProgram *dp,
+void MVM_disp_program_mark_run_temps(struct MVMThreadContext *tc, MVMDispProgram *dp,
         MVMCallsite *cs, MVMRegister *temps, MVMGCWorklist *worklist,
         MVMHeapSnapshotState *snapshot);
-void MVM_disp_program_mark_record_temps(MVMThreadContext *tc, MVMDispProgram *dp,
+void MVM_disp_program_mark_record_temps(struct MVMThreadContext *tc, MVMDispProgram *dp,
         MVMRegister *temps, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
-void MVM_disp_program_mark_outcome(MVMThreadContext *tc, MVMDispProgramOutcome *outcome,
+void MVM_disp_program_mark_outcome(struct MVMThreadContext *tc, MVMDispProgramOutcome *outcome,
         MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
-void MVM_disp_program_destroy(MVMThreadContext *tc, MVMDispProgram *dp);
-void MVM_disp_program_recording_destroy(MVMThreadContext *tc, MVMDispProgramRecording *rec);
+void MVM_disp_program_destroy(struct MVMThreadContext *tc, MVMDispProgram *dp);
+void MVM_disp_program_recording_destroy(struct MVMThreadContext *tc, MVMDispProgramRecording *rec);
 
 const char *MVM_disp_opcode_to_name(MVMDispProgramOpcode op);

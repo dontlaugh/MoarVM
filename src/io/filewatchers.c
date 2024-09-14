@@ -4,13 +4,13 @@
 typedef struct {
     char             *path;
     uv_fs_event_t     handle;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int               work_idx;
 } WatchInfo;
 
 static void on_changed(uv_fs_event_t *handle, const char *filename, int events, int status) {
     WatchInfo        *wi  = (WatchInfo *)handle->data;
-    MVMThreadContext *tc  = wi->tc;
+    struct MVMThreadContext *tc  = wi->tc;
     MVMObject        *arr = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
     MVMAsyncTask     *t   = MVM_io_eventloop_get_active_work(tc, wi->work_idx);
     MVM_repr_push_o(tc, arr, t->body.schedulee);
@@ -38,7 +38,7 @@ static void on_changed(uv_fs_event_t *handle, const char *filename, int events, 
 }
 
 /* Sets the signal handler up on the event loop. */
-static void setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     WatchInfo *wi = (WatchInfo *)data;
     int        r;
 
@@ -69,12 +69,12 @@ static void setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, 
 }
 
 /* Frees data associated with a file watcher task. */
-static void gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data)
         MVM_free(data);
 }
 
-static void cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *t, void *data) {
+static void cancel(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *t, void *data) {
     WatchInfo *wi = (WatchInfo *)data;
     uv_fs_event_stop(&wi->handle);
 }
@@ -88,7 +88,7 @@ static const MVMAsyncTaskOps op_table = {
     gc_free
 };
 
-MVMObject * MVM_io_file_watch(MVMThreadContext *tc, MVMObject *queue,
+MVMObject * MVM_io_file_watch(struct MVMThreadContext *tc, MVMObject *queue,
                               MVMObject *schedulee, MVMString *path,
                               MVMObject *async_type) {
     MVMAsyncTask *task;

@@ -71,5 +71,5 @@ struct MVMSpeshPEADeoptPoint {
     uint16_t target_reg;
 };
 
-void MVM_spesh_pea(MVMThreadContext *tc, MVMSpeshGraph *g);
-void MVM_spesh_pea_destroy_deopt_info(MVMThreadContext *tc, MVMSpeshPEADeopt *deopt_pea);
+void MVM_spesh_pea(struct MVMThreadContext *tc, MVMSpeshGraph *g);
+void MVM_spesh_pea_destroy_deopt_info(struct MVMThreadContext *tc, MVMSpeshPEADeopt *deopt_pea);

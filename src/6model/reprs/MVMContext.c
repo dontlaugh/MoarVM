@@ -5,7 +5,7 @@ static const MVMREPROps MVMContext_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. Also sets the invocation protocol handler in the STable. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &MVMContext_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,22 +18,22 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot clone an MVMContext");
 }
 
 /* Adds held objects to the GC worklist. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMContextBody *body = (MVMContextBody *)data;
     MVM_gc_worklist_add(tc, worklist, &body->context);
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVM_free(((MVMContext *)obj)->body.traversals);
 }
 
-static int32_t apply_traversals(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, uint8_t *traversals,
+static int32_t apply_traversals(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw, uint8_t *traversals,
                                  uint32_t num_traversals) {
     uint32_t i;
     uint32_t could_move = 1;
@@ -60,12 +60,12 @@ static int32_t apply_traversals(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, u
     return could_move;
 }
 
-static uint32_t setup_frame_walker(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMContextBody *data) {
+static uint32_t setup_frame_walker(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMContextBody *data) {
     MVM_spesh_frame_walker_init(tc, fw, data->context, 0);
     return apply_traversals(tc, fw, data->traversals, data->num_traversals);
 }
 
-static void at_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key, MVMRegister *result, uint16_t kind) {
+static void at_key(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key, MVMRegister *result, uint16_t kind) {
     MVMString      *name  = (MVMString *)key;
     MVMContextBody *body  = (MVMContextBody *)data;
 
@@ -123,7 +123,7 @@ static void at_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *d
     *result = *found;
 }
 
-static void bind_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key, MVMRegister value, uint16_t kind) {
+static void bind_key(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key, MVMRegister value, uint16_t kind) {
     MVMString      *name  = (MVMString *)key;
     MVMContextBody *body  = (MVMContextBody *)data;
 
@@ -164,7 +164,7 @@ static void bind_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
     }
 }
 
-static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t elems(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMContextBody *body  = (MVMContextBody *)data;
 
     MVMSpeshFrameWalker fw;
@@ -175,7 +175,7 @@ static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void
     return result;
 }
 
-static int64_t exists_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key) {
+static int64_t exists_key(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key) {
     MVMContextBody *body = (MVMContextBody *)data;
 
     MVMSpeshFrameWalker fw;
@@ -188,12 +188,12 @@ static int64_t exists_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, 
     return result;
 }
 
-static void delete_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key) {
+static void delete_key(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key) {
     MVM_exception_throw_adhoc(tc,
         "MVMContext representation does not support delete key");
 }
 
-static MVMStorageSpec get_value_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static MVMStorageSpec get_value_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMStorageSpec spec;
     spec.inlineable      = MVM_STORAGE_SPEC_REFERENCE;
     spec.boxed_primitive = MVM_STORAGE_SPEC_BP_NONE;
@@ -216,17 +216,17 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMContext_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMContext_initialize(struct MVMThreadContext *tc) {
     return &MVMContext_this_repr;
 }
 
@@ -270,7 +270,7 @@ static const MVMREPROps MVMContext_this_repr = {
  * inlines, records the deopt index or JIT location, so we will be able
  * to properly reconstruct the call tree. Stops once it finds a place we
  * already calculated this information. */
-static void snapshot_frame_callees(MVMThreadContext *tc, MVMFrame *f) {
+static void snapshot_frame_callees(struct MVMThreadContext *tc, MVMFrame *f) {
     while (f && f->caller) {
         MVMSpeshCandidate *cand = f->caller->spesh_cand;
         MVMFrameExtra *extra = MVM_frame_extra(tc, f);
@@ -294,7 +294,7 @@ static void snapshot_frame_callees(MVMThreadContext *tc, MVMFrame *f) {
 }
 
 /* Creates a MVMContent wrapper object around an MVMFrame. */
-MVMObject * MVM_context_from_frame(MVMThreadContext *tc, MVMFrame *f) {
+MVMObject * MVM_context_from_frame(struct MVMThreadContext *tc, MVMFrame *f) {
     MVMObject *ctx;
     f = MVM_frame_force_to_heap(tc, f);
     snapshot_frame_callees(tc, f);
@@ -308,7 +308,7 @@ MVMObject * MVM_context_from_frame(MVMThreadContext *tc, MVMFrame *f) {
 
 /* Creates a MVMContent wrapper object around an MVMFrame that only allows
  * access to the current frame and does not support traversal. */
-MVMObject * MVM_context_from_frame_non_traversable(MVMThreadContext *tc, MVMFrame *f) {
+MVMObject * MVM_context_from_frame_non_traversable(struct MVMThreadContext *tc, MVMFrame *f) {
     MVMObject *ctx;
     f = MVM_frame_force_to_heap(tc, f);
     MVMROOT(tc, f) {
@@ -319,7 +319,7 @@ MVMObject * MVM_context_from_frame_non_traversable(MVMThreadContext *tc, MVMFram
 }
 
 /* Checks if we can perform a traversal and reach an existing frame. */
-static int32_t traversal_exists(MVMThreadContext *tc, MVMFrame *base, uint8_t *traversals,
+static int32_t traversal_exists(struct MVMThreadContext *tc, MVMFrame *base, uint8_t *traversals,
                                  uint32_t num_traversals) {
     MVMSpeshFrameWalker fw;
     uint32_t could_move;
@@ -331,7 +331,7 @@ static int32_t traversal_exists(MVMThreadContext *tc, MVMFrame *base, uint8_t *t
 
 /* Try to get a context with the specified traversal applied. Ensures that the
  * traversal would lead to a result, and returns a NULL context if not. */
-MVMObject * MVM_context_apply_traversal(MVMThreadContext *tc, MVMContext *ctx, uint8_t traversal) {
+MVMObject * MVM_context_apply_traversal(struct MVMThreadContext *tc, MVMContext *ctx, uint8_t traversal) {
     /* Ensure we've got a traversable context. */
     if (!ctx->body.traversable)
         MVM_exception_throw_adhoc(tc,
@@ -365,7 +365,7 @@ MVMObject * MVM_context_apply_traversal(MVMThreadContext *tc, MVMContext *ctx, u
 
 /* Resolves the context to an exact frame. Returns NULL if it resolves to an
  * inline or doesn't resolve. */
-MVMFrame * MVM_context_get_frame(MVMThreadContext *tc, MVMContext *ctx) {
+MVMFrame * MVM_context_get_frame(struct MVMThreadContext *tc, MVMContext *ctx) {
     MVMSpeshFrameWalker fw;
     MVMFrame *result = NULL;
     MVM_spesh_frame_walker_init(tc, &fw, ctx->body.context, 0);
@@ -377,7 +377,7 @@ MVMFrame * MVM_context_get_frame(MVMThreadContext *tc, MVMContext *ctx) {
 
 /* Resolves the context to an exact frame; if the frame in question is an
  * inline, takes the inline's outer. Returns NULL if neither resolves. */
-MVMFrame * MVM_context_get_frame_or_outer(MVMThreadContext *tc, MVMContext *ctx) {
+MVMFrame * MVM_context_get_frame_or_outer(struct MVMThreadContext *tc, MVMContext *ctx) {
     MVMSpeshFrameWalker fw;
     MVMFrame *result = NULL;
     MVM_spesh_frame_walker_init(tc, &fw, ctx->body.context, 0);
@@ -393,7 +393,7 @@ MVMFrame * MVM_context_get_frame_or_outer(MVMThreadContext *tc, MVMContext *ctx)
 }
 
 /* Resolves the context and gets a hash of its lexicals. */
-MVMObject * MVM_context_lexicals_as_hash(MVMThreadContext *tc, MVMContext *ctx) {
+MVMObject * MVM_context_lexicals_as_hash(struct MVMThreadContext *tc, MVMContext *ctx) {
     MVMSpeshFrameWalker fw;
     MVMObject *result;
     MVM_spesh_frame_walker_init(tc, &fw, ctx->body.context, 0);
@@ -406,7 +406,7 @@ MVMObject * MVM_context_lexicals_as_hash(MVMThreadContext *tc, MVMContext *ctx) 
 }
 
 /* Find the primitive lexical type of a lexical in the context. */
-int64_t MVM_context_lexical_primspec(MVMThreadContext *tc, MVMContext *ctx, MVMString *name) {
+int64_t MVM_context_lexical_primspec(struct MVMThreadContext *tc, MVMContext *ctx, MVMString *name) {
     MVMSpeshFrameWalker fw;
     int64_t primspec = -1;
     MVM_spesh_frame_walker_init(tc, &fw, ctx->body.context, 0);
@@ -423,7 +423,7 @@ int64_t MVM_context_lexical_primspec(MVMThreadContext *tc, MVMContext *ctx, MVMS
 }
 
 /* Finds the code object associated with the frame represented by this context. */
-MVMObject * MVM_context_get_code(MVMThreadContext *tc, MVMContext *ctx) {
+MVMObject * MVM_context_get_code(struct MVMThreadContext *tc, MVMContext *ctx) {
     MVMSpeshFrameWalker fw;
     MVMObject *result = NULL;
     MVM_spesh_frame_walker_init(tc, &fw, ctx->body.context, 0);
@@ -435,7 +435,7 @@ MVMObject * MVM_context_get_code(MVMThreadContext *tc, MVMContext *ctx) {
 
 /* Does a lexical lookup relative to the context's current location.
  * Evaluates to a VMNull if it's not found. */
-MVMObject * MVM_context_lexical_lookup(MVMThreadContext *tc, MVMContext *ctx, MVMString *name) {
+MVMObject * MVM_context_lexical_lookup(struct MVMThreadContext *tc, MVMContext *ctx, MVMString *name) {
     MVMSpeshFrameWalker fw;
     MVM_spesh_frame_walker_init_for_outers(tc, &fw, ctx->body.context);
     if (apply_traversals(tc, &fw, ctx->body.traversals, ctx->body.num_traversals)) {
@@ -448,7 +448,7 @@ MVMObject * MVM_context_lexical_lookup(MVMThreadContext *tc, MVMContext *ctx, MV
 
 /* Does a dynamic lexical lookup relative to the context's current location.
  * Evaluates to a VMNull if it's not found. */
-void MVM_context_dynamic_lookup(MVMThreadContext *tc, MVMContext *ctx, MVMString *name, MVMRegister *r) {
+void MVM_context_dynamic_lookup(struct MVMThreadContext *tc, MVMContext *ctx, MVMString *name, MVMRegister *r) {
     MVMSpeshFrameWalker fw;
     MVM_spesh_frame_walker_init(tc, &fw, ctx->body.context, 0);
     if (apply_traversals(tc, &fw, ctx->body.traversals, ctx->body.num_traversals)) {
@@ -461,7 +461,7 @@ void MVM_context_dynamic_lookup(MVMThreadContext *tc, MVMContext *ctx, MVMString
 
 /* Does a caller lexical lookup relative to the context's current location.
  * Evaluates to a VMNull if it's not found. */
-MVMObject * MVM_context_caller_lookup(MVMThreadContext *tc, MVMContext *ctx, MVMString *name) {
+MVMObject * MVM_context_caller_lookup(struct MVMThreadContext *tc, MVMContext *ctx, MVMString *name) {
     MVMSpeshFrameWalker fw;
     MVM_spesh_frame_walker_init(tc, &fw, ctx->body.context, 1);
     if (apply_traversals(tc, &fw, ctx->body.traversals, ctx->body.num_traversals)) {

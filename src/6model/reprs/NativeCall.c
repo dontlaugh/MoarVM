@@ -5,7 +5,7 @@ static const MVMREPROps NativeCall_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. Also sets the invocation protocol handler in the STable. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &NativeCall_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,7 +18,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMNativeCallBody *src_body  = (MVMNativeCallBody *)src;
     MVMNativeCallBody *dest_body = (MVMNativeCallBody *)dest;
 
@@ -71,14 +71,14 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* We can't actually serialize the handle, but since this REPR gets inlined
  * we just do nothing here since it may well have never been opened. Various
  * more involved approaches are possible. */
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMNativeCallBody *body = (MVMNativeCallBody *)data;
     int16_t i = 0;
     MVM_serialization_write_cstr(
@@ -101,11 +101,11 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
     MVM_serialization_write_ref(tc, writer, (MVMObject*)body->resolve_lib_name);
     MVM_serialization_write_ref(tc, writer, (MVMObject*)body->resolve_lib_name_arg);
 }
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMNativeCall);
 }
 
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMNativeCallBody *body = (MVMNativeCallBody *)data;
     int16_t i = 0;
     body->lib_name = MVM_serialization_read_cstr(tc, reader, NULL);
@@ -132,7 +132,7 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 #endif
 }
 
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMNativeCallBody *body = (MVMNativeCallBody *)data;
     if (body->arg_info) {
         int16_t i;
@@ -146,7 +146,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
         MVM_gc_worklist_add(tc, worklist, &body->resolve_lib_name_arg);
 }
 
-static void gc_cleanup(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static void gc_cleanup(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMNativeCallBody *body = (MVMNativeCallBody *)data;
     if (body->lib_name)
         MVM_free(body->lib_name);
@@ -167,22 +167,22 @@ static void gc_cleanup(MVMThreadContext *tc, MVMSTable *st, void *data) {
 #endif
 }
 
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     gc_cleanup(tc, STABLE(obj), OBJECT_BODY(obj));
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMNativeCall_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMNativeCall_initialize(struct MVMThreadContext *tc) {
     return &NativeCall_this_repr;
 }
 
 /* gets the setup state */
-static int64_t get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static int64_t get_int(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMNativeCallBody *body = (MVMNativeCallBody *)data;
     return (body->lib_handle ? 1 : 0);
 }

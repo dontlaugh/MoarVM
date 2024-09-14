@@ -5,7 +5,7 @@ static const MVMREPROps Decoder_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &Decoder_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,12 +18,12 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot copy object with representation Decoder");
 }
 
 /* Called by the VM to mark any GCable items. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMDecoderBody *decoder = (MVMDecoderBody*)data;
     if (decoder->ds) {
         MVM_gc_worklist_add(tc, worklist, &(decoder->ds->replacement));
@@ -31,7 +31,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMDecoder *decoder = (MVMDecoder *)obj;
     if (decoder->body.ds)
         MVM_string_decodestream_destroy(tc, decoder->body.ds);
@@ -51,22 +51,22 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMDecoder);
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMDecoder_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMDecoder_initialize(struct MVMThreadContext *tc) {
     return &Decoder_this_repr;
 }
 
@@ -101,7 +101,7 @@ static const MVMREPROps Decoder_this_repr = {
 };
 
 /* Assert that the passed object really is a decoder; throw if not. */
-void MVM_decoder_ensure_decoder(MVMThreadContext *tc, MVMObject *decoder, const char *op) {
+void MVM_decoder_ensure_decoder(struct MVMThreadContext *tc, MVMObject *decoder, const char *op) {
     if (MVM_UNLIKELY(REPR(decoder)->ID != MVM_REPR_ID_Decoder || !IS_CONCRETE(decoder)))
         MVM_exception_throw_adhoc(tc,
             "Operation '%s' can only work on an object with the Decoder representation",
@@ -109,20 +109,20 @@ void MVM_decoder_ensure_decoder(MVMThreadContext *tc, MVMObject *decoder, const 
 }
 
 /* Checks and sets the decoder single-user sanity check flag. */
-static void enter_single_user(MVMThreadContext *tc, MVMDecoder *decoder) {
+static void enter_single_user(struct MVMThreadContext *tc, MVMDecoder *decoder) {
     if (!MVM_trycas(&(decoder->body.in_use), 0, 1))
        MVM_exception_throw_adhoc(tc, "Decoder may not be used concurrently");
     MVM_tc_set_ex_release_atomic(tc, &(decoder->body.in_use));
 }
 
 /* Releases the decoder single-user sanity check flag. */
-static void exit_single_user(MVMThreadContext *tc, MVMDecoder *decoder) {
+static void exit_single_user(struct MVMThreadContext *tc, MVMDecoder *decoder) {
     decoder->body.in_use = 0;
     MVM_tc_clear_ex_release_mutex(tc);
 }
 
 /* Configures the decoder with the specified encoding and other configuration. */
-static int should_translate_newlines(MVMThreadContext *tc, MVMObject *config) {
+static int should_translate_newlines(struct MVMThreadContext *tc, MVMObject *config) {
     if (IS_CONCRETE(config) && REPR(config)->ID == MVM_REPR_ID_MVMHash) {
         MVMObject *value = MVM_repr_at_key_o(tc, config,
             tc->instance->str_consts.translate_newlines);
@@ -130,7 +130,7 @@ static int should_translate_newlines(MVMThreadContext *tc, MVMObject *config) {
     }
     return 0;
 }
-static MVMString * has_replacement(MVMThreadContext *tc, MVMObject *config) {
+static MVMString * has_replacement(struct MVMThreadContext *tc, MVMObject *config) {
     if (IS_CONCRETE(config) && REPR(config)->ID == MVM_REPR_ID_MVMHash) {
         MVMObject *value = MVM_repr_at_key_o(tc, config,
             tc->instance->str_consts.replacement);
@@ -140,7 +140,7 @@ static MVMString * has_replacement(MVMThreadContext *tc, MVMObject *config) {
     }
     return NULL;
 }
-static int has_config(MVMThreadContext *tc, MVMObject *config) {
+static int has_config(struct MVMThreadContext *tc, MVMObject *config) {
     if (IS_CONCRETE(config) && REPR(config)->ID == MVM_REPR_ID_MVMHash) {
         MVMObject *value = MVM_repr_at_key_o(tc, config,
             tc->instance->str_consts.config);
@@ -149,7 +149,7 @@ static int has_config(MVMThreadContext *tc, MVMObject *config) {
     return 0;
 
 }
-void MVM_decoder_configure(MVMThreadContext *tc, MVMDecoder *decoder,
+void MVM_decoder_configure(struct MVMThreadContext *tc, MVMDecoder *decoder,
                            MVMString *encoding, MVMObject *config) {
     if (!decoder->body.ds) {
         uint8_t encid = MVM_string_find_encoding(tc, encoding);
@@ -169,7 +169,7 @@ void MVM_decoder_configure(MVMThreadContext *tc, MVMDecoder *decoder,
 }
 
 /* Obtains the DecodeStream object provided it's initialized, throwing if not. */
-static MVMDecodeStream * get_ds(MVMThreadContext *tc, MVMDecoder *decoder) {
+static MVMDecodeStream * get_ds(struct MVMThreadContext *tc, MVMDecoder *decoder) {
     MVMDecodeStream *ds = decoder->body.ds;
     if (!ds)
         MVM_exception_throw_adhoc(tc, "Decoder not yet configured");
@@ -177,12 +177,12 @@ static MVMDecodeStream * get_ds(MVMThreadContext *tc, MVMDecoder *decoder) {
 }
 
 /* Gets the separators specification for the decoder. */
-MVM_STATIC_INLINE MVMDecodeStreamSeparators * get_sep_spec(MVMThreadContext *tc, MVMDecoder *decoder) {
+static inline MVMDecodeStreamSeparators * get_sep_spec(struct MVMThreadContext *tc, MVMDecoder *decoder) {
     return decoder->body.sep_spec;
 }
 
 /* Sets the separators to be used by this decode stream. */
-void MVM_decoder_set_separators(MVMThreadContext *tc, MVMDecoder *decoder, MVMObject *seps) {
+void MVM_decoder_set_separators(struct MVMThreadContext *tc, MVMDecoder *decoder, MVMObject *seps) {
     int32_t is_str_array = REPR(seps)->pos_funcs.get_elem_storage_spec(tc,
         STABLE(seps)).boxed_primitive == MVM_STORAGE_SPEC_BP_STR;
     get_ds(tc, decoder); /* Ensure we're sufficiently initialized. */
@@ -207,7 +207,7 @@ void MVM_decoder_set_separators(MVMThreadContext *tc, MVMDecoder *decoder, MVMOb
 }
 
 /* Adds bytes to the decode stream. */
-void MVM_decoder_add_bytes(MVMThreadContext *tc, MVMDecoder *decoder, MVMObject *buffer) {
+void MVM_decoder_add_bytes(struct MVMThreadContext *tc, MVMDecoder *decoder, MVMObject *buffer) {
     MVMDecodeStream *ds = get_ds(tc, decoder);
     if (REPR(buffer)->ID == MVM_REPR_ID_VMArray) {
         /* To be safe, we need to make a copy of data in a resizable array; it
@@ -247,7 +247,7 @@ void MVM_decoder_add_bytes(MVMThreadContext *tc, MVMDecoder *decoder, MVMObject 
 
 /* Takes the specified number of chars from the decoder, or all if there
  * is not enough. */
-MVMString * MVM_decoder_take_chars(MVMThreadContext *tc, MVMDecoder *decoder, int64_t chars,
+MVMString * MVM_decoder_take_chars(struct MVMThreadContext *tc, MVMDecoder *decoder, int64_t chars,
                                    int64_t eof) {
     MVMString *result = NULL;
     enter_single_user(tc, decoder);
@@ -259,7 +259,7 @@ MVMString * MVM_decoder_take_chars(MVMThreadContext *tc, MVMDecoder *decoder, in
 }
 
 /* Takes all chars from the decoder. */
-MVMString * MVM_decoder_take_all_chars(MVMThreadContext *tc, MVMDecoder *decoder) {
+MVMString * MVM_decoder_take_all_chars(struct MVMThreadContext *tc, MVMDecoder *decoder) {
     MVMString *result = NULL;
     enter_single_user(tc, decoder);
     MVMROOT(tc, decoder) {
@@ -270,7 +270,7 @@ MVMString * MVM_decoder_take_all_chars(MVMThreadContext *tc, MVMDecoder *decoder
 }
 
 /* Takes all available chars from the decoder. */
-MVMString * MVM_decoder_take_available_chars(MVMThreadContext *tc, MVMDecoder *decoder) {
+MVMString * MVM_decoder_take_available_chars(struct MVMThreadContext *tc, MVMDecoder *decoder) {
     MVMString *result = NULL;
     enter_single_user(tc, decoder);
     MVMROOT(tc, decoder) {
@@ -281,7 +281,7 @@ MVMString * MVM_decoder_take_available_chars(MVMThreadContext *tc, MVMDecoder *d
 }
 
 /* Takes a line from the decoder. */
-MVMString * MVM_decoder_take_line(MVMThreadContext *tc, MVMDecoder *decoder,
+MVMString * MVM_decoder_take_line(struct MVMThreadContext *tc, MVMDecoder *decoder,
                                   int64_t chomp, int64_t incomplete_ok) {
     MVMDecodeStream *ds = get_ds(tc, decoder);
     MVMDecodeStreamSeparators *sep_spec = get_sep_spec(tc, decoder);
@@ -297,18 +297,18 @@ MVMString * MVM_decoder_take_line(MVMThreadContext *tc, MVMDecoder *decoder,
 }
 
 /* Returns true if the decoder is empty. */
-int64_t MVM_decoder_empty(MVMThreadContext *tc, MVMDecoder *decoder) {
+int64_t MVM_decoder_empty(struct MVMThreadContext *tc, MVMDecoder *decoder) {
     return MVM_string_decodestream_is_empty(tc, get_ds(tc, decoder));
 }
 
 /* Gets the number of (undecoded) bytes available in the decoder. */
-int64_t MVM_decoder_bytes_available(MVMThreadContext *tc, MVMDecoder *decoder) {
+int64_t MVM_decoder_bytes_available(struct MVMThreadContext *tc, MVMDecoder *decoder) {
     return MVM_string_decodestream_bytes_available(tc, get_ds(tc, decoder));
 }
 
 /* Takes bytes from the decode stream and places them into a buffer. If there
  * are less available than requested, hand back null. */
-MVMObject * MVM_decoder_take_bytes(MVMThreadContext *tc, MVMDecoder *decoder,
+MVMObject * MVM_decoder_take_bytes(struct MVMThreadContext *tc, MVMDecoder *decoder,
                                    MVMObject *buf_type, int64_t bytes) {
     MVMDecodeStream *ds = get_ds(tc, decoder);
     uint8_t *buf = NULL;

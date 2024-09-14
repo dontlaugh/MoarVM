@@ -74,8 +74,8 @@ struct MVMSpeshPlanned {
     uint32_t num_type_stats;
 };
 
-MVMSpeshPlan * MVM_spesh_plan(MVMThreadContext *tc, MVMObject *updated_static_frames, uint64_t *certain_specialization, uint64_t *observed_specialization, uint64_t *osr_specialization);
-void MVM_spesh_plan_gc_mark(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMGCWorklist *worklist);
-void MVM_spesh_plan_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSpeshPlan *plan);
-void MVM_spesh_plan_destroy(MVMThreadContext *tc, MVMSpeshPlan *plan);
-MVMSpeshStatsType * MVM_spesh_plan_copy_type_tuple(MVMThreadContext *tc, MVMCallsite *cs, MVMSpeshStatsType *to_copy);
+MVMSpeshPlan * MVM_spesh_plan(struct MVMThreadContext *tc, MVMObject *updated_static_frames, uint64_t *certain_specialization, uint64_t *observed_specialization, uint64_t *osr_specialization);
+void MVM_spesh_plan_gc_mark(struct MVMThreadContext *tc, MVMSpeshPlan *plan, MVMGCWorklist *worklist);
+void MVM_spesh_plan_gc_describe(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSpeshPlan *plan);
+void MVM_spesh_plan_destroy(struct MVMThreadContext *tc, MVMSpeshPlan *plan);
+MVMSpeshStatsType * MVM_spesh_plan_copy_type_tuple(struct MVMThreadContext *tc, MVMCallsite *cs, MVMSpeshStatsType *to_copy);

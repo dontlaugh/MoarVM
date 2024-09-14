@@ -46,7 +46,7 @@ static size_t max_typed_nodes(MVMCallsite *cs, MVMSpeshStatsType *types) {
 }
 
 /* Allocates a spesh arg guard tree with the specified amounst of nodes. */
-static MVMSpeshArgGuard * allocate_tree(MVMThreadContext *tc, uint32_t total_nodes) {
+static MVMSpeshArgGuard * allocate_tree(struct MVMThreadContext *tc, uint32_t total_nodes) {
     /* Allocate as a single blob of memory. */
     size_t node_size = total_nodes * sizeof(MVMSpeshArgGuardNode);
     size_t size = sizeof(MVMSpeshArgGuard) + node_size;
@@ -69,7 +69,7 @@ static int32_t next_type_index(MVMCallsite *cs, int32_t cur_obj_arg_idx) {
 }
 
 /* Add a new result node and return its index. */
-static uint32_t add_result_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
+static uint32_t add_result_node(struct MVMThreadContext *tc, MVMSpeshArgGuard *tree,
         uint32_t result_index) {
     tree->nodes[tree->used_nodes].op = MVM_SPESH_GUARD_OP_RESULT;
     tree->nodes[tree->used_nodes].result = result_index;
@@ -79,7 +79,7 @@ static uint32_t add_result_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
 }
 
 /* Add a new load node and return its index. */
-static uint32_t add_load_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
+static uint32_t add_load_node(struct MVMThreadContext *tc, MVMSpeshArgGuard *tree,
         MVMCallsite *cs, uint32_t type_index) {
     tree->nodes[tree->used_nodes].op = MVM_SPESH_GUARD_OP_LOAD_ARG;
     tree->nodes[tree->used_nodes].arg_index = type_index;
@@ -89,7 +89,7 @@ static uint32_t add_load_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
 }
 
 /* Add a new type check node and return its index. */
-static uint32_t add_type_check_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
+static uint32_t add_type_check_node(struct MVMThreadContext *tc, MVMSpeshArgGuard *tree,
         MVMObject *type, uint8_t concrete) {
     tree->nodes[tree->used_nodes].op = concrete
         ? MVM_SPESH_GUARD_OP_STABLE_CONC
@@ -102,7 +102,7 @@ static uint32_t add_type_check_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree
 }
 
 /* Add a new rw-check node and return its index. */
-static uint32_t add_rw_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
+static uint32_t add_rw_node(struct MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
     tree->nodes[tree->used_nodes].op = MVM_SPESH_GUARD_OP_DEREF_RW;
     tree->nodes[tree->used_nodes].offset = 0; /* TODO populate this properly */
     tree->nodes[tree->used_nodes].yes = 0;
@@ -111,7 +111,7 @@ static uint32_t add_rw_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
 }
 
 /* Add a new decont node and return its index. */
-static uint32_t add_decont_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
+static uint32_t add_decont_node(struct MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
     tree->nodes[tree->used_nodes].op = MVM_SPESH_GUARD_OP_DEREF_VALUE;
     tree->nodes[tree->used_nodes].offset = 0; /* TODO populate this properly */
     tree->nodes[tree->used_nodes].yes = 0;
@@ -121,7 +121,7 @@ static uint32_t add_decont_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
 
 /* Adds nodes for checking a particular object argument. Returns the node at
  * the start of the created tree. */
-static uint32_t add_nodes_for_typed_argument(MVMThreadContext *tc,
+static uint32_t add_nodes_for_typed_argument(struct MVMThreadContext *tc,
         MVMSpeshArgGuard *tree, MVMSpeshCandidate **candidates,
         MVMCallsite *cs, uint32_t *valid_candidates,
         uint32_t num_valid_candidates, int32_t type_index,
@@ -287,7 +287,7 @@ static uint32_t add_nodes_for_typed_argument(MVMThreadContext *tc,
 }
 
 /* For a given callsite, add nodes for each specialization according to it. */
-static void add_nodes_for_callsite(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
+static void add_nodes_for_callsite(struct MVMThreadContext *tc, MVMSpeshArgGuard *tree,
         uint32_t update_yes_node, MVMSpeshCandidate **candidates,
         CallsiteCandidates cc) {
     /* If we have a certain specialization, then add a node for it. If we fail
@@ -307,7 +307,7 @@ static void add_nodes_for_callsite(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
 
 /* Produce and install an updated set of guards, incorporating the new
  * candidate. */
-void MVM_spesh_arg_guard_regenerate(MVMThreadContext *tc, MVMSpeshArgGuard **guard_ptr,
+void MVM_spesh_arg_guard_regenerate(struct MVMThreadContext *tc, MVMSpeshArgGuard **guard_ptr,
         MVMSpeshCandidate **candidates, uint32_t num_spesh_candidates) {
     MVMSpeshArgGuard *tree;
 
@@ -400,7 +400,7 @@ void MVM_spesh_arg_guard_regenerate(MVMThreadContext *tc, MVMSpeshArgGuard **gua
 /* Runs the guard against a type tuple, which is used primarily for detecting
  * if an existing specialization already exists. Returns the index of that
  * specialization, or -1 if there is no match. */
-int32_t MVM_spesh_arg_guard_run_types(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
+int32_t MVM_spesh_arg_guard_run_types(struct MVMThreadContext *tc, MVMSpeshArgGuard *ag,
                                         MVMCallsite *cs, MVMSpeshStatsType *types) {
     uint32_t current_node = 0;
     MVMSpeshStatsType *test = NULL;
@@ -468,7 +468,7 @@ int32_t MVM_spesh_arg_guard_run_types(MVMThreadContext *tc, MVMSpeshArgGuard *ag
 
 /* Evaluates the argument guards. Returns >= 0 if there is a matching spesh
  * candidate, or -1 if there is not. */
-int32_t MVM_spesh_arg_guard_run(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
+int32_t MVM_spesh_arg_guard_run(struct MVMThreadContext *tc, MVMSpeshArgGuard *ag,
                                  MVMArgs args, int32_t *certain) {
     uint32_t current_node = 0;
     MVMObject *test = NULL;
@@ -517,7 +517,7 @@ int32_t MVM_spesh_arg_guard_run(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
 
 /* Runs the guards using call information gathered by the optimizer. This is
  * used for finding existing candidates to emit fast calls to or inline. */
-int32_t MVM_spesh_arg_guard_run_callinfo(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
+int32_t MVM_spesh_arg_guard_run_callinfo(struct MVMThreadContext *tc, MVMSpeshArgGuard *ag,
                                           MVMSpeshCallInfo *arg_info) {
     uint32_t current_node = 0;
     MVMSpeshFacts *facts = NULL;
@@ -592,7 +592,7 @@ int32_t MVM_spesh_arg_guard_run_callinfo(MVMThreadContext *tc, MVMSpeshArgGuard 
 }
 
 /* Marks any objects held by an argument guard. */
-void MVM_spesh_arg_guard_gc_mark(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
+void MVM_spesh_arg_guard_gc_mark(struct MVMThreadContext *tc, MVMSpeshArgGuard *ag,
                                  MVMGCWorklist *worklist) {
     if (ag) {
         uint32_t i;
@@ -608,7 +608,7 @@ void MVM_spesh_arg_guard_gc_mark(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
     }
 }
 
-void MVM_spesh_arg_guard_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+void MVM_spesh_arg_guard_gc_describe(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                      MVMSpeshArgGuard *ag) {
     if (ag) {
         uint32_t i;
@@ -628,7 +628,7 @@ void MVM_spesh_arg_guard_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState 
 /* Frees the memory associated with an argument guard. If `safe` is set to a
  * non-zero value then the memory is freed at the next safepoint. If it is set
  * to zero, the memory is freed immediately. */
-void MVM_spesh_arg_guard_destroy(MVMThreadContext *tc, MVMSpeshArgGuard *ag, uint32_t safe) {
+void MVM_spesh_arg_guard_destroy(struct MVMThreadContext *tc, MVMSpeshArgGuard *ag, uint32_t safe) {
     if (ag) {
         if (safe)
             MVM_free_at_safepoint(tc, ag);
@@ -639,7 +639,7 @@ void MVM_spesh_arg_guard_destroy(MVMThreadContext *tc, MVMSpeshArgGuard *ag, uin
 
 /* Discards an arg guard held on a static frame, if any, NULLing it out so the
  * candidates will no longer be reachable. */
-void MVM_spesh_arg_guard_discard(MVMThreadContext *tc, MVMStaticFrame *sf) {
+void MVM_spesh_arg_guard_discard(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     MVMStaticFrameSpesh *spesh = sf->body.spesh;
     if (spesh && spesh->body.spesh_arg_guard) {
         MVM_spesh_arg_guard_destroy(tc, spesh->body.spesh_arg_guard, 1);

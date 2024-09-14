@@ -4,8 +4,8 @@
 /* Initializes a new thread context. Note that this doesn't set up a
  * thread itself, it just creates the data structure that exists in
  * MoarVM per thread. */
-MVMThreadContext * MVM_tc_create(MVMThreadContext *parent, MVMInstance *instance) {
-    MVMThreadContext *tc = MVM_calloc(1, sizeof(MVMThreadContext));
+struct MVMThreadContext * MVM_tc_create(struct MVMThreadContext *parent, MVMInstance *instance) {
+    struct MVMThreadContext *tc = MVM_calloc(1, sizeof(struct MVMThreadContext));
     int32_t i;
 
     /* Associate with VM instance. */
@@ -69,7 +69,7 @@ MVMThreadContext * MVM_tc_create(MVMThreadContext *parent, MVMInstance *instance
  * ensured by a GC run at thread exit that forces evacuation of all
  * objects from this nursery to the second generation. Only after
  * that is true should this be called. */
-void MVM_tc_destroy(MVMThreadContext *tc) {
+void MVM_tc_destroy(struct MVMThreadContext *tc) {
     int32_t i;
 
     /* If an exception handler calls nqp::exit, we don't unwind the stack and
@@ -124,24 +124,24 @@ void MVM_tc_destroy(MVMThreadContext *tc) {
     }
 
     /* Free the thread context itself. */
-    memset(tc, 0xfe, sizeof(MVMThreadContext));
+    memset(tc, 0xfe, sizeof(struct MVMThreadContext));
     MVM_free(tc);
 }
 
 /* Setting and clearing mutex to release on exception throw.
  * If the LSB of the mutex' address is set, it's not actually a mutex but a
  * simple flag (an atomic_uintptr_t) that will be cleared on release. */
-void MVM_tc_set_ex_release_mutex(MVMThreadContext *tc, uv_mutex_t *mutex) {
+void MVM_tc_set_ex_release_mutex(struct MVMThreadContext *tc, uv_mutex_t *mutex) {
     if (tc->ex_release_mutex)
         MVM_exception_throw_adhoc(tc, "Internal error: multiple ex_release_mutex");
     tc->ex_release_mutex = mutex;
 }
-void MVM_tc_set_ex_release_atomic(MVMThreadContext *tc, atomic_uintptr_t *flag) {
+void MVM_tc_set_ex_release_atomic(struct MVMThreadContext *tc, atomic_uintptr_t *flag) {
     if (tc->ex_release_mutex)
         MVM_exception_throw_adhoc(tc, "Internal error: multiple ex_release_mutex");
     tc->ex_release_mutex = (uv_mutex_t *)((uintptr_t)flag | 1);
 }
-void MVM_tc_release_ex_release_mutex(MVMThreadContext *tc) {
+void MVM_tc_release_ex_release_mutex(struct MVMThreadContext *tc) {
     if (tc->ex_release_mutex) {
         if (MVM_UNLIKELY((uintptr_t)tc->ex_release_mutex & 1)) {
             *((atomic_uintptr_t*)((uintptr_t)tc->ex_release_mutex & ~(uintptr_t)1)) = 0;
@@ -151,6 +151,6 @@ void MVM_tc_release_ex_release_mutex(MVMThreadContext *tc) {
     }
     tc->ex_release_mutex = NULL;
 }
-void MVM_tc_clear_ex_release_mutex(MVMThreadContext *tc) {
+void MVM_tc_clear_ex_release_mutex(struct MVMThreadContext *tc) {
     tc->ex_release_mutex = NULL;
 }

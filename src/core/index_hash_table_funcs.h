@@ -5,10 +5,10 @@
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
 #define MVM_INDEX_HASH_LOAD_FACTOR 0.75
-MVM_STATIC_INLINE uint32_t MVM_index_hash_official_size(const struct MVMIndexHashTableControl *control) {
+static inline uint32_t MVM_index_hash_official_size(const struct MVMIndexHashTableControl *control) {
     return 1 << (uint32_t)control->official_size_log2;
 }
-MVM_STATIC_INLINE uint32_t MVM_index_hash_max_items(const struct MVMIndexHashTableControl *control) {
+static inline uint32_t MVM_index_hash_max_items(const struct MVMIndexHashTableControl *control) {
     return MVM_index_hash_official_size(control) * MVM_INDEX_HASH_LOAD_FACTOR;
 }
 /* -1 because...
@@ -18,20 +18,20 @@ MVM_STATIC_INLINE uint32_t MVM_index_hash_max_items(const struct MVMIndexHashTab
  * probe distance of 2 is the first extra bucket beyond the official allocation
  * probe distance of 255 is the 254th beyond the official allocation.
  */
-MVM_STATIC_INLINE uint32_t MVM_index_hash_allocated_items(const struct MVMIndexHashTableControl *control) {
+static inline uint32_t MVM_index_hash_allocated_items(const struct MVMIndexHashTableControl *control) {
     return MVM_index_hash_official_size(control) + control->max_probe_distance_limit - 1;
 }
-MVM_STATIC_INLINE uint32_t MVM_index_hash_kompromat(const struct MVMIndexHashTableControl *control) {
+static inline uint32_t MVM_index_hash_kompromat(const struct MVMIndexHashTableControl *control) {
     return MVM_index_hash_official_size(control) + control->max_probe_distance  - 1;
 }
-MVM_STATIC_INLINE uint8_t *MVM_index_hash_metadata(const struct MVMIndexHashTableControl *control) {
+static inline uint8_t *MVM_index_hash_metadata(const struct MVMIndexHashTableControl *control) {
     return (uint8_t *) control + sizeof(struct MVMIndexHashTableControl);
 }
-MVM_STATIC_INLINE uint8_t *MVM_index_hash_entries(const struct MVMIndexHashTableControl *control) {
+static inline uint8_t *MVM_index_hash_entries(const struct MVMIndexHashTableControl *control) {
     return (uint8_t *) control - sizeof(struct MVMIndexHashEntry);
 }
 
-MVM_STATIC_INLINE size_t MVM_index_hash_allocated_size(MVMThreadContext *tc, MVMIndexHashTable *hashtable) {
+static inline size_t MVM_index_hash_allocated_size(struct MVMThreadContext *tc, MVMIndexHashTable *hashtable) {
     struct MVMIndexHashTableControl *control = hashtable->table;
     if (!control)
         return 0;
@@ -47,18 +47,18 @@ MVM_STATIC_INLINE size_t MVM_index_hash_allocated_size(MVMThreadContext *tc, MVM
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
    which you allocated (heap, stack, inside another struct, wherever) */
-void MVM_index_hash_demolish(MVMThreadContext *tc, MVMIndexHashTable *hashtable);
+void MVM_index_hash_demolish(struct MVMThreadContext *tc, MVMIndexHashTable *hashtable);
 /* and then free memory if you allocated it */
 
 /* Call this before you use the hashtable, to initialise it.
  * Doesn't allocate memory for the hashtable struct itself - you can embed the
  * struct within a larger struct if you wish.
  */
-void MVM_index_hash_build(MVMThreadContext *tc,
+void MVM_index_hash_build(struct MVMThreadContext *tc,
                           MVMIndexHashTable *hashtable,
                           uint32_t entries);
 
-MVM_STATIC_INLINE int MVM_index_hash_is_empty(MVMThreadContext *tc,
+static inline int MVM_index_hash_is_empty(struct MVMThreadContext *tc,
                                               MVMIndexHashTable *hashtable) {
     struct MVMIndexHashTableControl *control = hashtable->table;
     return !control || control->cur_items == 0;
@@ -66,7 +66,7 @@ MVM_STATIC_INLINE int MVM_index_hash_is_empty(MVMThreadContext *tc,
 
 /* This code assumes that the destination hash is uninitialised - ie not even
  * MVM_index_hash_build has been called upon it. */
-MVM_STATIC_INLINE void MVM_index_hash_shallow_copy(MVMThreadContext *tc,
+static inline void MVM_index_hash_shallow_copy(struct MVMThreadContext *tc,
                                                    MVMIndexHashTable *source,
                                                    MVMIndexHashTable *dest) {
     const struct MVMIndexHashTableControl *control = source->table;
@@ -85,13 +85,13 @@ MVM_STATIC_INLINE void MVM_index_hash_shallow_copy(MVMThreadContext *tc,
 
 /* UNCONDITIONALLY creates a new hash entry with the given key and value.
  * Doesn't check if the key already exists. Use with care. */
-void MVM_index_hash_insert_nocheck(MVMThreadContext *tc,
+void MVM_index_hash_insert_nocheck(struct MVMThreadContext *tc,
                                    MVMIndexHashTable *hashtable,
                                    MVMString **list,
                                    uint32_t idx);
 
-MVM_STATIC_INLINE struct MVM_hash_loop_state
-MVM_index_hash_create_loop_state(MVMThreadContext *tc,
+static inline struct MVM_hash_loop_state
+MVM_index_hash_create_loop_state(struct MVMThreadContext *tc,
                                  struct MVMIndexHashTableControl *control,
                                  MVMString *key) {
     uint64_t hash_val = MVM_string_hash_code(tc, key);
@@ -116,7 +116,7 @@ MVM_index_hash_create_loop_state(MVMThreadContext *tc,
     return retval;
 }
 
-MVM_STATIC_INLINE uint32_t MVM_index_hash_fetch_nocheck(MVMThreadContext *tc,
+static inline uint32_t MVM_index_hash_fetch_nocheck(struct MVMThreadContext *tc,
                                                          MVMIndexHashTable *hashtable,
                                                          MVMString **list,
                                                          MVMString *want) {
@@ -158,7 +158,7 @@ MVM_STATIC_INLINE uint32_t MVM_index_hash_fetch_nocheck(MVMThreadContext *tc,
     }
 }
 
-MVM_STATIC_INLINE uint32_t MVM_index_hash_fetch(MVMThreadContext *tc,
+static inline uint32_t MVM_index_hash_fetch(struct MVMThreadContext *tc,
                                                  MVMIndexHashTable *hashtable,
                                                  MVMString **list,
                                                  MVMString *want) {
@@ -168,7 +168,7 @@ MVM_STATIC_INLINE uint32_t MVM_index_hash_fetch(MVMThreadContext *tc,
     return MVM_index_hash_fetch_nocheck(tc, hashtable, list, want);
 }
 
-MVM_STATIC_INLINE int MVM_index_hash_built(MVMThreadContext *tc,
+static inline int MVM_index_hash_built(struct MVMThreadContext *tc,
                                            MVMIndexHashTable *hashtable) {
     return !!hashtable->table;
 }

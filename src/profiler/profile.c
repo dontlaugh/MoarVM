@@ -1,7 +1,7 @@
 #include "moar.h"
 
 /* Starts profiling with the specified configuration. */
-void MVM_profile_start(MVMThreadContext *tc, MVMObject *config) {
+void MVM_profile_start(struct MVMThreadContext *tc, MVMObject *config) {
     if (tc->instance->profiling || MVM_profile_heap_profiling(tc))
         MVM_exception_throw_adhoc(tc, "Profiling is already started");
 
@@ -57,7 +57,7 @@ void MVM_profile_start(MVMThreadContext *tc, MVMObject *config) {
 }
 
 /* Ends profiling and returns the result data structure. */
-MVMObject * MVM_profile_end(MVMThreadContext *tc) {
+MVMObject * MVM_profile_end(struct MVMThreadContext *tc) {
     if (tc->instance->profiling) {
         MVM_profile_log_exit(tc);
         return MVM_profile_instrumented_end(tc);

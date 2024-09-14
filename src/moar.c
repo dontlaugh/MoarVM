@@ -29,7 +29,7 @@
     } \
 } while (0)
 
-static void setup_std_handles(MVMThreadContext *tc);
+static void setup_std_handles(struct MVMThreadContext *tc);
 
 static FILE *fopen_perhaps_with_pid(char *env_var, char *path, const char *mode) {
     FILE *result;
@@ -73,7 +73,7 @@ static FILE *fopen_perhaps_with_pid(char *env_var, char *path, const char *mode)
     exit(1);
 }
 
-MVM_STATIC_INLINE uint64_t ptr_hash_64_to_64(uint64_t u) {
+static inline uint64_t ptr_hash_64_to_64(uint64_t u) {
     /* Thomas Wong's hash from
      * https://web.archive.org/web/20120211151329/http://www.concentric.net/~Ttwang/tech/inthash.htm */
     u = (~u) + (u << 21);
@@ -87,7 +87,7 @@ MVM_STATIC_INLINE uint64_t ptr_hash_64_to_64(uint64_t u) {
 }
 
 #ifdef MVM_THREAD_LOCAL
-MVM_THREAD_LOCAL MVMThreadContext *MVM_running_threads_context;
+MVM_THREAD_LOCAL struct MVMThreadContext *MVM_running_threads_context;
 #else
 uv_key_t MVM_running_threads_context_key;
 
@@ -453,7 +453,7 @@ MVMInstance * MVM_vm_create_instance(void) {
 }
 
 /* Set up some standard file handles. */
-static void setup_std_handles(MVMThreadContext *tc) {
+static void setup_std_handles(struct MVMThreadContext *tc) {
     tc->instance->stdin_handle  = MVM_file_get_stdstream(tc, 0);
     MVM_gc_root_add_permanent_desc(tc, (MVMCollectable **)&tc->instance->stdin_handle,
         "stdin handle");
@@ -469,7 +469,7 @@ static void setup_std_handles(MVMThreadContext *tc) {
 
 /* This callback is passed to the interpreter code. It takes care of making
  * the initial invocation. */
-static void toplevel_initial_invoke(MVMThreadContext *tc, void *data) {
+static void toplevel_initial_invoke(struct MVMThreadContext *tc, void *data) {
     /* Create initial frame, which sets up all of the interpreter state also. */
     MVM_frame_dispatch_zero_args(tc, ((MVMStaticFrame *)data)->body.static_code);
 }
@@ -477,7 +477,7 @@ static void toplevel_initial_invoke(MVMThreadContext *tc, void *data) {
 /* Run deserialization frame, if there is one. Disable specialization
  * during this time, so we don't waste time logging one-shot setup
  * code. */
-static void run_deserialization_frame(MVMThreadContext *tc, MVMCompUnit *cu) {
+static void run_deserialization_frame(struct MVMThreadContext *tc, MVMCompUnit *cu) {
     if (cu->body.deserialize_frame) {
         int8_t spesh_enabled_orig = tc->instance->spesh_enabled;
         tc->instance->spesh_enabled = 0;
@@ -489,7 +489,7 @@ static void run_deserialization_frame(MVMThreadContext *tc, MVMCompUnit *cu) {
 /* Loads bytecode from the specified file name and runs it. */
 void MVM_vm_run_file(MVMInstance *instance, const char *filename) {
     /* Map the compilation unit into memory and dissect it. */
-    MVMThreadContext *tc = instance->main_thread;
+    struct MVMThreadContext *tc = instance->main_thread;
     MVMCompUnit      *cu = MVM_cu_map_from_file(tc, filename, 0);
 
     /* The call to MVM_string_utf8_decode() may allocate, invalidating the
@@ -508,7 +508,7 @@ void MVM_vm_run_file(MVMInstance *instance, const char *filename) {
 /* Loads bytecode from memory and runs it. */
 void MVM_vm_run_bytecode(MVMInstance *instance, uint8_t *bytes, uint32_t size) {
     /* Map the compilation unit into memory and dissect it. */
-    MVMThreadContext *tc = instance->main_thread;
+    struct MVMThreadContext *tc = instance->main_thread;
     MVMCompUnit      *cu = MVM_cu_from_bytes(tc, bytes, size);
 
     /* Run the deserialization frame, if any. */
@@ -521,7 +521,7 @@ void MVM_vm_run_bytecode(MVMInstance *instance, uint8_t *bytes, uint32_t size) {
 /* Loads bytecode from the specified file name and dumps it. */
 void MVM_vm_dump_file(MVMInstance *instance, const char *filename) {
     /* Map the compilation unit into memory and dissect it. */
-    MVMThreadContext *tc = instance->main_thread;
+    struct MVMThreadContext *tc = instance->main_thread;
     void        *block       = NULL;
     void        *handle      = NULL;
     uv_file      fd;
@@ -607,7 +607,7 @@ void MVM_vm_exit(MVMInstance *instance) {
     exit(0);
 }
 
-static void free_lib(MVMThreadContext *tc, void *entry_v, void *arg) {
+static void free_lib(struct MVMThreadContext *tc, void *entry_v, void *arg) {
     struct MVMDLLRegistry *entry = entry_v;
     MVM_nativecall_free_lib(entry->lib);
 }
@@ -776,7 +776,7 @@ void MVM_vm_set_prog_name(MVMInstance *instance, const char *prog_name) {
     instance->prog_name = prog_name;
 }
 
-void MVM_vm_event_subscription_configure(MVMThreadContext *tc, MVMObject *queue, MVMObject *config) {
+void MVM_vm_event_subscription_configure(struct MVMThreadContext *tc, MVMObject *queue, MVMObject *config) {
     MVMString *gcevent;
     MVMString *speshoverviewevent;
     MVMString *startup_time;

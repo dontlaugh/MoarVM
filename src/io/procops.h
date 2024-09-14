@@ -12,24 +12,24 @@
 #define MVM_PIPE_CAPTURE_ERR  256
 #define MVM_PIPE_MERGED_OUT_ERR 512
 
-MVMObject * MVM_proc_getenvhash(MVMThreadContext *tc);
-MVMObject * MVM_proc_spawn_async(MVMThreadContext *tc, MVMObject *queue, MVMString *prog,
+MVMObject * MVM_proc_getenvhash(struct MVMThreadContext *tc);
+MVMObject * MVM_proc_spawn_async(struct MVMThreadContext *tc, MVMObject *queue, MVMString *prog,
          MVMObject *args, MVMString *cwd, MVMObject *env, MVMObject *callbacks);
-void MVM_proc_kill_async(MVMThreadContext *tc, MVMObject *handle, int64_t signal);
-int64_t MVM_proc_getpid(MVMThreadContext *tc);
-int64_t MVM_proc_getppid(MVMThreadContext *tc);
-int64_t MVM_proc_rand_i(MVMThreadContext *tc);
-double MVM_proc_rand_n(MVMThreadContext *tc);
-double MVM_proc_randscale_n(MVMThreadContext *tc, double scale);
-void MVM_proc_seed(MVMThreadContext *tc, int64_t seed);
-uint64_t MVM_proc_time(MVMThreadContext *tc);
-MVMObject * MVM_proc_clargs(MVMThreadContext *tc);
-MVMString * MVM_executable_name(MVMThreadContext *tc);
-void MVM_proc_getrusage(MVMThreadContext *tc, MVMObject *result);
-int64_t MVM_proc_fork(MVMThreadContext *tc);
+void MVM_proc_kill_async(struct MVMThreadContext *tc, MVMObject *handle, int64_t signal);
+int64_t MVM_proc_getpid(struct MVMThreadContext *tc);
+int64_t MVM_proc_getppid(struct MVMThreadContext *tc);
+int64_t MVM_proc_rand_i(struct MVMThreadContext *tc);
+double MVM_proc_rand_n(struct MVMThreadContext *tc);
+double MVM_proc_randscale_n(struct MVMThreadContext *tc, double scale);
+void MVM_proc_seed(struct MVMThreadContext *tc, int64_t seed);
+uint64_t MVM_proc_time(struct MVMThreadContext *tc);
+MVMObject * MVM_proc_clargs(struct MVMThreadContext *tc);
+MVMString * MVM_executable_name(struct MVMThreadContext *tc);
+void MVM_proc_getrusage(struct MVMThreadContext *tc, MVMObject *result);
+int64_t MVM_proc_fork(struct MVMThreadContext *tc);
 
 #ifdef _WIN32
 #include <wchar.h>
-MVM_PUBLIC char ** MVM_UnicodeToUTF8_argv(const int argc, wchar_t **argv);
+ char ** MVM_UnicodeToUTF8_argv(const int argc, wchar_t **argv);
 #endif
 

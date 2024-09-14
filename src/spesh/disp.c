@@ -2,7 +2,7 @@
 
 #define GET_UI16(pc, idx)   *((uint16_t *)((pc) + (idx)))
 
-MVM_STATIC_INLINE uint64_t GET_UI64(const uint8_t *pc, int32_t idx) {
+static inline uint64_t GET_UI64(const uint8_t *pc, int32_t idx) {
     uint64_t retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
@@ -10,7 +10,7 @@ MVM_STATIC_INLINE uint64_t GET_UI64(const uint8_t *pc, int32_t idx) {
 
 /* Create op info for a dispatch instruction, so that during specialization we
  * can pretend it's not varargs. */
-size_t MVM_spesh_disp_dispatch_op_info_size(MVMThreadContext *tc,
+size_t MVM_spesh_disp_dispatch_op_info_size(struct MVMThreadContext *tc,
         const MVMOpInfo *base_info, MVMCallsite *callsite) {
     /* In general, ops support up to an operand limit; in the case that there are more,
      * we'd overrun the buffer. We thus allocate more. */
@@ -19,7 +19,7 @@ size_t MVM_spesh_disp_dispatch_op_info_size(MVMThreadContext *tc,
             ? total_ops - MVM_MAX_OPERANDS
             : 0) * sizeof(uint8_t);
 }
-void MVM_spesh_disp_initialize_dispatch_op_info(MVMThreadContext *tc,
+void MVM_spesh_disp_initialize_dispatch_op_info(struct MVMThreadContext *tc,
         const MVMOpInfo *base_info, MVMCallsite *callsite, MVMOpInfo *dispatch_info) {
 
     /* Populate based on the original operation. */
@@ -101,7 +101,7 @@ typedef struct {
 
 /* Rewrite a dispatch instruction into an sp_dispatch one, resolving only the
  * static frame and inline cache offset. */
-static void rewrite_to_sp_dispatch(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
+static void rewrite_to_sp_dispatch(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
         uint32_t bytecode_offset) {
     /* Resolve the callsite. */
     uint32_t callsite_idx = ins->operands[ins->info->opcode == MVM_OP_dispatch_v ? 1 : 2].callsite_idx;
@@ -143,7 +143,7 @@ static void rewrite_to_sp_dispatch(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSp
 
 /* Get the index of the first normal argument operand to the dispatch
  * instruction (after result unless void, dispatcher name, and callsite). */
-static uint32_t find_disp_op_first_real_arg(MVMThreadContext *tc, MVMSpeshIns *ins) {
+static uint32_t find_disp_op_first_real_arg(struct MVMThreadContext *tc, MVMSpeshIns *ins) {
     if (ins->info->opcode == MVM_OP_dispatch_v)
         return 2;
     assert(ins->info->opcode == MVM_OP_dispatch_i ||
@@ -155,7 +155,7 @@ static uint32_t find_disp_op_first_real_arg(MVMThreadContext *tc, MVMSpeshIns *i
 }
 
 /* Find an annotation on a dispatch instruction and remove it. */
-static MVMSpeshAnn * take_dispatch_annotation(MVMThreadContext *tc, MVMSpeshGraph *g,
+static MVMSpeshAnn * take_dispatch_annotation(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshIns *ins, int32_t kind) {
     MVMSpeshAnn *deopt_ann = ins->annotations;
     MVMSpeshAnn *prev = NULL;
@@ -177,7 +177,7 @@ static MVMSpeshAnn * take_dispatch_annotation(MVMThreadContext *tc, MVMSpeshGrap
 /* Creates an annotation relating a synthetic (added during optimization) deopt
  * point back to the original one whose usages will have been recorded in the
  * facts. */
-static MVMSpeshAnn * create_synthetic_deopt_annotation(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshAnn *in) {
+static MVMSpeshAnn * create_synthetic_deopt_annotation(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshAnn *in) {
     MVMSpeshAnn *ann = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshAnn));
     ann->type = MVM_SPESH_ANN_DEOPT_SYNTH;
     ann->data.deopt_idx = in->data.deopt_idx;
@@ -187,7 +187,7 @@ static MVMSpeshAnn * create_synthetic_deopt_annotation(MVMThreadContext *tc, MVM
 /* Takes an instruction that may deopt and an operand that should contain the
  * deopt index. Reuse the dispatch instruction deopt annotation if that did
  * not happen already, otherwise clone it. */
-static void set_deopt(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
+static void set_deopt(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
         MVMSpeshOperand *index_operand, MVMSpeshAnn *deopt_ann,
         uint32_t *reused_deopt_ann) {
     if (*reused_deopt_ann) {
@@ -208,7 +208,7 @@ static void set_deopt(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
 
 /* Emit a type, concreteness or object literal guard instruction (when concreteness
  * only, comparee is null). */
-static MVMSpeshOperand emit_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
+static MVMSpeshOperand emit_guard(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns **insert_after, uint16_t op,
         MVMSpeshOperand guard_reg, MVMCollectable *comparee, MVMSpeshAnn *deopt_ann,
         uint32_t *reused_deopt_ann) {
@@ -243,7 +243,7 @@ static MVMSpeshOperand emit_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* Emit a HLL guard instruction. */
-static MVMSpeshOperand emit_hll_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
+static MVMSpeshOperand emit_hll_guard(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns **insert_after, MVMSpeshOperand guard_reg,
         MVMHLLConfig *hll, MVMSpeshAnn *deopt_ann, uint32_t *reused_deopt_ann) {
     /* Produce a new version for after the guarding. */
@@ -272,7 +272,7 @@ static MVMSpeshOperand emit_hll_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 /* Emit a simple binary instruction with a result register and either a
  * input register or input constant. */
-static void emit_bi_op(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void emit_bi_op(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns **insert_after, uint16_t op,
         MVMSpeshOperand to_reg, MVMSpeshOperand from_reg) {
     /* Produce the instruction and insert it. */
@@ -292,7 +292,7 @@ static void emit_bi_op(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 /* Emit a simple three-ary instruction where the first register is written
  * to and the other two operands are registers that are read from. */
-static void emit_tri_op(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void emit_tri_op(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns **insert_after, uint16_t op,
         MVMSpeshOperand to_reg, MVMSpeshOperand from_reg, MVMSpeshOperand third_reg) {
     /* Produce the instruction and insert it. */
@@ -311,7 +311,7 @@ static void emit_tri_op(MVMThreadContext *tc, MVMSpeshGraph *g,
     MVM_spesh_usages_add_by_reg(tc, g, third_reg, ins);
 }
 
-static void emit_iffy_op(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void emit_iffy_op(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns **insert_after, uint16_t op,
         MVMSpeshOperand condition_reg, MVMSpeshBB *target) {
     /* Produce the instruction and insert it. */
@@ -329,7 +329,7 @@ static void emit_iffy_op(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* Emit an instruction to load a value into a spesh slot. */
-static void emit_load_spesh_slot(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void emit_load_spesh_slot(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns **insert_after, MVMSpeshOperand to_reg,
         MVMCollectable *value) {
     /* Add the instruction. */
@@ -351,7 +351,7 @@ static void emit_load_spesh_slot(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* Emit an instruction to load an attribute. */
-static void emit_load_attribute(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void emit_load_attribute(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns **insert_after, uint16_t op,
         MVMSpeshOperand to_reg, MVMSpeshOperand from_reg, uint16_t offset) {
     /* Produce instruction. */
@@ -371,7 +371,7 @@ static void emit_load_attribute(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* Emit a guard that a value is a given literal string. */
-static MVMSpeshOperand emit_literal_str_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
+static MVMSpeshOperand emit_literal_str_guard(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns **insert_after, MVMSpeshOperand testee,
         MVMString *expected, MVMSpeshAnn *deopt_ann, uint32_t *reused_deopt_ann) {
     /* Load the string literal value from a spesh slot. */
@@ -418,7 +418,7 @@ static uint16_t resumption_op_non_constant(MVMDispProgram *dp, uint16_t res_idx)
     return non_constant;
 }
 
-size_t MVM_spesh_disp_resumption_op_info_size(MVMThreadContext *tc,
+size_t MVM_spesh_disp_resumption_op_info_size(struct MVMThreadContext *tc,
         MVMDispProgram *dp, uint16_t res_idx) {
 
     uint16_t non_constant = resumption_op_non_constant(dp, res_idx);
@@ -434,7 +434,7 @@ size_t MVM_spesh_disp_resumption_op_info_size(MVMThreadContext *tc,
 /* Form the instruction info for an sp_resumption given the specified dispatch
  * program resumption. This is a varargs instruction, thus why we need to
  * synthesize the instruction info. */
-MVMOpInfo * MVM_spesh_disp_initialize_resumption_op_info(MVMThreadContext *tc,
+MVMOpInfo * MVM_spesh_disp_initialize_resumption_op_info(struct MVMThreadContext *tc,
         MVMDispProgram *dp, uint16_t res_idx, MVMOpInfo *res_info) {
     const MVMOpInfo *base_info = MVM_op_get_op(MVM_OP_sp_resumption);
     uint16_t non_constant = resumption_op_non_constant(dp, res_idx);
@@ -472,7 +472,7 @@ MVMOpInfo * MVM_spesh_disp_initialize_resumption_op_info(MVMThreadContext *tc,
 /* Insert an instruction relating to each dispatch resumption init state that
  * is wanted by the dispatch program. This makes sure we preserve the various
  * registers that are used by the resumption. */
-static void insert_resume_inits(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void insert_resume_inits(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         MVMSpeshIns **insert_after, MVMDispProgram *dp, MVMSpeshOperand *orig_args,
         MVMSpeshOperand *temporaries, int32_t deopt_idx) {
     uint32_t i;
@@ -533,7 +533,7 @@ static void insert_resume_inits(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpesh
 
 /* Try to translate a dispatch program into a sequence of ops (which will
  * be subject to later optimization and potentially JIT compilation). */
-static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
+static int translate_dispatch_program(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns *ins, MVMDispProgram *dp, MVMSpeshIns **next_ins) {
     /* First, validate it is a dispatch program we know how to compile. */
     uint32_t i;
@@ -1568,7 +1568,7 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
 static int compare_hits(const void *a, const void *b) {
     return ((OutcomeHitCount *)b)->hits - ((OutcomeHitCount *)a)->hits;
 }
-int MVM_spesh_disp_optimize(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+int MVM_spesh_disp_optimize(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         MVMSpeshPlanned *p, MVMSpeshIns *ins, MVMSpeshIns **next_ins) {
     /* Locate the inline cache bytecode offset. There must always be one. */
     MVMSpeshAnn *ann = ins->annotations;

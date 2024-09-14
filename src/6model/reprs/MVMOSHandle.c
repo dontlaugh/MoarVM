@@ -5,7 +5,7 @@ static const MVMREPROps MVMOSHandle_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &MVMOSHandle_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,14 +18,14 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Initializes the handle with the mutex all handles need. */
-static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static void initialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMOSHandleBody *handle = (MVMOSHandleBody *)data;
     handle->mutex = MVM_malloc(sizeof(uv_mutex_t));
     uv_mutex_init(handle->mutex);
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     /* can't be copied because then we could never know when gc_free should
      * close the handle (unless we did some refcounting on a shared container).
      * note - 12:25 <jnthn> I mean, Perl 6 will has an attribute which
@@ -35,14 +35,14 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 }
 
 /* Called by the VM to mark any GCable items. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMOSHandleBody *handle = (MVMOSHandleBody *)data;
     if (handle->ops && handle->ops->gc_mark)
         handle->ops->gc_mark(tc, handle->data, worklist);
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMOSHandle *handle = (MVMOSHandle *)obj;
     if (handle->body.ops && handle->body.ops->gc_free) {
         handle->body.ops->gc_free(tc, obj, handle->body.data);
@@ -66,17 +66,17 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMOSHandle_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMOSHandle_initialize(struct MVMThreadContext *tc) {
     return &MVMOSHandle_this_repr;
 }
 

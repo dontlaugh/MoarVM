@@ -5,7 +5,7 @@ static const MVMREPROps NFA_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &NFA_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,12 +18,12 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot copy object with representation NFA");
 }
 
 /* Called by the VM to mark any GCable items. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMNFABody *lb = (MVMNFABody *)data;
     int64_t i, j;
 
@@ -42,7 +42,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMNFA *nfa = (MVMNFA *)obj;
     int64_t i;
     for (i = 0; i < nfa->body.num_states; i++)
@@ -64,12 +64,12 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Serializes the data. */
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMNFABody *body = (MVMNFABody *)data;
     int64_t i, j;
 
@@ -180,7 +180,7 @@ static int opt_edge_comp(const void *av, const void *bv) {
         return 0;
     }
 }
-static void sort_states_and_add_synth_cp_node(MVMThreadContext *tc, MVMNFABody *body) {
+static void sort_states_and_add_synth_cp_node(struct MVMThreadContext *tc, MVMNFABody *body) {
     int64_t s;
     for (s = 0; s < body->num_states; s++) {
         /* See if there's enough interesting edges to do the opt. */
@@ -211,7 +211,7 @@ static void sort_states_and_add_synth_cp_node(MVMThreadContext *tc, MVMNFABody *
 }
 
 /* Deserializes the data. */
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMNFABody *body = (MVMNFABody *)data;
     int64_t i, j;
 
@@ -291,17 +291,17 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMNFA);
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMNFABody *body = (MVMNFABody *)data;
     uint64_t total;
     int64_t i;
@@ -315,7 +315,7 @@ static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) 
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMNFA_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMNFA_initialize(struct MVMThreadContext *tc) {
     return &NFA_this_repr;
 }
 
@@ -351,7 +351,7 @@ static const MVMREPROps NFA_this_repr = {
 
 /* We may be provided a grapheme as a codepoint for non-synthetics, or as a
  * 1-char string for synthetics. */
-static MVMGrapheme32 get_grapheme(MVMThreadContext *tc, MVMObject *obj) {
+static MVMGrapheme32 get_grapheme(struct MVMThreadContext *tc, MVMObject *obj) {
     /* Handle null and non-concrete case. */
     if (MVM_UNLIKELY(MVM_is_null(tc, obj) || !IS_CONCRETE(obj))) {
         MVM_exception_throw_adhoc(tc,
@@ -373,7 +373,7 @@ static MVMGrapheme32 get_grapheme(MVMThreadContext *tc, MVMObject *obj) {
     }
 }
 
-MVMObject * MVM_nfa_from_statelist(MVMThreadContext *tc, MVMObject *states, MVMObject *nfa_type) {
+MVMObject * MVM_nfa_from_statelist(struct MVMThreadContext *tc, MVMObject *states, MVMObject *nfa_type) {
     MVMObject  *nfa_obj;
     MVMNFABody *nfa;
     int64_t    i, j, num_states;
@@ -479,7 +479,7 @@ static int32_t in_done(uint32_t *done, uint32_t numdone, uint32_t st) {
     return 0;
 }
 
-static int64_t * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *target, int64_t offset, int64_t *total_fates_out) {
+static int64_t * nqp_nfa_run(struct MVMThreadContext *tc, MVMNFABody *nfa, MVMString *target, int64_t offset, int64_t *total_fates_out) {
     int64_t  eos     = MVM_string_graphs(tc, target);
     int64_t  numcur  = 0;
     int64_t  numnext = 0;
@@ -877,7 +877,7 @@ static int64_t * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *t
 
 /* Takes an NFA, a target string in and an offset. Runs the NFA and returns
  * the order to try the fates in. */
-MVMObject * MVM_nfa_run_proto(MVMThreadContext *tc, MVMObject *nfa, MVMString *target, int64_t offset) {
+MVMObject * MVM_nfa_run_proto(struct MVMThreadContext *tc, MVMObject *nfa, MVMString *target, int64_t offset) {
     /* Run the NFA. */
     int64_t  total_fates, i;
     int64_t *fates = nqp_nfa_run(tc, (MVMNFABody *)OBJECT_BODY(nfa), target, offset, &total_fates);
@@ -894,7 +894,7 @@ MVMObject * MVM_nfa_run_proto(MVMThreadContext *tc, MVMObject *nfa, MVMString *t
  * to update the bstack with backtracking points to try the alternation
  * branches in the correct order. The current capture stack is needed for its
  * height. */
-void MVM_nfa_run_alt(MVMThreadContext *tc, MVMObject *nfa, MVMString *target,
+void MVM_nfa_run_alt(struct MVMThreadContext *tc, MVMObject *nfa, MVMString *target,
         int64_t offset, MVMObject *bstack, MVMObject *cstack, MVMObject *labels) {
     /* Run the NFA. */
     int64_t  total_fates, i;

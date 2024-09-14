@@ -49,7 +49,7 @@ static const uint8_t utf8d[] = {
   12,36,12,12,12,12,12,12,12,12,12,12,
 };
 
-MVM_STATIC_INLINE int32_t
+static inline int32_t
 decode_utf8_byte(int32_t *state, MVMGrapheme32 *codep, uint8_t byte) {
   const int32_t type = utf8d[byte];
 
@@ -170,7 +170,7 @@ static int32_t utf8_encode(uint8_t *bp, MVMCodepoint cp) {
 
 /* Decodes the specified number of bytes of utf8 into an NFG string, creating
  * a result of the specified type. The type must have the MVMString REPR. */
-MVMString * MVM_string_utf8_decode(MVMThreadContext *tc, const MVMObject *result_type, const char *utf8, size_t bytes) {
+MVMString * MVM_string_utf8_decode(struct MVMThreadContext *tc, const MVMObject *result_type, const char *utf8, size_t bytes) {
     MVMString *result = (MVMString *)REPR(result_type)->allocate(tc, STABLE(result_type));
     int32_t count = 0;
     MVMCodepoint codepoint;
@@ -328,7 +328,7 @@ static int32_t its_the_bom(const uint8_t *utf8) {
 }
 
 /* Same as MVM_string_utf8_decode, but strips a BOM if it finds one. */
-MVMString * MVM_string_utf8_decode_strip_bom(MVMThreadContext *tc, const MVMObject *result_type, const char *utf8, size_t bytes) {
+MVMString * MVM_string_utf8_decode_strip_bom(struct MVMThreadContext *tc, const MVMObject *result_type, const char *utf8, size_t bytes) {
     if (bytes >= 3 && its_the_bom((uint8_t*)utf8)) {
         utf8 += 3;
         bytes -= 3;
@@ -336,7 +336,7 @@ MVMString * MVM_string_utf8_decode_strip_bom(MVMThreadContext *tc, const MVMObje
     return MVM_string_utf8_decode(tc, result_type, utf8, bytes);
 }
 
-static void encoding_error(MVMThreadContext *tc, uint8_t *bytes, int error_pos) {
+static void encoding_error(struct MVMThreadContext *tc, uint8_t *bytes, int error_pos) {
     if (error_pos >= 3) {
         uint8_t a = bytes[error_pos - 2], b = bytes[error_pos - 1], c = bytes[error_pos];
         MVM_exception_throw_adhoc(tc, "Malformed UTF-8 near bytes %02hhx %02hhx %02hhx", a, b, c);
@@ -356,7 +356,7 @@ static void encoding_error(MVMThreadContext *tc, uint8_t *bytes, int error_pos) 
 
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-uint32_t MVM_string_utf8_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_utf8_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                   const uint32_t *stopper_chars,
                                   MVMDecodeStreamSeparators *seps) {
     uint32_t count = 0, total = 0;
@@ -565,7 +565,7 @@ uint32_t MVM_string_utf8_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
 }
 
 /* Encodes the specified string to UTF-8. */
-char * MVM_string_utf8_encode_substr(MVMThreadContext *tc,
+char * MVM_string_utf8_encode_substr(struct MVMThreadContext *tc,
         MVMString *str, uint64_t *output_size, int64_t start, int64_t length,
         MVMString *replacement, int32_t translate_newlines) {
     uint8_t        *result = NULL;
@@ -626,14 +626,14 @@ char * MVM_string_utf8_encode_substr(MVMThreadContext *tc,
 }
 
 /* Encodes the specified string to UTF-8. */
-char * MVM_string_utf8_encode(MVMThreadContext *tc, MVMString *str, uint64_t *output_size,
+char * MVM_string_utf8_encode(struct MVMThreadContext *tc, MVMString *str, uint64_t *output_size,
         int32_t translate_newlines) {
     return MVM_string_utf8_encode_substr(tc, str, output_size, 0, -1, NULL,
         translate_newlines);
 }
 
 /* Encodes the specified string to a UTF-8 C string. */
-char * MVM_string_utf8_encode_C_string(MVMThreadContext *tc, MVMString *str) {
+char * MVM_string_utf8_encode_C_string(struct MVMThreadContext *tc, MVMString *str) {
     uint64_t output_size;
     char * utf8_string = MVM_string_utf8_encode(tc, str, &output_size, 0);
     /* this is almost always called from error-handling code. Don't care if it
@@ -644,7 +644,7 @@ char * MVM_string_utf8_encode_C_string(MVMThreadContext *tc, MVMString *str) {
 }
 
 /* Encodes the specified string to a UTF-8 C string. */
-char * MVM_string_utf8_encode_C_string_malloc(MVMThreadContext *tc, MVMString *str) {
+char * MVM_string_utf8_encode_C_string_malloc(struct MVMThreadContext *tc, MVMString *str) {
     int64_t         length = MVM_string_graphs(tc, str);
     /* Guesstimate that we'll be within 2 bytes for most chars most of the
      * time, and give ourselves 4 bytes breathing space, plus 1 for the NUL. */
@@ -675,11 +675,11 @@ char * MVM_string_utf8_encode_C_string_malloc(MVMThreadContext *tc, MVMString *s
 }
 
 /* Encodes the specified string to a UTF-8 C string if it is not NULL. */
-char * MVM_string_utf8_maybe_encode_C_string(MVMThreadContext *tc, MVMString *str) {
+char * MVM_string_utf8_maybe_encode_C_string(struct MVMThreadContext *tc, MVMString *str) {
     return str ? MVM_string_utf8_encode_C_string(tc, str) : NULL;
 }
 
-void MVM_string_utf8_throw_encoding_exception (MVMThreadContext *tc, MVMCodepoint cp) {
+void MVM_string_utf8_throw_encoding_exception (struct MVMThreadContext *tc, MVMCodepoint cp) {
     const char *gencat = MVM_unicode_codepoint_get_property_cstr(tc, cp, MVM_UNICODE_PROPERTY_GENERAL_CATEGORY);
     if(cp > 0x10FFFF) {
         MVM_exception_throw_adhoc(tc,
@@ -699,7 +699,7 @@ void MVM_string_utf8_throw_encoding_exception (MVMThreadContext *tc, MVMCodepoin
 }
 
 #ifdef DEBUG_HELPERS
-void MVM_dump_string(MVMThreadContext *tc, MVMString *s) {
+void MVM_dump_string(struct MVMThreadContext *tc, MVMString *s) {
     char *encoded = MVM_string_utf8_maybe_encode_C_string(tc, s);
     if (encoded) {
         fprintf(stderr, "%s\n", encoded);

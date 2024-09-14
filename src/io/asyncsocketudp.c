@@ -14,7 +14,7 @@ typedef struct {
     MVMOSHandle      *handle;
     MVMObject        *buf_type;
     int               seq_number;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int               work_idx;
 } ReadInfo;
 
@@ -31,7 +31,7 @@ static void free_on_close_cb(uv_handle_t *handle) {
 }
 
 /* XXX this is duplicated from asyncsocket.c; put it in some shared file */
-static void push_name_and_port(MVMThreadContext *tc, struct sockaddr_storage *name, MVMObject *arr) {
+static void push_name_and_port(struct MVMThreadContext *tc, struct sockaddr_storage *name, MVMObject *arr) {
     char addrstr[INET6_ADDRSTRLEN + 1];
     /* XXX windows support kludge. 64 bit is much too big, but we'll
      * get the proper data from the struct anyway, however windows
@@ -75,7 +75,7 @@ static void push_name_and_port(MVMThreadContext *tc, struct sockaddr_storage *na
 /* Read handler. */
 static void on_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const struct sockaddr *addr, unsigned flags) {
     ReadInfo         *ri  = (ReadInfo *)handle->data;
-    MVMThreadContext *tc  = ri->tc;
+    struct MVMThreadContext *tc  = ri->tc;
     MVMObject        *arr;
     MVMAsyncTask     *t;
 
@@ -151,7 +151,7 @@ static void on_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const 
 }
 
 /* Does setup work for setting up asynchronous reads. */
-static void read_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void read_setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     MVMIOAsyncUDPSocketData *handle_data;
     int                   r;
 
@@ -183,14 +183,14 @@ static void read_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_t
 }
 
 /* Marks objects for a read task. */
-static void read_gc_mark(MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
+static void read_gc_mark(struct MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
     ReadInfo *ri = (ReadInfo *)data;
     MVM_gc_worklist_add(tc, worklist, &ri->buf_type);
     MVM_gc_worklist_add(tc, worklist, &ri->handle);
 }
 
 /* Frees info for a read task. */
-static void read_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void read_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data)
         MVM_free(data);
 }
@@ -204,7 +204,7 @@ static const MVMAsyncTaskOps read_op_table = {
     read_gc_free
 };
 
-static MVMAsyncTask * read_bytes(MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
+static MVMAsyncTask * read_bytes(struct MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
                                  MVMObject *schedulee, MVMObject *buf_type, MVMObject *async_type) {
     MVMAsyncTask *task;
     ReadInfo    *ri;
@@ -252,7 +252,7 @@ typedef struct {
     MVMObject        *buf_data;
     uv_udp_send_t    *req;
     uv_buf_t          buf;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int               work_idx;
     struct sockaddr  *dest_addr;
 } WriteInfo;
@@ -260,7 +260,7 @@ typedef struct {
 /* Completion handler for an asynchronous write. */
 static void on_write(uv_udp_send_t *req, int status) {
     WriteInfo        *wi  = (WriteInfo *)req->data;
-    MVMThreadContext *tc  = wi->tc;
+    struct MVMThreadContext *tc  = wi->tc;
     MVMObject        *arr = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
     MVMAsyncTask     *t   = MVM_io_eventloop_get_active_work(tc, wi->work_idx);
     MVM_repr_push_o(tc, arr, t->body.schedulee);
@@ -289,7 +289,7 @@ static void on_write(uv_udp_send_t *req, int status) {
 }
 
 /* Does setup work for an asynchronous write. */
-static void write_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void write_setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     MVMIOAsyncUDPSocketData *handle_data;
     MVMArray                *buffer;
     char                    *output;
@@ -339,14 +339,14 @@ static void write_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_
 }
 
 /* Marks objects for a write task. */
-static void write_gc_mark(MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
+static void write_gc_mark(struct MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
     WriteInfo *wi = (WriteInfo *)data;
     MVM_gc_worklist_add(tc, worklist, &wi->handle);
     MVM_gc_worklist_add(tc, worklist, &wi->buf_data);
 }
 
 /* Frees info for a write task. */
-static void write_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void write_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data) {
         WriteInfo *wi = (WriteInfo *)data;
         if (wi->dest_addr)
@@ -364,7 +364,7 @@ static const MVMAsyncTaskOps write_op_table = {
     write_gc_free
 };
 
-static MVMAsyncTask * write_bytes_to(MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
+static MVMAsyncTask * write_bytes_to(struct MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
                                      MVMObject *schedulee, MVMObject *buffer, MVMObject *async_type,
                                      MVMString *host, int64_t port) {
     MVMAsyncTask    *task;
@@ -409,7 +409,7 @@ static MVMAsyncTask * write_bytes_to(MVMThreadContext *tc, MVMOSHandle *h, MVMOb
 }
 
 /* Does an asynchronous close (since it must run on the event loop). */
-static void close_perform(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void close_perform(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     uv_handle_t *handle = (uv_handle_t *)data;
 
     if (uv_is_closing(handle))
@@ -427,7 +427,7 @@ static const MVMAsyncTaskOps close_op_table = {
     NULL
 };
 
-static int64_t close_socket(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t close_socket(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncUDPSocketData *data = (MVMIOAsyncUDPSocketData *)h->body.data;
     MVMAsyncTask *task;
 
@@ -442,13 +442,13 @@ static int64_t close_socket(MVMThreadContext *tc, MVMOSHandle *h) {
     return 0;
 }
 
-static int64_t socket_is_tty(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_is_tty(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncUDPSocketData *data   = (MVMIOAsyncUDPSocketData *)h->body.data;
     uv_handle_t             *handle = (uv_handle_t *)data->handle;
     return (int64_t)(handle->type == UV_TTY);
 }
 
-static int64_t socket_handle(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_handle(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncUDPSocketData *data   = (MVMIOAsyncUDPSocketData *)h->body.data;
     uv_handle_t             *handle = (uv_handle_t *)data->handle;
     int        fd;
@@ -489,7 +489,7 @@ typedef struct {
 } SocketSetupInfo;
 
 /* Initilalize the UDP socket on the event loop. */
-static void setup_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void setup_setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     /* Set up the UDP handle. */
     SocketSetupInfo *ssi = (SocketSetupInfo *)data;
     uv_udp_t *udp_handle = MVM_malloc(sizeof(uv_udp_t));
@@ -541,7 +541,7 @@ static void setup_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_
 }
 
 /* Frees info for a connection task. */
-static void setup_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void setup_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data) {
         SocketSetupInfo *ssi = (SocketSetupInfo *)data;
         if (ssi->bind_addr)
@@ -560,7 +560,7 @@ static const MVMAsyncTaskOps setup_op_table = {
 };
 
 /* Creates a UDP socket and binds it to the specified host/port. */
-MVMObject * MVM_io_socket_udp_async(MVMThreadContext *tc, MVMObject *queue,
+MVMObject * MVM_io_socket_udp_async(struct MVMThreadContext *tc, MVMObject *queue,
                                     MVMObject *schedulee, MVMString *host,
                                     int64_t port, int64_t flags,
                                     MVMObject *async_type) {

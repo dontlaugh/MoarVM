@@ -1,6 +1,6 @@
 #include "moar.h"
 
-void * MVM_region_alloc(MVMThreadContext *tc, MVMRegionAlloc *al, size_t bytes) {
+void * MVM_region_alloc(struct MVMThreadContext *tc, MVMRegionAlloc *al, size_t bytes) {
     char *result = NULL;
 
 #if !defined(MVM_CAN_UNALIGNED_INT64) || !defined(MVM_CAN_UNALIGNED_NUM64)
@@ -32,7 +32,7 @@ void * MVM_region_alloc(MVMThreadContext *tc, MVMRegionAlloc *al, size_t bytes) 
     return result;
 }
 
-void MVM_region_destroy(MVMThreadContext *tc, MVMRegionAlloc *alloc) {
+void MVM_region_destroy(struct MVMThreadContext *tc, MVMRegionAlloc *alloc) {
     MVMRegionBlock *block = alloc->block;
     /* Free all of the allocated memory. */
     while (block) {
@@ -45,7 +45,7 @@ void MVM_region_destroy(MVMThreadContext *tc, MVMRegionAlloc *alloc) {
 }
 
 /* Link source region into target region, so they can be cleaned up as one */
-void MVM_region_merge(MVMThreadContext *tc, MVMRegionAlloc *target, MVMRegionAlloc *source) {
+void MVM_region_merge(struct MVMThreadContext *tc, MVMRegionAlloc *target, MVMRegionAlloc *source) {
     MVMRegionBlock *block = source->block;
     while (block != NULL) {
         MVMRegionBlock *prev = block->prev;

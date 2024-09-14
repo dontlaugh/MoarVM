@@ -84,4 +84,4 @@ struct MVMCPPStructREPRData {
 };
 
 /* Initializes the CPPStruct REPR. */
-const MVMREPROps * MVMCPPStruct_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMCPPStruct_initialize(struct MVMThreadContext *tc);

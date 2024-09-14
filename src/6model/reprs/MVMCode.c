@@ -5,7 +5,7 @@ static const MVMREPROps MVMCode_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &MVMCode_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,7 +18,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMCodeBody *src_body  = (MVMCodeBody *)src;
     MVMCodeBody *dest_body = (MVMCodeBody *)dest;
     MVM_ASSIGN_REF(tc, &(dest_root->header), dest_body->sf, src_body->sf);
@@ -30,7 +30,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 }
 
 /* Adds held objects to the GC worklist. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMCodeBody *body = (MVMCodeBody *)data;
     MVM_gc_worklist_add(tc, worklist, &body->outer);
     MVM_gc_worklist_add(tc, worklist, &body->code_object);
@@ -53,7 +53,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMCode *code_obj = (MVMCode *)obj;
     MVM_free(code_obj->body.state_vars);
 }
@@ -69,17 +69,17 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMCode_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMCode_initialize(struct MVMThreadContext *tc) {
     return &MVMCode_this_repr;
 }
 
@@ -113,7 +113,7 @@ static const MVMREPROps MVMCode_this_repr = {
     NULL, /* describe_refs */
 };
 
-MVM_PUBLIC MVMObject * MVM_code_location(MVMThreadContext *tc, MVMObject *code) {
+ MVMObject * MVM_code_location(struct MVMThreadContext *tc, MVMObject *code) {
     MVMObject *BOOTHash = tc->instance->boot_types.BOOTHash;
     MVMObject *result;
     MVMString *file;
@@ -146,7 +146,7 @@ MVM_PUBLIC MVMObject * MVM_code_location(MVMThreadContext *tc, MVMObject *code) 
     return result;
 }
 
-void MVM_code_location_out(MVMThreadContext *tc, MVMObject *code,
+void MVM_code_location_out(struct MVMThreadContext *tc, MVMObject *code,
                            MVMString **file_out, int32_t *line_out) {
     if (REPR(code)->ID != MVM_REPR_ID_MVMCode) {
         MVM_exception_throw_adhoc(tc, "getcodelocation needs an object of MVMCode REPR, got %s instead", REPR(code)->name);

@@ -16,4 +16,4 @@ struct MVMSpeshCode {
     uint64_t num_deopt_synths;
 };
 
-MVMSpeshCode * MVM_spesh_codegen(MVMThreadContext *tc, MVMSpeshGraph *g);
+MVMSpeshCode * MVM_spesh_codegen(struct MVMThreadContext *tc, MVMSpeshGraph *g);

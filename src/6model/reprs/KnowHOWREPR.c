@@ -5,7 +5,7 @@ static const MVMREPROps KnowHOWREPR_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &KnowHOWREPR_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,7 +18,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Initializes a new instance. */
-static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static void initialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMObject *methods, *attributes, *BOOTArray;
     MVMObject * const BOOTHash  = tc->instance->boot_types.BOOTHash;
 
@@ -36,7 +36,7 @@ static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMKnowHOWREPRBody *src_body  = (MVMKnowHOWREPRBody *)src;
     MVMKnowHOWREPRBody *dest_body = (MVMKnowHOWREPRBody *)dest;
     MVM_ASSIGN_REF(tc, &(dest_root->header), dest_body->methods, src_body->methods);
@@ -54,12 +54,12 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Adds held objects to the GC worklist. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMKnowHOWREPRBody *body = (MVMKnowHOWREPRBody *)data;
     MVM_gc_worklist_add(tc, worklist, &body->methods);
     MVM_gc_worklist_add(tc, worklist, &body->attributes);
@@ -67,17 +67,17 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMKnowHOWREPR);
 }
 
 /* Serializes the data. */
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMKnowHOWREPRBody *body = (MVMKnowHOWREPRBody *)data;
     MVM_serialization_write_str(tc, writer, body->name);
     MVM_serialization_write_ref(tc, writer, body->attributes);
@@ -85,7 +85,7 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
 }
 
 /* Deserializes the data. */
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMKnowHOWREPRBody *body = (MVMKnowHOWREPRBody *)data;
     MVM_ASSIGN_REF(tc, &(root->header), body->name, MVM_serialization_read_str(tc, reader));
     MVM_ASSIGN_REF(tc, &(root->header), body->attributes, MVM_serialization_read_ref(tc, reader));
@@ -93,7 +93,7 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMKnowHOWREPR_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMKnowHOWREPR_initialize(struct MVMThreadContext *tc) {
     return &KnowHOWREPR_this_repr;
 }
 

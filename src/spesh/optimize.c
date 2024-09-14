@@ -1,14 +1,14 @@
 #include "moar.h"
 
-static void optimize_bigint_bool_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins);
-static void optimize_bb(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void optimize_bigint_bool_op(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins);
+static void optimize_bb(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                         MVMSpeshPlanned *p);
 
 /* This is where the main optimization work on a spesh graph takes place,
  * using facts discovered during analysis. */
 
 /* Logging of whether we can or can't inline. */
-static void log_inline(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *target_sf,
+static void log_inline(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *target_sf,
                        MVMSpeshGraph *inline_graph, uint32_t bytecode_size,
                        char *no_inline_reason, int32_t unspecialized, const MVMOpInfo *no_inline_info) {
     if (tc->instance->spesh_inline_log) {
@@ -44,36 +44,36 @@ static void log_inline(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *t
 
 /* Obtains facts for an operand, just directly accessing them without
  * inferring any kind of usage. */
-static MVMSpeshFacts * get_facts_direct(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
+static MVMSpeshFacts * get_facts_direct(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
     return &g->facts[o.reg.orig][o.reg.i];
 }
 
 /* Obtains facts for an operand, indicating they are being used. */
-MVMSpeshFacts * MVM_spesh_get_and_use_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
+MVMSpeshFacts * MVM_spesh_get_and_use_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
     MVMSpeshFacts *facts = get_facts_direct(tc, g, o);
     MVM_spesh_use_facts(tc, g, facts);
     return facts;
 }
 
 /* Obtains facts for an operand, but doesn't (yet) indicate usefulness. */
-MVMSpeshFacts * MVM_spesh_get_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
+MVMSpeshFacts * MVM_spesh_get_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
     return get_facts_direct(tc, g, o);
 }
 
 /* Mark facts for an operand as being relied upon. */
-void MVM_spesh_use_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts) {
+void MVM_spesh_use_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts) {
     uint32_t i;
     for (i = 0; i < facts->num_log_guards; i++)
         g->log_guards[facts->log_guards[i]].used = 1;
 }
 
 /* Obtains a string constant. */
-MVMString * MVM_spesh_get_string(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
+MVMString * MVM_spesh_get_string(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
     return MVM_cu_string(tc, g->sf->body.cu, o.lit_str_idx);
 }
 
 /* Copy facts between two register operands. */
-static void copy_facts_resolved(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *tfacts,
+static void copy_facts_resolved(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *tfacts,
                                 MVMSpeshFacts *ffacts) {
     tfacts->flags         = ffacts->flags;
     tfacts->type          = ffacts->type;
@@ -82,35 +82,35 @@ static void copy_facts_resolved(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpesh
     tfacts->log_guards    = ffacts->log_guards;
     tfacts->num_log_guards = ffacts->num_log_guards;
 }
-static void copy_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand to,
+static void copy_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand to,
                        MVMSpeshOperand from) {
     MVMSpeshFacts *tfacts = get_facts_direct(tc, g, to);
     MVMSpeshFacts *ffacts = get_facts_direct(tc, g, from);
     copy_facts_resolved(tc, g, tfacts, ffacts);
 }
-void MVM_spesh_copy_facts_resolved(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *to,
+void MVM_spesh_copy_facts_resolved(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *to,
                                    MVMSpeshFacts *from) {
     copy_facts_resolved(tc, g, to, from);
 }
-void MVM_spesh_copy_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand to,
+void MVM_spesh_copy_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand to,
                           MVMSpeshOperand from) {
     copy_facts(tc, g, to, from);
 }
-static int is_syscall(MVMThreadContext *tc, MVMSpeshFacts *facts,
-                      void (*syscall) (MVMThreadContext *tc, MVMArgs arg_info)) {
+static int is_syscall(struct MVMThreadContext *tc, MVMSpeshFacts *facts,
+                      void (*syscall) (struct MVMThreadContext *tc, MVMArgs arg_info)) {
     return facts->flags & MVM_SPESH_FACT_KNOWN_VALUE
         && REPR(facts->value.o)->ID == MVM_REPR_ID_MVMCFunction
         && ((MVMCFunction*)facts->value.o)->body.func == syscall;
 }
 
-static void MVM_spesh_turn_into_set(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void MVM_spesh_turn_into_set(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     ins->info = MVM_op_get_op(MVM_OP_set);
     copy_facts(tc, g, ins->operands[0], ins->operands[1]);
 }
 
 /* Adds a value into a spesh slot and returns its index.
  * If a spesh slot already holds this value, return that instead. */
-int16_t MVM_spesh_add_spesh_slot_try_reuse(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c) {
+int16_t MVM_spesh_add_spesh_slot_try_reuse(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c) {
     int16_t prev_slot;
     for (prev_slot = 0; (uint16_t)prev_slot < g->num_spesh_slots; prev_slot++) {
         if (g->spesh_slots[prev_slot] == c)
@@ -120,7 +120,7 @@ int16_t MVM_spesh_add_spesh_slot_try_reuse(MVMThreadContext *tc, MVMSpeshGraph *
 }
 
 /* Adds a value into a spesh slot and returns its index. */
-int16_t MVM_spesh_add_spesh_slot(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c) {
+int16_t MVM_spesh_add_spesh_slot(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c) {
     if (g->num_spesh_slots >= g->alloc_spesh_slots) {
         g->alloc_spesh_slots += 8;
         if (g->spesh_slots)
@@ -134,7 +134,7 @@ int16_t MVM_spesh_add_spesh_slot(MVMThreadContext *tc, MVMSpeshGraph *g, MVMColl
 }
 
 /* Some things optimize into the `null` op; make sure it has facts set. */
-static void optimize_null(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void optimize_null(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                           MVMSpeshIns *ins) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
     facts->flags |= MVM_SPESH_FACT_KNOWN_TYPE | MVM_SPESH_FACT_KNOWN_VALUE;
@@ -144,7 +144,7 @@ static void optimize_null(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb
 /* If an `isnull` is on something we know the type of or value of, then we
  * can quickly verify the type is not based on the null REPR and turn it
  * into a constant. */
-static void optimize_isnull(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void optimize_isnull(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                             MVMSpeshIns *ins) {
     MVMSpeshFacts *obj_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     if (obj_facts->flags & MVM_SPESH_FACT_KNOWN_TYPE) {
@@ -160,12 +160,12 @@ static void optimize_isnull(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
     }
 }
 
-static void optimize_repr_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void optimize_repr_op(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                              MVMSpeshIns *ins, int32_t type_operand);
 
 /* Try to turn an istype into a constant; failing that, rewrite it into the
  * sp_istype op. */
-static void optimize_istype(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void optimize_istype(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     /* See if we can constant fold it. */
     MVMSpeshFacts *obj_facts  = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     MVMSpeshFacts *type_facts = MVM_spesh_get_facts(tc, g, ins->operands[2]);
@@ -215,7 +215,7 @@ static void optimize_istype(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
 /* Sees if we can resolve an eqaddr at compile time. If we know both of the
  * values, we can resolve it to a 1. If we know the types differ, we can
  * resolve it to a 0. */
-static void optimize_eqaddr(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void optimize_eqaddr(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMSpeshFacts *obj_a_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     MVMSpeshFacts *obj_b_facts = MVM_spesh_get_facts(tc, g, ins->operands[2]);
     int16_t known_result = -1;
@@ -242,7 +242,7 @@ static void optimize_eqaddr(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
         MVM_spesh_use_facts(tc, g, obj_b_facts);
     }
 }
-static void optimize_is_reprid(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void optimize_is_reprid(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMSpeshFacts *obj_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     uint32_t wanted_repr_id;
     uint64_t result_value;
@@ -277,7 +277,7 @@ static void optimize_is_reprid(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshI
     }
 }
 
-static void optimize_gethow(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void optimize_gethow(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMSpeshFacts *obj_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     MVMObject       *how_obj = NULL;
     if (obj_facts->flags & (MVM_SPESH_FACT_KNOWN_TYPE))
@@ -302,7 +302,7 @@ static void optimize_gethow(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
 
 
 /* Sees if we can resolve an isconcrete at compile time. */
-static void optimize_isconcrete(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void optimize_isconcrete(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMSpeshFacts *obj_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     if (obj_facts->flags & (MVM_SPESH_FACT_CONCRETE | MVM_SPESH_FACT_TYPEOBJ)) {
         MVMSpeshFacts *result_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
@@ -317,7 +317,7 @@ static void optimize_isconcrete(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpesh
     }
 }
 
-static void optimize_exception_ops(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_exception_ops(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     uint16_t op = ins->info->opcode;
 
     if (op == MVM_OP_newexception) {
@@ -414,7 +414,7 @@ static void optimize_exception_ops(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSp
 
 /* iffy ops that operate on a known value register can turn into goto
  * or be dropped. */
-static void optimize_iffy(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins, MVMSpeshBB *bb) {
+static void optimize_iffy(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins, MVMSpeshBB *bb) {
     MVMSpeshFacts *flag_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
     uint8_t negated_op;
     int8_t truthvalue = -1;
@@ -483,7 +483,7 @@ static void optimize_iffy(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *i
 }
 
 /* A not_i on a known value can be turned into a constant. */
-static void optimize_not_i(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins, MVMSpeshBB *bb) {
+static void optimize_not_i(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins, MVMSpeshBB *bb) {
     MVMSpeshFacts *src_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     if (src_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
         /* Do the not_i. */
@@ -506,7 +506,7 @@ static void optimize_not_i(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *
     }
 }
 
-static void optimize_bitwise_int_math(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins, MVMSpeshBB *bb) {
+static void optimize_bitwise_int_math(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins, MVMSpeshBB *bb) {
     MVMSpeshFacts *lhs_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     MVMSpeshFacts *rhs_facts = MVM_spesh_get_facts(tc, g, ins->operands[2]);
     if ((lhs_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) && (rhs_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE)) {
@@ -557,7 +557,7 @@ static void optimize_bitwise_int_math(MVMThreadContext *tc, MVMSpeshGraph *g, MV
 /* objprimspec can be done at spesh-time if we know the type of something.
  * Another thing is, that if we rely on the type being known, we'll be assured
  * we'll have a guard that promises the object in question to be non-null. */
-static void optimize_objprimspec(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void optimize_objprimspec(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMSpeshFacts *obj_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
 
     if (obj_facts->flags & MVM_SPESH_FACT_KNOWN_TYPE && obj_facts->type) {
@@ -574,7 +574,7 @@ static void optimize_objprimspec(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
 
 /* Turns a decont into a set, if we know it's not needed. Also make sure we
  * propagate any needed information. */
-static void optimize_decont(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_decont(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshFacts *obj_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     if ((obj_facts->flags & MVM_SPESH_FACT_TYPEOBJ) ||
             ((obj_facts->flags & MVM_SPESH_FACT_KNOWN_TYPE) &&
@@ -737,7 +737,7 @@ static void optimize_decont(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
 }
 
 /* Checks like iscont, iscont_[ins] and isrwcont can be done at spesh time. */
-static void optimize_container_check(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void optimize_container_check(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                                      MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     MVMSpeshFacts *result_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
@@ -800,7 +800,7 @@ static void optimize_container_check(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 /* Optimize away assertparamcheck if we know it will pass, otherwise tweak
  * it to work with inline caching after optimization. */
-static void optimize_assertparamcheck(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_assertparamcheck(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
     if (facts->flags & MVM_SPESH_FACT_KNOWN_VALUE && facts->value.i) {
         MVM_spesh_use_facts(tc, g, facts);
@@ -827,7 +827,7 @@ static void optimize_assertparamcheck(MVMThreadContext *tc, MVMSpeshGraph *g, MV
 }
 
 /* Tweak bindcomplete so that it works with inline caching after optimization. */
-static void optimize_bindcomplete(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void optimize_bindcomplete(struct MVMThreadContext *tc, MVMSpeshGraph *g,
     MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshAnn *ann = ins->annotations;
     while (ann) {
@@ -846,7 +846,7 @@ static void optimize_bindcomplete(MVMThreadContext *tc, MVMSpeshGraph *g,
     }
 }
 
-static void optimize_guard(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void optimize_guard(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                       MVMSpeshIns *ins) {
     uint16_t opcode = ins->info->opcode;
 
@@ -916,7 +916,7 @@ static void optimize_guard(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *b
 }
 
 /* If we have a const_i and a coerce_in, we can emit a const_n instead. */
-static void optimize_coerce(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_coerce(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
 
     if (facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
@@ -935,7 +935,7 @@ static void optimize_coerce(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
 }
 
 /* If we have a const_i and a coerce_iu or coerce_ui, we can emit a const_i instead. */
-static void optimize_signedness_coerce(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_signedness_coerce(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     // fooled you! these coerces are actually
     // equivalent to "set" in implementation.
     MVM_spesh_turn_into_set(tc, g, ins);
@@ -943,7 +943,7 @@ static void optimize_signedness_coerce(MVMThreadContext *tc, MVMSpeshGraph *g, M
 
 /* If we know the type of a significant operand, we might try to specialize by
  * representation. */
-static void optimize_repr_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void optimize_repr_op(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                              MVMSpeshIns *ins, int32_t type_operand) {
     /* Immediately mark guards as used, as the JIT would like to devirtualize
      * repr ops later and we don't want guards to be thrown out before that */
@@ -956,7 +956,7 @@ static void optimize_repr_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB 
 }
 
 /* Optimize string equality if one param is the empty string */
-static void optimize_string_equality(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_string_equality(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshFacts *a_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     MVMSpeshFacts *b_facts = MVM_spesh_get_facts(tc, g, ins->operands[2]);
     uint8_t was_eq = 0;
@@ -996,7 +996,7 @@ static void optimize_string_equality(MVMThreadContext *tc, MVMSpeshGraph *g, MVM
 }
 
 /* Optimizes a hllbool instruction away if the value is known */
-static void optimize_hllbool(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void optimize_hllbool(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     uint32_t for_op = ins->info->opcode == MVM_OP_hllboolfor ? 1 : 0;
     MVMSpeshFacts *obj_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     if (obj_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
@@ -1030,7 +1030,7 @@ static void optimize_hllbool(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns
 }
 
 /* Gets the kind of register a lexical lookup targets. */
-static uint16_t get_lexical_kind(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
+static uint16_t get_lexical_kind(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
     uint16_t *lexical_types;
     uint16_t i;
     MVMStaticFrame *sf = g->sf;
@@ -1044,7 +1044,7 @@ static uint16_t get_lexical_kind(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
 
 /* Turns a getlex instruction into getlex_o or getlex_ins depending on type;
  * these get rid of some branching as well as don't log. */
-static void optimize_getlex(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void optimize_getlex(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     ins->info = MVM_op_get_op(get_lexical_kind(tc, g, ins->operands[1]) == MVM_reg_obj
         ? MVM_OP_sp_getlex_o
         : MVM_OP_sp_getlex_ins);
@@ -1052,7 +1052,7 @@ static void optimize_getlex(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
 
 /* Turns a bindlex instruction into sp_bindlex_in or sp_bindlex_os depending
  * on type; these get rid of checks whether we need the write barrier. */
-static void optimize_bindlex(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void optimize_bindlex(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     uint16_t kind = get_lexical_kind(tc, g, ins->operands[0]);
     ins->info = MVM_op_get_op(kind == MVM_reg_obj || kind == MVM_reg_str
         ? MVM_OP_sp_bindlex_os
@@ -1060,7 +1060,7 @@ static void optimize_bindlex(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns
 }
 
 /* Transforms a late-bound lexical lookup into a constant. */
-static void lex_to_constant(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
+static void lex_to_constant(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
                             MVMObject *log_obj) {
     MVMSpeshFacts *facts;
 
@@ -1095,7 +1095,7 @@ static void lex_to_constant(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
 
 /* Optimizes away a lexical lookup when we know the value won't change from
  * the logged one. */
-static void optimize_getlexstatic(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void optimize_getlexstatic(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                   MVMSpeshIns *ins) {
     /* Look up the bytecode offset (should never be missing). */
     MVMSpeshAnn *ann = ins->annotations;
@@ -1133,7 +1133,7 @@ static void optimize_getlexstatic(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpe
 
 /* Optimizes away a lexical lookup when we know the value won't change for a
  * given invocant type (this relies on us being in a typed specialization). */
-static void optimize_getlex_per_invocant(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void optimize_getlex_per_invocant(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                                          MVMSpeshBB *bb, MVMSpeshIns *ins,
                                          MVMSpeshPlanned *p) {
     MVMSpeshAnn *ann;
@@ -1172,7 +1172,7 @@ static void optimize_getlex_per_invocant(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 /* Find the dispatch cache bytecode offset of the given instruction. Returns 0
  * if not found. */
-static uint32_t find_cache_offset(MVMThreadContext *tc, MVMSpeshIns *ins) {
+static uint32_t find_cache_offset(struct MVMThreadContext *tc, MVMSpeshIns *ins) {
     MVMSpeshAnn *ann = ins->annotations;
     while (ann) {
         if (ann->type == MVM_SPESH_ANN_CACHED)
@@ -1186,7 +1186,7 @@ static uint32_t find_cache_offset(MVMThreadContext *tc, MVMSpeshIns *ins) {
  * of operations culminating in the runbytecode instruction. It may be on the
  * runbytecode itself, if no guards were stacked up before it, but may also be
  * earlier (but always in the same basic block). */
-static int32_t find_predeopt_index(MVMThreadContext *tc, MVMSpeshIns *ins) {
+static int32_t find_predeopt_index(struct MVMThreadContext *tc, MVMSpeshIns *ins) {
     while (ins) {
         MVMSpeshAnn *ann = ins->annotations;
         while (ann) {
@@ -1207,7 +1207,7 @@ static int32_t find_predeopt_index(MVMThreadContext *tc, MVMSpeshIns *ins) {
 
 /* Given an instruction, finds the deopt target on it. Panics if there is not
  * one there. */
-static void find_deopt_target_and_index(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
+static void find_deopt_target_and_index(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
         uint32_t *deopt_target_out, uint32_t *deopt_index_out) {
     MVMSpeshAnn *deopt_ann = ins->annotations;
     while (deopt_ann) {
@@ -1223,7 +1223,7 @@ static void find_deopt_target_and_index(MVMThreadContext *tc, MVMSpeshGraph *g, 
 
 /* Given a callsite instruction, finds the type tuples there and checks if
  * there is a relatively stable one. */
-static MVMSpeshStatsType * find_invokee_type_tuple(MVMThreadContext *tc,
+static MVMSpeshStatsType * find_invokee_type_tuple(struct MVMThreadContext *tc,
         MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins,
         MVMSpeshPlanned *p, uint32_t bytecode_offset, MVMCallsite *expect_cs) {
     uint32_t i;
@@ -1273,7 +1273,7 @@ static MVMSpeshStatsType * find_invokee_type_tuple(MVMThreadContext *tc,
 
 /* Sees if any static frames were logged for the dispatch at this location,
  * and if so checks if there was a stable one. */
-static MVMStaticFrame * find_runbytecode_static_frame(MVMThreadContext *tc, MVMSpeshPlanned *p,
+static MVMStaticFrame * find_runbytecode_static_frame(struct MVMThreadContext *tc, MVMSpeshPlanned *p,
         MVMSpeshIns *ins, uint32_t cache_offset) {
     uint32_t i;
     MVMStaticFrame *best_result = NULL;
@@ -1321,7 +1321,7 @@ static MVMStaticFrame * find_runbytecode_static_frame(MVMThreadContext *tc, MVMS
  * to the instruction, to ensure the guard keeps alive deopt usages of the
  * pre-deopt point if it ends up as the only one. Also produce a new deopt
  * index for the guard currently being produced and return it. */
-static uint32_t add_deopt_ann(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
+static uint32_t add_deopt_ann(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
         int32_t predeopt_index) {
     MVMSpeshAnn *ann = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshAnn));
     ann->type = MVM_SPESH_ANN_DEOPT_SYNTH;
@@ -1333,7 +1333,7 @@ static uint32_t add_deopt_ann(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIn
 }
 
 /* Inserts a static frame guard instruction. */
-static void insert_static_frame_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void insert_static_frame_guard(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns *ins, MVMSpeshOperand coderef_reg,
         MVMStaticFrame *target_sf, int32_t predeopt_index) {
     MVMSpeshIns *guard = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
@@ -1348,7 +1348,7 @@ static void insert_static_frame_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* Inserts an argument type guard as suggested by a logged type tuple. */
-static void insert_arg_type_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void insert_arg_type_guard(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns *ins, int32_t predeopt_index,
         MVMSpeshStatsType *type_info, MVMSpeshOperand preguard_reg) {
     /* Split the SSA version of the arg. */
@@ -1374,7 +1374,7 @@ static void insert_arg_type_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* Inserts an argument decont type guard as suggested by a logged type tuple. */
-static void insert_arg_decont_type_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void insert_arg_decont_type_guard(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns *ins, int32_t predeopt_index,
         MVMSpeshStatsType *type_info, MVMSpeshOperand to_guard) {
     /* We need a temporary register to decont into. */
@@ -1411,7 +1411,7 @@ static void insert_arg_decont_type_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 /* Look through the call info and the type tuple, see what guards we are
  * missing, and insert them. */
-static void check_and_tweak_arg_guards(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void check_and_tweak_arg_guards(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns *ins, uint32_t predeopt_index,
         MVMSpeshStatsType *type_tuple, MVMCallsite *cs, MVMSpeshOperand *args) {
     uint32_t n = cs->flag_count;
@@ -1443,7 +1443,7 @@ static void check_and_tweak_arg_guards(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 /* Ties to optimize a runbytecode instruction by either pre-selecting a spesh
  * candidate or, if possible, inlining it. */
-static void optimize_runbytecode(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void optimize_runbytecode(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         MVMSpeshIns *ins, MVMSpeshPlanned *p) {
     /* Make sure we can find the dispatch bytecode offset (used for both
      * looking up in the spesh log) and the pre-deopt index (for use with
@@ -1652,7 +1652,7 @@ static void optimize_runbytecode(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
     }
 }
 
-static void optimize_coverage_log(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_coverage_log(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     char *cache        = (char *)(uintptr_t)ins->operands[3].lit_i64;
     int32_t cache_idx = ins->operands[2].lit_i32;
 
@@ -1662,7 +1662,7 @@ static void optimize_coverage_log(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpe
 }
 
 /* Optimizes an extension op. */
-static void optimize_extop(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_extop(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMExtOpRecord *extops     = g->sf->body.cu->body.extops;
     uint16_t       num_extops = g->sf->body.cu->body.num_extops;
     uint16_t       i;
@@ -1676,7 +1676,7 @@ static void optimize_extop(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *b
     }
 }
 
-static void optimize_uniprop_ops(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_uniprop_ops(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshFacts *arg1_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     MVMSpeshFacts *result_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
     if (arg1_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
@@ -1703,7 +1703,7 @@ static void optimize_uniprop_ops(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
 
 /* If something is only kept alive because we log its allocation, kick out
  * the allocation logging and let the op that creates it die. */
-static void optimize_prof_allocated(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_prof_allocated(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     if (MVM_spesh_usages_used_once(tc, g, ins->operands[0])) {
         MVM_spesh_manipulate_delete_ins(tc, g, bb, ins);
     }
@@ -1712,7 +1712,7 @@ static void optimize_prof_allocated(MVMThreadContext *tc, MVMSpeshGraph *g, MVMS
 /* Tries to optimize a throwcat instruction. Note that within a given frame
  * (we don't consider inlines here) the throwcat instructions all have the
  * same semantics. */
-static void optimize_throwcat(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_throwcat(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     /* First, see if we have any goto handlers for this category. */
     int32_t *handlers_found = MVM_malloc(g->num_handlers * sizeof(int32_t));
     uint32_t num_found      = 0;
@@ -1805,7 +1805,7 @@ static void optimize_throwcat(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB
 }
 
 /* Updates rebless with rebless_sp, which will deopt from the current code. */
-static void tweak_rebless(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void tweak_rebless(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     uint32_t deopt_target, deopt_index;
     MVMSpeshOperand *new_operands = MVM_spesh_alloc(tc, g, 4 * sizeof(MVMSpeshOperand));
     new_operands[0] = ins->operands[0];
@@ -1819,7 +1819,7 @@ static void tweak_rebless(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *i
 
 /* A wval instruction does a few checks on its way; it's faster to pop the
  * value into a spesh splot. */
-static void optimize_wval(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void optimize_wval(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMObject *value = MVM_spesh_get_facts(tc, g, ins->operands[0])->value.o;
     if (value) {
         ins->operands[1].lit_i16 = MVM_spesh_add_spesh_slot_try_reuse(tc, g,
@@ -1830,7 +1830,7 @@ static void optimize_wval(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *i
 
 /* Replaces atomic ops with a version that needs no checking of the target's
  * container spec and concreteness, when we have the facts to hand. */
-static void optimize_container_atomic(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void optimize_container_atomic(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                                       MVMSpeshIns *ins, uint16_t target_reg) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, ins->operands[target_reg]);
     if ((facts->flags & MVM_SPESH_FACT_CONCRETE) && (facts->flags & MVM_SPESH_FACT_KNOWN_TYPE)) {
@@ -1859,7 +1859,7 @@ static void optimize_container_atomic(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* Lower bigint binary ops to specialized forms where possible. */
-static void optimize_bigint_binary_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_bigint_binary_op(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     /* Check that input types and result type are consistent. */
     MVMObject *common_type = NULL;
     MVMSpeshFacts *facts[3];
@@ -1914,7 +1914,7 @@ static void optimize_bigint_binary_op(MVMThreadContext *tc, MVMSpeshGraph *g, MV
  * don't count getting the bigint body out of the containing object. That's
  * why it's very beneficial to give it the "calculate offset into object
  * body statically and access directly via an sp_ op" treatment. */
-static void optimize_bigint_bool_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void optimize_bigint_bool_op(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMObject *type = NULL;
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
 
@@ -1939,7 +1939,7 @@ static void optimize_bigint_bool_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMS
     }
 }
 
-static int eliminate_phi_dead_reads(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static int eliminate_phi_dead_reads(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     uint32_t operand = 1;
     uint32_t insert_pos = 1;
     uint32_t num_operands = ins->info->num_operands;
@@ -1962,7 +1962,7 @@ static int eliminate_phi_dead_reads(MVMThreadContext *tc, MVMSpeshGraph *g, MVMS
     }
     return 1;
 }
-static void analyze_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void analyze_phi(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     uint32_t operand;
     int32_t common_flags;
     MVMObject *common_type;
@@ -2065,7 +2065,7 @@ static void analyze_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, 
     }
 }
 
-static void optimize_bb_switch(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void optimize_bb_switch(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                         MVMSpeshPlanned *p) {
     /* Look for instructions that are interesting to optimize. */
     MVMSpeshIns *ins = bb->first_ins;
@@ -2384,7 +2384,7 @@ static void optimize_bb_switch(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshB
 }
 
 /* Visits the blocks in dominator tree order, recursively. */
-static void optimize_bb(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void optimize_bb(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                         MVMSpeshPlanned *p) {
     int64_t i = 0;
     /* Because optimize_bb() can be deeply recursive, separate as much code
@@ -2429,7 +2429,7 @@ typedef struct {
 /* Optimization turns many things into simple set instructions, which we can
  * often further eliminate; others may become unrequired due to eliminated
  * branches, and some may be from sub-optimizal original code. */
-static MVMSpeshBB * find_bb_with_instruction_linearly_after(MVMThreadContext *tc, MVMSpeshGraph *g,
+static MVMSpeshBB * find_bb_with_instruction_linearly_after(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                                                             MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshBB *cur_bb = bb;
     while (cur_bb) {
@@ -2443,7 +2443,7 @@ static MVMSpeshBB * find_bb_with_instruction_linearly_after(MVMThreadContext *tc
     }
     return NULL;
 }
-static uint32_t conflict_free(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static uint32_t conflict_free(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         MVMSpeshIns *from, MVMSpeshIns *to, uint16_t reg, uint16_t allow_reads) {
     /* A conflict over reg exists if either from and to are a non-linear BB
      * sequence or if another version of reg is written between from and to. */
@@ -2476,7 +2476,7 @@ static uint32_t conflict_free(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB
     }
     return 0;
 }
-static void try_eliminate_set(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void try_eliminate_set(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                               MVMSpeshIns *ins) {
     /* If this set is the only user of its second operand, we might be able to
      * change the writing instruction to just write the target of the set. */
@@ -2535,7 +2535,7 @@ static void try_eliminate_set(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB
 /* Find box_* that are used by a matching unbox_*. This can happen in part due
  * to imperfect code-gen, but also because the box is in an inlinee and the
  * unbox on the outside, or vice versa. */
-static void try_eliminate_one_box_unbox(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void try_eliminate_one_box_unbox(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                          MVMSpeshIns *box_ins, MVMSpeshIns *unbox_ins) {
     if (conflict_free(tc, g, bb, box_ins, unbox_ins, box_ins->operands[1].reg.orig, 1)) {
         /* Make unbox instruction no longer use the boxed value. */
@@ -2550,7 +2550,7 @@ static void try_eliminate_one_box_unbox(MVMThreadContext *tc, MVMSpeshGraph *g, 
         MVM_spesh_usages_add_by_reg(tc, g, unbox_ins->operands[1], unbox_ins);
     }
 }
-static void walk_set_looking_for_unbox(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void walk_set_looking_for_unbox(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                        MVMSpeshIns *box_ins, uint16_t unbox_op, uint16_t decont_op,
                                        MVMSpeshIns *set_ins) {
     MVMSpeshUseChainEntry *user_entry = MVM_spesh_get_facts(tc, g, set_ins->operands[0])->usage.users;
@@ -2563,7 +2563,7 @@ static void walk_set_looking_for_unbox(MVMThreadContext *tc, MVMSpeshGraph *g, M
         user_entry = user_entry->next;
     }
 }
-static void try_eliminate_box_unbox_pair(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void try_eliminate_box_unbox_pair(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                          MVMSpeshIns *ins, uint16_t unbox_op, uint16_t decont_op,
                                          PostInlinePassState *pips) {
     MVMSpeshUseChainEntry *user_entry = MVM_spesh_get_facts(tc, g, ins->operands[0])->usage.users;
@@ -2585,7 +2585,7 @@ static void try_eliminate_box_unbox_pair(MVMThreadContext *tc, MVMSpeshGraph *g,
         MVM_spesh_manipulate_delete_ins(tc, g, bb, ins);
     }
 }
-static void walk_set_looking_for_unbool(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void walk_set_looking_for_unbool(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                        MVMSpeshIns *box_ins, MVMSpeshIns *set_ins) {
     MVMSpeshUseChainEntry *user_entry = MVM_spesh_get_facts(tc, g, set_ins->operands[0])->usage.users;
     while (user_entry) {
@@ -2604,7 +2604,7 @@ static void walk_set_looking_for_unbool(MVMThreadContext *tc, MVMSpeshGraph *g, 
         user_entry = user_entry->next;
     }
 }
-static void try_eliminate_bool_unbool_pair(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void try_eliminate_bool_unbool_pair(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                          MVMSpeshIns *ins, PostInlinePassState *pips) {
     MVMSpeshUseChainEntry *user_entry = MVM_spesh_get_facts(tc, g, ins->operands[0])->usage.users;
     while (user_entry) {
@@ -2629,7 +2629,7 @@ static void try_eliminate_bool_unbool_pair(MVMThreadContext *tc, MVMSpeshGraph *
 }
 
 
-static void post_inline_visit_bb(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void post_inline_visit_bb(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                  PostInlinePassState *pips) {
     int32_t i;
 
@@ -2705,7 +2705,7 @@ static void post_inline_visit_bb(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
     for (i = 0; i < bb->num_children; i++)
         post_inline_visit_bb(tc, g, bb->children[i], pips);
 }
-static void post_inline_pass(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb) {
+static void post_inline_pass(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb) {
     uint32_t i;
 
     /* Walk the basic blocks for the second pass. */
@@ -2734,7 +2734,7 @@ static void post_inline_pass(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB 
 
 /* Goes through the various log-based guard instructions and removes any that
  * are not being used. */
-static void eliminate_unused_log_guards(MVMThreadContext *tc, MVMSpeshGraph *g) {
+static void eliminate_unused_log_guards(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     int32_t i;
     for (i = 0; i < g->num_log_guards; i++)
         if (!g->log_guards[i].used) {
@@ -2745,7 +2745,7 @@ static void eliminate_unused_log_guards(MVMThreadContext *tc, MVMSpeshGraph *g) 
 /* Sometimes - almost always due to other optmimizations having done their
  * work - we end up with an unconditional goto at the end of a basic block
  * that points right to the very next basic block. Delete these. */
-static void eliminate_pointless_gotos(MVMThreadContext *tc, MVMSpeshGraph *g) {
+static void eliminate_pointless_gotos(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB *cur_bb = g->entry;
     while (cur_bb) {
         if (!cur_bb->jumplist) {
@@ -2762,7 +2762,7 @@ static void eliminate_pointless_gotos(MVMThreadContext *tc, MVMSpeshGraph *g) {
     }
 }
 
-static void merge_bbs(MVMThreadContext *tc, MVMSpeshGraph *g) {
+static void merge_bbs(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB *bb = g->entry;
     uint32_t orig_bbs = g->num_bbs;
     if (!bb || !bb->linear_next) return; /* looks like there's only a single bb anyway */
@@ -2829,7 +2829,7 @@ static void merge_bbs(MVMThreadContext *tc, MVMSpeshGraph *g) {
 }
 
 /* Drives the overall optimization work taking place on a spesh graph. */
-void MVM_spesh_optimize(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshPlanned *p) {
+void MVM_spesh_optimize(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshPlanned *p) {
     /* Before starting, we eliminate dead basic blocks that were tossed by
      * arg spesh, to simplify the graph. */
     MVM_spesh_eliminate_dead_bbs(tc, g, 1);

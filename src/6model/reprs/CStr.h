@@ -10,4 +10,4 @@ struct MVMCStr {
 };
 
 /* Initializes the CStr REPR. */
-const MVMREPROps * MVMCStr_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMCStr_initialize(struct MVMThreadContext *tc);

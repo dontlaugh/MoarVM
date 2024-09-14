@@ -15,13 +15,13 @@ static void jg_append_node(MVMJitGraph *jg, MVMJitNode *node) {
     node->next = NULL;
 }
 
-static void jg_append_deopt_check(MVMThreadContext *tc, MVMJitGraph *jg) {
+static void jg_append_deopt_check(struct MVMThreadContext *tc, MVMJitGraph *jg) {
     MVMJitNode *node = MVM_spesh_alloc(tc, jg->sg, sizeof(MVMJitNode));
     node->type = MVM_JIT_NODE_DEOPT_CHECK;
     jg_append_node(jg, node);
 }
 
-static void jg_append_primitive(MVMThreadContext *tc, MVMJitGraph *jg,
+static void jg_append_primitive(struct MVMThreadContext *tc, MVMJitGraph *jg,
                                 MVMSpeshIns * ins) {
     MVMJitNode * node = MVM_spesh_alloc(tc, jg->sg, sizeof(MVMJitNode));
     node->type = MVM_JIT_NODE_PRIMITIVE;
@@ -29,7 +29,7 @@ static void jg_append_primitive(MVMThreadContext *tc, MVMJitGraph *jg,
     jg_append_node(jg, node);
 }
 
-static void jg_append_call_c(MVMThreadContext *tc, MVMJitGraph *jg,
+static void jg_append_call_c(struct MVMThreadContext *tc, MVMJitGraph *jg,
                               void * func_ptr, int16_t num_args,
                               MVMJitCallArg *call_args,
                               MVMJitRVMode rv_mode, int16_t rv_idx) {
@@ -53,7 +53,7 @@ static void jg_append_call_c(MVMThreadContext *tc, MVMJitGraph *jg,
 }
 
 
-static void add_deopt_idx(MVMThreadContext *tc, MVMJitGraph *jg, int32_t label_name, int32_t deopt_idx) {
+static void add_deopt_idx(struct MVMThreadContext *tc, MVMJitGraph *jg, int32_t label_name, int32_t deopt_idx) {
     MVMJitDeopt deopt;
     deopt.label = label_name;
     deopt.idx   = deopt_idx;
@@ -61,7 +61,7 @@ static void add_deopt_idx(MVMThreadContext *tc, MVMJitGraph *jg, int32_t label_n
 }
 
 
-static void jg_append_branch(MVMThreadContext *tc, MVMJitGraph *jg,
+static void jg_append_branch(struct MVMThreadContext *tc, MVMJitGraph *jg,
                               int32_t name, MVMSpeshIns *ins) {
     MVMJitNode * node = MVM_spesh_alloc(tc, jg->sg, sizeof(MVMJitNode));
     node->type = MVM_JIT_NODE_BRANCH;
@@ -87,7 +87,7 @@ static void jg_append_branch(MVMThreadContext *tc, MVMJitGraph *jg,
     jg_append_node(jg, node);
 }
 
-static void jg_append_label(MVMThreadContext *tc, MVMJitGraph *jg, int32_t name) {
+static void jg_append_label(struct MVMThreadContext *tc, MVMJitGraph *jg, int32_t name) {
     MVMJitNode *node;
     /* does this label already exist? */
     MVM_VECTOR_ENSURE_SIZE(jg->label_nodes, name);
@@ -102,7 +102,7 @@ static void jg_append_label(MVMThreadContext *tc, MVMJitGraph *jg, int32_t name)
     jg->label_nodes[name] = node;
 }
 
-static void * op_to_func(MVMThreadContext *tc, int16_t opcode) {
+static void * op_to_func(struct MVMThreadContext *tc, int16_t opcode) {
     switch(opcode) {
     case MVM_OP_checkarity: return MVM_args_checkarity;
     case MVM_OP_say: return MVM_string_say;
@@ -461,7 +461,7 @@ static void * op_to_func(MVMThreadContext *tc, int16_t opcode) {
     }
 }
 
-static void jg_append_guard(MVMThreadContext *tc, MVMJitGraph *jg,
+static void jg_append_guard(struct MVMThreadContext *tc, MVMJitGraph *jg,
                              MVMSpeshIns *ins, uint32_t target_operand) {
     MVMJitNode   *node = MVM_spesh_alloc(tc, jg->sg, sizeof(MVMJitNode));
     int32_t deopt_idx;
@@ -492,7 +492,7 @@ static void jg_append_guard(MVMThreadContext *tc, MVMJitGraph *jg,
     jg_append_node(jg, node);
 }
 
-static void jg_append_control(MVMThreadContext *tc, MVMJitGraph *jg,
+static void jg_append_control(struct MVMThreadContext *tc, MVMJitGraph *jg,
                               MVMSpeshIns *ins, MVMJitControlType ctrl) {
     MVMJitNode *node = MVM_spesh_alloc(tc, jg->sg, sizeof(MVMJitNode));
     node->type = MVM_JIT_NODE_CONTROL;
@@ -501,7 +501,7 @@ static void jg_append_control(MVMThreadContext *tc, MVMJitGraph *jg,
     jg_append_node(jg, node);
 }
 
-static int32_t consume_jumplist(MVMThreadContext *tc, MVMJitGraph *jg,
+static int32_t consume_jumplist(struct MVMThreadContext *tc, MVMJitGraph *jg,
                                  MVMSpeshIterator *iter, MVMSpeshIns *ins) {
     int64_t num_labels  = ins->operands[0].lit_i64;
     int16_t idx_reg     = ins->operands[1].reg.orig;
@@ -533,11 +533,11 @@ static int32_t consume_jumplist(MVMThreadContext *tc, MVMJitGraph *jg,
     return 1;
 }
 
-static MVMString* wrap_MVM_cu_string(MVMThreadContext *tc, MVMCompUnit *cu, uint32_t idx) {
+static MVMString* wrap_MVM_cu_string(struct MVMThreadContext *tc, MVMCompUnit *cu, uint32_t idx) {
     return MVM_cu_string(tc, cu, idx);
 }
 
-static int32_t jg_add_data_node(MVMThreadContext *tc, MVMJitGraph *jg, void *data, size_t size) {
+static int32_t jg_add_data_node(struct MVMThreadContext *tc, MVMJitGraph *jg, void *data, size_t size) {
     MVMJitNode *node = MVM_spesh_alloc(tc, jg->sg, sizeof(MVMJitNode));
     int32_t label   = MVM_jit_label_for_obj(tc, jg, data);
     node->type         = MVM_JIT_NODE_DATA;
@@ -548,7 +548,7 @@ static int32_t jg_add_data_node(MVMThreadContext *tc, MVMJitGraph *jg, void *dat
     return label;
 }
 
-static uint16_t * try_fake_extop_regs(MVMThreadContext *tc, MVMSpeshGraph *sg, MVMSpeshIns *ins, size_t *bufsize) {
+static uint16_t * try_fake_extop_regs(struct MVMThreadContext *tc, MVMSpeshGraph *sg, MVMSpeshIns *ins, size_t *bufsize) {
     uint16_t *regs = MVM_spesh_alloc(tc, sg, (*bufsize = (ins->info->num_operands * sizeof(uint16_t))));
     uint16_t i;
     for (i = 0; i < ins->info->num_operands; i++) {
@@ -565,7 +565,7 @@ static uint16_t * try_fake_extop_regs(MVMThreadContext *tc, MVMSpeshGraph *sg, M
     return regs;
 }
 
-static void before_ins(MVMThreadContext *tc, MVMJitGraph *jg,
+static void before_ins(struct MVMThreadContext *tc, MVMJitGraph *jg,
                        MVMSpeshIterator *iter, MVMSpeshIns  *ins) {
     MVMSpeshBB   *bb = iter->bb;
     MVMSpeshAnn *ann = ins->annotations;
@@ -625,7 +625,7 @@ static void before_ins(MVMThreadContext *tc, MVMJitGraph *jg,
     }
 }
 
-static void after_ins(MVMThreadContext *tc, MVMJitGraph *jg,
+static void after_ins(struct MVMThreadContext *tc, MVMJitGraph *jg,
                       MVMSpeshIterator *iter, MVMSpeshIns *ins) {
     MVMSpeshBB   *bb = iter->bb;
     MVMSpeshAnn *ann = ins->annotations;
@@ -655,13 +655,13 @@ static void after_ins(MVMThreadContext *tc, MVMJitGraph *jg,
     }
 }
 
-static void jg_sc_wb(MVMThreadContext *tc, MVMJitGraph *jg, MVMSpeshOperand check) {
+static void jg_sc_wb(struct MVMThreadContext *tc, MVMJitGraph *jg, MVMSpeshOperand check) {
     MVMJitCallArg args[] = { { MVM_JIT_INTERP_VAR,  MVM_JIT_INTERP_TC },
                              { MVM_JIT_REG_VAL,     check.reg.orig } };
     jg_append_call_c(tc, jg, &MVM_SC_WB_OBJ, 2, args, MVM_JIT_RV_VOID, -1);
 }
 
-static int32_t consume_reprop(MVMThreadContext *tc, MVMJitGraph *jg,
+static int32_t consume_reprop(struct MVMThreadContext *tc, MVMJitGraph *jg,
                                MVMSpeshIterator *iter, MVMSpeshIns *ins) {
     int16_t op = ins->info->opcode;
     MVMSpeshOperand type_operand;
@@ -777,7 +777,7 @@ static int32_t consume_reprop(MVMThreadContext *tc, MVMJitGraph *jg,
                 /* atpos_i             w(int64) r(obj) r(int64) */
                 /* atkey_i             w(int64) r(obj) r(str)*/
 
-                /*void (*at_pos) (MVMThreadContext *tc, MVMSTable *st,
+                /*void (*at_pos) (struct MVMThreadContext *tc, MVMSTable *st,
                  *    MVMObject *root, void *data, int64_t index,
                  *    MVMRegister *result, uint16_t kind);*/
 
@@ -843,11 +843,11 @@ static int32_t consume_reprop(MVMThreadContext *tc, MVMJitGraph *jg,
                 /*bindpos_i           r(obj) r(int64) r(int64)*/
                 /*bindkey_i           r(obj) r(str) r(int64)*/
 
-                /* void (*bind_pos) (MVMThreadContext *tc, MVMSTable *st,
+                /* void (*bind_pos) (struct MVMThreadContext *tc, MVMSTable *st,
                       MVMObject *root, void *data, int64_t index,
                       MVMRegister value, uint16_t kind); */
 
-                /* void (*bind_key) (MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+                /* void (*bind_key) (struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
                       void *data, MVMObject *key, MVMRegister value, uint16_t kind); */
 
                 int32_t invocant = ins->operands[0].reg.orig;
@@ -924,7 +924,7 @@ static int32_t consume_reprop(MVMThreadContext *tc, MVMJitGraph *jg,
             case MVM_OP_getattrs_o: {
                 /*getattr_i           w(int64) r(obj) r(obj) str int16*/
                 /*getattrs_i          w(int64) r(obj) r(obj) r(str)*/
-                /*static void get_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,*/
+                /*static void get_attribute(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root,*/
                 /*        void *data, MVMObject *class_handle, MVMString *name, int64_t hint,*/
                 /*      MVMRegister *result_reg, uint16_t kind) {*/
 
@@ -971,7 +971,7 @@ static int32_t consume_reprop(MVMThreadContext *tc, MVMJitGraph *jg,
             case MVM_OP_attrinited: {
                 /*attrinited          w(int64) r(obj) r(obj) r(str)*/
 
-                /*int64_t (*is_attribute_initialized) (MVMThreadContext *tc, MVMSTable *st,*/
+                /*int64_t (*is_attribute_initialized) (struct MVMThreadContext *tc, MVMSTable *st,*/
                     /*void *data, MVMObject *class_handle, MVMString *name,*/
                     /*int64_t hint);*/
 
@@ -1017,7 +1017,7 @@ static int32_t consume_reprop(MVMThreadContext *tc, MVMJitGraph *jg,
                 /*bindattr_n          r(obj) r(obj) str    r(num64) int16*/
                 /*bindattrs_n         r(obj) r(obj) r(str) r(num64)*/
 
-                /* static void bind_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+                /* static void bind_attribute(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
                  *        void *data, MVMObject *class_handle, MVMString *name, int64_t hint,
                  *        MVMRegister value_reg, uint16_t kind) */
 
@@ -1064,7 +1064,7 @@ static int32_t consume_reprop(MVMThreadContext *tc, MVMJitGraph *jg,
             }
             case MVM_OP_hintfor: {
                 /*
-                 *  int64_t (*hint_for) (MVMThreadContext *tc, MVMSTable *st,
+                 *  int64_t (*hint_for) (struct MVMThreadContext *tc, MVMSTable *st,
                  *      MVMObject *class_handle, MVMString *name);
                  */
 
@@ -1626,7 +1626,7 @@ skipdevirt:
     return 1;
 }
 
-static void add_bail_comment(MVMThreadContext *tc, MVMJitGraph *jg, MVMSpeshIns *ins) {
+static void add_bail_comment(struct MVMThreadContext *tc, MVMJitGraph *jg, MVMSpeshIns *ins) {
     MVMSpeshGraph *g = jg->sg;
     if (MVM_spesh_debug_enabled(tc)) {
         MVM_spesh_graph_add_comment(tc, g, ins, "JIT: bailed completely because of <%s>",
@@ -1634,7 +1634,7 @@ static void add_bail_comment(MVMThreadContext *tc, MVMJitGraph *jg, MVMSpeshIns 
     }
 }
 
-static int32_t consume_ins(MVMThreadContext *tc, MVMJitGraph *jg,
+static int32_t consume_ins(struct MVMThreadContext *tc, MVMJitGraph *jg,
                             MVMSpeshIterator *iter, MVMSpeshIns *ins) {
     int16_t op;
     op = ins->info->opcode;
@@ -4137,7 +4137,7 @@ static int32_t consume_ins(MVMThreadContext *tc, MVMJitGraph *jg,
     return 1;
 }
 
-static int32_t consume_bb(MVMThreadContext *tc, MVMJitGraph *jg,
+static int32_t consume_bb(struct MVMThreadContext *tc, MVMJitGraph *jg,
                            MVMSpeshIterator *iter, MVMSpeshBB *bb) {
     MVMJitExprTree *tree = NULL;
     uint32_t i;
@@ -4191,7 +4191,7 @@ static int32_t consume_bb(MVMThreadContext *tc, MVMJitGraph *jg,
 }
 
 
-MVMJitGraph * MVM_jit_try_make_graph(MVMThreadContext *tc, MVMSpeshGraph *sg) {
+MVMJitGraph * MVM_jit_try_make_graph(struct MVMThreadContext *tc, MVMSpeshGraph *sg) {
     MVMSpeshIterator iter;
     MVMJitGraph *graph;
 
@@ -4265,7 +4265,7 @@ MVMJitGraph * MVM_jit_try_make_graph(MVMThreadContext *tc, MVMSpeshGraph *sg) {
     return NULL;
 }
 
-void MVM_jit_graph_destroy(MVMThreadContext *tc, MVMJitGraph *graph) {
+void MVM_jit_graph_destroy(struct MVMThreadContext *tc, MVMJitGraph *graph) {
     MVMJitNode *node;
     /* destroy all trees */
     for (node = graph->first_node; node != NULL; node = node->next) {

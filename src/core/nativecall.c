@@ -5,7 +5,7 @@
 #include <platform/time.h>
 
 /* Grabs a NativeCall body. */
-MVMNativeCallBody * MVM_nativecall_get_nc_body(MVMThreadContext *tc, MVMObject *obj) {
+MVMNativeCallBody * MVM_nativecall_get_nc_body(struct MVMThreadContext *tc, MVMObject *obj) {
     if (REPR(obj)->ID == MVM_REPR_ID_MVMNativeCall)
         return (MVMNativeCallBody *)OBJECT_BODY(obj);
     else
@@ -14,7 +14,7 @@ MVMNativeCallBody * MVM_nativecall_get_nc_body(MVMThreadContext *tc, MVMObject *
 }
 
 /* Gets the flag for whether to free a string after a call or not. */
-static int16_t get_str_free_flag(MVMThreadContext *tc, MVMObject *info) {
+static int16_t get_str_free_flag(struct MVMThreadContext *tc, MVMObject *info) {
     MVMString *flag = tc->instance->str_consts.free_str;
     if (MVM_repr_exists_key(tc, info, flag))
         if (!MVM_repr_get_int(tc, MVM_repr_at_key_o(tc, info, flag)))
@@ -23,7 +23,7 @@ static int16_t get_str_free_flag(MVMThreadContext *tc, MVMObject *info) {
 }
 
 /* Gets the flag for whether an arg is rw or not. */
-static int16_t get_rw_flag(MVMThreadContext *tc, MVMObject *info) {
+static int16_t get_rw_flag(struct MVMThreadContext *tc, MVMObject *info) {
     MVMString *flag = tc->instance->str_consts.rw;
     if (MVM_repr_exists_key(tc, info, flag)) {
         if (MVM_repr_get_int(tc, MVM_repr_at_key_o(tc, info, flag)))
@@ -33,7 +33,7 @@ static int16_t get_rw_flag(MVMThreadContext *tc, MVMObject *info) {
 }
 
 /* Gets the flag for whether an arg is rw or not. */
-static int16_t get_refresh_flag(MVMThreadContext *tc, MVMObject *info) {
+static int16_t get_refresh_flag(struct MVMThreadContext *tc, MVMObject *info) {
     MVMString *typeobj_str = tc->instance->str_consts.typeobj;
     if (MVM_repr_exists_key(tc, info, typeobj_str)) {
         MVMObject *typeobj = MVM_repr_at_key_o(tc, info, typeobj_str);
@@ -54,7 +54,7 @@ static int16_t get_refresh_flag(MVMThreadContext *tc, MVMObject *info) {
 }
 
 /* Takes a hash describing a type hands back an argument type code. */
-int16_t MVM_nativecall_get_arg_type(MVMThreadContext *tc, MVMObject *info, int16_t is_return) {
+int16_t MVM_nativecall_get_arg_type(struct MVMThreadContext *tc, MVMObject *info, int16_t is_return) {
     MVMString *typename = MVM_repr_get_str(tc, MVM_repr_at_key_o(tc, info,
         tc->instance->str_consts.type));
     char *ctypename = MVM_string_utf8_encode_C_string(tc, typename);
@@ -119,19 +119,19 @@ int16_t MVM_nativecall_get_arg_type(MVMThreadContext *tc, MVMObject *info, int16
     return result;
 }
 
-MVMObject * MVM_nativecall_make_int(MVMThreadContext *tc, MVMObject *type, int64_t value) {
+MVMObject * MVM_nativecall_make_int(struct MVMThreadContext *tc, MVMObject *type, int64_t value) {
     return type ? MVM_repr_box_int(tc, type, value) : NULL;
 }
 
-MVMObject * MVM_nativecall_make_uint(MVMThreadContext *tc, MVMObject *type, uint64_t value) {
+MVMObject * MVM_nativecall_make_uint(struct MVMThreadContext *tc, MVMObject *type, uint64_t value) {
     return type ? MVM_repr_box_int(tc, type, (int64_t)value) : NULL;
 }
 
-MVMObject * MVM_nativecall_make_num(MVMThreadContext *tc, MVMObject *type, double value) {
+MVMObject * MVM_nativecall_make_num(struct MVMThreadContext *tc, MVMObject *type, double value) {
     return type ? MVM_repr_box_num(tc, type, value) : NULL;
 }
 
-MVMObject * MVM_nativecall_make_str(MVMThreadContext *tc, MVMObject *type, int16_t ret_type, char *cstring) {
+MVMObject * MVM_nativecall_make_str(struct MVMThreadContext *tc, MVMObject *type, int16_t ret_type, char *cstring) {
     MVMObject *result = type;
     if (cstring && type) {
         MVMString *value;
@@ -162,7 +162,7 @@ MVMObject * MVM_nativecall_make_str(MVMThreadContext *tc, MVMObject *type, int16
 }
 
 /* Constructs a boxed result using a CStruct REPR type. */
-MVMObject * MVM_nativecall_make_cstruct(MVMThreadContext *tc, MVMObject *type, void *cstruct) {
+MVMObject * MVM_nativecall_make_cstruct(struct MVMThreadContext *tc, MVMObject *type, void *cstruct) {
     MVMObject *result = type;
     if (cstruct && type) {
         MVMCStructREPRData *repr_data = (MVMCStructREPRData *)STABLE(type)->REPR_data;
@@ -178,7 +178,7 @@ MVMObject * MVM_nativecall_make_cstruct(MVMThreadContext *tc, MVMObject *type, v
 }
 
 /* Constructs a boxed result using a CUnion REPR type. */
-MVMObject * MVM_nativecall_make_cunion(MVMThreadContext *tc, MVMObject *type, void *cunion) {
+MVMObject * MVM_nativecall_make_cunion(struct MVMThreadContext *tc, MVMObject *type, void *cunion) {
     MVMObject *result = type;
     if (cunion && type) {
         MVMCUnionREPRData *repr_data = (MVMCUnionREPRData *)STABLE(type)->REPR_data;
@@ -193,7 +193,7 @@ MVMObject * MVM_nativecall_make_cunion(MVMThreadContext *tc, MVMObject *type, vo
     return result;
 }
 
-MVMObject * MVM_nativecall_make_cppstruct(MVMThreadContext *tc, MVMObject *type, void *cppstruct) {
+MVMObject * MVM_nativecall_make_cppstruct(struct MVMThreadContext *tc, MVMObject *type, void *cppstruct) {
     MVMObject *result = type;
     if (cppstruct && type) {
         MVMCPPStructREPRData *repr_data = (MVMCPPStructREPRData *)STABLE(type)->REPR_data;
@@ -209,7 +209,7 @@ MVMObject * MVM_nativecall_make_cppstruct(MVMThreadContext *tc, MVMObject *type,
 }
 
 /* Constructs a boxed result using a CPointer REPR type. */
-MVMObject * MVM_nativecall_make_cpointer(MVMThreadContext *tc, MVMObject *type, void *ptr) {
+MVMObject * MVM_nativecall_make_cpointer(struct MVMThreadContext *tc, MVMObject *type, void *ptr) {
     MVMObject *result = type;
     if (ptr && type) {
         if (REPR(type)->ID != MVM_REPR_ID_MVMCPointer)
@@ -222,7 +222,7 @@ MVMObject * MVM_nativecall_make_cpointer(MVMThreadContext *tc, MVMObject *type, 
 }
 
 /* Constructs a boxed result using a CArray REPR type. */
-MVMObject * MVM_nativecall_make_carray(MVMThreadContext *tc, MVMObject *type, void *carray) {
+MVMObject * MVM_nativecall_make_carray(struct MVMThreadContext *tc, MVMObject *type, void *carray) {
     MVMObject *result = type;
     if (carray && type) {
         if (REPR(type)->ID != MVM_REPR_ID_MVMCArray)
@@ -234,55 +234,55 @@ MVMObject * MVM_nativecall_make_carray(MVMThreadContext *tc, MVMObject *type, vo
     return result;
 }
 
-signed char MVM_nativecall_unmarshal_char(MVMThreadContext *tc, MVMObject *value) {
+signed char MVM_nativecall_unmarshal_char(struct MVMThreadContext *tc, MVMObject *value) {
     return (signed char)MVM_repr_get_int(tc, value);
 }
 
-signed short MVM_nativecall_unmarshal_short(MVMThreadContext *tc, MVMObject *value) {
+signed short MVM_nativecall_unmarshal_short(struct MVMThreadContext *tc, MVMObject *value) {
     return (signed short)MVM_repr_get_int(tc, value);
 }
 
-signed int MVM_nativecall_unmarshal_int(MVMThreadContext *tc, MVMObject *value) {
+signed int MVM_nativecall_unmarshal_int(struct MVMThreadContext *tc, MVMObject *value) {
     return (signed int)MVM_repr_get_int(tc, value);
 }
 
-signed long MVM_nativecall_unmarshal_long(MVMThreadContext *tc, MVMObject *value) {
+signed long MVM_nativecall_unmarshal_long(struct MVMThreadContext *tc, MVMObject *value) {
     return (signed long)MVM_repr_get_int(tc, value);
 }
 
-signed long long MVM_nativecall_unmarshal_longlong(MVMThreadContext *tc, MVMObject *value) {
+signed long long MVM_nativecall_unmarshal_longlong(struct MVMThreadContext *tc, MVMObject *value) {
     return (signed long long)MVM_repr_get_int(tc, value);
 }
 
-unsigned char MVM_nativecall_unmarshal_uchar(MVMThreadContext *tc, MVMObject *value) {
+unsigned char MVM_nativecall_unmarshal_uchar(struct MVMThreadContext *tc, MVMObject *value) {
     return (unsigned char)MVM_repr_get_int(tc, value);
 }
 
-unsigned short MVM_nativecall_unmarshal_ushort(MVMThreadContext *tc, MVMObject *value) {
+unsigned short MVM_nativecall_unmarshal_ushort(struct MVMThreadContext *tc, MVMObject *value) {
     return (unsigned short)MVM_repr_get_int(tc, value);
 }
 
-unsigned int MVM_nativecall_unmarshal_uint(MVMThreadContext *tc, MVMObject *value) {
+unsigned int MVM_nativecall_unmarshal_uint(struct MVMThreadContext *tc, MVMObject *value) {
     return (unsigned int)MVM_repr_get_int(tc, value);
 }
 
-unsigned long MVM_nativecall_unmarshal_ulong(MVMThreadContext *tc, MVMObject *value) {
+unsigned long MVM_nativecall_unmarshal_ulong(struct MVMThreadContext *tc, MVMObject *value) {
     return (unsigned long)MVM_repr_get_int(tc, value);
 }
 
-unsigned long long MVM_nativecall_unmarshal_ulonglong(MVMThreadContext *tc, MVMObject *value) {
+unsigned long long MVM_nativecall_unmarshal_ulonglong(struct MVMThreadContext *tc, MVMObject *value) {
     return (unsigned long long)MVM_repr_get_int(tc, value);
 }
 
-float MVM_nativecall_unmarshal_float(MVMThreadContext *tc, MVMObject *value) {
+float MVM_nativecall_unmarshal_float(struct MVMThreadContext *tc, MVMObject *value) {
     return (float)MVM_repr_get_num(tc, value);
 }
 
-double MVM_nativecall_unmarshal_double(MVMThreadContext *tc, MVMObject *value) {
+double MVM_nativecall_unmarshal_double(struct MVMThreadContext *tc, MVMObject *value) {
     return (double)MVM_repr_get_num(tc, value);
 }
 
-char * MVM_nativecall_encode_string(MVMThreadContext *tc, MVMString *value_str, int16_t type, int16_t *free, int16_t unmarshal_kind, const MVMREPROps *repr) {
+char * MVM_nativecall_encode_string(struct MVMThreadContext *tc, MVMString *value_str, int16_t type, int16_t *free, int16_t unmarshal_kind, const MVMREPROps *repr) {
     /* Encode string. */
     char *str;
     switch (type & MVM_NATIVECALL_ARG_TYPE_MASK) {
@@ -321,14 +321,14 @@ char * MVM_nativecall_encode_string(MVMThreadContext *tc, MVMString *value_str, 
     return str;
 }
 
-char * MVM_nativecall_unmarshal_string(MVMThreadContext *tc, MVMObject *value, int16_t type, int16_t *free, int16_t unmarshal_kind) {
+char * MVM_nativecall_unmarshal_string(struct MVMThreadContext *tc, MVMObject *value, int16_t type, int16_t *free, int16_t unmarshal_kind) {
     return IS_CONCRETE(value)
         ? MVM_nativecall_encode_string(tc, MVM_repr_get_str(tc, value), type, free, unmarshal_kind, REPR(value))
         : NULL;
 }
 
-MVM_NO_RETURN static void unmarshal_error(MVMThreadContext *tc, char *desired_repr, MVMObject *value, int16_t unmarshal_kind) MVM_NO_RETURN_ATTRIBUTE;
-MVM_NO_RETURN static void unmarshal_error(MVMThreadContext *tc, char *desired_repr, MVMObject *value, int16_t unmarshal_kind) {
+MVM_NO_RETURN static void unmarshal_error(struct MVMThreadContext *tc, char *desired_repr, MVMObject *value, int16_t unmarshal_kind) MVM_NO_RETURN_ATTRIBUTE;
+MVM_NO_RETURN static void unmarshal_error(struct MVMThreadContext *tc, char *desired_repr, MVMObject *value, int16_t unmarshal_kind) {
     if (unmarshal_kind == MVM_NATIVECALL_UNMARSHAL_KIND_GENERIC) {
         MVM_exception_throw_adhoc(tc,
             "NativeCall conversion expected type with %s representation, but got a %s (%s)", desired_repr, REPR(value)->name, MVM_6model_get_debug_name(tc, value));
@@ -347,7 +347,7 @@ MVM_NO_RETURN static void unmarshal_error(MVMThreadContext *tc, char *desired_re
     }
 }
 
-void * MVM_nativecall_unmarshal_cstruct(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
+void * MVM_nativecall_unmarshal_cstruct(struct MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
     if (!IS_CONCRETE(value))
         return NULL;
     else if (REPR(value)->ID == MVM_REPR_ID_MVMCStruct)
@@ -356,7 +356,7 @@ void * MVM_nativecall_unmarshal_cstruct(MVMThreadContext *tc, MVMObject *value, 
         unmarshal_error(tc, "CStruct", value, unmarshal_kind);
 }
 
-void * MVM_nativecall_unmarshal_cppstruct(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
+void * MVM_nativecall_unmarshal_cppstruct(struct MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
     if (!IS_CONCRETE(value))
         return NULL;
     else if (REPR(value)->ID == MVM_REPR_ID_MVMCPPStruct)
@@ -365,7 +365,7 @@ void * MVM_nativecall_unmarshal_cppstruct(MVMThreadContext *tc, MVMObject *value
         unmarshal_error(tc, "CPPStruct", value, unmarshal_kind);
 }
 
-void * MVM_nativecall_unmarshal_cpointer(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
+void * MVM_nativecall_unmarshal_cpointer(struct MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
     if (!IS_CONCRETE(value))
         return NULL;
     else if (REPR(value)->ID == MVM_REPR_ID_MVMCPointer)
@@ -374,7 +374,7 @@ void * MVM_nativecall_unmarshal_cpointer(MVMThreadContext *tc, MVMObject *value,
         unmarshal_error(tc, "CPointer", value, unmarshal_kind);
 }
 
-void * MVM_nativecall_unmarshal_carray(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
+void * MVM_nativecall_unmarshal_carray(struct MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
     if (!IS_CONCRETE(value))
         return NULL;
     else if (REPR(value)->ID == MVM_REPR_ID_MVMCArray)
@@ -383,7 +383,7 @@ void * MVM_nativecall_unmarshal_carray(MVMThreadContext *tc, MVMObject *value, i
         unmarshal_error(tc, "CArray", value, unmarshal_kind);
 }
 
-void * MVM_nativecall_unmarshal_vmarray(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
+void * MVM_nativecall_unmarshal_vmarray(struct MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
     if (!IS_CONCRETE(value))
         return NULL;
     else if (REPR(value)->ID == MVM_REPR_ID_VMArray) {
@@ -396,7 +396,7 @@ void * MVM_nativecall_unmarshal_vmarray(MVMThreadContext *tc, MVMObject *value, 
         unmarshal_error(tc, "VMArray", value, unmarshal_kind);
 }
 
-void * MVM_nativecall_unmarshal_cunion(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
+void * MVM_nativecall_unmarshal_cunion(struct MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind) {
     if (!IS_CONCRETE(value))
         return NULL;
     else if (REPR(value)->ID == MVM_REPR_ID_MVMCUnion)
@@ -417,7 +417,7 @@ static const char *dlerror(void)
 }
 #endif
 
-void MVM_nativecall_setup(MVMThreadContext *tc, MVMNativeCallBody *body, unsigned int interval_id) {
+void MVM_nativecall_setup(struct MVMThreadContext *tc, MVMNativeCallBody *body, unsigned int interval_id) {
     /* Try to load the library. */
     DLLib *lib_handle = MVM_nativecall_load_lib(body->lib_name[0] ? body->lib_name : NULL);
 
@@ -449,7 +449,7 @@ void MVM_nativecall_setup(MVMThreadContext *tc, MVMNativeCallBody *body, unsigne
 }
 
 /* Builds up a native call site out of the supplied arguments. */
-int8_t MVM_nativecall_build(MVMThreadContext *tc, MVMObject *site, MVMString *lib,
+int8_t MVM_nativecall_build(struct MVMThreadContext *tc, MVMObject *site, MVMString *lib,
         MVMString *sym, MVMString *conv, MVMObject *in_arg_info, MVMObject *ret_info) {
     char *lib_name = MVM_string_utf8_c8_encode_C_string(tc, lib);
     char *sym_name = MVM_string_utf8_c8_encode_C_string(tc, sym);
@@ -536,7 +536,7 @@ int8_t MVM_nativecall_build(MVMThreadContext *tc, MVMObject *site, MVMString *li
     return 0;
 }
 
-static MVMObject * nativecall_cast(MVMThreadContext *tc, MVMObject *target_spec, MVMObject *target_type, void *cpointer_body) {
+static MVMObject * nativecall_cast(struct MVMThreadContext *tc, MVMObject *target_spec, MVMObject *target_type, void *cpointer_body) {
     MVMObject *result = NULL;
 
     MVMROOT2(tc, target_spec, target_type) {
@@ -682,7 +682,7 @@ static MVMObject * nativecall_cast(MVMThreadContext *tc, MVMObject *target_spec,
     return result;
 }
 
-MVMObject * MVM_nativecall_global(MVMThreadContext *tc, MVMString *lib, MVMString *sym, MVMObject *target_spec, MVMObject *target_type) {
+MVMObject * MVM_nativecall_global(struct MVMThreadContext *tc, MVMString *lib, MVMString *sym, MVMObject *target_spec, MVMObject *target_type) {
     char *lib_name = MVM_string_utf8_c8_encode_C_string(tc, lib);
     char *sym_name = MVM_string_utf8_c8_encode_C_string(tc, sym);
     DLLib *lib_handle;
@@ -719,7 +719,7 @@ MVMObject * MVM_nativecall_global(MVMThreadContext *tc, MVMString *lib, MVMStrin
     return ret;
 }
 
-MVMObject * MVM_nativecall_cast(MVMThreadContext *tc, MVMObject *target_spec, MVMObject *target_type, MVMObject *source) {
+MVMObject * MVM_nativecall_cast(struct MVMThreadContext *tc, MVMObject *target_spec, MVMObject *target_type, MVMObject *source) {
     void *data_body;
 
     if (!source)
@@ -743,7 +743,7 @@ MVMObject * MVM_nativecall_cast(MVMThreadContext *tc, MVMObject *target_spec, MV
     return nativecall_cast(tc, target_spec, target_type, data_body);
 }
 
-int64_t MVM_nativecall_sizeof(MVMThreadContext *tc, MVMObject *obj) {
+int64_t MVM_nativecall_sizeof(struct MVMThreadContext *tc, MVMObject *obj) {
     if (REPR(obj)->ID == MVM_REPR_ID_MVMCStruct)
         return ((MVMCStructREPRData *)STABLE(obj)->REPR_data)->struct_size;
     else if (REPR(obj)->ID == MVM_REPR_ID_MVMCPPStruct)
@@ -769,7 +769,7 @@ int64_t MVM_nativecall_sizeof(MVMThreadContext *tc, MVMObject *obj) {
  * objects are propagated to the HLL side. All CArray and CStruct arguments to
  * C functions are write-barriered automatically, so this should be necessary
  * only in the rarest of cases. */
-void MVM_nativecall_refresh(MVMThreadContext *tc, MVMObject *cthingy) {
+void MVM_nativecall_refresh(struct MVMThreadContext *tc, MVMObject *cthingy) {
     if (!IS_CONCRETE(cthingy))
         return;
     if (REPR(cthingy)->ID == MVM_REPR_ID_MVMCArray) {
@@ -936,7 +936,7 @@ void MVM_nativecall_refresh(MVMThreadContext *tc, MVMObject *cthingy) {
 typedef struct ResolverData {
     MVMObject *site;
 } ResolverData;
-static void callback_invoke(MVMThreadContext *tc, void *data) {
+static void callback_invoke(struct MVMThreadContext *tc, void *data) {
     /* Invoke the coderef, to set up the nested interpreter. */
     ResolverData *r = (ResolverData*)data;
     MVMNativeCallBody *body = MVM_nativecall_get_nc_body(tc, r->site);
@@ -948,7 +948,7 @@ static void callback_invoke(MVMThreadContext *tc, void *data) {
     /* Ensure we exit interp after callback. */
     tc->thread_entry_frame = tc->cur_frame;
 }
-void MVM_nativecall_restore_library(MVMThreadContext *tc, MVMNativeCallBody *body, MVMObject *root) {
+void MVM_nativecall_restore_library(struct MVMThreadContext *tc, MVMNativeCallBody *body, MVMObject *root) {
     if (body->resolve_lib_name && !MVM_is_null(tc, body->resolve_lib_name_arg)) {
         MVMRegister res = {NULL};
         ResolverData data = {root};

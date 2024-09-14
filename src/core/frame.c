@@ -7,7 +7,7 @@
 #define MVM_SPESH_CHECK_PRESELECTION 0
 
 /* Computes the initial work area for a frame or a specialization of a frame. */
-MVMRegister * MVM_frame_initial_work(MVMThreadContext *tc, uint16_t *local_types,
+MVMRegister * MVM_frame_initial_work(struct MVMThreadContext *tc, uint16_t *local_types,
                                      uint16_t num_locals) {
     uint16_t i;
     MVMRegister *work_initial = MVM_calloc(num_locals, sizeof(MVMRegister));
@@ -21,7 +21,7 @@ MVMRegister * MVM_frame_initial_work(MVMThreadContext *tc, uint16_t *local_types
  * space it shall need. Also triggers bytecode verification of the frame's
  * bytecode. Assumes we are holding the CU's deserialize frame mutex (at
  * the time of writing, this is only called from instrumentation_level_barrier). */
-static void prepare_and_verify_static_frame(MVMThreadContext *tc, MVMStaticFrame *static_frame) {
+static void prepare_and_verify_static_frame(struct MVMThreadContext *tc, MVMStaticFrame *static_frame) {
     MVMStaticFrameBody *static_frame_body = &static_frame->body;
     MVMCompUnit        *cu                = static_frame_body->cu;
 
@@ -83,7 +83,7 @@ static void prepare_and_verify_static_frame(MVMThreadContext *tc, MVMStaticFrame
  * simply be that we never invoked the frame, in which case we prepare and
  * verify it. It may also be because we need to instrument the code for
  * profiling. */
-static void instrumentation_level_barrier(MVMThreadContext *tc, MVMStaticFrame *static_frame) {
+static void instrumentation_level_barrier(struct MVMThreadContext *tc, MVMStaticFrame *static_frame) {
     MVMCompUnit *cu = static_frame->body.cu;
     MVMROOT2(tc, static_frame, cu) {
         /* Obtain mutex, so we don't end up with instrumentation races. */
@@ -126,7 +126,7 @@ static void instrumentation_level_barrier(MVMThreadContext *tc, MVMStaticFrame *
 /* Called when the GC destroys a frame. Since the frame may have been alive as
  * part of a continuation that was taken but never invoked, we should check
  * things normally cleaned up on return don't need cleaning up also. */
-void MVM_frame_destroy(MVMThreadContext *tc, MVMFrame *frame) {
+void MVM_frame_destroy(struct MVMThreadContext *tc, MVMFrame *frame) {
     MVM_args_proc_cleanup(tc, &frame->params);
     if (frame->env && !MVM_FRAME_IS_ON_CALLSTACK(tc, frame))
         MVM_free(frame->env);
@@ -140,7 +140,7 @@ void MVM_frame_destroy(MVMThreadContext *tc, MVMFrame *frame) {
  * static lexicals to be deserialized if it's used for auto-close purposes.
  * Since we're not creating it to run bytecode, just for the purpose of a
  * serialized closure, we don't create any call stack record for it. */
-static MVMFrame * create_context_only(MVMThreadContext *tc, MVMStaticFrame *static_frame,
+static MVMFrame * create_context_only(struct MVMThreadContext *tc, MVMStaticFrame *static_frame,
         MVMObject *code_ref, int32_t autoclose) {
     MVMFrame *frame;
 
@@ -204,7 +204,7 @@ static MVMFrame * create_context_only(MVMThreadContext *tc, MVMStaticFrame *stat
 
 /* Creates a frame that is suitable for deserializing a context into. Starts
  * with a ref count of 1 due to being held by an SC. */
-MVMFrame * MVM_frame_create_context_only(MVMThreadContext *tc, MVMStaticFrame *static_frame,
+MVMFrame * MVM_frame_create_context_only(struct MVMThreadContext *tc, MVMStaticFrame *static_frame,
         MVMObject *code_ref) {
     return create_context_only(tc, static_frame, code_ref, 0);
 }
@@ -212,7 +212,7 @@ MVMFrame * MVM_frame_create_context_only(MVMThreadContext *tc, MVMStaticFrame *s
 /* Provides auto-close functionality, for the handful of cases where we have
  * not ever been in the outer frame of something we're invoking. In this case,
  * we fake up a frame based on the static lexical environment. */
-static MVMFrame * autoclose(MVMThreadContext *tc, MVMStaticFrame *needed) {
+static MVMFrame * autoclose(struct MVMThreadContext *tc, MVMStaticFrame *needed) {
     MVMFrame *result;
 
     /* First, see if we can find one on the call stack; return it if so. */
@@ -250,7 +250,7 @@ static MVMFrame * autoclose(MVMThreadContext *tc, MVMStaticFrame *needed) {
  * the callstack by default, but can put the frame onto the heap if it tends to be
  * promoted there anyway. Returns a pointer to the frame wherever in memory it ends
  * up living. Separate versions for specialized and unspecialized frames. */
-static MVMFrame * allocate_unspecialized_frame(MVMThreadContext *tc,
+static MVMFrame * allocate_unspecialized_frame(struct MVMThreadContext *tc,
         MVMStaticFrame *static_frame, int32_t heap) {
     MVMFrame *frame;
     int32_t work_size = static_frame->body.work_size;
@@ -292,7 +292,7 @@ static MVMFrame * allocate_unspecialized_frame(MVMThreadContext *tc,
 
     return frame;
 }
-static MVMFrame * allocate_specialized_frame(MVMThreadContext *tc,
+static MVMFrame * allocate_specialized_frame(struct MVMThreadContext *tc,
         MVMStaticFrame *static_frame, MVMSpeshCandidate *spesh_cand, int32_t heap) {
     MVMFrame *frame;
     int32_t work_size = spesh_cand->body.work_size;
@@ -337,7 +337,7 @@ static MVMFrame * allocate_specialized_frame(MVMThreadContext *tc,
 }
 
 /* Set up a deopt frame. */
-void MVM_frame_setup_deopt(MVMThreadContext *tc, MVMFrame *frame, MVMStaticFrame *static_frame,
+void MVM_frame_setup_deopt(struct MVMThreadContext *tc, MVMFrame *frame, MVMStaticFrame *static_frame,
         MVMCode *code_ref) {
     /* Initialize various frame properties. */
     frame->static_info = static_frame;
@@ -350,7 +350,7 @@ void MVM_frame_setup_deopt(MVMThreadContext *tc, MVMFrame *frame, MVMStaticFrame
 /* Sets up storage for state variables. We do this after tc->cur_frame became
  * the current frame, to make sure these new objects will certainly get marked
  * if GC is triggered along the way. */
-static void setup_state_vars(MVMThreadContext *tc, MVMStaticFrame *static_frame) {
+static void setup_state_vars(struct MVMThreadContext *tc, MVMStaticFrame *static_frame) {
     /* Drag everything out of static_frame_body before we start,
      * as GC action may invalidate it. */
     MVMFrame    *frame     = tc->cur_frame;
@@ -400,7 +400,7 @@ static void setup_state_vars(MVMThreadContext *tc, MVMStaticFrame *static_frame)
 }
 
 /* Produces an error on outer frame mis-match. */
-static void report_outer_conflict(MVMThreadContext *tc, MVMStaticFrame *static_frame,
+static void report_outer_conflict(struct MVMThreadContext *tc, MVMStaticFrame *static_frame,
         MVMFrame *outer) {
     char *frame_cuuid = MVM_string_utf8_encode_C_string(tc, static_frame->body.cuuid);
     char *frame_name;
@@ -452,7 +452,7 @@ static void report_outer_conflict(MVMThreadContext *tc, MVMStaticFrame *static_f
 }
 
 /* Dispatches execution to the specified code object with the specified args. */
-void MVM_frame_dispatch(MVMThreadContext *tc, MVMCode *code, MVMArgs args, int32_t spesh_cand) {
+void MVM_frame_dispatch(struct MVMThreadContext *tc, MVMCode *code, MVMArgs args, int32_t spesh_cand) {
     /* Did we get given a specialization? */
     MVMStaticFrame *static_frame = code->body.sf;
     MVMStaticFrameSpesh *spesh;
@@ -604,7 +604,7 @@ void MVM_frame_dispatch(MVMThreadContext *tc, MVMCode *code, MVMArgs args, int32
 
 /* Dispatches to a frame with zero args. Convenience for various entrypoint
  * style locations. */
-void MVM_frame_dispatch_zero_args(MVMThreadContext *tc, MVMCode *code) {
+void MVM_frame_dispatch_zero_args(struct MVMThreadContext *tc, MVMCode *code) {
     MVMArgs args = {
         .callsite = MVM_callsite_get_common(tc, MVM_CALLSITE_ID_ZERO_ARITY),
         .source = NULL,
@@ -615,7 +615,7 @@ void MVM_frame_dispatch_zero_args(MVMThreadContext *tc, MVMCode *code) {
 
 /* Dispatches to a frame with args set up by C code. Also sets the expected
  * return type and destination for the return value. */
-void MVM_frame_dispatch_from_c(MVMThreadContext *tc, MVMCode *code,
+void MVM_frame_dispatch_from_c(struct MVMThreadContext *tc, MVMCode *code,
         MVMCallStackArgsFromC *args_record, MVMRegister *return_value,
         MVMReturnType return_type) {
     MVMFrame *cur_frame = tc->cur_frame;
@@ -628,7 +628,7 @@ void MVM_frame_dispatch_from_c(MVMThreadContext *tc, MVMCode *code,
 /* Moves the specified frame from the stack and on to the heap. Must only
  * be called if the frame is not already there. Use MVM_frame_force_to_heap
  * when not sure. */
-MVMFrame * MVM_frame_move_to_heap(MVMThreadContext *tc, MVMFrame *frame) {
+MVMFrame * MVM_frame_move_to_heap(struct MVMThreadContext *tc, MVMFrame *frame) {
     /* To keep things simple, we'll promote all non-promoted frames on the call
      * stack. We walk the call stack to find them. */
     MVMFrame *cur_to_promote = NULL;
@@ -769,8 +769,8 @@ MVMFrame * MVM_frame_move_to_heap(MVMThreadContext *tc, MVMFrame *frame) {
 
 /* This function is to be used by the debugserver if a thread is currently
  * blocked. */
-MVMFrame * MVM_frame_debugserver_move_to_heap(MVMThreadContext *debug_tc,
-        MVMThreadContext *owner, MVMFrame *frame) {
+MVMFrame * MVM_frame_debugserver_move_to_heap(struct MVMThreadContext *debug_tc,
+        struct MVMThreadContext *owner, MVMFrame *frame) {
     /* To keep things simple, we'll promote all non-promoted frames on the call
      * stack. We walk the call stack to find them. */
     MVMFrame *cur_to_promote = NULL;
@@ -876,10 +876,10 @@ MVMFrame * MVM_frame_debugserver_move_to_heap(MVMThreadContext *debug_tc,
 /* Attempt to return from the current frame. Returns non-zero if we can,
  * and zero if there is nowhere to return to (which would signal the exit
  * of the interpreter). */
-static void remove_after_handler(MVMThreadContext *tc, void *sr_data) {
+static void remove_after_handler(struct MVMThreadContext *tc, void *sr_data) {
     MVM_callstack_unwind_frame(tc, 0);
 }
-uint64_t MVM_frame_try_return(MVMThreadContext *tc) {
+uint64_t MVM_frame_try_return(struct MVMThreadContext *tc) {
     MVMFrame *cur_frame = tc->cur_frame;
 
     if (cur_frame->static_info->body.has_exit_handler &&
@@ -941,7 +941,7 @@ uint64_t MVM_frame_try_return(MVMThreadContext *tc) {
 }
 
 /* Try a return from the current frame; skip running any exit handlers. */
-uint64_t MVM_frame_try_return_no_exit_handlers(MVMThreadContext *tc) {
+uint64_t MVM_frame_try_return_no_exit_handlers(struct MVMThreadContext *tc) {
     return MVM_callstack_unwind_frame(tc, 0);
 }
 
@@ -955,11 +955,11 @@ typedef struct {
     void      *jit_return_label;
     MVMObject *payload;
 } MVMUnwindData;
-static void mark_unwind_data(MVMThreadContext *tc, void *sr_data, MVMGCWorklist *worklist) {
+static void mark_unwind_data(struct MVMThreadContext *tc, void *sr_data, MVMGCWorklist *worklist) {
     MVMUnwindData *ud  = (MVMUnwindData *)sr_data;
     MVM_gc_worklist_add(tc, worklist, &(ud->frame));
 }
-static void continue_unwind(MVMThreadContext *tc, void *sr_data) {
+static void continue_unwind(struct MVMThreadContext *tc, void *sr_data) {
     MVMUnwindData *ud  = (MVMUnwindData *)sr_data;
     MVMFrame *frame    = ud->frame;
     uint8_t *abs_addr = ud->abs_addr;
@@ -968,7 +968,7 @@ static void continue_unwind(MVMThreadContext *tc, void *sr_data) {
     tc->last_payload = ud->payload;
     MVM_frame_unwind_to(tc, frame, abs_addr, rel_addr, NULL, jit_return_label);
 }
-void MVM_frame_unwind_to(MVMThreadContext *tc, MVMFrame *frame, uint8_t *abs_addr,
+void MVM_frame_unwind_to(struct MVMThreadContext *tc, MVMFrame *frame, uint8_t *abs_addr,
                          uint32_t rel_addr, MVMObject *return_value, void *jit_return_label) {
     /* Lazy deopt means that we might have located an exception handler in
      * optimized code, but then at the point we call MVM_callstack_unwind_frame we'll
@@ -1069,7 +1069,7 @@ void MVM_frame_unwind_to(MVMThreadContext *tc, MVMFrame *frame, uint8_t *abs_add
 }
 
 /* Gets a code object for a frame, lazily deserializing it if needed. */
-MVMObject * MVM_frame_get_code_object(MVMThreadContext *tc, MVMCode *code) {
+MVMObject * MVM_frame_get_code_object(struct MVMThreadContext *tc, MVMCode *code) {
     if (MVM_UNLIKELY(REPR(code)->ID != MVM_REPR_ID_MVMCode))
         MVM_exception_throw_adhoc(tc, "getcodeobj needs a code ref");
 
@@ -1097,7 +1097,7 @@ MVMObject * MVM_frame_get_code_object(MVMThreadContext *tc, MVMCode *code) {
 }
 
 /* Given the specified code object, sets its outer to the current scope. */
-void MVM_frame_capturelex(MVMThreadContext *tc, MVMObject *code) {
+void MVM_frame_capturelex(struct MVMThreadContext *tc, MVMObject *code) {
     MVMFrame *captured;
     if (MVM_UNLIKELY(REPR(code)->ID != MVM_REPR_ID_MVMCode))
         MVM_exception_throw_adhoc(tc,
@@ -1122,7 +1122,7 @@ void MVM_frame_capturelex(MVMThreadContext *tc, MVMObject *code) {
  * static frame on the call stack, so that the QUIT will discover the correct
  * $x.
  */
-void MVM_frame_capture_inner(MVMThreadContext *tc, MVMObject *code) {
+void MVM_frame_capture_inner(struct MVMThreadContext *tc, MVMObject *code) {
     MVMFrame *outer;
     MVMROOT(tc, code) {
         MVMStaticFrame *sf_outer = ((MVMCode*)code)->body.sf->body.outer;
@@ -1139,7 +1139,7 @@ void MVM_frame_capture_inner(MVMThreadContext *tc, MVMObject *code) {
 
 /* Given the specified code object, copies it and returns a copy which
  * captures a closure over the current scope. */
-MVMObject * MVM_frame_takeclosure(MVMThreadContext *tc, MVMObject *code) {
+MVMObject * MVM_frame_takeclosure(struct MVMThreadContext *tc, MVMObject *code) {
     MVMCode *closure;
     MVMFrame *captured;
 
@@ -1165,7 +1165,7 @@ MVMObject * MVM_frame_takeclosure(MVMThreadContext *tc, MVMObject *code) {
 }
 
 /* Vivifies a lexical in a frame. */
-MVMObject * MVM_frame_vivify_lexical(MVMThreadContext *tc, MVMFrame *f, uint16_t idx) {
+MVMObject * MVM_frame_vivify_lexical(struct MVMThreadContext *tc, MVMFrame *f, uint16_t idx) {
     uint8_t       *flags;
     int16_t        flag;
     MVMRegister    *static_env;
@@ -1243,7 +1243,7 @@ MVMObject * MVM_frame_vivify_lexical(MVMThreadContext *tc, MVMFrame *f, uint16_t
  * specified type. Non-existing object lexicals produce NULL, expected
  * (for better or worse) by various things. Otherwise, an error is thrown
  * if it does not exist. Incorrect type always throws. */
-int MVM_frame_find_lexical_by_name(MVMThreadContext *tc, MVMString *name, uint16_t type, MVMRegister *r) {
+int MVM_frame_find_lexical_by_name(struct MVMThreadContext *tc, MVMString *name, uint16_t type, MVMRegister *r) {
     MVMSpeshFrameWalker fw;
     MVM_spesh_frame_walker_init_for_outers(tc, &fw, tc->cur_frame);
     MVMRegister *res = MVM_frame_lexical_lookup_using_frame_walker(tc, &fw, name, type);
@@ -1272,7 +1272,7 @@ int MVM_frame_find_lexical_by_name(MVMThreadContext *tc, MVMString *name, uint16
 
 /* Binds the specified value to the given lexical, finding it along the static
  * chain. */
-MVM_PUBLIC void MVM_frame_bind_lexical_by_name(MVMThreadContext *tc, MVMString *name, uint16_t type, MVMRegister value) {
+ void MVM_frame_bind_lexical_by_name(struct MVMThreadContext *tc, MVMString *name, uint16_t type, MVMRegister value) {
     MVMFrame *cur_frame = tc->cur_frame;
     while (cur_frame != NULL) {
         if (cur_frame->static_info->body.num_lexicals) {
@@ -1308,7 +1308,7 @@ MVM_PUBLIC void MVM_frame_bind_lexical_by_name(MVMThreadContext *tc, MVMString *
 }
 
 /* Finds a lexical in the outer frame, throwing if it's not there. */
-void MVM_frame_find_lexical_by_name_outer(MVMThreadContext *tc, MVMString *name, MVMRegister *result) {
+void MVM_frame_find_lexical_by_name_outer(struct MVMThreadContext *tc, MVMString *name, MVMRegister *result) {
     int found;
     MVMROOT(tc, name) {
         found = MVM_frame_find_lexical_by_name_rel(tc, name, tc->cur_frame->outer, result);
@@ -1323,7 +1323,7 @@ void MVM_frame_find_lexical_by_name_outer(MVMThreadContext *tc, MVMString *name,
 
 /* Looks up the address of the lexical with the specified name, starting with
  * the specified frame. Only works if it's an object lexical.  */
-int MVM_frame_find_lexical_by_name_rel(MVMThreadContext *tc, MVMString *name, MVMFrame *cur_frame, MVMRegister *r) {
+int MVM_frame_find_lexical_by_name_rel(struct MVMThreadContext *tc, MVMString *name, MVMFrame *cur_frame, MVMRegister *r) {
     while (cur_frame != NULL) {
         if (cur_frame->static_info->body.num_lexicals) {
             uint32_t idx = MVM_get_lexical_by_name(tc, cur_frame->static_info, name);
@@ -1359,7 +1359,7 @@ int MVM_frame_find_lexical_by_name_rel(MVMThreadContext *tc, MVMString *name, MV
 
 /* Performs some kind of lexical lookup using the frame walker. The exact walk
  * that is done depends on the frame walker setup. */
-MVMRegister * MVM_frame_lexical_lookup_using_frame_walker(MVMThreadContext *tc,
+MVMRegister * MVM_frame_lexical_lookup_using_frame_walker(struct MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw, MVMString *name, uint16_t type) {
     MVM_gc_root_temp_push(tc, (MVMCollectable **)&(name));
     while (MVM_spesh_frame_walker_next(tc, fw)) {
@@ -1387,7 +1387,7 @@ MVMRegister * MVM_frame_lexical_lookup_using_frame_walker(MVMThreadContext *tc,
 
 /* Looks up the address of the lexical with the specified name, starting with
  * the specified frame. It checks all outer frames of the caller frame chain.  */
-MVMRegister * MVM_frame_find_lexical_by_name_rel_caller(MVMThreadContext *tc, MVMString *name, MVMFrame *cur_caller_frame) {
+MVMRegister * MVM_frame_find_lexical_by_name_rel_caller(struct MVMThreadContext *tc, MVMString *name, MVMFrame *cur_caller_frame) {
     MVMSpeshFrameWalker fw;
     MVM_spesh_frame_walker_init(tc, &fw, cur_caller_frame, 1);
     return MVM_frame_lexical_lookup_using_frame_walker(tc, &fw, name, MVM_reg_obj);
@@ -1395,7 +1395,7 @@ MVMRegister * MVM_frame_find_lexical_by_name_rel_caller(MVMThreadContext *tc, MV
 
 /* Looks up the address of the lexical with the specified name and the
  * specified type. Returns null if it does not exist. */
-static void try_cache_dynlex(MVMThreadContext *tc, MVMFrame *from, MVMFrame *to, MVMString *name, MVMRegister *reg, uint16_t type, uint32_t fcost, uint32_t icost) {
+static void try_cache_dynlex(struct MVMThreadContext *tc, MVMFrame *from, MVMFrame *to, MVMString *name, MVMRegister *reg, uint16_t type, uint32_t fcost, uint32_t icost) {
 #if MVM_DYNLEX_CACHE_ENABLED
     int32_t next = 0;
     int32_t frames = 0;
@@ -1426,7 +1426,7 @@ static void try_cache_dynlex(MVMThreadContext *tc, MVMFrame *from, MVMFrame *to,
     }
 #endif
 }
-MVMRegister * MVM_frame_find_dynamic_using_frame_walker(MVMThreadContext *tc,
+MVMRegister * MVM_frame_find_dynamic_using_frame_walker(struct MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw, MVMString *name, uint16_t *type, MVMFrame *initial_frame,
         int32_t vivify, MVMFrame **found_frame) {
     FILE *dlog = tc->instance->dynvar_log_fh;
@@ -1521,7 +1521,7 @@ MVMRegister * MVM_frame_find_dynamic_using_frame_walker(MVMThreadContext *tc,
     *found_frame = NULL;
     return NULL;
 }
-MVMRegister * MVM_frame_find_contextual_by_name(MVMThreadContext *tc, MVMString *name,
+MVMRegister * MVM_frame_find_contextual_by_name(struct MVMThreadContext *tc, MVMString *name,
         uint16_t *type, MVMFrame *initial_frame, int32_t vivify, MVMFrame **found_frame) {
     MVMSpeshFrameWalker fw;
     MVM_spesh_frame_walker_init(tc, &fw, initial_frame, 0);
@@ -1529,7 +1529,7 @@ MVMRegister * MVM_frame_find_contextual_by_name(MVMThreadContext *tc, MVMString 
             vivify, found_frame);
 }
 
-void MVM_frame_getdynlex_with_frame_walker(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
+void MVM_frame_getdynlex_with_frame_walker(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
                                                   MVMString *name, MVMRegister *r) {
     uint16_t type;
     MVMFrame *found_frame;
@@ -1609,13 +1609,13 @@ void MVM_frame_getdynlex_with_frame_walker(MVMThreadContext *tc, MVMSpeshFrameWa
         }
     }
 }
-void MVM_frame_getdynlex(MVMThreadContext *tc, MVMString *name, MVMFrame *cur_frame, MVMRegister *r) {
+void MVM_frame_getdynlex(struct MVMThreadContext *tc, MVMString *name, MVMFrame *cur_frame, MVMRegister *r) {
     MVMSpeshFrameWalker fw;
     MVM_spesh_frame_walker_init(tc, &fw, cur_frame, 0);
     MVM_frame_getdynlex_with_frame_walker(tc, &fw, name, r);
 }
 
-void MVM_frame_binddynlex(MVMThreadContext *tc, MVMString *name, MVMObject *value, MVMFrame *cur_frame) {
+void MVM_frame_binddynlex(struct MVMThreadContext *tc, MVMString *name, MVMObject *value, MVMFrame *cur_frame) {
     uint16_t type;
     MVMFrame *found_frame;
     MVMRegister *lex_reg;
@@ -1651,7 +1651,7 @@ void MVM_frame_binddynlex(MVMThreadContext *tc, MVMString *name, MVMObject *valu
 
 /* Returns the storage unit for the lexical in the specified frame. Does not
  * try to vivify anything - gets exactly what is there. */
-MVMRegister * MVM_frame_lexical(MVMThreadContext *tc, MVMFrame *f, MVMString *name) {
+MVMRegister * MVM_frame_lexical(struct MVMThreadContext *tc, MVMFrame *f, MVMString *name) {
     if (MVM_LIKELY(f->static_info->body.num_lexicals != 0)) {
         uint32_t idx = MVM_get_lexical_by_name(tc, f->static_info, name);
         if (idx != MVM_INDEX_HASH_NOT_FOUND)
@@ -1666,7 +1666,7 @@ MVMRegister * MVM_frame_lexical(MVMThreadContext *tc, MVMFrame *f, MVMString *na
 }
 
 /* Returns the storage unit for the lexical in the specified frame. */
-MVMRegister * MVM_frame_try_get_lexical(MVMThreadContext *tc, MVMFrame *f, MVMString *name, uint16_t type) {
+MVMRegister * MVM_frame_try_get_lexical(struct MVMThreadContext *tc, MVMFrame *f, MVMString *name, uint16_t type) {
     if (f->static_info->body.num_lexicals) {
         uint32_t idx = MVM_get_lexical_by_name(tc, f->static_info, name);
         if (idx != MVM_INDEX_HASH_NOT_FOUND && f->static_info->body.lexical_types[idx] == type) {
@@ -1680,7 +1680,7 @@ MVMRegister * MVM_frame_try_get_lexical(MVMThreadContext *tc, MVMFrame *f, MVMSt
 }
 
 /* Translates a register kind into a primitive storage spec constant. */
-uint16_t MVM_frame_translate_to_primspec(MVMThreadContext *tc, uint16_t kind) {
+uint16_t MVM_frame_translate_to_primspec(struct MVMThreadContext *tc, uint16_t kind) {
     switch (MVM_EXPECT(kind, MVM_reg_obj)) {
         case MVM_reg_int64:
             return MVM_STORAGE_SPEC_BP_INT;
@@ -1712,7 +1712,7 @@ uint16_t MVM_frame_translate_to_primspec(MVMThreadContext *tc, uint16_t kind) {
 }
 
 /* Returns the primitive type specification for a lexical. */
-uint16_t MVM_frame_lexical_primspec(MVMThreadContext *tc, MVMFrame *f, MVMString *name) {
+uint16_t MVM_frame_lexical_primspec(struct MVMThreadContext *tc, MVMFrame *f, MVMString *name) {
     if (f->static_info->body.num_lexicals) {
         uint32_t idx = MVM_get_lexical_by_name(tc, f->static_info, name);
         if (idx != MVM_INDEX_HASH_NOT_FOUND)
@@ -1729,7 +1729,7 @@ uint16_t MVM_frame_lexical_primspec(MVMThreadContext *tc, MVMFrame *f, MVMString
 
 /* Gets, allocating if needed, the frame extra data structure for the given
  * frame. This is used to hold data that only a handful of frames need. */
-MVMFrameExtra * MVM_frame_extra(MVMThreadContext *tc, MVMFrame *f) {
+MVMFrameExtra * MVM_frame_extra(struct MVMThreadContext *tc, MVMFrame *f) {
     if (!f->extra)
         f->extra = MVM_calloc(1, sizeof(MVMFrameExtra));
     return f->extra;
@@ -1738,7 +1738,7 @@ MVMFrameExtra * MVM_frame_extra(MVMThreadContext *tc, MVMFrame *f) {
 /* Gets the code object of the caller, provided there is one. Works even in
  * the face that the caller was an inline (however, the current frame that is
  * using the op must not be itself inlined). */
-MVMObject * MVM_frame_caller_code(MVMThreadContext *tc) {
+MVMObject * MVM_frame_caller_code(struct MVMThreadContext *tc) {
     MVMObject *result;
     MVMFrame *f = tc->cur_frame;
     if (f->caller) {

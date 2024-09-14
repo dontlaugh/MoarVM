@@ -41,14 +41,14 @@ static uint32_t is_unified_ideograph (MVMCodepoint cp) {
 }
 
 /* Data from Blocks.txt */
-MVM_STATIC_INLINE uint32_t is_Assigned_Block_Nushu (MVMCodepoint cp) {
+static inline uint32_t is_Assigned_Block_Nushu (MVMCodepoint cp) {
     return
        (0x1B170 <= cp && cp <= 0x1B2FF) /* 1B170..1B2FF Nushu                              */
     ;
 }
 
 /* Data from Blocks.txt */
-MVM_STATIC_INLINE uint32_t is_Block_Tangut (MVMCodepoint cp) {
+static inline uint32_t is_Block_Tangut (MVMCodepoint cp) {
     return
        (0x17000 <= cp && cp <= 0x187FF) /* 17000..187FF Tangut                             */
     || (0x18800 <= cp && cp <= 0x18AFF) /* 18800..18AFF Tangut Components                  */
@@ -56,7 +56,7 @@ MVM_STATIC_INLINE uint32_t is_Block_Tangut (MVMCodepoint cp) {
 }
 
 /* Data from Blocks.txt */
-MVM_STATIC_INLINE uint32_t is_Block_CJK_Unified_Ideographs_OR_CJK_Compatibility_Ideographs (MVMCodepoint cp) {
+static inline uint32_t is_Block_CJK_Unified_Ideographs_OR_CJK_Compatibility_Ideographs (MVMCodepoint cp) {
     return
        (0x4E00  <= cp && cp <= 0x9FFF ) /* 4E00..9FFF CJK Unified Ideographs             */
     || (0xF900  <= cp && cp <= 0xFAFF ) /* F900..FAFF CJK Compatibility Ideographs       */

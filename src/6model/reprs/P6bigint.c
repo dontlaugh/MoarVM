@@ -5,7 +5,7 @@
 #endif
 
 /* Get a native int64 from an mp_int. */
-static int64_t mp_get_int64(MVMThreadContext *tc, mp_int * a) {
+static int64_t mp_get_int64(struct MVMThreadContext *tc, mp_int * a) {
     uint64_t res;
     uint64_t signed_max = 9223372036854775807ULL;
     const int bits = mp_count_bits(a);
@@ -34,12 +34,12 @@ static int64_t mp_get_int64(MVMThreadContext *tc, mp_int * a) {
     return MP_NEG == a->sign ? -res : res;
 }
 
-int64_t MVM_p6bigint_get_int64(MVMThreadContext *tc, MVMP6bigintBody *body) {
+int64_t MVM_p6bigint_get_int64(struct MVMThreadContext *tc, MVMP6bigintBody *body) {
     return mp_get_int64(tc, body->u.bigint);
 }
 
 /* Get a native uint64 from an mp_int. */
-static uint64_t mp_get_uint64(MVMThreadContext *tc, mp_int * a) {
+static uint64_t mp_get_uint64(struct MVMThreadContext *tc, mp_int * a) {
     const int bits = mp_count_bits(a);
 
     if (bits > 64) {
@@ -54,7 +54,7 @@ static const MVMREPROps P6bigint_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &P6bigint_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -67,13 +67,13 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Initializes a new instance. */
-static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static void initialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     body->u.smallint.flag = MVM_BIGINT_32_FLAG;
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMP6bigintBody *src_body = (MVMP6bigintBody *)src;
     MVMP6bigintBody *dest_body = (MVMP6bigintBody *)dest;
     if (MVM_BIGINT_IS_BIG(src_body)) {
@@ -90,7 +90,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
     }
 }
 
-void MVM_p6bigint_store_as_mp_int(MVMThreadContext *tc, MVMP6bigintBody *body, int64_t value) {
+void MVM_p6bigint_store_as_mp_int(struct MVMThreadContext *tc, MVMP6bigintBody *body, int64_t value) {
     mp_err err;
     mp_int *i = MVM_malloc(sizeof(mp_int));
     if ((err = mp_init_i64(i, value)) != MP_OKAY) {
@@ -100,7 +100,7 @@ void MVM_p6bigint_store_as_mp_int(MVMThreadContext *tc, MVMP6bigintBody *body, i
     body->u.bigint = i;
 }
 
-static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
+static void set_int(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (MVM_IS_32BIT_INT(value)) {
         body->u.smallint.flag = MVM_BIGINT_32_FLAG;
@@ -110,7 +110,7 @@ static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
         MVM_p6bigint_store_as_mp_int(tc, body, value);
     }
 }
-static int64_t get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static int64_t get_int(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (MVM_BIGINT_IS_BIG(body)) {
         mp_int *i = body->u.bigint;
@@ -121,7 +121,7 @@ static int64_t get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
     }
 }
 
-static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t value) {
+static void set_uint(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t value) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (value < 2147483647ULL) {
         body->u.smallint.flag = MVM_BIGINT_32_FLAG;
@@ -137,7 +137,7 @@ static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
         body->u.bigint = i;
     }
 }
-static uint64_t get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t get_uint(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (MVM_BIGINT_IS_BIG(body)) {
         mp_int *i = body->u.bigint;
@@ -151,7 +151,7 @@ static uint64_t get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, v
     }
 }
 
-static void * get_boxed_ref(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint32_t repr_id) {
+static void * get_boxed_ref(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint32_t repr_id) {
     if (repr_id == MVM_REPR_ID_P6bigint)
         return data;
 
@@ -171,16 +171,16 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
-static void gc_cleanup(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static void gc_cleanup(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (MVM_BIGINT_IS_BIG(body)) {
         mp_clear(body->u.bigint);
@@ -188,7 +188,7 @@ static void gc_cleanup(MVMThreadContext *tc, MVMSTable *st, void *data) {
     }
 }
 
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMP6bigintBody *body = &((MVMP6bigint *)obj)->body;
     if (MVM_BIGINT_IS_BIG(body)) {
         mp_clear(body->u.bigint);
@@ -197,7 +197,7 @@ static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
 }
 
 /* Serializes the bigint. */
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (MVM_BIGINT_IS_BIG(body)) {
         mp_err err;
@@ -230,12 +230,12 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
 }
 
 /* Set the size on the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMP6bigint);
 }
 
 /* Deserializes the bigint. */
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
 
     if (MVM_serialization_read_int(tc, reader) == 1) { /* Is it small int? */
@@ -261,7 +261,7 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (MVM_BIGINT_IS_BIG(body))
         return body->u.bigint->alloc;
@@ -270,7 +270,7 @@ static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) 
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMP6bigint_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMP6bigint_initialize(struct MVMThreadContext *tc) {
     return &P6bigint_this_repr;
 }
 

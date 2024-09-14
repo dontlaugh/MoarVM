@@ -22,14 +22,14 @@ struct MVMSpeshResumeInit {
     uint16_t *init_registers;
 };
 
-size_t MVM_spesh_disp_dispatch_op_info_size(MVMThreadContext *tc,
+size_t MVM_spesh_disp_dispatch_op_info_size(struct MVMThreadContext *tc,
         const MVMOpInfo *base_info, MVMCallsite *callsite);
-void MVM_spesh_disp_initialize_dispatch_op_info(MVMThreadContext *tc,
+void MVM_spesh_disp_initialize_dispatch_op_info(struct MVMThreadContext *tc,
         const MVMOpInfo *base_info, MVMCallsite *cs, MVMOpInfo *dispatch_info);
-size_t MVM_spesh_disp_resumption_op_info_size(MVMThreadContext *tc,
+size_t MVM_spesh_disp_resumption_op_info_size(struct MVMThreadContext *tc,
         MVMDispProgram *dp, uint16_t res_idx);
-MVMOpInfo * MVM_spesh_disp_initialize_resumption_op_info(MVMThreadContext *tc,
+MVMOpInfo * MVM_spesh_disp_initialize_resumption_op_info(struct MVMThreadContext *tc,
         MVMDispProgram *dp, uint16_t res_idx, MVMOpInfo *res_info);
 MVMCallsite * MVM_spesh_disp_callsite_for_dispatch_op(uint16_t opcode, uint8_t *args,
         MVMCompUnit *cu);
-int MVM_spesh_disp_optimize(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshPlanned *p, MVMSpeshIns *ins, MVMSpeshIns **next_ins);
+int MVM_spesh_disp_optimize(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshPlanned *p, MVMSpeshIns *ins, MVMSpeshIns **next_ins);

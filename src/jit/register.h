@@ -23,8 +23,8 @@ typedef struct {
 #define MVM_JIT_REGISTER_HAS_REQUIREMENT(spec) ((spec & 0x80) != 0)
 #define MVM_JIT_REGISTER_REQUIREMENT(spec) (spec & 0x7f)
 
-void MVM_jit_linear_scan_allocate(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTileList *list);
-void MVM_jit_arch_storage_for_arglist(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_linear_scan_allocate(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTileList *list);
+void MVM_jit_arch_storage_for_arglist(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                                       MVMJitExprTree *tree, int32_t arglist_node,
                                       MVMJitStorageRef *storage);
 MVMJitStorageClass MVM_jit_arch_register_class(uint8_t register_id);

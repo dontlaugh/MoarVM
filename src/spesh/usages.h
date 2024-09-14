@@ -48,28 +48,28 @@ struct MVMSpeshDeoptUseEntry {
     MVMSpeshDeoptUseEntry *next;
 };
 
-void MVM_spesh_usages_add(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts, MVMSpeshIns *by);
-void MVM_spesh_usages_add_by_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand used, MVMSpeshIns *by);
-void MVM_spesh_usages_delete(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts, MVMSpeshIns *by);
-void MVM_spesh_usages_delete_by_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand used, MVMSpeshIns *by);
-void MVM_spesh_usages_add_for_handler(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts);
-void MVM_spesh_usages_add_for_handler_by_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand used);
-void MVM_spesh_usages_create_usage(MVMThreadContext *tc, MVMSpeshGraph *g);
-void MVM_spesh_usages_create_deopt_usage(MVMThreadContext *tc, MVMSpeshGraph *g);
-void MVM_spesh_usages_add_deopt_usage(MVMThreadContext *tc, MVMSpeshGraph *g,
+void MVM_spesh_usages_add(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts, MVMSpeshIns *by);
+void MVM_spesh_usages_add_by_reg(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand used, MVMSpeshIns *by);
+void MVM_spesh_usages_delete(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts, MVMSpeshIns *by);
+void MVM_spesh_usages_delete_by_reg(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand used, MVMSpeshIns *by);
+void MVM_spesh_usages_add_for_handler(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts);
+void MVM_spesh_usages_add_for_handler_by_reg(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand used);
+void MVM_spesh_usages_create_usage(struct MVMThreadContext *tc, MVMSpeshGraph *g);
+void MVM_spesh_usages_create_deopt_usage(struct MVMThreadContext *tc, MVMSpeshGraph *g);
+void MVM_spesh_usages_add_deopt_usage(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshFacts *facts, int32_t deopt_idx);
-void MVM_spesh_usages_add_deopt_usage_by_reg(MVMThreadContext *tc, MVMSpeshGraph *g,
+void MVM_spesh_usages_add_deopt_usage_by_reg(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshOperand operand, int32_t deopt_idx);
-void MVM_spesh_usages_add_unconditional_deopt_usage(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts);
-void MVM_spesh_usages_add_unconditional_deopt_usage_by_reg(MVMThreadContext *tc, MVMSpeshGraph *g,
+void MVM_spesh_usages_add_unconditional_deopt_usage(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts);
+void MVM_spesh_usages_add_unconditional_deopt_usage_by_reg(struct MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshOperand operand);
-void MVM_spesh_usages_retain_deopt_index(MVMThreadContext *tc, MVMSpeshGraph *g, uint32_t idx);
-void MVM_spesh_usages_remove_unused_deopt(MVMThreadContext *tc, MVMSpeshGraph *g);
-uint32_t MVM_spesh_usages_is_used(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check);
-uint32_t MVM_spesh_usages_is_used_by_deopt(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check);
-uint32_t MVM_spesh_usages_is_used_by_handler(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check);
-uint32_t MVM_spesh_usages_used_once(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check);
-uint32_t MVM_spesh_usages_count(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check);
+void MVM_spesh_usages_retain_deopt_index(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint32_t idx);
+void MVM_spesh_usages_remove_unused_deopt(struct MVMThreadContext *tc, MVMSpeshGraph *g);
+uint32_t MVM_spesh_usages_is_used(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check);
+uint32_t MVM_spesh_usages_is_used_by_deopt(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check);
+uint32_t MVM_spesh_usages_is_used_by_handler(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check);
+uint32_t MVM_spesh_usages_used_once(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check);
+uint32_t MVM_spesh_usages_count(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check);
 #if MVM_SPESH_CHECK_DU
-void MVM_spesh_usages_check(MVMThreadContext *tc, MVMSpeshGraph *g);
+void MVM_spesh_usages_check(struct MVMThreadContext *tc, MVMSpeshGraph *g);
 #endif

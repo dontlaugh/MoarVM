@@ -95,21 +95,21 @@ typedef struct {
  * end just after one (storing the produced value). Without this, ordering
  * problems can cause two 'atomic' live ranges to be allocated and expired
  * before their actual last use */
-MVM_STATIC_INLINE uint32_t order_nr(uint32_t tile_idx) {
+static inline uint32_t order_nr(uint32_t tile_idx) {
     return tile_idx * 2;
 }
 
 
-MVM_STATIC_INLINE int32_t is_definition(ValueRef *v) {
+static inline int32_t is_definition(ValueRef *v) {
     return (v->value_idx == 0);
 }
 
-MVM_STATIC_INLINE int32_t is_arglist_ref(MVMJitTileList *list, ValueRef *v) {
+static inline int32_t is_arglist_ref(MVMJitTileList *list, ValueRef *v) {
     return (list->items[v->tile_idx]->op == MVM_JIT_ARGLIST);
 }
 
 
-MVM_STATIC_INLINE int32_t live_range_is_empty(LiveRange *range) {
+static inline int32_t live_range_is_empty(LiveRange *range) {
     return (range->first == NULL &&
             range->synthetic[0] == NULL &&
             range->synthetic[1] == NULL);
@@ -244,7 +244,7 @@ static int32_t value_set_union(UnionFind *sets, LiveRange *values, int32_t a, in
 }
 
 
-MVM_STATIC_INLINE void heap_swap(int32_t *heap, int32_t a, int32_t b) {
+static inline void heap_swap(int32_t *heap, int32_t a, int32_t b) {
     int32_t t = heap[a];
     heap[a]    = heap[b];
     heap[b]    = t;
@@ -325,14 +325,14 @@ static int32_t values_cmp_last_ref(LiveRange *values, int32_t a, int32_t b) {
     return values[a].end - values[b].end;
 }
 
-MVM_STATIC_INLINE MVMJitTile * first_tile(MVMJitTileList *list, LiveRange *value) {
+static inline MVMJitTile * first_tile(MVMJitTileList *list, LiveRange *value) {
     return list->items[value->first->tile_idx];
 }
 
 /* TODO - this is an x86-ism, since x86 prefers to have the first operand an
  * input-output operand. So this might need revisiting when the register
  * allocator is ported. */
-static int8_t try_preferred_register(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTile *tile, MVMBitmap reg_perm) {
+static int8_t try_preferred_register(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTile *tile, MVMBitmap reg_perm) {
     /* Tile has at least one operand.
      * That operand is free.
      * It is also of the desired register class */
@@ -343,7 +343,7 @@ static int8_t try_preferred_register(MVMThreadContext *tc, RegisterAllocator *al
 }
 
 /* register assignment logic */
-static int8_t allocate_register(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list, LiveRange *value) {
+static int8_t allocate_register(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list, LiveRange *value) {
     int8_t reg_num = try_preferred_register(tc, alc, first_tile(list, value), value->reg_perm);
     if (reg_num < 0)
         reg_num = MVM_FFS(alc->reg_free & value->reg_perm) - 1;
@@ -352,12 +352,12 @@ static int8_t allocate_register(MVMThreadContext *tc, RegisterAllocator *alc, MV
     return reg_num;
 }
 
-static void free_register(MVMThreadContext *tc, RegisterAllocator *alc, uint8_t reg_num) {
+static void free_register(struct MVMThreadContext *tc, RegisterAllocator *alc, uint8_t reg_num) {
     assert(!MVM_bitmap_get_low(alc->reg_free, reg_num));
     MVM_bitmap_set_low(&alc->reg_free, reg_num);
 }
 
-static void assign_register(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
+static void assign_register(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
                      int32_t lv, uint8_t reg_num) {
     /* What to do here:
      * - update tiles using this live range to refer to this register
@@ -387,7 +387,7 @@ static void assign_register(MVMThreadContext *tc, RegisterAllocator *alc, MVMJit
 }
 
 
-MVM_STATIC_INLINE void close_hole(RegisterAllocator *alc, int32_t ref, uint32_t tile_idx) {
+static inline void close_hole(RegisterAllocator *alc, int32_t ref, uint32_t tile_idx) {
     LiveRange *v = alc->values + ref;
     if (v->holes && v->holes->start < order_nr(tile_idx)) {
         v->holes->start = order_nr(tile_idx);
@@ -395,7 +395,7 @@ MVM_STATIC_INLINE void close_hole(RegisterAllocator *alc, int32_t ref, uint32_t 
     }
 }
 
-MVM_STATIC_INLINE void open_hole(RegisterAllocator *alc, int32_t ref, uint32_t tile_idx) {
+static inline void open_hole(RegisterAllocator *alc, int32_t ref, uint32_t tile_idx) {
     LiveRange *v = alc->values + ref;
     if (v->start < order_nr(tile_idx) &&
         (v->holes == NULL || v->holes->start > order_nr(tile_idx))) {
@@ -413,7 +413,7 @@ MVM_STATIC_INLINE void open_hole(RegisterAllocator *alc, int32_t ref, uint32_t t
  * rather than do a full spill, in the not-so-rare case that many of the live
  * values will be temporaries and the call is only necessary in a branch */
 
-static void find_holes(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list) {
+static void find_holes(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list) {
     int32_t i, j;
     uint32_t k;
 
@@ -497,7 +497,7 @@ static void find_holes(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileL
 }
 
 
-static void determine_live_ranges(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list) {
+static void determine_live_ranges(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list) {
     uint32_t i, j;
     int32_t num_phi = 0; /* pessimistic but correct upper bound of number of holes */
     MVMJitExprTree *tree = list->tree;
@@ -605,7 +605,7 @@ static void determine_live_ranges(MVMThreadContext *tc, RegisterAllocator *alc, 
 }
 
 /* The code below needs some thinking... */
-static void active_set_add(MVMThreadContext *tc, RegisterAllocator *alc, int32_t a) {
+static void active_set_add(struct MVMThreadContext *tc, RegisterAllocator *alc, int32_t a) {
     /* the original linear-scan heuristic for spilling is to take the last value
      * in the set to expire, freeeing up the largest extent of code... that is a
      * reasonably good heuristic, albeit not essential to the concept of linear
@@ -633,7 +633,7 @@ static void active_set_add(MVMThreadContext *tc, RegisterAllocator *alc, int32_t
 
 
 /* Take live ranges from active_set whose last use was after position and append them to the retired list */
-static void active_set_expire(MVMThreadContext *tc, RegisterAllocator *alc, uint32_t order_nr) {
+static void active_set_expire(struct MVMThreadContext *tc, RegisterAllocator *alc, uint32_t order_nr) {
     uint32_t i;
     for (i = 0; i < alc->active_top; i++) {
         int32_t v = alc->active[i];
@@ -658,7 +658,7 @@ static void active_set_expire(MVMThreadContext *tc, RegisterAllocator *alc, uint
 }
 
 /* Compute the earliest live range that is still active. */
-static int32_t earliest_active_value(MVMThreadContext *tc, RegisterAllocator *alc, uint32_t tile_order_nr) {
+static int32_t earliest_active_value(struct MVMThreadContext *tc, RegisterAllocator *alc, uint32_t tile_order_nr) {
     /* can we cache this, and does it make sense to do so? */
     uint32_t i;
     for (i = 0; i < alc->active_top; i++) {
@@ -667,7 +667,7 @@ static int32_t earliest_active_value(MVMThreadContext *tc, RegisterAllocator *al
     return tile_order_nr;
 }
 
-static void active_set_splice(MVMThreadContext *tc, RegisterAllocator *alc, uint32_t to_splice) {
+static void active_set_splice(struct MVMThreadContext *tc, RegisterAllocator *alc, uint32_t to_splice) {
     int32_t i ;
     /* find (reverse, because it's usually the last); predecrement alc->active_top because we're removing one item */
     for (i = --alc->active_top; i >= 0; i--) {
@@ -681,7 +681,7 @@ static void active_set_splice(MVMThreadContext *tc, RegisterAllocator *alc, uint
     }
 }
 
-static void spill_set_release(MVMThreadContext *tc, RegisterAllocator *alc, uint32_t order_nr) {
+static void spill_set_release(struct MVMThreadContext *tc, RegisterAllocator *alc, uint32_t order_nr) {
     while (alc->spilled_num > 0 && alc->values[alc->spilled[0]].end <= order_nr) {
         int32_t spilled = live_range_heap_pop(alc->values, alc->spilled, &alc->spilled_num,
                                                values_cmp_last_ref);
@@ -692,7 +692,7 @@ static void spill_set_release(MVMThreadContext *tc, RegisterAllocator *alc, uint
     }
 }
 
-static int32_t insert_load_before_use(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
+static int32_t insert_load_before_use(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
                                        ValueRef *ref, int32_t load_pos) {
     int32_t n = live_range_init(alc);
     MVMJitTile *tile = MVM_jit_tile_make(tc, alc->compiler, MVM_jit_compile_load, 2, 1,
@@ -708,7 +708,7 @@ static int32_t insert_load_before_use(MVMThreadContext *tc, RegisterAllocator *a
     return n;
 }
 
-static int32_t insert_store_after_definition(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
+static int32_t insert_store_after_definition(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
                                               ValueRef *ref, int32_t store_pos) {
     int32_t n       = live_range_init(alc);
     MVMJitTile *tile = MVM_jit_tile_make(tc, alc->compiler, MVM_jit_compile_store, 2, 2,
@@ -724,7 +724,7 @@ static int32_t insert_store_after_definition(MVMThreadContext *tc, RegisterAlloc
     return n;
 }
 
-static uint32_t select_live_range_for_spill(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list, int32_t code_pos, MVMBitmap reg_perm) {
+static uint32_t select_live_range_for_spill(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list, int32_t code_pos, MVMBitmap reg_perm) {
     int i;
     for (i = alc->active_top - 1; i >= 0; i--) {
         LiveRange *r = alc->values + alc->active[i];
@@ -735,7 +735,7 @@ static uint32_t select_live_range_for_spill(MVMThreadContext *tc, RegisterAlloca
 }
 
 
-static void live_range_spill(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
+static void live_range_spill(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
                              uint32_t to_spill, uint32_t spill_pos, uint32_t code_pos) {
 
     int8_t reg_spilled = alc->values[to_spill].reg_num;
@@ -790,7 +790,7 @@ static void live_range_spill(MVMThreadContext *tc, RegisterAllocator *alc, MVMJi
 }
 
 
-static void prepare_arglist_and_call(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
+static void prepare_arglist_and_call(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
                                      int32_t arglist_idx, int32_t call_idx) {
     MVMJitTile *arglist_tile = list->items[arglist_idx],
                   *call_tile = list->items[call_idx];
@@ -1021,7 +1021,7 @@ static void prepare_arglist_and_call(MVMThreadContext *tc, RegisterAllocator *al
     }
 }
 
-MVM_STATIC_INLINE void process_tile(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list, uint32_t tile_cursor) {
+static inline void process_tile(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list, uint32_t tile_cursor) {
     MVMJitTile *tile = list->items[tile_cursor];
 
     if (tile->op == MVM_JIT_ARGLIST) {
@@ -1064,7 +1064,7 @@ MVM_STATIC_INLINE void process_tile(MVMThreadContext *tc, RegisterAllocator *alc
     }
 }
 
-static void process_live_range(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list, int32_t v) {
+static void process_live_range(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list, int32_t v) {
     int8_t reg;
     uint32_t tile_order_nr = alc->values[v].start;
     MVMBitmap reg_perm = alc->values[v].reg_perm;
@@ -1089,7 +1089,7 @@ static void process_live_range(MVMThreadContext *tc, RegisterAllocator *alc, MVM
 
 }
 
-static void linear_scan(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list) {
+static void linear_scan(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list) {
     uint32_t tile_cursor = 0;
     MVM_VECTOR_INIT(alc->retired, alc->worklist_num);
     MVM_VECTOR_INIT(alc->spilled, 8);
@@ -1126,7 +1126,7 @@ static void linear_scan(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTile
 }
 
 /* Edit the assigned registers and insert copies to enforce the register requirements */
-static void enforce_operand_requirements(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list) {
+static void enforce_operand_requirements(struct MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list) {
 #define MVM_JIT_ARCH_X64 1
 #if MVM_JIT_ARCH == MVM_JIT_ARCH_X64
     uint32_t i;
@@ -1179,7 +1179,7 @@ static void enforce_operand_requirements(MVMThreadContext *tc, RegisterAllocator
 
 
 
-void MVM_jit_linear_scan_allocate(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTileList *list) {
+void MVM_jit_linear_scan_allocate(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTileList *list) {
     RegisterAllocator alc;
     /* initialize allocator */
     alc.compiler = compiler;

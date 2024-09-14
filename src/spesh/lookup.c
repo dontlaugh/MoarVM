@@ -10,15 +10,15 @@
 
 /* Tries to get the HOW (meta-object) of an object - but only if it's already
  * available (e.g. deserialized). In the case it's not, returns NULL. */
-MVMObject * MVM_spesh_try_get_how(MVMThreadContext *tc, MVMObject *obj) {
+MVMObject * MVM_spesh_try_get_how(struct MVMThreadContext *tc, MVMObject *obj) {
     return STABLE(obj)->HOW;
 }
 
-int8_t MVM_spesh_get_reg_type(MVMThreadContext *tc, MVMSpeshGraph *sg, uint16_t reg) {
+int8_t MVM_spesh_get_reg_type(struct MVMThreadContext *tc, MVMSpeshGraph *sg, uint16_t reg) {
     return sg->local_types ? sg->local_types[reg] : sg->sf->body.local_types[reg];
 }
 
-int8_t MVM_spesh_get_lex_type(MVMThreadContext *tc, MVMSpeshGraph *sg, uint16_t outers, uint16_t idx) {
+int8_t MVM_spesh_get_lex_type(struct MVMThreadContext *tc, MVMSpeshGraph *sg, uint16_t outers, uint16_t idx) {
     if (outers == 0) {
         return sg->lexical_types ? sg->lexical_types[idx] : sg->sf->body.lexical_types[idx];
     } else {
@@ -28,7 +28,7 @@ int8_t MVM_spesh_get_lex_type(MVMThreadContext *tc, MVMSpeshGraph *sg, uint16_t 
     }
 }
 
-uint8_t MVM_spesh_get_opr_type(MVMThreadContext *tc, MVMSpeshGraph *sg, MVMSpeshIns *ins, int32_t i) {
+uint8_t MVM_spesh_get_opr_type(struct MVMThreadContext *tc, MVMSpeshGraph *sg, MVMSpeshIns *ins, int32_t i) {
     MVMSpeshOperand opr = ins->operands[i];
     uint8_t opr_kind = ins->info->operands[i];
     uint8_t opr_type = opr_kind & MVM_operand_type_mask;

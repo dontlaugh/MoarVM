@@ -5,7 +5,7 @@ static const MVMREPROps MVMStaticFrame_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. Also sets the invocation protocol handler in the STable. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &MVMStaticFrame_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,7 +18,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMStaticFrameBody *src_body  = (MVMStaticFrameBody *)src;
     MVMStaticFrameBody *dest_body = (MVMStaticFrameBody *)dest;
 
@@ -122,7 +122,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 }
 
 /* Adds held objects to the GC worklist. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMStaticFrameBody *body = (MVMStaticFrameBody *)data;
 
     /* mvmobjects */
@@ -171,7 +171,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMStaticFrame *sf = (MVMStaticFrame *)obj;
     MVMStaticFrameBody *body = &sf->body;
     if (body->orig_bytecode != body->bytecode) {
@@ -206,18 +206,18 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     /* XXX in the end we'll support inlining of this... */
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMStaticFrameBody *body = (MVMStaticFrameBody *)data;
     uint64_t size = 0;
 
@@ -255,7 +255,7 @@ static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) 
     return size;
 }
 
-static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
+static void describe_refs(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
     MVMStaticFrameBody *body = (MVMStaticFrameBody *)data;
 
     static uint64_t cache_1 = 0;
@@ -308,7 +308,7 @@ static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTa
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMStaticFrame_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMStaticFrame_initialize(struct MVMThreadContext *tc) {
     return &MVMStaticFrame_this_repr;
 }
 
@@ -343,7 +343,7 @@ static const MVMREPROps MVMStaticFrame_this_repr = {
 };
 
 
-char * MVM_staticframe_file_location(MVMThreadContext *tc, MVMStaticFrame *sf) {
+char * MVM_staticframe_file_location(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     MVMBytecodeAnnotation *ann = MVM_bytecode_resolve_annotation(tc, &sf->body, 0);
     MVMCompUnit *cu = sf->body.cu;
     uint32_t          str_idx = ann ? ann->filename_string_heap_index : 0;
@@ -364,7 +364,7 @@ char * MVM_staticframe_file_location(MVMThreadContext *tc, MVMStaticFrame *sf) {
 /* We could change this code (and bytecode.c) to lazily only build the lookup
  * hash on the first lookup. I don't have a feel for how often no lookups are
  * made, and hence whether the added complexity would be much of a saving. */
-uint32_t MVM_get_lexical_by_name(MVMThreadContext *tc, MVMStaticFrame *sf, MVMString *name) {
+uint32_t MVM_get_lexical_by_name(struct MVMThreadContext *tc, MVMStaticFrame *sf, MVMString *name) {
     /* deserialize_frames in bytecode.c doesn't create the lookup hash if there
      * are only a small number of lexicals in this frame. */
     if (MVM_index_hash_built(tc, &sf->body.lexical_names)) {

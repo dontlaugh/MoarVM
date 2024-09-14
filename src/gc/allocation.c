@@ -7,7 +7,7 @@
 
 /* Allocate the specified amount of memory from the nursery. Will
  * trigger a GC run if there is not enough. */
-void * MVM_gc_allocate_nursery(MVMThreadContext *tc, size_t size) {
+void * MVM_gc_allocate_nursery(struct MVMThreadContext *tc, size_t size) {
     void *allocated;
     /* objects in the nursery must be aligned, so we pad at the end. The
      * assumption that they are aligned is also encoded in the collector */
@@ -52,7 +52,7 @@ void * MVM_gc_allocate_nursery(MVMThreadContext *tc, size_t size) {
 
 /* Allocates a new STable, based on the specified thread context, REPR
  * and meta-object. */
-MVMSTable * MVM_gc_allocate_stable(MVMThreadContext *tc, const MVMREPROps *repr, MVMObject *how) {
+MVMSTable * MVM_gc_allocate_stable(struct MVMThreadContext *tc, const MVMREPROps *repr, MVMObject *how) {
     MVMSTable *st;
     MVMROOT(tc, how) {
         st                = MVM_gc_allocate_zeroed(tc, sizeof(MVMSTable));
@@ -68,7 +68,7 @@ MVMSTable * MVM_gc_allocate_stable(MVMThreadContext *tc, const MVMREPROps *repr,
 }
 
 /* Allocates a new type object. */
-MVMObject * MVM_gc_allocate_type_object(MVMThreadContext *tc, MVMSTable *st) {
+MVMObject * MVM_gc_allocate_type_object(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMObject *obj;
     MVMROOT(tc, st) {
         obj                = MVM_gc_allocate_zeroed(tc, sizeof(MVMObject));
@@ -81,7 +81,7 @@ MVMObject * MVM_gc_allocate_type_object(MVMThreadContext *tc, MVMSTable *st) {
 }
 
 /* Allocates a new object, and points it at the specified STable. */
-MVMObject * MVM_gc_allocate_object(MVMThreadContext *tc, MVMSTable *st) {
+MVMObject * MVM_gc_allocate_object(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMObject *obj;
     MVMROOT(tc, st) {
         obj               = MVM_gc_allocate_zeroed(tc, st->size);
@@ -95,7 +95,7 @@ MVMObject * MVM_gc_allocate_object(MVMThreadContext *tc, MVMSTable *st) {
 }
 
 /* Allocates a new heap frame. */
-MVMFrame * MVM_gc_allocate_frame(MVMThreadContext *tc) {
+MVMFrame * MVM_gc_allocate_frame(struct MVMThreadContext *tc) {
     MVMFrame *f = MVM_gc_allocate_zeroed(tc, sizeof(MVMFrame));
     f->header.flags1 = MVM_CF_FRAME;
     f->header.size   = sizeof(MVMFrame);

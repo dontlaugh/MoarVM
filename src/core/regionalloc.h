@@ -22,6 +22,6 @@ struct MVMRegionAlloc {
 #define MVM_REGIONALLOC_FIRST_MEMBLOCK_SIZE 32768
 #define MVM_REGIONALLOC_MEMBLOCK_SIZE       8192
 
-void * MVM_region_alloc(MVMThreadContext *tc, MVMRegionAlloc *alloc, size_t s);
-void MVM_region_destroy(MVMThreadContext *tc, MVMRegionAlloc *alloc);
-void MVM_region_merge(MVMThreadContext *tc,  MVMRegionAlloc *target, MVMRegionAlloc *source);
+void * MVM_region_alloc(struct MVMThreadContext *tc, MVMRegionAlloc *alloc, size_t s);
+void MVM_region_destroy(struct MVMThreadContext *tc, MVMRegionAlloc *alloc);
+void MVM_region_merge(struct MVMThreadContext *tc,  MVMRegionAlloc *target, MVMRegionAlloc *source);

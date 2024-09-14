@@ -2,7 +2,7 @@
 
 #define UNI_MIN_SIZE_BASE_2 3
 
-MVM_STATIC_INLINE void hash_demolish_internal(MVMThreadContext *tc,
+static inline void hash_demolish_internal(struct MVMThreadContext *tc,
                                               struct MVMUniHashTableControl *control) {
     size_t allocated_items = MVM_uni_hash_allocated_items(control);
     size_t entries_size = sizeof(struct MVMUniHashEntry) * allocated_items;
@@ -12,7 +12,7 @@ MVM_STATIC_INLINE void hash_demolish_internal(MVMThreadContext *tc,
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
    which you allocated (heap, stack, inside another struct, wherever) */
-void MVM_uni_hash_demolish(MVMThreadContext *tc, MVMUniHashTable *hashtable) {
+void MVM_uni_hash_demolish(struct MVMThreadContext *tc, MVMUniHashTable *hashtable) {
     struct MVMUniHashTableControl *control = hashtable->table;
     if (!control)
         return;
@@ -22,7 +22,7 @@ void MVM_uni_hash_demolish(MVMThreadContext *tc, MVMUniHashTable *hashtable) {
 /* and then free memory if you allocated it */
 
 
-MVM_STATIC_INLINE struct MVMUniHashTableControl *hash_allocate_common(MVMThreadContext *tc,
+static inline struct MVMUniHashTableControl *hash_allocate_common(struct MVMThreadContext *tc,
                                                                       uint8_t official_size_log2) {
     uint32_t official_size = 1 << (uint32_t)official_size_log2;
     uint32_t max_items = official_size * MVM_UNI_HASH_LOAD_FACTOR;
@@ -59,7 +59,7 @@ MVM_STATIC_INLINE struct MVMUniHashTableControl *hash_allocate_common(MVMThreadC
     return control;
 }
 
-void MVM_uni_hash_build(MVMThreadContext *tc,
+void MVM_uni_hash_build(struct MVMThreadContext *tc,
                         MVMUniHashTable *hashtable,
                         uint32_t entries) {
     uint32_t initial_size_base2;
@@ -80,7 +80,7 @@ void MVM_uni_hash_build(MVMThreadContext *tc,
 
 static uint64_t uni_hash_fsck_internal(struct MVMUniHashTableControl *control, uint32_t mode);
 
-MVM_STATIC_INLINE struct MVMUniHashEntry *hash_insert_internal(MVMThreadContext *tc,
+static inline struct MVMUniHashEntry *hash_insert_internal(struct MVMThreadContext *tc,
                                                                struct MVMUniHashTableControl *control,
                                                                const char *key,
                                                                uint32_t hash_val) {
@@ -186,7 +186,7 @@ MVM_STATIC_INLINE struct MVMUniHashEntry *hash_insert_internal(MVMThreadContext 
     }
 }
 
-static struct MVMUniHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
+static struct MVMUniHashTableControl *maybe_grow_hash(struct MVMThreadContext *tc,
                                                       struct MVMUniHashTableControl *control) {
     /* control->max_items may have been set to 0 to trigger a call into this
      * function. */
@@ -273,7 +273,7 @@ static struct MVMUniHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
 }
 
 /* I think that we are going to expose this soon. */
-MVM_STATIC_INLINE void *MVM_uni_hash_lvalue_fetch(MVMThreadContext *tc,
+static inline void *MVM_uni_hash_lvalue_fetch(struct MVMThreadContext *tc,
                                                   MVMUniHashTable *hashtable,
                                                   const char *key) {
     struct MVMUniHashTableControl *control = hashtable->table;
@@ -307,7 +307,7 @@ MVM_STATIC_INLINE void *MVM_uni_hash_lvalue_fetch(MVMThreadContext *tc,
  * Doesn't check if the key already exists. Use with care.
  * (well that's the official line. As you can see, the XXX suggests we currently
  * don't exploit the documented freedom.) */
-void MVM_uni_hash_insert(MVMThreadContext *tc,
+void MVM_uni_hash_insert(struct MVMThreadContext *tc,
                          MVMUniHashTable *hashtable,
                          const char *key,
                          int32_t value) {

@@ -5,7 +5,7 @@ static const MVMREPROps MVMIter_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &MVMIter_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,18 +18,18 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot copy object with representation VMIter");
 }
 
 /* Adds held objects to the GC worklist. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMIterBody  *body  = (MVMIterBody *)data;
     MVM_gc_worklist_add(tc, worklist, &body->target);
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
 }
 
 static const MVMStorageSpec storage_spec = {
@@ -42,11 +42,11 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
-static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
+static void shift(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     MVMIterBody *body = (MVMIterBody *)data;
     MVMObject *target = body->target;
     switch (body->mode) {
@@ -138,10 +138,10 @@ static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *da
 
 /* This whole splice optimization can be optimized for the case we have two
  * MVMIter representation objects. */
-static void isplice(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *from, int64_t offset, uint64_t count) {
+static void isplice(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *from, int64_t offset, uint64_t count) {
 }
 
-static MVMStorageSpec get_elem_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static MVMStorageSpec get_elem_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMStorageSpec spec;
     spec.inlineable      = MVM_STORAGE_SPEC_REFERENCE;
     spec.boxed_primitive = MVM_STORAGE_SPEC_BP_NONE;
@@ -153,17 +153,17 @@ static MVMStorageSpec get_elem_storage_spec(MVMThreadContext *tc, MVMSTable *st)
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* XXX element type supplied through this... */
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMIter);
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMIter_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMIter_initialize(struct MVMThreadContext *tc) {
     return &MVMIter_this_repr;
 }
 
@@ -216,7 +216,7 @@ static const MVMREPROps MVMIter_this_repr = {
     NULL, /* describe_refs */
 };
 
-MVMObject * MVM_iter(MVMThreadContext *tc, MVMObject *target) {
+MVMObject * MVM_iter(struct MVMThreadContext *tc, MVMObject *target) {
     MVMIter *iterator;
     if (!IS_CONCRETE(target)) {
         MVM_exception_throw_adhoc(tc, "Cannot iterate over a %s type object", MVM_6model_get_debug_name(tc, target));
@@ -257,7 +257,7 @@ MVMObject * MVM_iter(MVMThreadContext *tc, MVMObject *target) {
     return (MVMObject *)iterator;
 }
 
-int64_t MVM_iter_istrue(MVMThreadContext *tc, MVMIter *iter) {
+int64_t MVM_iter_istrue(struct MVMThreadContext *tc, MVMIter *iter) {
     switch (iter->body.mode) {
         case MVM_ITER_MODE_ARRAY:
         case MVM_ITER_MODE_ARRAY_INT:
@@ -273,7 +273,7 @@ int64_t MVM_iter_istrue(MVMThreadContext *tc, MVMIter *iter) {
     }
 }
 
-MVMString * MVM_iterkey_s(MVMThreadContext *tc, MVMIter *iterator) {
+MVMString * MVM_iterkey_s(struct MVMThreadContext *tc, MVMIter *iterator) {
     if (REPR(iterator)->ID != MVM_REPR_ID_MVMIter
             || iterator->body.mode != MVM_ITER_MODE_HASH)
         MVM_exception_throw_adhoc(tc, "This is not a hash iterator, it's a %s (%s)", REPR(iterator)->name, MVM_6model_get_debug_name(tc, (MVMObject *)iterator));
@@ -297,7 +297,7 @@ MVMString * MVM_iterkey_s(MVMThreadContext *tc, MVMIter *iterator) {
     return entry->hash_handle.key;
 }
 
-MVMObject * MVM_iterval(MVMThreadContext *tc, MVMIter *iterator) {
+MVMObject * MVM_iterval(struct MVMThreadContext *tc, MVMIter *iterator) {
     MVMIterBody *body;
     MVMObject *target;
     MVMRegister result;

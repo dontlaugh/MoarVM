@@ -46,7 +46,7 @@ static int32_t gb18030_valid_check_len4_first2(int32_t c_1, int32_t c_2) {
     return (((0x81 <= c_1 && c_1 <= 0x83) || (c_1 == 0x84 && c_2 == 0x30)) && (0x30 <= c_2 && c_2 <= 0x39))	|| (c_1 == 0x84 && c_2 == 0x31);
 }
 
-MVMString * MVM_string_gb18030_decode(MVMThreadContext *tc, const MVMObject *result_type, const char *gb18030_char, size_t bytes) {
+MVMString * MVM_string_gb18030_decode(struct MVMThreadContext *tc, const MVMObject *result_type, const char *gb18030_char, size_t bytes) {
     uint8_t *gb18030 = (uint8_t*)gb18030_char;
     size_t i, result_graphs;
 
@@ -110,7 +110,7 @@ MVMString * MVM_string_gb18030_decode(MVMThreadContext *tc, const MVMObject *res
     return result;
 }
 
-uint32_t MVM_string_gb18030_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_gb18030_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                          const uint32_t *stopper_chars, MVMDecodeStreamSeparators *seps) {
     uint32_t count = 0, total = 0;
     uint32_t bufsize;
@@ -263,7 +263,7 @@ done:
     return reached_stopper;
 }
 
-char * MVM_string_gb18030_encode_substr(MVMThreadContext *tc, MVMString *str,
+char * MVM_string_gb18030_encode_substr(struct MVMThreadContext *tc, MVMString *str,
                                        uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement,
                                        int32_t translate_newlines) {
 

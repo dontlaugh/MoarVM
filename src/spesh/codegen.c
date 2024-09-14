@@ -81,7 +81,7 @@ static void write_num64(SpeshWriterState *ws, double value) {
 }
 
 /* Deopt user retention logic for the sake of inlining. */
-static void collect_deopt_users(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand from,
+static void collect_deopt_users(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand from,
         AllDeoptUsers *all_deopt_users) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, from);
     MVMSpeshDeoptUseEntry *deopt_users = facts->usage.deopt_users;
@@ -111,7 +111,7 @@ static void collect_deopt_users(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpesh
 }
 
 /* Writes instructions within a basic block boundary. */
-static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWriterState *ws, MVMSpeshBB *bb) {
+static void write_instructions(struct MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWriterState *ws, MVMSpeshBB *bb) {
     MVMSpeshIns *ins = bb->first_ins;
     while (ins) {
         int32_t i;
@@ -389,7 +389,7 @@ static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWrit
 }
 
 /* Generate bytecode from a spesh graph. */
-MVMSpeshCode * MVM_spesh_codegen(MVMThreadContext *tc, MVMSpeshGraph *g) {
+MVMSpeshCode * MVM_spesh_codegen(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshCode *res;
     MVMSpeshBB   *bb;
     uint32_t     i, hanlen;

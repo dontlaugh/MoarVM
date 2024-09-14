@@ -1,6 +1,9 @@
 #include "moar.h"
 #include "platform/random.h"
 #include "core/jfs64.h"
+// #include "types.h"
+// #include "6model/reprs/P6bigint.h"
+#include "tommath.h"
 
 #define MANTISSA_BITS_IN_DOUBLE 53
 #define EXPONENT_SHIFT 52
@@ -17,7 +20,7 @@
     #define MIN(x,y) ((x)<(y)?(x):(y))
 #endif
 
-MVM_STATIC_INLINE void adjust_nursery(MVMThreadContext *tc, MVMP6bigintBody *body) {
+static inline void adjust_nursery(struct MVMThreadContext *tc, MVMP6bigintBody *body) {
     if (MVM_BIGINT_IS_BIG(body)) {
         int used = body->u.bigint->used;
         int adjustment = MIN(used, 32768) & ~0x7;
@@ -29,7 +32,7 @@ MVM_STATIC_INLINE void adjust_nursery(MVMThreadContext *tc, MVMP6bigintBody *bod
 
 /* Returns the body of a P6bigint, containing the bigint/smallint union, for
  * operations that want to explicitly handle the two. */
-static MVMP6bigintBody * get_bigint_body(MVMThreadContext *tc, MVMObject *obj) {
+static MVMP6bigintBody * get_bigint_body(struct MVMThreadContext *tc, MVMObject *obj) {
     if (IS_CONCRETE(obj))
         return (MVMP6bigintBody *)REPR(obj)->box_funcs.get_boxed_ref(tc,
             STABLE(obj), obj, OBJECT_BODY(obj), MVM_REPR_ID_P6bigint);
@@ -47,7 +50,7 @@ static int can_be_smallint(const mp_int *i) {
 
 /* Forces a bigint, even if we only have a smallint. Takes a parameter that
  * indicates where to allocate a temporary mp_int if needed. */
-static mp_int * force_bigint(MVMThreadContext *tc, const MVMP6bigintBody *body, int idx) {
+static mp_int * force_bigint(struct MVMThreadContext *tc, const MVMP6bigintBody *body, int idx) {
     if (MVM_BIGINT_IS_BIG(body)) {
         return body->u.bigint;
     }
@@ -67,7 +70,7 @@ static mp_int * force_bigint(MVMThreadContext *tc, const MVMP6bigintBody *body, 
 
 /* Stores an int64 in a bigint result body, either as a 32-bit smallint if it
  * is in range, or a big integer if not. */
-static void store_int64_result(MVMThreadContext *tc, MVMP6bigintBody *body, int64_t result) {
+static void store_int64_result(struct MVMThreadContext *tc, MVMP6bigintBody *body, int64_t result) {
     if (MVM_IS_32BIT_INT(result)) {
         body->u.smallint.flag = MVM_BIGINT_32_FLAG;
         body->u.smallint.value = (int32_t)result;
@@ -110,7 +113,7 @@ static void store_bigint_result(MVMP6bigintBody *body, mp_int *i) {
  * eventually passing it here, but since it can't catch any of the below exceptions, we
  * need to clean it up in that case.
  */
-static void grow_and_negate(MVMThreadContext *tc, const mp_int *a, int size, mp_int *b, mp_int *c) {
+static void grow_and_negate(struct MVMThreadContext *tc, const mp_int *a, int size, mp_int *b, mp_int *c) {
     mp_err err;
     int i;
     /* Always add an extra DIGIT so we can tell positive values
@@ -144,7 +147,7 @@ static void grow_and_negate(MVMThreadContext *tc, const mp_int *a, int size, mp_
 
 /* The callers of this create `c` via MVM_malloc() and mp_init() before passing it here, but
  * since they can't catch any of the below exceptions, we need to clean it up in that case. */
-static void two_complement_bitop(MVMThreadContext *tc, mp_int *a, mp_int *b, mp_int *c,
+static void two_complement_bitop(struct MVMThreadContext *tc, mp_int *a, mp_int *b, mp_int *c,
                                  mp_err (*mp_bitop)(const mp_int *, const mp_int *, mp_int *)) {
 
     mp_err err;
@@ -209,7 +212,7 @@ static void two_complement_bitop(MVMThreadContext *tc, mp_int *a, mp_int *b, mp_
 
 /* Both callers of this create `result` via MVM_malloc() and mp_init() before passing it here, but
  * since they can't catch any of the below exceptions, we need to clean it up in that case. */
-static void two_complement_shl(MVMThreadContext *tc, mp_int *result, mp_int *value, int64_t count) {
+static void two_complement_shl(struct MVMThreadContext *tc, mp_int *result, mp_int *value, int64_t count) {
     mp_err err;
     if (count >= 0) {
         if ((err = mp_mul_2d(value, count, result)) != MP_OKAY) {
@@ -248,7 +251,7 @@ static void two_complement_shl(MVMThreadContext *tc, mp_int *result, mp_int *val
 }
 
 #define MVM_BIGINT_UNARY_OP(opname, SMALLINT_OP) \
-MVMObject * MVM_bigint_##opname(MVMThreadContext *tc, MVMObject *result_type, MVMObject *source) { \
+MVMObject * MVM_bigint_##opname(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *source) { \
     MVMP6bigintBody *bb; \
     MVMObject *result; \
     MVMROOT(tc, source) { \
@@ -287,7 +290,7 @@ MVMObject * MVM_bigint_##opname(MVMThreadContext *tc, MVMObject *result_type, MV
 }
 
 #define MVM_BIGINT_BINARY_OP(opname) \
-MVMObject * MVM_bigint_##opname(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) { \
+MVMObject * MVM_bigint_##opname(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) { \
     MVMP6bigintBody *ba, *bb, *bc; \
     MVMObject *result; \
     mp_err err; \
@@ -316,7 +319,7 @@ MVMObject * MVM_bigint_##opname(MVMThreadContext *tc, MVMObject *result_type, MV
 }
 
 #define MVM_BIGINT_BINARY_OP_SIMPLE(opname, SMALLINT_OP) \
-void MVM_bigint_fallback_##opname(MVMThreadContext *tc, MVMP6bigintBody *ba, MVMP6bigintBody *bb, \
+void MVM_bigint_fallback_##opname(struct MVMThreadContext *tc, MVMP6bigintBody *ba, MVMP6bigintBody *bb, \
                                   MVMP6bigintBody *bc) { \
     mp_err err; \
     mp_int *ia, *ib, *ic; \
@@ -335,7 +338,7 @@ void MVM_bigint_fallback_##opname(MVMThreadContext *tc, MVMP6bigintBody *ba, MVM
     store_bigint_result(bc, ic); \
     adjust_nursery(tc, bc); \
 } \
-MVMObject * MVM_bigint_##opname(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) { \
+MVMObject * MVM_bigint_##opname(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) { \
     MVMP6bigintBody *ba, *bb, *bc; \
     MVMObject *result; \
     ba = get_bigint_body(tc, a); \
@@ -380,7 +383,7 @@ MVMObject * MVM_bigint_##opname(MVMThreadContext *tc, MVMObject *result_type, MV
 }
 
 #define MVM_BIGINT_BINARY_OP_2(opname, SMALLINT_OP) \
-MVMObject * MVM_bigint_##opname(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) { \
+MVMObject * MVM_bigint_##opname(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) { \
     MVMObject *result; \
     MVMROOT2(tc, a, b) { \
         result = MVM_repr_alloc_init(tc, result_type);\
@@ -424,7 +427,7 @@ MVM_BIGINT_BINARY_OP_SIMPLE(sub, { sc = sa - sb; })
 MVM_BIGINT_BINARY_OP_SIMPLE(mul, { sc = sa * sb; })
 MVM_BIGINT_BINARY_OP(lcm)
 
-MVMObject *MVM_bigint_gcd(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) {
+MVMObject *MVM_bigint_gcd(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) {
     MVMObject       *result;
 
     MVMROOT2(tc, a, b) {
@@ -474,7 +477,7 @@ MVM_BIGINT_BINARY_OP_2(or , { sc = sa | sb; })
 MVM_BIGINT_BINARY_OP_2(xor, { sc = sa ^ sb; })
 MVM_BIGINT_BINARY_OP_2(and, { sc = sa & sb; })
 
-int64_t MVM_bigint_cmp(MVMThreadContext *tc, MVMObject *a, MVMObject *b) {
+int64_t MVM_bigint_cmp(struct MVMThreadContext *tc, MVMObject *a, MVMObject *b) {
     MVMP6bigintBody *ba = get_bigint_body(tc, a);
     MVMP6bigintBody *bb = get_bigint_body(tc, b);
     if (MVM_BIGINT_IS_BIG(ba) || MVM_BIGINT_IS_BIG(bb)) {
@@ -490,7 +493,7 @@ int64_t MVM_bigint_cmp(MVMThreadContext *tc, MVMObject *a, MVMObject *b) {
     }
 }
 
-MVMObject * MVM_bigint_mod(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) {
+MVMObject * MVM_bigint_mod(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) {
 
     MVMObject *result;
 
@@ -534,7 +537,7 @@ MVMObject * MVM_bigint_mod(MVMThreadContext *tc, MVMObject *result_type, MVMObje
     return result;
 }
 
-MVMObject *MVM_bigint_div(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) {
+MVMObject *MVM_bigint_div(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b) {
     MVMP6bigintBody *ba;
     MVMP6bigintBody *bb = get_bigint_body(tc, b);
     MVMP6bigintBody *bc;
@@ -640,7 +643,7 @@ MVMObject *MVM_bigint_div(MVMThreadContext *tc, MVMObject *result_type, MVMObjec
     return result;
 }
 
-MVMObject * MVM_bigint_pow(MVMThreadContext *tc, MVMObject *a, MVMObject *b,
+MVMObject * MVM_bigint_pow(struct MVMThreadContext *tc, MVMObject *a, MVMObject *b,
         MVMObject *num_type, MVMObject *int_type) {
     MVMP6bigintBody *ba = get_bigint_body(tc, a);
     MVMP6bigintBody *bb = get_bigint_body(tc, b);
@@ -702,7 +705,7 @@ MVMObject * MVM_bigint_pow(MVMThreadContext *tc, MVMObject *a, MVMObject *b,
     return r;
 }
 
-MVMObject *MVM_bigint_shl(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, int64_t n) {
+MVMObject *MVM_bigint_shl(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, int64_t n) {
     MVMP6bigintBody *ba;
     MVMP6bigintBody *bb;
     MVMObject       *result;
@@ -747,7 +750,7 @@ static int BIGINT_IS_NEGATIVE (MVMP6bigintBody *ba) {
         return ba->u.smallint.value < 0;
     }
 }
-MVMObject *MVM_bigint_shr(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, int64_t n) {
+MVMObject *MVM_bigint_shr(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, int64_t n) {
     MVMP6bigintBody *ba;
     MVMP6bigintBody *bb;
     MVMObject       *result;
@@ -781,7 +784,7 @@ MVMObject *MVM_bigint_shr(MVMThreadContext *tc, MVMObject *result_type, MVMObjec
     return result;
 }
 
-MVMObject *MVM_bigint_not(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a) {
+MVMObject *MVM_bigint_not(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *a) {
     MVMP6bigintBody *ba;
     MVMP6bigintBody *bb;
     MVMObject       *result;
@@ -823,7 +826,7 @@ MVMObject *MVM_bigint_not(MVMThreadContext *tc, MVMObject *result_type, MVMObjec
     return result;
 }
 
-MVMObject *MVM_bigint_expmod(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b, MVMObject *c) {
+MVMObject *MVM_bigint_expmod(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *a, MVMObject *b, MVMObject *c) {
     MVMP6bigintBody *ba = get_bigint_body(tc, a);
     MVMP6bigintBody *bb = get_bigint_body(tc, b);
     MVMP6bigintBody *bc = get_bigint_body(tc, c);
@@ -857,7 +860,7 @@ MVMObject *MVM_bigint_expmod(MVMThreadContext *tc, MVMObject *result_type, MVMOb
     return result;
 }
 
-void MVM_bigint_from_str(MVMThreadContext *tc, MVMObject *a, const char *buf) {
+void MVM_bigint_from_str(struct MVMThreadContext *tc, MVMObject *a, const char *buf) {
     mp_err err;
     MVMP6bigintBody *body = get_bigint_body(tc, a);
     mp_int *i = alloca(sizeof(mp_int));
@@ -881,7 +884,7 @@ void MVM_bigint_from_str(MVMThreadContext *tc, MVMObject *a, const char *buf) {
     }
 }
 #define can_fit_into_8bit(g) ((-128 <= (g) && (g) <= 127))
-MVMObject * MVM_coerce_sI(MVMThreadContext *tc, MVMString *s, MVMObject *type) {
+MVMObject * MVM_coerce_sI(struct MVMThreadContext *tc, MVMString *s, MVMObject *type) {
     char *buf = NULL;
     int is_malloced = 0;
     MVMStringIndex i;
@@ -940,7 +943,7 @@ MVMObject * MVM_coerce_sI(MVMThreadContext *tc, MVMString *s, MVMObject *type) {
     return a;
 }
 
-MVMObject * MVM_bigint_from_bigint(MVMThreadContext *tc, MVMObject *result_type, MVMObject *a) {
+MVMObject * MVM_bigint_from_bigint(struct MVMThreadContext *tc, MVMObject *result_type, MVMObject *a) {
     MVMP6bigintBody *a_body;
     MVMP6bigintBody *r_body;
     MVMObject       *result;
@@ -1043,7 +1046,7 @@ static int mp_faster_radix_size (mp_int *a, int radix, int *size)
     return MP_OKAY;
 }
 
-MVMString * MVM_bigint_to_str(MVMThreadContext *tc, MVMObject *a, int base) {
+MVMString * MVM_bigint_to_str(struct MVMThreadContext *tc, MVMObject *a, int base) {
     MVMP6bigintBody *body = get_bigint_body(tc, a);
     if (MVM_BIGINT_IS_BIG(body)) {
         mp_err err;
@@ -1111,7 +1114,7 @@ MVMString * MVM_bigint_to_str(MVMThreadContext *tc, MVMObject *a, int base) {
     }
 }
 
-double MVM_bigint_to_num(MVMThreadContext *tc, MVMObject *a) {
+double MVM_bigint_to_num(struct MVMThreadContext *tc, MVMObject *a) {
     MVMP6bigintBody *ba = get_bigint_body(tc, a);
 
     if (MVM_BIGINT_IS_BIG(ba)) {
@@ -1121,7 +1124,7 @@ double MVM_bigint_to_num(MVMThreadContext *tc, MVMObject *a) {
     }
 }
 
-MVMObject *MVM_bigint_from_num(MVMThreadContext *tc, MVMObject *result_type, double n) {
+MVMObject *MVM_bigint_from_num(struct MVMThreadContext *tc, MVMObject *result_type, double n) {
     mp_err err;
     MVMObject * const result = MVM_repr_alloc_init(tc, result_type);
     MVMP6bigintBody *ba = get_bigint_body(tc, result);
@@ -1156,7 +1159,7 @@ MVMObject *MVM_bigint_from_num(MVMThreadContext *tc, MVMObject *result_type, dou
  * cases.
  */
 
-static double bigint_div_num(MVMThreadContext *tc, const mp_int *numerator, const mp_int *denominator) {
+static double bigint_div_num(struct MVMThreadContext *tc, const mp_int *numerator, const mp_int *denominator) {
     int negative = numerator->sign != denominator->sign;
 
     if (mp_iszero(denominator)) {
@@ -1284,7 +1287,8 @@ static double bigint_div_num(MVMThreadContext *tc, const mp_int *numerator, cons
             mp_clear_multi(&quotient, &remainder, scaled, NULL);
             MVM_exception_throw_adhoc(tc, "Failed to double remainder in bigint division");
         }
-        mp_ord cmp = mp_cmp_mag(&remainder, denominator_scaled);
+        /* cmp is -1, 0, or 1 */
+        int cmp = mp_cmp_mag(&remainder, denominator_scaled);
         if (cmp != MP_LT) {
             if (cmp == MP_GT) {
                 ++mantissa;
@@ -1415,7 +1419,7 @@ static double bigint_div_num(MVMThreadContext *tc, const mp_int *numerator, cons
     return result.d;
 }
 
-double MVM_bigint_div_num(MVMThreadContext *tc, MVMObject *a, MVMObject *b) {
+double MVM_bigint_div_num(struct MVMThreadContext *tc, MVMObject *a, MVMObject *b) {
     MVMP6bigintBody *ba = get_bigint_body(tc, a);
     MVMP6bigintBody *bb = get_bigint_body(tc, b);
     double c;
@@ -1444,7 +1448,7 @@ double MVM_bigint_div_num(MVMThreadContext *tc, MVMObject *a, MVMObject *b) {
 
 /* LibTomMath, multiple-precision integer library -- Tom St Denis */
 /* SPDX-License-Identifier: Unlicense */
-mp_err MVM_mp_rand(MVMThreadContext *tc, mp_int *a, int digits)
+mp_err MVM_mp_rand(struct MVMThreadContext *tc, mp_int *a, int digits)
 {
    int i;
    mp_err err;
@@ -1483,7 +1487,7 @@ mp_err MVM_mp_rand(MVMThreadContext *tc, mp_int *a, int digits)
 #define MP_NEW_LTM_VERSION
 #endif
 
-MVMObject * MVM_bigint_rand(MVMThreadContext *tc, MVMObject *type, MVMObject *b) {
+MVMObject * MVM_bigint_rand(struct MVMThreadContext *tc, MVMObject *type, MVMObject *b) {
     MVMObject *result;
     MVMP6bigintBody *ba;
     MVMP6bigintBody *bb = get_bigint_body(tc, b);
@@ -1589,12 +1593,12 @@ static int64_t is_SPRP(uint32_t n, uint32_t a) {
     return 0;
 }
 
-int64_t MVM_bigint_is_prime(MVMThreadContext *tc, MVMObject *a) {
+int64_t MVM_bigint_is_prime(struct MVMThreadContext *tc, MVMObject *a) {
     MVMP6bigintBody *ba = get_bigint_body(tc, a);
     if (MVM_BIGINT_IS_BIG(ba)) {
         mp_int *ia = ba->u.bigint;
         mp_err err;
-        mp_bool result;
+        int result; // set to 1 if "probably prime"
 
         if (ia->sign == MP_NEG) {
             return 0;
@@ -1618,7 +1622,7 @@ int64_t MVM_bigint_is_prime(MVMThreadContext *tc, MVMObject *a) {
     }
 }
 
-MVMObject * MVM_bigint_radix(MVMThreadContext *tc, int64_t radix, MVMString *str, int64_t offset, int64_t flag, MVMObject *type) {
+MVMObject * MVM_bigint_radix(struct MVMThreadContext *tc, int64_t radix, MVMString *str, int64_t offset, int64_t flag, MVMObject *type) {
     mp_err err;
     MVMObject *result;
     int64_t chars  = MVM_string_graphs(tc, str);
@@ -1762,7 +1766,7 @@ MVMObject * MVM_bigint_radix(MVMThreadContext *tc, int64_t radix, MVMString *str
 
 /* returns 1 if a is too large to fit into an INTVAL without loss of
    information */
-int64_t MVM_bigint_is_big(MVMThreadContext *tc, MVMObject *a) {
+int64_t MVM_bigint_is_big(struct MVMThreadContext *tc, MVMObject *a) {
     MVMP6bigintBody *ba = get_bigint_body(tc, a);
 
     if (MVM_BIGINT_IS_BIG(ba)) {
@@ -1778,7 +1782,7 @@ int64_t MVM_bigint_is_big(MVMThreadContext *tc, MVMObject *a) {
     }
 }
 
-int64_t MVM_bigint_bool(MVMThreadContext *tc, MVMObject *a) {
+int64_t MVM_bigint_bool(struct MVMThreadContext *tc, MVMObject *a) {
     MVMP6bigintBody *body = get_bigint_body(tc, a);
     if (MVM_BIGINT_IS_BIG(body))
         return !mp_iszero(body->u.bigint);

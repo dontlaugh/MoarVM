@@ -4,7 +4,7 @@
 static const MVMREPROps ReentrantMutex_this_repr;
 
 /* Populates the object body with a mutex. */
-static void initialize_mutex(MVMThreadContext *tc, MVMReentrantMutexBody *rm) {
+static void initialize_mutex(struct MVMThreadContext *tc, MVMReentrantMutexBody *rm) {
     int init_stat;
     rm->mutex = MVM_malloc(sizeof(uv_mutex_t));
     if ((init_stat = uv_mutex_init(rm->mutex)) < 0) {
@@ -16,7 +16,7 @@ static void initialize_mutex(MVMThreadContext *tc, MVMReentrantMutexBody *rm) {
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &ReentrantMutex_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -29,17 +29,17 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Initializes a new instance. */
-static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static void initialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     initialize_mutex(tc, (MVMReentrantMutexBody *)data);
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot copy object with representation ReentrantMutex");
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     /* The ThreadContext has already been destroyed by the GC. */
     MVMReentrantMutex *rm = (MVMReentrantMutex *)obj;
     if (rm->body.lock_count)
@@ -61,31 +61,31 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMReentrantMutex);
 }
 
 /* Serializing a mutex doesn't save anything; we will re-create it upon
  * deserialization. Makes data structures that just happen to have a lock in
  * them serializable. */
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
 }
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     initialize_mutex(tc, (MVMReentrantMutexBody *)data);
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMReentrantMutex_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMReentrantMutex_initialize(struct MVMThreadContext *tc) {
     return &ReentrantMutex_this_repr;
 }
 
@@ -120,14 +120,14 @@ static const MVMREPROps ReentrantMutex_this_repr = {
 };
 
 /* Locks the mutex. */
-void MVM_reentrantmutex_lock_checked(MVMThreadContext *tc, MVMObject *lock) {
+void MVM_reentrantmutex_lock_checked(struct MVMThreadContext *tc, MVMObject *lock) {
     if (REPR(lock)->ID == MVM_REPR_ID_ReentrantMutex && IS_CONCRETE(lock))
         MVM_reentrantmutex_lock(tc, (MVMReentrantMutex *)lock);
     else
         MVM_exception_throw_adhoc(tc,
             "lock requires a concrete object with REPR ReentrantMutex");
 }
-void MVM_reentrantmutex_lock(MVMThreadContext *tc, MVMReentrantMutex *rm) {
+void MVM_reentrantmutex_lock(struct MVMThreadContext *tc, MVMReentrantMutex *rm) {
     /*unsigned int interval_id;*/
 
     /* Atomic access must be aligned, otherwise the lock will not work. */
@@ -155,14 +155,14 @@ void MVM_reentrantmutex_lock(MVMThreadContext *tc, MVMReentrantMutex *rm) {
 }
 
 /* Unlocks the mutex. */
-void MVM_reentrantmutex_unlock_checked(MVMThreadContext *tc, MVMObject *lock) {
+void MVM_reentrantmutex_unlock_checked(struct MVMThreadContext *tc, MVMObject *lock) {
     if (REPR(lock)->ID == MVM_REPR_ID_ReentrantMutex && IS_CONCRETE(lock))
         MVM_reentrantmutex_unlock(tc, (MVMReentrantMutex *)lock);
     else
         MVM_exception_throw_adhoc(tc,
             "unlock requires a concrete object with REPR ReentrantMutex");
 }
-void MVM_reentrantmutex_unlock(MVMThreadContext *tc, MVMReentrantMutex *rm) {
+void MVM_reentrantmutex_unlock(struct MVMThreadContext *tc, MVMReentrantMutex *rm) {
     /* Ensure we hold the lock. */
     if (MVM_load(&rm->body.holder_id) == tc->thread_id) {
         if (MVM_decr(&rm->body.lock_count) == 1) {

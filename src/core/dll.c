@@ -1,6 +1,6 @@
 #include "moar.h"
 
-int MVM_dll_load(MVMThreadContext *tc, MVMString *name, MVMString *path) {
+int MVM_dll_load(struct MVMThreadContext *tc, MVMString *name, MVMString *path) {
     char *cpath;
     DLLib *lib;
 
@@ -47,7 +47,7 @@ int MVM_dll_load(MVMThreadContext *tc, MVMString *name, MVMString *path) {
     return 1;
 }
 
-int MVM_dll_free(MVMThreadContext *tc, MVMString *name) {
+int MVM_dll_free(struct MVMThreadContext *tc, MVMString *name) {
     if (!MVM_str_hash_key_is_valid(tc, name)) {
         MVM_str_hash_key_throw_invalid(tc, name);
     }
@@ -84,7 +84,7 @@ int MVM_dll_free(MVMThreadContext *tc, MVMString *name) {
     return 1;
 }
 
-MVMObject * MVM_dll_find_symbol(MVMThreadContext *tc, MVMString *lib,
+MVMObject * MVM_dll_find_symbol(struct MVMThreadContext *tc, MVMString *lib,
         MVMString *sym) {
     MVMDLLSym *obj;
     char *csym;
@@ -134,7 +134,7 @@ MVMObject * MVM_dll_find_symbol(MVMThreadContext *tc, MVMString *lib,
     return (MVMObject *)obj;
 }
 
-void MVM_dll_drop_symbol(MVMThreadContext *tc, MVMObject *obj) {
+void MVM_dll_drop_symbol(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMDLLSym *sym;
     MVMDLLRegistry *dll;
 

@@ -5,7 +5,7 @@ static const MVMREPROps SpeshLog_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &SpeshLog_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,19 +18,19 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Initializes the log. */
-static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static void initialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMSpeshLogBody *log = (MVMSpeshLogBody *)data;
     log->entries = MVM_malloc(sizeof(MVMSpeshLogEntry) * MVM_SPESH_LOG_DEFAULT_ENTRIES);
     log->limit = MVM_SPESH_LOG_DEFAULT_ENTRIES;
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot copy object with representation SpeshLog");
 }
 
 /* Called by the VM to mark any GCable items. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMSpeshLogBody *log = (MVMSpeshLogBody *)data;
     uint32_t i;
     MVM_gc_worklist_add(tc, worklist, &(log->thread));
@@ -56,7 +56,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
     }
 }
 
-static void describe_refs (MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
+static void describe_refs (struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
     MVMSpeshLogBody  *body      = (MVMSpeshLogBody *)data;
     uint64_t         i         = 0;
 
@@ -100,7 +100,7 @@ static void describe_refs (MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMST
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMSpeshLog *log = (MVMSpeshLog *)obj;
     MVM_free(log->body.entries);
     if (log->body.block_condvar) {
@@ -124,27 +124,27 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMSpeshLog);
 }
 
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMSpeshLogBody *log = (MVMSpeshLogBody *)data;
     return log->limit * sizeof(MVMSpeshLogEntry);
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMSpeshLog_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMSpeshLog_initialize(struct MVMThreadContext *tc) {
     return &SpeshLog_this_repr;
 }
 

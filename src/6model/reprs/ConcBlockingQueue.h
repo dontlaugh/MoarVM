@@ -31,10 +31,10 @@ struct MVMConcBlockingQueue {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMConcBlockingQueue_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMConcBlockingQueue_initialize(struct MVMThreadContext *tc);
 
 /* Operations on concurrent blocking queues. */
-MVMObject * MVM_concblockingqueue_poll(MVMThreadContext *tc, MVMConcBlockingQueue *queue);
+MVMObject * MVM_concblockingqueue_poll(struct MVMThreadContext *tc, MVMConcBlockingQueue *queue);
 
 /* Purely for the convenience of the jit */
-MVMObject * MVM_concblockingqueue_jit_poll(MVMThreadContext *tc, MVMObject *queue);
+MVMObject * MVM_concblockingqueue_jit_poll(struct MVMThreadContext *tc, MVMObject *queue);

@@ -1,5 +1,5 @@
 struct MVMJitCode {
-    void     (*func_ptr)(MVMThreadContext *tc, MVMCompUnit *cu, void * label);
+    void     (*func_ptr)(struct MVMThreadContext *tc, MVMCompUnit *cu, void * label);
     size_t     size;
     uint8_t  *bytecode;
 
@@ -29,25 +29,25 @@ struct MVMJitCode {
     atomic_uintptr_t ref_cnt;
 };
 
-MVMJitCode* MVM_jit_compile_graph(MVMThreadContext *tc, MVMJitGraph *graph);
+MVMJitCode* MVM_jit_compile_graph(struct MVMThreadContext *tc, MVMJitGraph *graph);
 
-MVMJitCode* MVM_jit_code_copy(MVMThreadContext *tc, MVMJitCode * const code);
-void MVM_jit_code_destroy(MVMThreadContext *tc, MVMJitCode *code);
+MVMJitCode* MVM_jit_code_copy(struct MVMThreadContext *tc, MVMJitCode * const code);
+void MVM_jit_code_destroy(struct MVMThreadContext *tc, MVMJitCode *code);
 
 /* Peseudotile compile functions */
-void MVM_jit_compile_label(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_label(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                            MVMJitTile *tile, MVMJitExprTree *tree);
-void MVM_jit_compile_branch(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_branch(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                             MVMJitTile *tile, MVMJitExprTree *tree);
-void MVM_jit_compile_conditional_branch(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_conditional_branch(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                                         MVMJitTile *tile, MVMJitExprTree *tree);
-void MVM_jit_compile_store(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_store(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                            MVMJitTile *tile, MVMJitExprTree *tree);
-void MVM_jit_compile_load(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_load(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                           MVMJitTile *tile, MVMJitExprTree *tree);
-void MVM_jit_compile_move(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_move(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                           MVMJitTile *tile, MVMJitExprTree *tree);
-void MVM_jit_compile_memory_copy(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_memory_copy(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                                  MVMJitTile *tile, MVMJitExprTree *tree);
-void MVM_jit_compile_guard(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_guard(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                            MVMJitTile *tile, MVMJitExprTree *tree);

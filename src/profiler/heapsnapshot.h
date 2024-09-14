@@ -246,18 +246,18 @@ struct MVMHeapSnapshotWorkItem {
     void *target;
 };
 
-int32_t MVM_profile_heap_profiling(MVMThreadContext *tc);
-void MVM_profile_heap_start(MVMThreadContext *tc, MVMObject *config);
-void MVM_profile_heap_take_snapshot(MVMThreadContext *tc);
-MVMObject * MVM_profile_heap_end(MVMThreadContext *tc);
+int32_t MVM_profile_heap_profiling(struct MVMThreadContext *tc);
+void MVM_profile_heap_start(struct MVMThreadContext *tc, MVMObject *config);
+void MVM_profile_heap_take_snapshot(struct MVMThreadContext *tc);
+MVMObject * MVM_profile_heap_end(struct MVMThreadContext *tc);
 
 /* API for things that want to contribute more detailed data to the heap
  * profile. */
-MVM_PUBLIC void MVM_profile_heap_add_collectable_rel_const_cstr(MVMThreadContext *tc,
+ void MVM_profile_heap_add_collectable_rel_const_cstr(struct MVMThreadContext *tc,
     MVMHeapSnapshotState *ss, MVMCollectable *collectable, const char *desc);
-MVM_PUBLIC void MVM_profile_heap_add_collectable_rel_const_cstr_cached(MVMThreadContext *tc,
+ void MVM_profile_heap_add_collectable_rel_const_cstr_cached(struct MVMThreadContext *tc,
     MVMHeapSnapshotState *ss, MVMCollectable *collectable, const char *desc, uint64_t *cache);
-MVM_PUBLIC void MVM_profile_heap_add_collectable_rel_vm_str(MVMThreadContext *tc,
+ void MVM_profile_heap_add_collectable_rel_vm_str(struct MVMThreadContext *tc,
     MVMHeapSnapshotState *ss, MVMCollectable *collectable, MVMString *desc);
-MVM_PUBLIC void MVM_profile_heap_add_collectable_rel_idx(MVMThreadContext *tc,
+ void MVM_profile_heap_add_collectable_rel_idx(struct MVMThreadContext *tc,
     MVMHeapSnapshotState *ss, MVMCollectable *collectable, uint64_t idx);

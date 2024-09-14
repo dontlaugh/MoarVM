@@ -223,22 +223,22 @@ struct MVMProfileContinuationData {
 #define MVM_PROFILE_ENTER_JIT_INLINE    4
 
 /* Logging functions. */
-void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, uint64_t mode);
-void MVM_profile_log_enter_native(MVMThreadContext *tc, MVMObject *nativecallsite);
-void MVM_profile_log_exit(MVMThreadContext *tc);
-void MVM_profile_log_unwind(MVMThreadContext *tc);
-MVMProfileContinuationData * MVM_profile_log_continuation_control(MVMThreadContext *tc, const MVMFrame *root_frame);
-void MVM_profile_log_continuation_invoke(MVMThreadContext *tc, const MVMProfileContinuationData *cd);
-void MVM_profile_log_thread_created(MVMThreadContext *tc, MVMThreadContext *child_tc);
-void MVM_profile_log_allocated(MVMThreadContext *tc, MVMObject *obj);
-void MVM_profile_log_scalar_replaced(MVMThreadContext *tc, MVMSTable *st);
-void MVM_profiler_log_gc_start(MVMThreadContext *tc, uint32_t full, uint32_t this_thread_responsible);
-void MVM_profiler_log_gc_end(MVMThreadContext *tc);
-void MVM_profiler_log_gen2_roots(MVMThreadContext *tc, uint64_t amount, MVMThreadContext *other);
-void MVM_profiler_log_gc_deallocate(MVMThreadContext *tc, MVMObject *object);
-void MVM_profiler_log_unmanaged_data_promoted(MVMThreadContext *tc, uint64_t amount);
-void MVM_profiler_log_spesh_start(MVMThreadContext *tc);
-void MVM_profiler_log_spesh_end(MVMThreadContext *tc);
-void MVM_profiler_log_osr(MVMThreadContext *tc, uint64_t jitted);
-void MVM_profiler_log_deopt_one(MVMThreadContext *tc);
-void MVM_profiler_log_deopt_all(MVMThreadContext *tc);
+void MVM_profile_log_enter(struct MVMThreadContext *tc, MVMStaticFrame *sf, uint64_t mode);
+void MVM_profile_log_enter_native(struct MVMThreadContext *tc, MVMObject *nativecallsite);
+void MVM_profile_log_exit(struct MVMThreadContext *tc);
+void MVM_profile_log_unwind(struct MVMThreadContext *tc);
+MVMProfileContinuationData * MVM_profile_log_continuation_control(struct MVMThreadContext *tc, const MVMFrame *root_frame);
+void MVM_profile_log_continuation_invoke(struct MVMThreadContext *tc, const MVMProfileContinuationData *cd);
+void MVM_profile_log_thread_created(struct MVMThreadContext *tc, struct MVMThreadContext *child_tc);
+void MVM_profile_log_allocated(struct MVMThreadContext *tc, MVMObject *obj);
+void MVM_profile_log_scalar_replaced(struct MVMThreadContext *tc, MVMSTable *st);
+void MVM_profiler_log_gc_start(struct MVMThreadContext *tc, uint32_t full, uint32_t this_thread_responsible);
+void MVM_profiler_log_gc_end(struct MVMThreadContext *tc);
+void MVM_profiler_log_gen2_roots(struct MVMThreadContext *tc, uint64_t amount, struct MVMThreadContext *other);
+void MVM_profiler_log_gc_deallocate(struct MVMThreadContext *tc, MVMObject *object);
+void MVM_profiler_log_unmanaged_data_promoted(struct MVMThreadContext *tc, uint64_t amount);
+void MVM_profiler_log_spesh_start(struct MVMThreadContext *tc);
+void MVM_profiler_log_spesh_end(struct MVMThreadContext *tc);
+void MVM_profiler_log_osr(struct MVMThreadContext *tc, uint64_t jitted);
+void MVM_profiler_log_deopt_one(struct MVMThreadContext *tc);
+void MVM_profiler_log_deopt_all(struct MVMThreadContext *tc);

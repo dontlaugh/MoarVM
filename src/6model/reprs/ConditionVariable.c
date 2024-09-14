@@ -5,7 +5,7 @@ static const MVMREPROps ConditionVariable_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &ConditionVariable_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,18 +18,18 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot copy object with representation ConditionVariable");
 }
 
 /* Called by the VM to mark any GCable items. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMConditionVariableBody *cv = (MVMConditionVariableBody *)data;
     MVM_gc_worklist_add(tc, worklist, &cv->mutex);
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMConditionVariable *cv = (MVMConditionVariable *)obj;
     if (cv->body.condvar) {
         uv_cond_destroy(cv->body.condvar);
@@ -49,22 +49,22 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMConditionVariable);
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMConditionVariable_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMConditionVariable_initialize(struct MVMThreadContext *tc) {
     return &ConditionVariable_this_repr;
 }
 
@@ -99,7 +99,7 @@ static const MVMREPROps ConditionVariable_this_repr = {
 };
 
 /* Given a reentrant mutex, produces an associated condition variable. */
-MVMObject * MVM_conditionvariable_from_lock(MVMThreadContext *tc, MVMReentrantMutex *lock, MVMObject *type) {
+MVMObject * MVM_conditionvariable_from_lock(struct MVMThreadContext *tc, MVMReentrantMutex *lock, MVMObject *type) {
     MVMConditionVariable *cv;
     int init_stat;
 
@@ -122,7 +122,7 @@ MVMObject * MVM_conditionvariable_from_lock(MVMThreadContext *tc, MVMReentrantMu
 
 /* Adds the current thread to the queue of waiters on the condition variable,
  * releasing, waiting, and then re-acquiring the lock. */
-void MVM_conditionvariable_wait(MVMThreadContext *tc, MVMConditionVariable *cv) {
+void MVM_conditionvariable_wait(struct MVMThreadContext *tc, MVMConditionVariable *cv) {
     MVMReentrantMutex *rm = (MVMReentrantMutex *)cv->body.mutex;
     atomic_uintptr_t orig_rec_level;
     unsigned int interval_id;
@@ -149,13 +149,13 @@ void MVM_conditionvariable_wait(MVMThreadContext *tc, MVMConditionVariable *cv) 
 }
 
 /* Signals one thread waiting on the condition. */
-void MVM_conditionvariable_signal_one(MVMThreadContext *tc, MVMConditionVariable *cv) {
+void MVM_conditionvariable_signal_one(struct MVMThreadContext *tc, MVMConditionVariable *cv) {
     MVM_telemetry_timestamp(tc, "ConditionVariable.signal_one");
     uv_cond_signal(cv->body.condvar);
 }
 
 /* Signals all threads waiting on the condition. */
-void MVM_conditionvariable_signal_all(MVMThreadContext *tc, MVMConditionVariable *cv) {
+void MVM_conditionvariable_signal_all(struct MVMThreadContext *tc, MVMConditionVariable *cv) {
     MVM_telemetry_timestamp(tc, "ConditionVariable.signal_all");
     uv_cond_broadcast(cv->body.condvar);
 }

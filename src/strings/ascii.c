@@ -2,7 +2,7 @@
 
 /* Decodes the specified number of bytes of ASCII into an NFG string, creating
  * a result of the specified type. The type must have the MVMString REPR. */
-MVMString * MVM_string_ascii_decode(MVMThreadContext *tc, const MVMObject *result_type, const char *ascii, size_t bytes) {
+MVMString * MVM_string_ascii_decode(struct MVMThreadContext *tc, const MVMObject *result_type, const char *ascii, size_t bytes) {
     MVMString *result;
     MVMGrapheme32 *buffer;
     size_t i, result_graphs;
@@ -40,13 +40,13 @@ MVMString * MVM_string_ascii_decode(MVMThreadContext *tc, const MVMObject *resul
 
 /* Decodes a NULL-terminated ASCII string into an NFG string, creating
  * a result of the specified type. The type must have the MVMString REPR. */
-MVMString * MVM_string_ascii_decode_nt(MVMThreadContext *tc, const MVMObject *result_type, const char *ascii) {
+MVMString * MVM_string_ascii_decode_nt(struct MVMThreadContext *tc, const MVMObject *result_type, const char *ascii) {
     return MVM_string_ascii_decode(tc, result_type, ascii, strlen(ascii));
 }
 
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-uint32_t MVM_string_ascii_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_ascii_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                    const uint32_t *stopper_chars,
                                    MVMDecodeStreamSeparators *seps) {
     uint32_t             count = 0, total = 0;
@@ -143,7 +143,7 @@ uint32_t MVM_string_ascii_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds
  * will become replaced with the supplied replacement, or an exception will be
  * thrown if there isn't one. The result string is NULL terminated, but the
  * specified size is the non-null part. */
-char * MVM_string_ascii_encode_substr(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
+char * MVM_string_ascii_encode_substr(struct MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
     /* ASCII is a single byte encoding, but \r\n is a 2-byte grapheme, so we
      * may have to resize as we go. */
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
@@ -211,17 +211,17 @@ char * MVM_string_ascii_encode_substr(MVMThreadContext *tc, MVMString *str, uint
 }
 
 /* Encodes the specified string to ASCII.  */
-char * MVM_string_ascii_encode(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int32_t translate_newlines) {
+char * MVM_string_ascii_encode(struct MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int32_t translate_newlines) {
     return MVM_string_ascii_encode_substr(tc, str, output_size, 0, -1, NULL, translate_newlines);
 }
 
 /* Encodes the specified string to ASCII not returning length.  */
-char * MVM_string_ascii_encode_any(MVMThreadContext *tc, MVMString *str) {
+char * MVM_string_ascii_encode_any(struct MVMThreadContext *tc, MVMString *str) {
     return MVM_string_ascii_encode(tc, str, NULL, 0);
 }
 
 /* Encodes the specified string to ASCII using libc malloc.  */
-char * MVM_string_ascii_encode_malloc(MVMThreadContext *tc, MVMString *str) {
+char * MVM_string_ascii_encode_malloc(struct MVMThreadContext *tc, MVMString *str) {
     /* ASCII is a single byte encoding, but \r\n is a 2-byte grapheme, so we
      * may have to resize as we go. */
     uint32_t      lengthu   = MVM_string_graphs(tc, str);

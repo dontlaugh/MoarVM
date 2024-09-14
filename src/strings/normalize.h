@@ -67,15 +67,15 @@ struct MVMNormalizer {
 };
 
 /* Guts-y functions, called by the API level ones below. */
-int32_t MVM_unicode_normalizer_process_codepoint_full(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out);
-int32_t MVM_unicode_normalizer_process_codepoint_norm_terminator(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out);
+int32_t MVM_unicode_normalizer_process_codepoint_full(struct MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out);
+int32_t MVM_unicode_normalizer_process_codepoint_norm_terminator(struct MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out);
 
 /* Takes a codepoint to process for normalization as the "in" parameter. If we
  * are able to produce one or more normalized codepoints right off, then we
  * put it into the location pointed to by "out", and return the number of
  * codepoints now available including the one we just passed out. If we can't
  * produce a normalized codepoint right now, we return a 0. */
-MVM_STATIC_INLINE int32_t MVM_unicode_normalizer_process_codepoint(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out) {
+static inline int32_t MVM_unicode_normalizer_process_codepoint(struct MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out) {
     /* Control characters in the Latin-1 range are normalization terminators -
      * that is, we know we can spit out whatever codepoints we have seen so
      * far in normalized form without having to consider them into the
@@ -129,32 +129,32 @@ MVM_STATIC_INLINE int32_t MVM_unicode_normalizer_process_codepoint(MVMThreadCont
 /* Grapheme version of the above. Note that this exists mostly for API clarity
  * rather than adding any semantics; the normalizer must be configured to
  * produce NFG to get synthetics out. */
-MVM_STATIC_INLINE int32_t MVM_unicode_normalizer_process_codepoint_to_grapheme(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMGrapheme32 *out) {
+static inline int32_t MVM_unicode_normalizer_process_codepoint_to_grapheme(struct MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMGrapheme32 *out) {
     assert(sizeof(MVMCodepoint) == sizeof(MVMGrapheme32));
     return MVM_unicode_normalizer_process_codepoint(tc, n, in, (MVMGrapheme32 *)out);
 }
 
 /* Push a number of codepoints into the "to normalize" buffer. */
-void MVM_unicode_normalizer_push_codepoints(MVMThreadContext *tc, MVMNormalizer *n, const MVMCodepoint *in, int32_t num_codepoints);
+void MVM_unicode_normalizer_push_codepoints(struct MVMThreadContext *tc, MVMNormalizer *n, const MVMCodepoint *in, int32_t num_codepoints);
 
 /* Get the number of codepoints/graphemes ready to fetch. */
-MVM_STATIC_INLINE int32_t MVM_unicode_normalizer_available(MVMThreadContext *tc, MVMNormalizer *n) {
+static inline int32_t MVM_unicode_normalizer_available(struct MVMThreadContext *tc, MVMNormalizer *n) {
     return n->buffer_norm_end - n->buffer_start;
 }
 
 /* Get the number of codepoints/graphemes ready to fetch. */
-MVM_STATIC_INLINE int32_t MVM_unicode_normalizer_empty(MVMThreadContext *tc, MVMNormalizer *n) {
+static inline int32_t MVM_unicode_normalizer_empty(struct MVMThreadContext *tc, MVMNormalizer *n) {
     return n->buffer_end == n->buffer_start;
 }
 
 /* Indicate that we've reached the end of the input stream. Any codepoints
  * left to normalize now can be. */
-void MVM_unicode_normalizer_eof(MVMThreadContext *tc, MVMNormalizer *n);
+void MVM_unicode_normalizer_eof(struct MVMThreadContext *tc, MVMNormalizer *n);
 
 /* Get a normalized codepoint; should only ever be called if there are some
  * known to be available, either because normalize_to_codepoint returned a
  * value greater than 1, or normalize_available returned a non-zero value. */
-MVM_STATIC_INLINE MVMCodepoint MVM_unicode_normalizer_get_codepoint(MVMThreadContext *tc, MVMNormalizer *n) {
+static inline MVMCodepoint MVM_unicode_normalizer_get_codepoint(struct MVMThreadContext *tc, MVMNormalizer *n) {
     if (n->buffer_norm_end == n->buffer_start)
         MVM_exception_throw_adhoc(tc, "Normalization: illegal call to get codepoint");
     return n->buffer[n->buffer_start++];
@@ -163,7 +163,7 @@ MVM_STATIC_INLINE MVMCodepoint MVM_unicode_normalizer_get_codepoint(MVMThreadCon
 /* Grapheme version of the above. Note that this exists mostly for API clarity
  * rather than adding any semantics; the normalizer must be configured to
  * produce NFG to get synthetics out. */
-MVM_STATIC_INLINE MVMGrapheme32 MVM_unicode_normalizer_get_grapheme(MVMThreadContext *tc, MVMNormalizer *n) {
+static inline MVMGrapheme32 MVM_unicode_normalizer_get_grapheme(struct MVMThreadContext *tc, MVMNormalizer *n) {
     assert(sizeof(MVMCodepoint) == sizeof(MVMGrapheme32));
     if (n->buffer_norm_end == n->buffer_start)
         MVM_exception_throw_adhoc(tc, "Normalization: illegal call to get grapheme");
@@ -171,38 +171,38 @@ MVM_STATIC_INLINE MVMGrapheme32 MVM_unicode_normalizer_get_grapheme(MVMThreadCon
 }
 
 /* Setup and teardown of the MVMNormalizer struct. */
-MVMNormalization MVM_unicode_normalizer_form(MVMThreadContext *tc, int64_t form_in);
-void MVM_unicode_normalizer_init(MVMThreadContext *tc, MVMNormalizer *n, MVMNormalization norm);
-void MVM_unicode_normalizer_translate_newlines(MVMThreadContext *tc, MVMNormalizer *n);
-void MVM_unicode_normalizer_cleanup(MVMThreadContext *tc, MVMNormalizer *n);
+MVMNormalization MVM_unicode_normalizer_form(struct MVMThreadContext *tc, int64_t form_in);
+void MVM_unicode_normalizer_init(struct MVMThreadContext *tc, MVMNormalizer *n, MVMNormalization norm);
+void MVM_unicode_normalizer_translate_newlines(struct MVMThreadContext *tc, MVMNormalizer *n);
+void MVM_unicode_normalizer_cleanup(struct MVMThreadContext *tc, MVMNormalizer *n);
 
 /* High-level normalize implementation, working from an input array of
  * codepoints and producing an output array of codepoints. */
-void MVM_unicode_normalize_codepoints(MVMThreadContext *tc, const MVMObject *in, MVMObject *out, MVMNormalization form);
+void MVM_unicode_normalize_codepoints(struct MVMThreadContext *tc, const MVMObject *in, MVMObject *out, MVMNormalization form);
 
 /* High-level function to produces an NFG string from an input array of
  * codepoints. */
-MVMString * MVM_unicode_codepoints_to_nfg_string(MVMThreadContext *tc,const MVMObject *codes);
-MVMString * MVM_unicode_codepoints_c_array_to_nfg_string(MVMThreadContext *tc, MVMCodepoint * cp_v, int64_t cp_count);
+MVMString * MVM_unicode_codepoints_to_nfg_string(struct MVMThreadContext *tc,const MVMObject *codes);
+MVMString * MVM_unicode_codepoints_c_array_to_nfg_string(struct MVMThreadContext *tc, MVMCodepoint * cp_v, int64_t cp_count);
 
 /* High-level function to produce an array of codepoints from a string. */
-void MVM_unicode_string_to_codepoints(MVMThreadContext *tc, MVMString *s, MVMNormalization form, MVMObject *out);
+void MVM_unicode_string_to_codepoints(struct MVMThreadContext *tc, MVMString *s, MVMNormalization form, MVMObject *out);
 
 /* faster atoi function */
-MVM_STATIC_INLINE int32_t fast_atoi( const char * dec_str ) {
+static inline int32_t fast_atoi( const char * dec_str ) {
     int32_t value = 0;
     while( *dec_str ) {
         value = value*10 + (*dec_str++ - '0');
     }
     return value;
 }
-int64_t MVM_unicode_relative_ccc(MVMThreadContext *tc, MVMCodepoint cp);
-int32_t MVM_unicode_normalize_should_break(MVMThreadContext *tc, MVMCodepoint a, MVMCodepoint b, MVMNormalizer *norm);
-int64_t MVM_unicode_relative_ccc(MVMThreadContext *tc, MVMCodepoint cp);
-int32_t MVM_string_is_control_full(MVMThreadContext *tc, MVMCodepoint in);
+int64_t MVM_unicode_relative_ccc(struct MVMThreadContext *tc, MVMCodepoint cp);
+int32_t MVM_unicode_normalize_should_break(struct MVMThreadContext *tc, MVMCodepoint a, MVMCodepoint b, MVMNormalizer *norm);
+int64_t MVM_unicode_relative_ccc(struct MVMThreadContext *tc, MVMCodepoint cp);
+int32_t MVM_string_is_control_full(struct MVMThreadContext *tc, MVMCodepoint in);
 /* Function for choosing the appropriate line-ending grapheme depending on if
  * newline translation is enabled. */
-MVM_STATIC_INLINE MVMGrapheme32 MVM_unicode_normalizer_translated_crlf(MVMThreadContext *tc, MVMNormalizer *n) {
+static inline MVMGrapheme32 MVM_unicode_normalizer_translated_crlf(struct MVMThreadContext *tc, MVMNormalizer *n) {
     return n->translate_newlines
         ? '\n'
         : MVM_nfg_crlf_grapheme(tc);

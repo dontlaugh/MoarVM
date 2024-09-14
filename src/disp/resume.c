@@ -8,7 +8,7 @@
  * is a dispatch recorded or dispatch run record on the callstack, and we'll
  * use that for storage of resumption state, to find the original dispatch
  * args and temporaries, etc. */
-static void finish_resumption_data(MVMThreadContext *tc, MVMDispResumptionData *data,
+static void finish_resumption_data(struct MVMThreadContext *tc, MVMDispResumptionData *data,
         MVMDispResumptionState *state, uint32_t offset) {
     data->resumption = &(data->dp->resumptions[offset]);
 #if DUMP_RESUMPTIONS
@@ -19,7 +19,7 @@ static void finish_resumption_data(MVMThreadContext *tc, MVMDispResumptionData *
         state = state->next;
     data->state_ptr = &(state->state);
 }
-static uint32_t setup_resumption(MVMThreadContext *tc, MVMDispResumptionData *data,
+static uint32_t setup_resumption(struct MVMThreadContext *tc, MVMDispResumptionData *data,
         MVMDispProgram *dp, MVMArgs *arg_info, MVMDispResumptionState *state,
         MVMRegister *temps, uint32_t *exhausted) {
     /* Did the dispatch program set up any static resumptions, and are there at
@@ -69,7 +69,7 @@ static uint32_t setup_resumption(MVMThreadContext *tc, MVMDispResumptionData *da
  * translated into ops. In this case, there is a register for storing any
  * dispatch state object, and we also have registers holding all of the args
  * and temps that we might need. */
-static void setup_translated_resumption(MVMThreadContext *tc, MVMDispResumptionData *data,
+static void setup_translated_resumption(struct MVMThreadContext *tc, MVMDispResumptionData *data,
         MVMSpeshResumeInit *ri, MVMFrame *frame) {
     data->dp = ri->dp;
     data->resumption = &(ri->dp->resumptions[ri->res_idx]);
@@ -81,7 +81,7 @@ static void setup_translated_resumption(MVMThreadContext *tc, MVMDispResumptionD
 
 /* Set up resumption data in the sitaution that the dispatch we'll resume was
  * translated, but then we deoptimized and uninlined it. */
-static void setup_deopted_resumption(MVMThreadContext *tc,  MVMDispResumptionData *data,
+static void setup_deopted_resumption(struct MVMThreadContext *tc,  MVMDispResumptionData *data,
         MVMCallStackDeoptedResumeInit *dri) {
     data->dp = dri->dp;
     data->resumption = dri->dpr;
@@ -94,10 +94,10 @@ static void setup_deopted_resumption(MVMThreadContext *tc,  MVMDispResumptionDat
 /* Looks down the callstack to find the dispatch that we are resuming, starting
  * from the indicated start point. If found, populates the struct pointed to by
  * the data parameter and returns a non-zero value. */
-static int32_t should_keep_searching(MVMThreadContext *tc, MVMDispProgram *dp) {
+static int32_t should_keep_searching(struct MVMThreadContext *tc, MVMDispProgram *dp) {
     return !dp || dp->num_resumptions == 0 || dp->ops[0].code == MVMDispOpcodeStartResumption;
 }
-static uint32_t find_internal(MVMThreadContext *tc, MVMDispResumptionData *data,
+static uint32_t find_internal(struct MVMThreadContext *tc, MVMDispResumptionData *data,
         uint32_t exhausted, int32_t caller) {
     /* Create iterator, which is over both dispatch records and frames. */
 #if DUMP_RESUMPTIONS
@@ -286,19 +286,19 @@ static uint32_t find_internal(MVMThreadContext *tc, MVMDispResumptionData *data,
 }
 
 /* Looks down the callstack to find the dispatch that we are resuming. */
-uint32_t MVM_disp_resume_find_topmost(MVMThreadContext *tc, MVMDispResumptionData *data,
+uint32_t MVM_disp_resume_find_topmost(struct MVMThreadContext *tc, MVMDispResumptionData *data,
                                        uint32_t exhausted) {
     return find_internal(tc, data, exhausted, 0);
 }
 
 /* Skip to our caller, and then find the current dispatch. */
-uint32_t MVM_disp_resume_find_caller(MVMThreadContext *tc, MVMDispResumptionData *data,
+uint32_t MVM_disp_resume_find_caller(struct MVMThreadContext *tc, MVMDispResumptionData *data,
                                       uint32_t exhausted) {
     return find_internal(tc, data, exhausted, 1);
 }
 
 /* Get the resume initialization state argument at the specified index. */
-MVMRegister MVM_disp_resume_get_init_arg(MVMThreadContext *tc, MVMDispResumptionData *data,
+MVMRegister MVM_disp_resume_get_init_arg(struct MVMThreadContext *tc, MVMDispResumptionData *data,
                                          uint32_t arg_idx) {
     MVMDispProgramResumption *resumption = data->resumption;
     if (resumption->init_values) {
@@ -348,7 +348,7 @@ MVMRegister MVM_disp_resume_get_init_arg(MVMThreadContext *tc, MVMDispResumption
 }
 
 /* Mark the resumption state. */
-void MVM_disp_resume_mark_resumption_state(MVMThreadContext *tc, MVMDispResumptionState *res_state,
+void MVM_disp_resume_mark_resumption_state(struct MVMThreadContext *tc, MVMDispResumptionState *res_state,
         MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
     /* Ensure it's valid (if top level is, stack will be). */
     if (!res_state->disp)
@@ -367,7 +367,7 @@ void MVM_disp_resume_mark_resumption_state(MVMThreadContext *tc, MVMDispResumpti
 }
 
 /* Free any memory associated with a linked list of resumption states. */
-void MVM_disp_resume_destroy_resumption_state(MVMThreadContext *tc,
+void MVM_disp_resume_destroy_resumption_state(struct MVMThreadContext *tc,
         MVMDispResumptionState *res_state) {
     /* First entry lives on the stack, so don't consider it. */
     MVMDispResumptionState *current = res_state->next;

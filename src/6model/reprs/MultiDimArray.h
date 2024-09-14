@@ -47,4 +47,4 @@ struct MVMMultiDimArrayREPRData {
 };
 
 /* Initializes the MultiDimArray REPR. */
-const MVMREPROps * MVMMultiDimArray_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMMultiDimArray_initialize(struct MVMThreadContext *tc);

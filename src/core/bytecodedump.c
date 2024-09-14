@@ -63,11 +63,11 @@ enum {
     MVM_val_op_boundary   = 2
 };
 
-static MVMStaticFrame * get_frame(MVMThreadContext *tc, MVMCompUnit *cu, int idx) {
+static MVMStaticFrame * get_frame(struct MVMThreadContext *tc, MVMCompUnit *cu, int idx) {
     return ((MVMCode *)cu->body.coderefs[idx])->body.sf;
 }
 
-static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *frame, MVMSpeshCandidate *maybe_candidate, uint8_t *frame_cur_op, char ***frame_lexicals, char **oo, uint32_t *os, uint32_t *ol) {
+static void bytecode_dump_frame_internal(struct MVMThreadContext *tc, MVMStaticFrame *frame, MVMSpeshCandidate *maybe_candidate, uint8_t *frame_cur_op, char ***frame_lexicals, char **oo, uint32_t *os, uint32_t *ol) {
     /* since "references" are not a thing in C, keep a local copy of these
      * and update the passed-in pointers at the end of the function */
     char *o = *oo;
@@ -403,7 +403,7 @@ static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *f
 }
 
 
-char * MVM_bytecode_dump(MVMThreadContext *tc, MVMCompUnit *cu) {
+char * MVM_bytecode_dump(struct MVMThreadContext *tc, MVMCompUnit *cu) {
     uint32_t s = 1024;
     uint32_t l = 0;
     uint32_t i, j, k;
@@ -530,7 +530,7 @@ char * MVM_bytecode_dump(MVMThreadContext *tc, MVMCompUnit *cu) {
 }
 
 #ifdef DEBUG_HELPERS
-void MVM_dump_bytecode_of(MVMThreadContext *tc, MVMFrame *frame, MVMSpeshCandidate *maybe_candidate) {
+void MVM_dump_bytecode_of(struct MVMThreadContext *tc, MVMFrame *frame, MVMSpeshCandidate *maybe_candidate) {
     uint32_t s = 1024;
     uint32_t l = 0;
     char *o = MVM_malloc(s * sizeof(char));
@@ -553,7 +553,7 @@ void MVM_dump_bytecode_of(MVMThreadContext *tc, MVMFrame *frame, MVMSpeshCandida
     fprintf(stderr, "%s", o);
 }
 
-void MVM_dump_bytecode_staticframe(MVMThreadContext *tc, MVMStaticFrame *frame) {
+void MVM_dump_bytecode_staticframe(struct MVMThreadContext *tc, MVMStaticFrame *frame) {
     uint32_t s = 1024;
     uint32_t l = 0;
     char *o = MVM_malloc(s * sizeof(char));
@@ -565,7 +565,7 @@ void MVM_dump_bytecode_staticframe(MVMThreadContext *tc, MVMStaticFrame *frame) 
     fprintf(stderr, "%s", o);
 }
 
-void MVM_dump_bytecode(MVMThreadContext *tc) {
+void MVM_dump_bytecode(struct MVMThreadContext *tc) {
     if (tc->cur_frame != NULL) {
         MVMStaticFrame *sf = tc->cur_frame->static_info;
         uint8_t *effective_bytecode = MVM_frame_effective_bytecode(tc->cur_frame);
@@ -592,7 +592,7 @@ void MVM_dump_bytecode(MVMThreadContext *tc) {
     }
 }
 
-void MVM_dump_bytecode_stackframe(MVMThreadContext *tc, int32_t depth) {
+void MVM_dump_bytecode_stackframe(struct MVMThreadContext *tc, int32_t depth) {
     MVMStaticFrame *sf;
     uint8_t *effective_bytecode;
     MVMFrame *frame = tc->cur_frame;

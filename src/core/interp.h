@@ -110,11 +110,11 @@ struct MVMRunloopState {
 };
 
 /* Functions. */
-void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContext *, void *), void *invoke_data, MVMRunloopState *outer_runloop);
-void MVM_interp_run_nested(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContext *, void *), void *invoke_data, MVMRegister *res);
-MVM_PUBLIC void MVM_interp_enable_tracing(void);
+void MVM_interp_run(struct MVMThreadContext *tc, void (*initial_invoke)(struct MVMThreadContext *, void *), void *invoke_data, MVMRunloopState *outer_runloop);
+void MVM_interp_run_nested(struct MVMThreadContext *tc, void (*initial_invoke)(struct MVMThreadContext *, void *), void *invoke_data, MVMRegister *res);
+ void MVM_interp_enable_tracing(void);
 
-MVM_STATIC_INLINE int64_t MVM_BC_get_I64(const uint8_t *cur_op, int offset) {
+static inline int64_t MVM_BC_get_I64(const uint8_t *cur_op, int offset) {
     const uint8_t *const where = cur_op + offset;
 #ifdef MVM_CAN_UNALIGNED_INT64
     return *(int64_t *)where;
@@ -125,7 +125,7 @@ MVM_STATIC_INLINE int64_t MVM_BC_get_I64(const uint8_t *cur_op, int offset) {
 #endif
 }
 
-MVM_STATIC_INLINE double MVM_BC_get_N64(const uint8_t *cur_op, int offset) {
+static inline double MVM_BC_get_N64(const uint8_t *cur_op, int offset) {
 #ifdef MVM_CAN_UNALIGNED_NUM64
     const uint8_t *const where = cur_op + offset;
     return *(double *)where;
@@ -136,7 +136,7 @@ MVM_STATIC_INLINE double MVM_BC_get_N64(const uint8_t *cur_op, int offset) {
 #endif
 }
 /* For MVM_reg_* types */
-static char * MVM_reg_get_debug_name(MVMThreadContext *tc, uint16_t type) {
+static char * MVM_reg_get_debug_name(struct MVMThreadContext *tc, uint16_t type) {
     switch (type) {
         case MVM_reg_int8:
             return "int8";

@@ -29,7 +29,7 @@ static const double MVM_NUM_NAN = 0.0 / 0.0;
 #  endif
 #endif
 
-MVM_STATIC_INLINE int MVM_num_isnanorinf(MVMThreadContext *tc, double n) {
+static inline int MVM_num_isnanorinf(struct MVMThreadContext *tc, double n) {
 #if defined(MVM_HAS_ISINF) && defined(MVM_HAS_ISNAN)
     return isinf(n) || isnan(n);
 #else
@@ -37,19 +37,19 @@ MVM_STATIC_INLINE int MVM_num_isnanorinf(MVMThreadContext *tc, double n) {
 #endif
 }
 
-MVM_STATIC_INLINE double MVM_num_posinf(MVMThreadContext *tc) {
+static inline double MVM_num_posinf(struct MVMThreadContext *tc) {
     return MVM_NUM_POSINF;
 }
 
-MVM_STATIC_INLINE double MVM_num_neginf(MVMThreadContext *tc) {
+static inline double MVM_num_neginf(struct MVMThreadContext *tc) {
     return MVM_NUM_NEGINF;
 }
 
-MVM_STATIC_INLINE double MVM_num_nan(MVMThreadContext *tc) {
+static inline double MVM_num_nan(struct MVMThreadContext *tc) {
     return MVM_NUM_NAN;
 }
 
-MVM_STATIC_INLINE int MVM_num_isnegzero(MVMThreadContext *tc, double n) {
+static inline int MVM_num_isnegzero(struct MVMThreadContext *tc, double n) {
 #ifdef MVM_HAS_SIGNBIT
     return n == 0 && signbit(n);
 #else

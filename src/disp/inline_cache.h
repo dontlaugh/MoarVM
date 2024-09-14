@@ -30,9 +30,9 @@ struct MVMDispInlineCache {
 /* We always invoke an action using the cache by calling a function pointer.
  * These are the kinds of pointer we have: one for getlexstatic, another for
  * dispatch. */
-typedef int MVMDispInlineCacheRunGetLexStatic(MVMThreadContext *tc,
+typedef int MVMDispInlineCacheRunGetLexStatic(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMString *name, MVMRegister *r);
-typedef void MVMDispInlineCacheRunDispatch(MVMThreadContext *tc,
+typedef void MVMDispInlineCacheRunDispatch(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
         MVMString *id, MVMCallsite *cs, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset);
@@ -93,17 +93,17 @@ struct MVMDispInlineCacheEntryPolymorphicDispatchFlattening {
 /* The maximum degree of polymorphism allowed at a given inline cache site. */
 #define MVM_INLINE_CACHE_MAX_POLY 64
 
-void MVM_disp_inline_cache_setup(MVMThreadContext *tc, MVMStaticFrame *sf);
-void MVM_disp_inline_cache_mark(MVMThreadContext *tc, MVMDispInlineCache *cache,
+void MVM_disp_inline_cache_setup(struct MVMThreadContext *tc, MVMStaticFrame *sf);
+void MVM_disp_inline_cache_mark(struct MVMThreadContext *tc, MVMDispInlineCache *cache,
         MVMGCWorklist *worklist);
-MVMObject * MVM_disp_inline_cache_get_lex_resolution(MVMThreadContext *tc, MVMStaticFrame *sf,
+MVMObject * MVM_disp_inline_cache_get_lex_resolution(struct MVMThreadContext *tc, MVMStaticFrame *sf,
         uint32_t bytecode_offset);
-uint32_t MVM_disp_inline_cache_get_slot(MVMThreadContext *tc, MVMStaticFrame *sf,
+uint32_t MVM_disp_inline_cache_get_slot(struct MVMThreadContext *tc, MVMStaticFrame *sf,
         uint32_t bytecode_offset);
-uint32_t MVM_disp_inline_cache_transition(MVMThreadContext *tc,
+uint32_t MVM_disp_inline_cache_transition(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *entry,
         MVMStaticFrame *root, MVMDispDefinition *initial_disp,
         MVMCallsite *initial_cs, MVMDispProgram *dp);
-void MVM_disp_inline_cache_destroy(MVMThreadContext *tc, MVMDispInlineCache *cache);
-uint32_t MVM_disp_inline_cache_get_kind(MVMThreadContext *tc, MVMDispInlineCacheEntry *entry);
-int32_t MVM_disp_inline_cache_try_get_kind(MVMThreadContext *tc, MVMDispInlineCacheEntry *entry);
+void MVM_disp_inline_cache_destroy(struct MVMThreadContext *tc, MVMDispInlineCache *cache);
+uint32_t MVM_disp_inline_cache_get_kind(struct MVMThreadContext *tc, MVMDispInlineCacheEntry *entry);
+int32_t MVM_disp_inline_cache_try_get_kind(struct MVMThreadContext *tc, MVMDispInlineCacheEntry *entry);

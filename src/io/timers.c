@@ -5,7 +5,7 @@ typedef struct {
     int timeout;
     int repeat;
     uv_timer_t *handle;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int work_idx;
 } TimerInfo;
 
@@ -17,7 +17,7 @@ static void free_timer(uv_handle_t *handle) {
 /* Timer callback; dispatches schedulee to the queue. */
 static void timer_cb(uv_timer_t *handle) {
     TimerInfo        *ti = (TimerInfo *)handle->data;
-    MVMThreadContext *tc = ti->tc;
+    struct MVMThreadContext *tc = ti->tc;
     MVMAsyncTask     *t  = MVM_io_eventloop_get_active_work(tc, ti->work_idx);
     MVM_repr_push_o(tc, t->body.queue, t->body.schedulee);
     if (!ti->repeat && ti->work_idx >= 0) {
@@ -31,7 +31,7 @@ static void timer_cb(uv_timer_t *handle) {
 }
 
 /* Sets the timer up on the event loop. */
-static void setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     TimerInfo *ti = (TimerInfo *)data;
     ti->handle = MVM_malloc(sizeof(uv_timer_t));
     uv_timer_init(loop, ti->handle);
@@ -42,7 +42,7 @@ static void setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, 
 }
 
 /* Stops the timer. */
-static void cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void cancel(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     TimerInfo *ti = (TimerInfo *)data;
     if (ti->work_idx >= 0) {
         uv_timer_stop(ti->handle);
@@ -54,7 +54,7 @@ static void cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task,
 }
 
 /* Frees data associated with a timer async task. */
-static void gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data)
         MVM_free(data);
 }
@@ -69,7 +69,7 @@ static const MVMAsyncTaskOps op_table = {
 };
 
 /* Creates a new timer. */
-MVMObject * MVM_io_timer_create(MVMThreadContext *tc, MVMObject *queue,
+MVMObject * MVM_io_timer_create(struct MVMThreadContext *tc, MVMObject *queue,
                                 MVMObject *schedulee, int64_t timeout,
                                 int64_t repeat, MVMObject *async_type) {
     MVMAsyncTask *task;

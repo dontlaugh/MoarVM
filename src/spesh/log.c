@@ -2,7 +2,7 @@
 
 /* Provided spesh is enabled, set up specialization data logging for the
  * current thread. */
-void MVM_spesh_log_initialize_thread(MVMThreadContext *tc, int32_t main_thread) {
+void MVM_spesh_log_initialize_thread(struct MVMThreadContext *tc, int32_t main_thread) {
     if (tc->instance->spesh_enabled) {
         tc->spesh_log = MVM_spesh_log_create(tc, tc->thread_obj);
         tc->spesh_log_quota = main_thread
@@ -12,7 +12,7 @@ void MVM_spesh_log_initialize_thread(MVMThreadContext *tc, int32_t main_thread) 
 }
 
 /* Creates a spesh log for the specified target thread. */
-MVMSpeshLog * MVM_spesh_log_create(MVMThreadContext *tc, MVMThread *target_thread) {
+MVMSpeshLog * MVM_spesh_log_create(struct MVMThreadContext *tc, MVMThread *target_thread) {
     MVMSpeshLog *result;
     MVMROOT(tc, target_thread) {
         result = (MVMSpeshLog *)MVM_repr_alloc_init(tc, tc->instance->SpeshLog);
@@ -23,7 +23,7 @@ MVMSpeshLog * MVM_spesh_log_create(MVMThreadContext *tc, MVMThread *target_threa
 
 /* Increments the used count and - if it hits the limit - sends the log off
  * to the worker thread and NULLs it out. */
-static void send_log(MVMThreadContext *tc, MVMSpeshLog *sl) {
+static void send_log(struct MVMThreadContext *tc, MVMSpeshLog *sl) {
     if (tc->instance->spesh_blocking) {
         uv_mutex_t *block_mutex;
         uv_cond_t *block_condvar;
@@ -52,7 +52,7 @@ static void send_log(MVMThreadContext *tc, MVMSpeshLog *sl) {
         tc->spesh_log = NULL;
     }
 }
-static void commit_entry(MVMThreadContext *tc, MVMSpeshLog *sl) {
+static void commit_entry(struct MVMThreadContext *tc, MVMSpeshLog *sl) {
     sl->body.used++;
     if (sl->body.used == sl->body.limit)
         send_log(tc, sl);
@@ -62,7 +62,7 @@ static void commit_entry(MVMThreadContext *tc, MVMSpeshLog *sl) {
  * spesh log or a spesh log that's quite full. This might hinder us in getting
  * enough data recorded for a tight outer loop in a benchmark. Either grant a
  * bonus log or send the log early so we can have a fresh one. */
-void MVM_spesh_log_new_compunit(MVMThreadContext *tc) {
+void MVM_spesh_log_new_compunit(struct MVMThreadContext *tc) {
     if (tc->num_compunit_extra_logs < 5) {
         if (tc->spesh_log)
             if (tc->spesh_log->body.used > tc->spesh_log->body.limit / 4)
@@ -78,7 +78,7 @@ void MVM_spesh_log_new_compunit(MVMThreadContext *tc) {
 }
 
 /* Log the entry to a call frame along with the parameters. */
-static void log_param_type(MVMThreadContext *tc, int32_t cid, uint16_t arg_idx,
+static void log_param_type(struct MVMThreadContext *tc, int32_t cid, uint16_t arg_idx,
                            MVMObject *value, MVMSpeshLogEntryKind kind, int32_t rw_cont) {
     MVMSpeshLog *sl = tc->spesh_log;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);
@@ -91,7 +91,7 @@ static void log_param_type(MVMThreadContext *tc, int32_t cid, uint16_t arg_idx,
     entry->param.arg_idx = arg_idx;
     commit_entry(tc, sl);
 }
-static void log_parameter(MVMThreadContext *tc, int32_t cid, uint16_t arg_idx, MVMObject *param) {
+static void log_parameter(struct MVMThreadContext *tc, int32_t cid, uint16_t arg_idx, MVMObject *param) {
     MVMContainerSpec const *cs = STABLE(param)->container_spec;
     MVMROOT(tc, param) {
         log_param_type(tc, cid, arg_idx, param, MVM_SPESH_LOG_PARAMETER,
@@ -107,7 +107,7 @@ static void log_parameter(MVMThreadContext *tc, int32_t cid, uint16_t arg_idx, M
         }
     }
 }
-void MVM_spesh_log_entry(MVMThreadContext *tc, int32_t cid, MVMStaticFrame *sf,
+void MVM_spesh_log_entry(struct MVMThreadContext *tc, int32_t cid, MVMStaticFrame *sf,
                          MVMArgs args) {
     MVMSpeshLog *sl = tc->spesh_log;
     if (sl) {
@@ -134,7 +134,7 @@ void MVM_spesh_log_entry(MVMThreadContext *tc, int32_t cid, MVMStaticFrame *sf,
 }
 
 /* Log an OSR point being hit. */
-void MVM_spesh_log_osr(MVMThreadContext *tc) {
+void MVM_spesh_log_osr(struct MVMThreadContext *tc) {
     MVMSpeshLog *sl = tc->spesh_log;
     int32_t cid = tc->cur_frame->spesh_correlation_id;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);
@@ -145,7 +145,7 @@ void MVM_spesh_log_osr(MVMThreadContext *tc) {
 }
 
 /* Log a type. */
-void MVM_spesh_log_type(MVMThreadContext *tc, MVMObject *value) {
+void MVM_spesh_log_type(struct MVMThreadContext *tc, MVMObject *value) {
     MVMSpeshLog *sl = tc->spesh_log;
     int32_t cid = tc->cur_frame->spesh_correlation_id;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);
@@ -157,7 +157,7 @@ void MVM_spesh_log_type(MVMThreadContext *tc, MVMObject *value) {
     commit_entry(tc, sl);
 }
 
-void MVM_spesh_log_type_at(MVMThreadContext *tc, MVMObject *value, uint8_t *prev_op) {
+void MVM_spesh_log_type_at(struct MVMThreadContext *tc, MVMObject *value, uint8_t *prev_op) {
     MVMSpeshLog *sl = tc->spesh_log;
     int32_t cid = tc->cur_frame->spesh_correlation_id;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);
@@ -170,7 +170,7 @@ void MVM_spesh_log_type_at(MVMThreadContext *tc, MVMObject *value, uint8_t *prev
 }
 
 /* Log a decont, only those that did not invoke. */
-void MVM_spesh_log_decont(MVMThreadContext *tc, uint8_t *prev_op, MVMObject *value) {
+void MVM_spesh_log_decont(struct MVMThreadContext *tc, uint8_t *prev_op, MVMObject *value) {
     MVMSpeshLog *sl = tc->spesh_log;
     int32_t cid = tc->cur_frame->spesh_correlation_id;
     if (prev_op + 4 == *(tc->interp_cur_op)) {
@@ -186,7 +186,7 @@ void MVM_spesh_log_decont(MVMThreadContext *tc, uint8_t *prev_op, MVMObject *val
 
 /* Log the target of an invocation; we log the static frame and whether the
  * outer of the code object is the current frame. */
-void MVM_spesh_log_bytecode_target(MVMThreadContext *tc, int32_t cid,
+void MVM_spesh_log_bytecode_target(struct MVMThreadContext *tc, int32_t cid,
         uint32_t bytecode_offset, MVMCode *target) {
     MVMSpeshLog *sl = tc->spesh_log;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);
@@ -199,7 +199,7 @@ void MVM_spesh_log_bytecode_target(MVMThreadContext *tc, int32_t cid,
 }
 
 /* Log the type returned to a frame after an invocation. */
-void MVM_spesh_log_return_type(MVMThreadContext *tc, MVMObject *value) {
+void MVM_spesh_log_return_type(struct MVMThreadContext *tc, MVMObject *value) {
     MVMSpeshLog *sl = tc->spesh_log;
     MVMFrame *caller = tc->cur_frame->caller;
     int32_t cid = caller->spesh_correlation_id;
@@ -220,7 +220,7 @@ void MVM_spesh_log_return_type(MVMThreadContext *tc, MVMObject *value) {
 
 /* Logs the return from logged to unlogged code, for the purpose of stack
  * tracking. */
-void MVM_spesh_log_return_to_unlogged(MVMThreadContext *tc) {
+void MVM_spesh_log_return_to_unlogged(struct MVMThreadContext *tc) {
     MVMSpeshLog *sl = tc->spesh_log;
     int32_t cid = tc->cur_frame->spesh_correlation_id;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);
@@ -230,7 +230,7 @@ void MVM_spesh_log_return_to_unlogged(MVMThreadContext *tc) {
 }
 
 /* Log the result of a dispatch. */
-void MVM_spesh_log_dispatch_resolution_for_correlation_id(MVMThreadContext *tc,
+void MVM_spesh_log_dispatch_resolution_for_correlation_id(struct MVMThreadContext *tc,
         int32_t cid, uint32_t bytecode_offset, uint16_t result_index) {
     MVMSpeshLog *sl = tc->spesh_log;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);

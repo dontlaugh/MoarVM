@@ -7,7 +7,7 @@
 #define MAX_NAMED_ARGS 8
 
 /* Adds facts for an object arg. */
-static void add_facts(MVMThreadContext *tc, MVMSpeshGraph *g, int32_t slot,
+static void add_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, int32_t slot,
                       MVMSpeshStatsType type_tuple_entry, MVMSpeshIns *arg_ins) {
     /* Add appropriate facts from the arg type tuple. */
     int16_t orig = arg_ins->operands[0].reg.orig;
@@ -28,7 +28,7 @@ static void add_facts(MVMThreadContext *tc, MVMSpeshGraph *g, int32_t slot,
 }
 
 /* Handles a pos arg that needs unboxing. */
-static void pos_unbox(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void pos_unbox(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                       MVMSpeshIns *ins, const MVMOpInfo *unbox_op) {
     MVMSpeshOperand  temp  = MVM_spesh_manipulate_get_temp_reg(tc, g, MVM_reg_obj);
     MVMSpeshIns     *unbox = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
@@ -43,7 +43,7 @@ static void pos_unbox(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
 }
 
 /* Handles a pos arg that needs boxing. */
-static void pos_box(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void pos_box(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                     MVMSpeshIns *ins, const MVMOpInfo *hlltype_op, const MVMOpInfo *box_op,
                     const MVMOpInfo *arg_op, uint8_t kind) {
     MVMSpeshOperand  temp_bt, temp_arg;
@@ -77,7 +77,7 @@ static void pos_box(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
 }
 
 /* Gets the primitive boxed by a type. */
-static uint16_t prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, int32_t i) {
+static uint16_t prim_spec(struct MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, int32_t i) {
     MVMObject *type = type_tuple ? type_tuple[i].type : NULL;
     const MVMStorageSpec *ss;
     if (!type)
@@ -88,7 +88,7 @@ static uint16_t prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, i
     return 0;
 }
 
-static uint8_t cmp_prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, int32_t i, int32_t wanted_prim_spec) {
+static uint8_t cmp_prim_spec(struct MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, int32_t i, int32_t wanted_prim_spec) {
     MVMObject *type = NULL;
     int32_t concrete = 0;
     const MVMStorageSpec *ss;
@@ -127,7 +127,7 @@ static uint8_t cmp_prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple
     return 0;
 }
 
-static void insert_getarg_and_box(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void insert_getarg_and_box(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                   MVMSpeshIns *insert_point, MVMCallsiteFlags arg_flags,
                                   int32_t argument_idx, MVMSpeshOperand value_temp) {
     /* Instruction to get value depends on argument type. */
@@ -214,7 +214,7 @@ static void insert_getarg_and_box(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpe
 }
 
 /* Puts a single named argument into a slurpy hash, boxing if needed. */
-static void slurp_named_arg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void slurp_named_arg(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                             MVMSpeshIns *hash_ins, int32_t named_idx) {
     MVMSpeshIns *key_ins;
 
@@ -254,7 +254,7 @@ static void slurp_named_arg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
     MVM_spesh_manipulate_release_temp_reg(tc, g, value_temp);
 }
 
-static void slurp_positional_arg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void slurp_positional_arg(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                  MVMSpeshIns *array_ins, int32_t pos_idx, int32_t target_idx) {
     MVMSpeshIns *index_ins;
 
@@ -293,7 +293,7 @@ static void slurp_positional_arg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
 
 /* Takes information about the incoming callsite and arguments, and performs
  * various optimizations based on that information. */
-void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
+void MVM_spesh_args(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                     MVMSpeshStatsType *type_tuple) {
     /* We need to identify the various arg-related instructions in the graph,
      * then manipulate them as a whole. */

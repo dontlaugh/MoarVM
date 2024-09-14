@@ -26,4 +26,4 @@ struct MVMException {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMException_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMException_initialize(struct MVMThreadContext *tc);

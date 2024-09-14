@@ -51,11 +51,11 @@ struct MVMSpeshFacts {
 #define MVM_SPESH_FACT_KNOWN_BOX_SRC        2048 /* We know what register this value was boxed from */
 #define MVM_SPESH_FACT_RW_CONT              8192 /* Known to be an rw container */
 
-void MVM_spesh_facts_discover(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshPlanned *p,
+void MVM_spesh_facts_discover(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshPlanned *p,
     uint32_t is_specialized);
-void MVM_spesh_facts_depend(MVMThreadContext *tc, MVMSpeshGraph *g,
+void MVM_spesh_facts_depend(struct MVMThreadContext *tc, MVMSpeshGraph *g,
     MVMSpeshFacts *target, MVMSpeshFacts *source);
-void MVM_spesh_facts_object_facts(MVMThreadContext *tc, MVMSpeshGraph *g,
+void MVM_spesh_facts_object_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g,
     MVMSpeshOperand tgt, MVMObject *obj);
-void MVM_spesh_facts_guard_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+void MVM_spesh_facts_guard_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         MVMSpeshIns *ins);

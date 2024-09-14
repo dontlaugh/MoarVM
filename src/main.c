@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 int wmain(int argc, wchar_t *wargv[])
 #endif
 {
-    MVMInstance *instance;
+    struct MVMInstance *instance;
     const char  *input_file;
     const char  *executable_name = NULL;
     const char  *lib_path[8];
@@ -237,7 +237,7 @@ int wmain(int argc, wchar_t *wargv[])
                     return EXIT_FAILURE;
                 }
                 if (port <= 1024 || 65535 < port) {
-                    fprintf(stderr, "ERROR: debug server port out of range. We only accept ports above 1024 and below 65535. (got: %"PRIi64")\n", port);
+                    fprintf(stderr, "ERROR: debug server port out of range. We only accept ports above 1024 and below 65535.\n");
                     return EXIT_FAILURE;
                 }
                 debugserverport = (uint32_t)port;

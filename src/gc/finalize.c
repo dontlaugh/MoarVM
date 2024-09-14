@@ -1,7 +1,7 @@
 #include "moar.h"
 
 /* Turns finalization on or off for a type. */
-void MVM_gc_finalize_set(MVMThreadContext *tc, MVMObject *type, int64_t finalize) {
+void MVM_gc_finalize_set(struct MVMThreadContext *tc, MVMObject *type, int64_t finalize) {
     MVMSTable *st        = STABLE(type);
     int64_t   new_flags = st->mode_flags & (~MVM_FINALIZE_TYPE);
     if (finalize)
@@ -12,7 +12,7 @@ void MVM_gc_finalize_set(MVMThreadContext *tc, MVMObject *type, int64_t finalize
 
 /* Adds an object we've just allocated to the queue of those with finalizers
  * that will need calling upon collection. */
-void MVM_gc_finalize_add_to_queue(MVMThreadContext *tc, MVMObject *obj) {
+void MVM_gc_finalize_add_to_queue(struct MVMThreadContext *tc, MVMObject *obj) {
     MVM_ASSERT_NOT_FROMSPACE(tc, obj);
     if (tc->num_finalize == tc->alloc_finalize) {
         if (tc->alloc_finalize)
@@ -29,7 +29,7 @@ void MVM_gc_finalize_add_to_queue(MVMThreadContext *tc, MVMObject *obj) {
 /* Walks through the per-thread finalize queues, identifying objects that
  * should be finalized, pushing them onto a finalize list, and then marking
  * that list entry. Assumes the world is stopped. */
-static void add_to_finalizing(MVMThreadContext *tc, MVMObject *obj) {
+static void add_to_finalizing(struct MVMThreadContext *tc, MVMObject *obj) {
     if (tc->num_finalizing == tc->alloc_finalizing) {
         if (tc->alloc_finalizing)
             tc->alloc_finalizing *= 2;
@@ -41,7 +41,7 @@ static void add_to_finalizing(MVMThreadContext *tc, MVMObject *obj) {
     tc->finalizing[tc->num_finalizing] = obj;
     tc->num_finalizing++;
 }
-static void walk_thread_finalize_queue(MVMThreadContext *tc, uint8_t gen) {
+static void walk_thread_finalize_queue(struct MVMThreadContext *tc, uint8_t gen) {
     uint32_t collapse_pos = 0;
     uint32_t i;
     for (i = 0; i < tc->num_finalize; i++) {
@@ -70,7 +70,7 @@ static void walk_thread_finalize_queue(MVMThreadContext *tc, uint8_t gen) {
     }
     tc->num_finalize = collapse_pos;
 }
-void MVM_finalize_walk_queues(MVMThreadContext *tc, uint8_t gen) {
+void MVM_finalize_walk_queues(struct MVMThreadContext *tc, uint8_t gen) {
     MVMThread *cur_thread = (MVMThread *)MVM_load(&tc->instance->threads);
     while (cur_thread) {
         if (cur_thread->body.tc) {
@@ -83,13 +83,13 @@ void MVM_finalize_walk_queues(MVMThreadContext *tc, uint8_t gen) {
 }
 
 /* Try to run a finalization handler. Returns a true value if we do so */
-void reinstate_last_handler_result(MVMThreadContext *tc, void *data) {
+void reinstate_last_handler_result(struct MVMThreadContext *tc, void *data) {
     tc->last_handler_result = *((MVMObject **)data);
 }
-void mark_last_handler_result(MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
+void mark_last_handler_result(struct MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
     MVM_gc_worklist_add(tc, worklist, (MVMObject **)data);
 }
-void MVM_gc_finalize_run_handler(MVMThreadContext *tc) {
+void MVM_gc_finalize_run_handler(struct MVMThreadContext *tc) {
     /* Make sure there is a current frame and that there's a HLL handler
      * to run. */
     if (!tc->cur_frame)

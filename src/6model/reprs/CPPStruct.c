@@ -9,7 +9,7 @@ static void free_repr_data(MVMCPPStructREPRData *repr_data);
  * list of attributes (populating the passed flat_list). Also builds
  * the index mapping for doing named lookups. Note index is not related
  * to the storage position. */
-static MVMObject * index_mapping_and_flat_list(MVMThreadContext *tc, MVMObject *mro,
+static MVMObject * index_mapping_and_flat_list(struct MVMThreadContext *tc, MVMObject *mro,
          MVMCPPStructREPRData *repr_data, MVMSTable *st) {
     MVMInstance *instance  = tc->instance;
     MVMObject *flat_list, *class_list, *attr_map_list;
@@ -103,7 +103,7 @@ static int32_t round_up_to_multi(int32_t i, int32_t m) {
 /* This works out an allocation strategy for the object. It takes care of
  * "inlining" storage of attributes that are natively typed, as well as
  * noting unbox targets. */
-static void compute_allocation_strategy(MVMThreadContext *tc, MVMSTable *st,
+static void compute_allocation_strategy(struct MVMThreadContext *tc, MVMSTable *st,
                                         MVMObject *repr_info, MVMCPPStructREPRData *repr_data) {
     /* Compute index mapping table and get flat list of attributes. */
     MVMObject *flat_list;
@@ -357,7 +357,7 @@ static void set_ptr_at_offset(void *data, int32_t offset, void *value) {
 }
 
 /* Helper for finding a slot number. */
-static int32_t try_get_slot(MVMThreadContext *tc, MVMCPPStructREPRData *repr_data, MVMObject *class_key, MVMString *name) {
+static int32_t try_get_slot(struct MVMThreadContext *tc, MVMCPPStructREPRData *repr_data, MVMObject *class_key, MVMString *name) {
     if (repr_data->name_to_index_mapping) {
         MVMCPPStructNameMap *cur_map_entry = repr_data->name_to_index_mapping;
         while (cur_map_entry->class_key != NULL) {
@@ -375,7 +375,7 @@ static int32_t try_get_slot(MVMThreadContext *tc, MVMCPPStructREPRData *repr_dat
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &CPPStruct_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -388,7 +388,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Composes the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *repr_info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *repr_info) {
     /* Compute allocation strategy. */
     MVMObject *attr_info = MVM_repr_at_key_o(tc, repr_info, tc->instance->str_consts.attribute);
     MVMCPPStructREPRData *repr_data = MVM_calloc(1, sizeof(MVMCPPStructREPRData));
@@ -399,7 +399,7 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *repr_info) {
 }
 
 /* Initialize a new instance. */
-static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static void initialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMCPPStructREPRData * repr_data = (MVMCPPStructREPRData *)st->REPR_data;
 
     /* Allocate object body. */
@@ -423,13 +423,13 @@ static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
 }
 
 /* Copies to the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "cloning a CPPStruct is NYI");
 }
 
 /* Helper for complaining about attribute access errors. */
-MVM_NO_RETURN static void no_such_attribute(MVMThreadContext *tc, const char *action, MVMObject *class_handle, MVMString *name) MVM_NO_RETURN_ATTRIBUTE;
-static void no_such_attribute(MVMThreadContext *tc, const char *action, MVMObject *class_handle, MVMString *name) {
+MVM_NO_RETURN static void no_such_attribute(struct MVMThreadContext *tc, const char *action, MVMObject *class_handle, MVMString *name) MVM_NO_RETURN_ATTRIBUTE;
+static void no_such_attribute(struct MVMThreadContext *tc, const char *action, MVMObject *class_handle, MVMString *name) {
     char *c_name = MVM_string_utf8_encode_C_string(tc, name);
     char *waste[] = { c_name, NULL };
     MVM_exception_throw_adhoc_free(tc, waste, "Can not %s non-existent attribute '%s'",
@@ -437,13 +437,13 @@ static void no_such_attribute(MVMThreadContext *tc, const char *action, MVMObjec
 }
 
 /* Helper to die because this type doesn't support attributes. */
-MVM_NO_RETURN static void die_no_attrs(MVMThreadContext *tc) MVM_NO_RETURN_ATTRIBUTE;
-static void die_no_attrs(MVMThreadContext *tc) {
+MVM_NO_RETURN static void die_no_attrs(struct MVMThreadContext *tc) MVM_NO_RETURN_ATTRIBUTE;
+static void die_no_attrs(struct MVMThreadContext *tc) {
     MVM_exception_throw_adhoc(tc,
         "CPPStruct representation attribute not yet fully implemented");
 }
 
-static void get_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+static void get_attribute(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
         void *data, MVMObject *class_handle, MVMString *name, int64_t hint,
         MVMRegister *result_reg, uint16_t kind) {
     MVMCPPStructREPRData *repr_data = (MVMCPPStructREPRData *)st->REPR_data;
@@ -562,7 +562,7 @@ static void get_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
 }
 
 /* Binds the given value to the specified attribute. */
-static void bind_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
+static void bind_attribute(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
         void *data, MVMObject *class_handle, MVMString *name, int64_t hint,
         MVMRegister value_reg, uint16_t kind) {
     MVMCPPStructREPRData *repr_data = (MVMCPPStructREPRData *)st->REPR_data;
@@ -680,17 +680,17 @@ static void bind_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
 
 
 /* Checks if an attribute has been initialized. */
-static int64_t is_attribute_initialized(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, int64_t hint) {
+static int64_t is_attribute_initialized(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, int64_t hint) {
     die_no_attrs(tc);
 }
 
 /* Gets the hint for the given attribute ID. */
-static int64_t hint_for(MVMThreadContext *tc, MVMSTable *st, MVMObject *class_handle, MVMString *name) {
+static int64_t hint_for(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *class_handle, MVMString *name) {
     return MVM_NO_HINT;
 }
 
 /* Adds held objects to the GC worklist. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMCPPStructREPRData *repr_data = (MVMCPPStructREPRData *) st->REPR_data;
     MVMCPPStructBody *body = (MVMCPPStructBody *)data;
     int32_t i;
@@ -699,7 +699,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Marks the representation data in an STable.*/
-static void gc_mark_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMGCWorklist *worklist) {
+static void gc_mark_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMGCWorklist *worklist) {
     MVMCPPStructREPRData *repr_data = (MVMCPPStructREPRData *)st->REPR_data;
     if (repr_data) {
         int32_t i;
@@ -743,14 +743,14 @@ static void free_repr_data(MVMCPPStructREPRData *repr_data) {
 }
 
 /* Free representation data. */
-static void gc_free_repr_data(MVMThreadContext *tc, MVMSTable *st) {
+static void gc_free_repr_data(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMCPPStructREPRData *repr_data = (MVMCPPStructREPRData *)st->REPR_data;
     free_repr_data(repr_data);
 }
 
 /* This is called to do any cleanup of resources when an object gets
  * embedded inside another one. Never called on a top-level object. */
-static void gc_cleanup(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static void gc_cleanup(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMCPPStructBody *body = (MVMCPPStructBody *)data;
     if (body->child_objs)
         MVM_free(body->child_objs);
@@ -761,7 +761,7 @@ static void gc_cleanup(MVMThreadContext *tc, MVMSTable *st, void *data) {
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     gc_cleanup(tc, STABLE(obj), OBJECT_BODY(obj));
 }
 
@@ -775,12 +775,12 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Serializes the REPR data. */
-static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
+static void serialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
     MVMCPPStructREPRData *repr_data = (MVMCPPStructREPRData *)st->REPR_data;
     int32_t i, num_classes, num_slots;
 
@@ -820,7 +820,7 @@ static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializ
 }
 
 /* Deserializes the REPR data. */
-static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     MVMCPPStructREPRData *repr_data = (MVMCPPStructREPRData *) MVM_malloc(sizeof(MVMCPPStructREPRData));
     int32_t i, num_classes, num_slots;
 
@@ -867,12 +867,12 @@ static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerial
     st->REPR_data = repr_data;
 }
 
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMCPPStruct);
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMCPPStruct_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMCPPStruct_initialize(struct MVMThreadContext *tc) {
     return &CPPStruct_this_repr;
 }
 

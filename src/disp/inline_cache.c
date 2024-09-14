@@ -2,23 +2,23 @@
 
 #define DUMP_FULL_CACHES 0
 
-static uint32_t try_update_cache_entry(MVMThreadContext *tc, MVMDispInlineCacheEntry **target,
+static uint32_t try_update_cache_entry(struct MVMThreadContext *tc, MVMDispInlineCacheEntry **target,
         MVMDispInlineCacheEntry *from, MVMDispInlineCacheEntry *to);
 
 /**
  * Inline caching of getlexstatic_o
  **/
 
-static int getlexstatic_initial(MVMThreadContext *tc,
+static int getlexstatic_initial(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMString *name, MVMRegister *r);
-static int getlexstatic_resolved(MVMThreadContext *tc,
+static int getlexstatic_resolved(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMString *name, MVMRegister *r);
 
 /* Unlinked node. */
 static MVMDispInlineCacheEntry unlinked_getlexstatic = { getlexstatic_initial };
 
 /* Initial unlinked handler. */
-static int getlexstatic_initial(MVMThreadContext *tc,
+static int getlexstatic_initial(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMString *name, MVMRegister *r) {
     /* Do the lookup. */
     int found = MVM_frame_find_lexical_by_name(tc, name, MVM_reg_obj, r);
@@ -36,7 +36,7 @@ static int getlexstatic_initial(MVMThreadContext *tc,
 }
 
 /* Once resolved, just hand back the result. */
-static int getlexstatic_resolved(MVMThreadContext *tc,
+static int getlexstatic_resolved(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMString *name, MVMRegister *r) {
     MVMDispInlineCacheEntryResolvedGetLexStatic *resolved =
         (MVMDispInlineCacheEntryResolvedGetLexStatic *)*entry_ptr;
@@ -49,12 +49,12 @@ static int getlexstatic_resolved(MVMThreadContext *tc,
  * Inline caching of dispatch_*
  **/
 
-static void dispatch_initial(MVMThreadContext *tc,
+static void dispatch_initial(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
         MVMString *id, MVMCallsite *cs, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset);
 
-static void dispatch_initial_flattening(MVMThreadContext *tc,
+static void dispatch_initial_flattening(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
         MVMString *id, MVMCallsite *cs, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset);
@@ -64,7 +64,7 @@ static MVMDispInlineCacheEntry unlinked_dispatch = { .run_dispatch = dispatch_in
 static MVMDispInlineCacheEntry unlinked_dispatch_flattening =
     { .run_dispatch = dispatch_initial_flattening };
 
-static void dispatch_initial(MVMThreadContext *tc,
+static void dispatch_initial(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
         MVMString *id, MVMCallsite *callsite, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
@@ -80,7 +80,7 @@ static void dispatch_initial(MVMThreadContext *tc,
     MVM_disp_program_run_dispatch(tc, disp, arg_info, entry_ptr, seen, sf);
 }
 
-static void dispatch_initial_flattening(MVMThreadContext *tc,
+static void dispatch_initial_flattening(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
         MVMString *id, MVMCallsite *cs, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
@@ -93,7 +93,7 @@ static void dispatch_initial_flattening(MVMThreadContext *tc,
     MVM_disp_program_run_dispatch(tc, disp, record->arg_info, entry_ptr, seen, sf);
 }
 
-static void dispatch_monomorphic(MVMThreadContext *tc,
+static void dispatch_monomorphic(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
         MVMString *id, MVMCallsite *callsite, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
@@ -117,7 +117,7 @@ static void dispatch_monomorphic(MVMThreadContext *tc,
     }
 }
 
-static void dispatch_monomorphic_flattening(MVMThreadContext *tc,
+static void dispatch_monomorphic_flattening(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
         MVMString *id, MVMCallsite *callsite, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
@@ -156,7 +156,7 @@ static void dispatch_monomorphic_flattening(MVMThreadContext *tc,
             sf);
 }
 
-static void dispatch_polymorphic(MVMThreadContext *tc,
+static void dispatch_polymorphic(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
         MVMString *id, MVMCallsite *callsite, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
@@ -190,7 +190,7 @@ static void dispatch_polymorphic(MVMThreadContext *tc,
             bytecode_offset);
 }
 
-static void dispatch_polymorphic_flattening(MVMThreadContext *tc,
+static void dispatch_polymorphic_flattening(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
         MVMString *id, MVMCallsite *callsite, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
@@ -228,7 +228,7 @@ static void dispatch_polymorphic_flattening(MVMThreadContext *tc,
             sf);
 }
 
-uint32_t MVM_disp_inline_cache_get_kind(MVMThreadContext *tc,
+uint32_t MVM_disp_inline_cache_get_kind(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry *entry) {
     int32_t kind = MVM_disp_inline_cache_try_get_kind(tc, entry);
     if (kind < 0)
@@ -236,7 +236,7 @@ uint32_t MVM_disp_inline_cache_get_kind(MVMThreadContext *tc,
     return (uint32_t)kind;
 }
 
-int32_t MVM_disp_inline_cache_try_get_kind(MVMThreadContext *tc,
+int32_t MVM_disp_inline_cache_try_get_kind(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry *entry) {
     if (!entry)
         return -1;
@@ -278,13 +278,13 @@ static void set_max_temps_flattening(MVMDispInlineCacheEntryPolymorphicDispatchF
             max = entry->dps[i]->num_temporaries;
     entry->max_temporaries = max;
 }
-static void gc_barrier_program(MVMThreadContext *tc, MVMStaticFrame *root,
+static void gc_barrier_program(struct MVMThreadContext *tc, MVMStaticFrame *root,
         MVMDispProgram *dp) {
     uint32_t i;
     for (i = 0; i < dp->num_gc_constants; i++)
         MVM_gc_write_barrier(tc, (MVMCollectable *)root, dp->gc_constants[i]);
 }
-uint32_t MVM_disp_inline_cache_transition(MVMThreadContext *tc,
+uint32_t MVM_disp_inline_cache_transition(struct MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *entry,
         MVMStaticFrame *root, MVMDispDefinition *initial_disp,
         MVMCallsite *initial_cs, MVMDispProgram *dp) {
@@ -438,7 +438,7 @@ static uint32_t shift_for_interval(uint32_t v) {
 }
 
 /* Sets up the inline caches for the specified static frame. */
-void MVM_disp_inline_cache_setup(MVMThreadContext *tc, MVMStaticFrame *sf) {
+void MVM_disp_inline_cache_setup(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     /* Walk the bytecode, looking for instructions that want cache entries.
      * Also look for the minimum byte distance between two such instructions. */
     MVMCompUnit *cu = sf->body.cu;
@@ -593,7 +593,7 @@ void MVM_disp_inline_cache_setup(MVMThreadContext *tc, MVMStaticFrame *sf) {
 }
 
 /* Cleans up a cache entry. */
-static void cleanup_entry(MVMThreadContext *tc, MVMDispInlineCacheEntry *entry, uint8_t destroy_dps) {
+static void cleanup_entry(struct MVMThreadContext *tc, MVMDispInlineCacheEntry *entry, uint8_t destroy_dps) {
     if (!entry)
         return;
     else if (entry->run_getlexstatic == getlexstatic_initial) {
@@ -641,7 +641,7 @@ static void cleanup_entry(MVMThreadContext *tc, MVMDispInlineCacheEntry *entry, 
 }
 
 /* Tries to migrate an inline cache entry to its next state. */
-uint32_t try_update_cache_entry(MVMThreadContext *tc, MVMDispInlineCacheEntry **target,
+uint32_t try_update_cache_entry(struct MVMThreadContext *tc, MVMDispInlineCacheEntry **target,
         MVMDispInlineCacheEntry *from, MVMDispInlineCacheEntry *to) {
     if (MVM_trycas(target, from, to)) {
         cleanup_entry(tc, from, 0);
@@ -655,7 +655,7 @@ uint32_t try_update_cache_entry(MVMThreadContext *tc, MVMDispInlineCacheEntry **
 
 /* Given the inline cache entry for a getlexstatic_o instruction, return the
  * object it is resolved to, if it is in a resolved state. */
-MVMObject * MVM_disp_inline_cache_get_lex_resolution(MVMThreadContext *tc, MVMStaticFrame *sf,
+MVMObject * MVM_disp_inline_cache_get_lex_resolution(struct MVMThreadContext *tc, MVMStaticFrame *sf,
         uint32_t bytecode_offset) {
     MVMDispInlineCache *cache = &(sf->body.inline_cache);
     MVMDispInlineCacheEntry *entry = cache->entries[bytecode_offset >> cache->bit_shift];
@@ -665,14 +665,14 @@ MVMObject * MVM_disp_inline_cache_get_lex_resolution(MVMThreadContext *tc, MVMSt
 }
 
 /* Given a static frame and a bytecode offset, resolve the inline cache slot. */
-uint32_t MVM_disp_inline_cache_get_slot(MVMThreadContext *tc, MVMStaticFrame *sf,
+uint32_t MVM_disp_inline_cache_get_slot(struct MVMThreadContext *tc, MVMStaticFrame *sf,
         uint32_t bytecode_offset) {
     MVMDispInlineCache *cache = &(sf->body.inline_cache);
     return bytecode_offset >> cache->bit_shift;
 }
 
 /* GC-mark an inline cache entry. */
-void MVM_disp_inline_cache_mark(MVMThreadContext *tc, MVMDispInlineCache *cache,
+void MVM_disp_inline_cache_mark(struct MVMThreadContext *tc, MVMDispInlineCache *cache,
         MVMGCWorklist *worklist) {
     uint32_t i;
     for (i = 0; i < cache->num_entries; i++) {
@@ -721,7 +721,7 @@ void MVM_disp_inline_cache_mark(MVMThreadContext *tc, MVMDispInlineCache *cache,
 }
 
 /* Clear up the memory associated with an inline cache. */
-void MVM_disp_inline_cache_destroy(MVMThreadContext *tc, MVMDispInlineCache *cache) {
+void MVM_disp_inline_cache_destroy(struct MVMThreadContext *tc, MVMDispInlineCache *cache) {
     uint32_t i;
     for (i = 0; i < cache->num_entries; i++)
         cleanup_entry(tc, cache->entries[i], 1);

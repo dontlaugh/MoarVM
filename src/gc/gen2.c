@@ -139,7 +139,7 @@ void MVM_gc_gen2_destroy(MVMInstance *i, MVMGen2Allocator *al) {
 }
 
 /* blindly move pages from one gen2 to another */
-void MVM_gc_gen2_transfer(MVMThreadContext *src, MVMThreadContext *dest) {
+void MVM_gc_gen2_transfer(struct MVMThreadContext *src, struct MVMThreadContext *dest) {
     MVMGen2Allocator *gen2 = src->gen2, *dest_gen2 = dest->gen2;
     uint32_t bin, obj_size, page;
     char ***freelist_insert_pos;

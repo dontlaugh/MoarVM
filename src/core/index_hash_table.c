@@ -2,7 +2,7 @@
 
 #define INDEX_MIN_SIZE_BASE_2 3
 
-MVM_STATIC_INLINE void hash_demolish_internal(MVMThreadContext *tc,
+static inline void hash_demolish_internal(struct MVMThreadContext *tc,
                                               struct MVMIndexHashTableControl *control) {
     size_t allocated_items = MVM_index_hash_allocated_items(control);
     size_t entries_size = MVM_hash_round_size_up(sizeof(struct MVMIndexHashEntry) * allocated_items);
@@ -12,7 +12,7 @@ MVM_STATIC_INLINE void hash_demolish_internal(MVMThreadContext *tc,
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
    which you allocated (heap, stack, inside another struct, wherever) */
-void MVM_index_hash_demolish(MVMThreadContext *tc, MVMIndexHashTable *hashtable) {
+void MVM_index_hash_demolish(struct MVMThreadContext *tc, MVMIndexHashTable *hashtable) {
     struct MVMIndexHashTableControl *control = hashtable->table;
     if (!control)
         return;
@@ -22,7 +22,7 @@ void MVM_index_hash_demolish(MVMThreadContext *tc, MVMIndexHashTable *hashtable)
 /* and then free memory if you allocated it */
 
 
-MVM_STATIC_INLINE struct MVMIndexHashTableControl *hash_allocate_common(MVMThreadContext *tc,
+static inline struct MVMIndexHashTableControl *hash_allocate_common(struct MVMThreadContext *tc,
                                                                         uint8_t official_size_log2) {
     uint32_t official_size = 1 << (uint32_t)official_size_log2;
     uint32_t max_items = official_size * MVM_INDEX_HASH_LOAD_FACTOR;
@@ -69,7 +69,7 @@ MVM_STATIC_INLINE struct MVMIndexHashTableControl *hash_allocate_common(MVMThrea
     return control;
 }
 
-void MVM_index_hash_build(MVMThreadContext *tc,
+void MVM_index_hash_build(struct MVMThreadContext *tc,
                           MVMIndexHashTable *hashtable,
                           uint32_t entries) {
     uint32_t initial_size_base2;
@@ -88,7 +88,7 @@ void MVM_index_hash_build(MVMThreadContext *tc,
     hashtable->table = hash_allocate_common(tc, initial_size_base2);
 }
 
-MVM_STATIC_INLINE void hash_insert_internal(MVMThreadContext *tc,
+static inline void hash_insert_internal(struct MVMThreadContext *tc,
                                             struct MVMIndexHashTableControl *control,
                                             MVMString **list,
                                             uint32_t idx) {
@@ -193,7 +193,7 @@ MVM_STATIC_INLINE void hash_insert_internal(MVMThreadContext *tc,
     }
 }
 
-static struct MVMIndexHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
+static struct MVMIndexHashTableControl *maybe_grow_hash(struct MVMThreadContext *tc,
                                                         struct MVMIndexHashTableControl *control,
                                                         MVMString **list) {
     /* control->max_items may have been set to 0 to trigger a call into this
@@ -279,7 +279,7 @@ static struct MVMIndexHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
 
 /* UNCONDITIONALLY creates a new hash entry with the given key and value.
  * Doesn't check if the key already exists. Use with care. */
-void MVM_index_hash_insert_nocheck(MVMThreadContext *tc,
+void MVM_index_hash_insert_nocheck(struct MVMThreadContext *tc,
                                    MVMIndexHashTable *hashtable,
                                    MVMString **list,
                                    uint32_t idx) {

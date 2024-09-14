@@ -47,7 +47,7 @@ static const int8_t arg_fpr[] = {
 };
 
 
-void MVM_jit_arch_storage_for_arglist(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_arch_storage_for_arglist(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                                       MVMJitExprTree *tree, int32_t arglist_node,
                                       MVMJitStorageRef *storage) {
     uint32_t narg = MVM_JIT_EXPR_NCHILD(tree, arglist_node);
@@ -96,7 +96,7 @@ static const int8_t arg_fpr[] = {
 };
 
 
-void MVM_jit_arch_storage_for_arglist(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_arch_storage_for_arglist(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                                       MVMJitExprTree *tree, int32_t arglist_node,
                                       MVMJitStorageRef *storage) {
     int32_t i, narg = MVM_JIT_EXPR_NCHILD(tree, arglist_node);

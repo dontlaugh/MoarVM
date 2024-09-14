@@ -5,7 +5,7 @@ static const MVMREPROps MVMNull_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &MVMNull_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,12 +18,12 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Creates a new instance based on the type object. */
-static MVMObject * allocate(MVMThreadContext *tc, MVMSTable *st) {
+static MVMObject * allocate(struct MVMThreadContext *tc, MVMSTable *st) {
     MVM_exception_throw_adhoc(tc, "Cannot create an instance of null type");
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot clone null type");
 }
 
@@ -37,22 +37,22 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     MVM_exception_throw_adhoc(tc, "Cannot compose null type");
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMNull);
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMNull_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMNull_initialize(struct MVMThreadContext *tc) {
     return &MVMNull_this_repr;
 }
 

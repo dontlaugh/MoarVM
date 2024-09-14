@@ -4,9 +4,9 @@ struct MVMNull {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMNull_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMNull_initialize(struct MVMThreadContext *tc);
 
 /* Macro for VM null checks. */
-MVM_STATIC_INLINE int64_t MVM_is_null(MVMThreadContext *tc, MVMObject *check) {
+static inline int64_t MVM_is_null(struct MVMThreadContext *tc, MVMObject *check) {
     return !check || check == tc->instance->VMNull;
 }

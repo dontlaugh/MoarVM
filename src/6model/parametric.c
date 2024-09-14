@@ -1,7 +1,7 @@
 #include "moar.h"
 
 /* Takes a type and sets it up as a parametric type, provided it's OK to do so. */
-void MVM_6model_parametric_setup(MVMThreadContext *tc, MVMObject *type, MVMObject *parameterizer) {
+void MVM_6model_parametric_setup(struct MVMThreadContext *tc, MVMObject *type, MVMObject *parameterizer) {
     MVMSTable *st = STABLE(type);
 
     /* Ensure that the type is not already parametric or parameterized. */
@@ -36,7 +36,7 @@ typedef struct {
     MVMObject   *parameters;
     MVMRegister *result;
 } ParameterizeReturnData;
-static void finish_parameterizing(MVMThreadContext *tc, void *sr_data) {
+static void finish_parameterizing(struct MVMThreadContext *tc, void *sr_data) {
     ParameterizeReturnData *prd = (ParameterizeReturnData *)sr_data;
     MVMObject *found;
     MVMObject *parameters = prd->parameters;
@@ -78,12 +78,12 @@ static void finish_parameterizing(MVMThreadContext *tc, void *sr_data) {
         uv_mutex_unlock(&tc->instance->mutex_parameterization_add);
     }
 }
-static void mark_parameterize_sr_data(MVMThreadContext *tc, void *sr_data, MVMGCWorklist *worklist) {
+static void mark_parameterize_sr_data(struct MVMThreadContext *tc, void *sr_data, MVMGCWorklist *worklist) {
     ParameterizeReturnData *prd = (ParameterizeReturnData *)sr_data;
     MVM_gc_worklist_add(tc, worklist, &(prd->parametric_type));
     MVM_gc_worklist_add(tc, worklist, &(prd->parameters));
 }
-void MVM_6model_parametric_parameterize(MVMThreadContext *tc, MVMObject *type, MVMObject *params,
+void MVM_6model_parametric_parameterize(struct MVMThreadContext *tc, MVMObject *type, MVMObject *params,
                                         MVMRegister *result) {
     /* Ensure we have a parametric type. */
     MVMSTable *st = STABLE(type);
@@ -114,7 +114,7 @@ void MVM_6model_parametric_parameterize(MVMThreadContext *tc, MVMObject *type, M
 
 /* Try to find an existing parameterization of the specified type and
  * parameters. If none is found, returns NULL. */
-MVMObject * MVM_6model_parametric_try_find_parameterization(MVMThreadContext *tc, MVMSTable *st, MVMObject *params) {
+MVMObject * MVM_6model_parametric_try_find_parameterization(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *params) {
     int64_t i, j, num_lookups, params_elems;
     num_lookups  = MVM_repr_elems(tc, st->paramet.ric.lookup);
     params_elems = MVM_repr_elems(tc, params);
@@ -140,7 +140,7 @@ MVMObject * MVM_6model_parametric_try_find_parameterization(MVMThreadContext *tc
 
 /* If the passed type is a parameterized type, then returns the parametric
  * type it is based on. Otherwise, returns null. */
-MVMObject * MVM_6model_parametric_type_parameterized(MVMThreadContext *tc, MVMObject *type) {
+MVMObject * MVM_6model_parametric_type_parameterized(struct MVMThreadContext *tc, MVMObject *type) {
     MVMSTable *st = STABLE(type);
     if (st->mode_flags & MVM_PARAMETERIZED_TYPE)
         return st->paramet.erized.parametric_type;
@@ -149,7 +149,7 @@ MVMObject * MVM_6model_parametric_type_parameterized(MVMThreadContext *tc, MVMOb
 }
 
 /* Provided this is a parameterized type, returns the array of type parameters. */
-MVMObject * MVM_6model_parametric_type_parameters(MVMThreadContext *tc, MVMObject *type) {
+MVMObject * MVM_6model_parametric_type_parameters(struct MVMThreadContext *tc, MVMObject *type) {
     MVMSTable *st = STABLE(type);
     if (!(st->mode_flags & MVM_PARAMETERIZED_TYPE))
         MVM_exception_throw_adhoc(tc, "This type is not parameterized");
@@ -157,7 +157,7 @@ MVMObject * MVM_6model_parametric_type_parameters(MVMThreadContext *tc, MVMObjec
 }
 
 /* Provided this is a parameterized type, returns the type parameter at the specified index. */
-MVMObject * MVM_6model_parametric_type_parameter_at(MVMThreadContext *tc, MVMObject *type, int64_t idx) {
+MVMObject * MVM_6model_parametric_type_parameter_at(struct MVMThreadContext *tc, MVMObject *type, int64_t idx) {
     MVMSTable *st = STABLE(type);
     if (!(st->mode_flags & MVM_PARAMETERIZED_TYPE))
         MVM_exception_throw_adhoc(tc, "This type is not parameterized");

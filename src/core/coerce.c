@@ -50,7 +50,7 @@ static int __inline __builtin_clzll(uint64_t value) {
 #endif
 #endif
 
-int64_t MVM_coerce_istrue_s(MVMThreadContext *tc, MVMString *str) {
+int64_t MVM_coerce_istrue_s(struct MVMThreadContext *tc, MVMString *str) {
     return str == NULL || !IS_CONCRETE(str) || MVM_string_graphs_nocheck(tc, str) == 0 ? 0 : 1;
 }
 
@@ -134,7 +134,7 @@ static char * i64toa_jeaiii(int64_t i, char* b) {
 
 /* End code */
 static const int mag[] = { 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20, 20 };
-MVMString * MVM_coerce_i_s(MVMThreadContext *tc, int64_t i) {
+MVMString * MVM_coerce_i_s(struct MVMThreadContext *tc, int64_t i) {
     /* See if we can hit the cache. */
     const int cache = 0 <= i && i < MVM_INT_TO_STR_CACHE_SIZE;
     if (cache) {
@@ -173,7 +173,7 @@ MVMString * MVM_coerce_i_s(MVMThreadContext *tc, int64_t i) {
     }
 }
 
-MVMString * MVM_coerce_u_s(MVMThreadContext *tc, uint64_t i) {
+MVMString * MVM_coerce_u_s(struct MVMThreadContext *tc, uint64_t i) {
     /* See if we can hit the cache. */
     const int cache = i < MVM_INT_TO_STR_CACHE_SIZE;
     if (cache) {
@@ -211,7 +211,7 @@ MVMString * MVM_coerce_u_s(MVMThreadContext *tc, uint64_t i) {
     }
 }
 
-MVMString * MVM_coerce_n_s(MVMThreadContext *tc, double n) {
+MVMString * MVM_coerce_n_s(struct MVMThreadContext *tc, double n) {
     if (MVM_UNLIKELY(MVM_num_isnanorinf(tc, n))) {
         if (n == MVM_num_posinf(tc)) {
             return MVM_string_ascii_decode_nt(tc, tc->instance->VMString, "Inf");
@@ -406,7 +406,7 @@ MVMString * MVM_coerce_n_s(MVMThreadContext *tc, double n) {
     return MVM_string_ascii_from_buf_nocheck(tc, blob, orig_len);
 }
 
-int64_t MVM_coerce_s_i(MVMThreadContext *tc, MVMString *str) {
+int64_t MVM_coerce_s_i(struct MVMThreadContext *tc, MVMString *str) {
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
     int64_t       result = 0;
     int32_t       any = 0, negative = 0;
@@ -564,7 +564,7 @@ int64_t MVM_coerce_s_i(MVMThreadContext *tc, MVMString *str) {
     return result;
 }
 
-uint64_t MVM_coerce_s_u(MVMThreadContext *tc, MVMString *str) {
+uint64_t MVM_coerce_s_u(struct MVMThreadContext *tc, MVMString *str) {
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
     uint64_t      result = 0;
     int32_t       any = 0, negative = 0;
@@ -726,7 +726,7 @@ uint64_t MVM_coerce_s_u(MVMThreadContext *tc, MVMString *str) {
     return result;
 }
 
-int64_t MVM_coerce_simple_intify(MVMThreadContext *tc, MVMObject *obj) {
+int64_t MVM_coerce_simple_intify(struct MVMThreadContext *tc, MVMObject *obj) {
     /* Handle null and non-concrete case. */
     if (MVM_is_null(tc, obj) || !IS_CONCRETE(obj)) {
         return 0;
@@ -750,7 +750,7 @@ int64_t MVM_coerce_simple_intify(MVMThreadContext *tc, MVMObject *obj) {
     }
 }
 
-MVMObject * MVM_radix(MVMThreadContext *tc, int64_t radix, MVMString *str, int64_t offset, int64_t flag) {
+MVMObject * MVM_radix(struct MVMThreadContext *tc, int64_t radix, MVMString *str, int64_t offset, int64_t flag) {
     MVMObject *result;
     int64_t zvalue = 0;
     int64_t chars  = MVM_string_graphs(tc, str);

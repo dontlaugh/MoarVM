@@ -61,16 +61,16 @@ struct MVMSpeshInline {
     int16_t last_spesh_resume_init;
 };
 
-MVMSpeshGraph * MVM_spesh_inline_try_get_graph(MVMThreadContext *tc,
+MVMSpeshGraph * MVM_spesh_inline_try_get_graph(struct MVMThreadContext *tc,
     MVMSpeshGraph *inliner, MVMStaticFrame *target_sf, MVMSpeshCandidate *cand,
     MVMSpeshIns *runbytecode_ins, char **no_inline_reason, uint32_t *effective_size,
     MVMOpInfo const **no_inline_info);
-MVMSpeshGraph * MVM_spesh_inline_try_get_graph_from_unspecialized(MVMThreadContext *tc,
+MVMSpeshGraph * MVM_spesh_inline_try_get_graph_from_unspecialized(struct MVMThreadContext *tc,
     MVMSpeshGraph *inliner, MVMStaticFrame *target_sf, MVMSpeshIns *invoke_ins,
     MVMCallsite *cs, MVMSpeshOperand *args, MVMSpeshStatsType *type_tuple,
     char **no_inline_reason, MVMOpInfo const **no_inline_info);
-void MVM_spesh_inline(MVMThreadContext *tc, MVMSpeshGraph *inliner,
+void MVM_spesh_inline(struct MVMThreadContext *tc, MVMSpeshGraph *inliner,
     MVMCallsite *cs, MVMSpeshOperand *args, MVMSpeshBB *runbytecode_bb,
     MVMSpeshIns *runbytecode_ins, MVMSpeshGraph *inlinee, MVMStaticFrame *inlinee_sf,
     MVMSpeshOperand code_ref_reg, MVMSpeshIns *resume_init, uint16_t bytecode_size);
-uint32_t MVM_spesh_inline_get_max_size(MVMThreadContext *tc, MVMStaticFrame *sf);
+uint32_t MVM_spesh_inline_get_max_size(struct MVMThreadContext *tc, MVMStaticFrame *sf);

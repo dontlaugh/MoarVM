@@ -5,4 +5,4 @@ enum {
     MVM_BC_op_boundary   = 1 << 1,
 };
 
-void MVM_validate_static_frame(MVMThreadContext *tc, MVMStaticFrame *static_frame);
+void MVM_validate_static_frame(struct MVMThreadContext *tc, MVMStaticFrame *static_frame);

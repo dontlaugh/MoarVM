@@ -1,3 +1,5 @@
+#pragma once
+
 /* Exception handler actions. */
 #define MVM_EX_ACTION_GOTO                0
 #define MVM_EX_ACTION_GOTO_WITH_PAYLOAD   1
@@ -63,46 +65,46 @@ struct MVMFrameHandler {
 /* An active (currently executing) exception handler. */
 struct MVMActiveHandler {
     /* The frame the handler was found in. */
-    MVMFrame *frame;
+    struct MVMFrame *frame;
 
     /* The handler information itself. */
-    MVMFrameHandler *handler;
+    struct MVMFrameHandler *handler;
 
     /* Handler information for a JITted handler */
-    MVMJitHandler *jit_handler;
+    struct MVMJitHandler *jit_handler;
 
     /* The exception object. */
-    MVMObject *ex_obj;
+    struct MVMObject *ex_obj;
 
     /* The next active handler in the chain. */
-    MVMActiveHandler *next_handler;
+    struct MVMActiveHandler *next_handler;
 };
 
 /* Exception related functions. */
-MVMObject * MVM_exception_backtrace(MVMThreadContext *tc, MVMObject *ex_obj);
-MVMObject * MVM_exception_backtrace_strings(MVMThreadContext *tc, MVMObject *exObj);
-void MVM_dump_backtrace(MVMThreadContext *tc);
-void MVM_exception_throwcat(MVMThreadContext *tc, uint8_t mode, uint32_t cat, MVMRegister *resume_result);
-void MVM_exception_die(MVMThreadContext *tc, MVMString *str, MVMRegister *rr);
-void MVM_exception_throwobj(MVMThreadContext *tc, uint8_t mode, MVMObject *exObj, MVMRegister *resume_result);
-void MVM_exception_throwpayload(MVMThreadContext *tc, uint8_t mode, uint32_t cat, MVMObject *payload, MVMRegister *resume_result);
-void MVM_exception_resume(MVMThreadContext *tc, MVMObject *exObj);
-MVM_PUBLIC MVM_NO_RETURN void MVM_panic_allocation_failed(size_t len) MVM_NO_RETURN_ATTRIBUTE;
-MVM_PUBLIC MVM_NO_RETURN void MVM_panic(int32_t exitCode, const char *messageFormat, ...) MVM_NO_RETURN_ATTRIBUTE MVM_FORMAT(printf, 2, 3);
-MVM_PUBLIC MVM_NO_RETURN void MVM_oops(MVMThreadContext *tc, const char *messageFormat, ...) MVM_NO_RETURN_ATTRIBUTE MVM_FORMAT(printf, 2, 3);
-MVM_PUBLIC MVM_NO_RETURN void MVM_exception_throw_adhoc(MVMThreadContext *tc, const char *messageFormat, ...) MVM_NO_RETURN_ATTRIBUTE MVM_FORMAT(printf, 2, 3);
-MVM_NO_RETURN void MVM_exception_throw_adhoc_va(MVMThreadContext *tc, const char *messageFormat, va_list args) MVM_NO_RETURN_ATTRIBUTE;
-MVM_PUBLIC MVM_NO_RETURN void MVM_exception_throw_adhoc_free(MVMThreadContext *tc, char **waste, const char *messageFormat, ...) MVM_NO_RETURN_ATTRIBUTE MVM_FORMAT(printf, 3, 4);
-MVM_NO_RETURN void MVM_exception_throw_adhoc_free_va(MVMThreadContext *tc, char **waste, const char *messageFormat, va_list args) MVM_NO_RETURN_ATTRIBUTE;
-MVM_PUBLIC void MVM_crash_on_error(void);
-char * MVM_exception_backtrace_line(MVMThreadContext *tc, MVMFrame *cur_frame, uint16_t not_top, uint8_t *throw_address);
-int32_t MVM_get_exception_category(MVMThreadContext *tc, MVMObject *ex);
-void MVM_bind_exception_category(MVMThreadContext *tc, MVMObject *ex, int32_t category);
-MVMObject * MVM_get_exception_payload(MVMThreadContext *tc, MVMObject *ex);
-void MVM_bind_exception_payload(MVMThreadContext *tc, MVMObject *ex, MVMObject *payload);
-MVMString * MVM_get_exception_message(MVMThreadContext *tc, MVMObject *ex);
-void MVM_bind_exception_message(MVMThreadContext *tc, MVMObject *ex, MVMString *message);
-void MVM_exception_returnafterunwind(MVMThreadContext *tc, MVMObject *ex);
+struct MVMObject * MVM_exception_backtrace(struct MVMThreadContext *tc, struct MVMObject *ex_obj);
+struct MVMObject * MVM_exception_backtrace_strings(struct MVMThreadContext *tc, struct MVMObject *exObj);
+void MVM_dump_backtrace(struct MVMThreadContext *tc);
+void MVM_exception_throwcat(struct MVMThreadContext *tc, uint8_t mode, uint32_t cat, MVMRegister *resume_result);
+void MVM_exception_die(struct MVMThreadContext *tc, MVMString *str, MVMRegister *rr);
+void MVM_exception_throwobj(struct MVMThreadContext *tc, uint8_t mode,struct MVMObject *exObj, MVMRegister *resume_result);
+void MVM_exception_throwpayload(struct MVMThreadContext *tc, uint8_t mode, uint32_t cat,struct MVMObject *payload, MVMRegister *resume_result);
+void MVM_exception_resume(struct MVMThreadContext *tc,struct MVMObject *exObj);
+  void MVM_panic_allocation_failed(size_t len) ;
+  void MVM_panic(int32_t exitCode, const char *messageFormat, ...);
+  void MVM_oops(struct MVMThreadContext *tc, const char *messageFormat, ...);
+  void MVM_exception_throw_adhoc(struct MVMThreadContext *tc, const char *messageFormat, ...);
+ void MVM_exception_throw_adhoc_va(struct MVMThreadContext *tc, const char *messageFormat, va_list args) ;
+  void MVM_exception_throw_adhoc_free(struct MVMThreadContext *tc, char **waste, const char *messageFormat, ...);
+ void MVM_exception_throw_adhoc_free_va(struct MVMThreadContext *tc, char **waste, const char *messageFormat, va_list args);
+ void MVM_crash_on_error(void);
+char * MVM_exception_backtrace_line(struct MVMThreadContext *tc, MVMFrame *cur_frame, uint16_t not_top, uint8_t *throw_address);
+int32_t MVM_get_exception_category(struct MVMThreadContext *tc,struct MVMObject *ex);
+void MVM_bind_exception_category(struct MVMThreadContext *tc,struct MVMObject *ex, int32_t category);
+struct MVMObject * MVM_get_exception_payload(struct MVMThreadContext *tc,struct MVMObject *ex);
+void MVM_bind_exception_payload(struct MVMThreadContext *tc,struct MVMObject *ex,struct MVMObject *payload);
+struct MVMString * MVM_get_exception_message(struct MVMThreadContext *tc,struct MVMObject *ex);
+void MVM_bind_exception_message(struct MVMThreadContext *tc,struct MVMObject *ex, MVMString *message);
+void MVM_exception_returnafterunwind(struct MVMThreadContext *tc,struct MVMObject *ex);
 
 /* Exit codes for panic. */
 #define MVM_exitcode_NYI            12

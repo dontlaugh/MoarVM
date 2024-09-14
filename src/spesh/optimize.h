@@ -18,14 +18,14 @@ struct MVMSpeshCallInfo {
     MVMSpeshIns   *arg_ins[MAX_ARGS_FOR_OPT];
 };
 
-void MVM_spesh_optimize(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshPlanned *p);
-MVM_PUBLIC int16_t MVM_spesh_add_spesh_slot(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c);
-int16_t MVM_spesh_add_spesh_slot_try_reuse(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c);
-void MVM_spesh_copy_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand to,
+void MVM_spesh_optimize(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshPlanned *p);
+ int16_t MVM_spesh_add_spesh_slot(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c);
+int16_t MVM_spesh_add_spesh_slot_try_reuse(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c);
+void MVM_spesh_copy_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand to,
         MVMSpeshOperand from);
-void MVM_spesh_copy_facts_resolved(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *to,
+void MVM_spesh_copy_facts_resolved(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *to,
         MVMSpeshFacts *from);
-MVM_PUBLIC MVMSpeshFacts * MVM_spesh_get_and_use_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o);
-MVM_PUBLIC MVMSpeshFacts * MVM_spesh_get_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o);
-MVM_PUBLIC void MVM_spesh_use_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *f);
-MVM_PUBLIC MVMString * MVM_spesh_get_string(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o);
+ MVMSpeshFacts * MVM_spesh_get_and_use_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o);
+ MVMSpeshFacts * MVM_spesh_get_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o);
+ void MVM_spesh_use_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *f);
+ MVMString * MVM_spesh_get_string(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o);

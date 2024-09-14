@@ -108,7 +108,7 @@ typedef struct siphash siphash;
     HALF_ROUND(v0,v1,v2,v3,13,16); \
     HALF_ROUND(v2,v1,v0,v3,17,21);
 
-MVM_STATIC_INLINE void siphashinit (siphash *sh, size_t src_sz, const uint64_t key[2]) {
+static inline void siphashinit (siphash *sh, size_t src_sz, const uint64_t key[2]) {
     const uint64_t k0 = MVM_MAYBE_TO_LITTLE_ENDIAN_64(key[0]);
     const uint64_t k1 = MVM_MAYBE_TO_LITTLE_ENDIAN_64(key[1]);
     sh->b = (uint64_t)src_sz << 56;
@@ -117,13 +117,13 @@ MVM_STATIC_INLINE void siphashinit (siphash *sh, size_t src_sz, const uint64_t k
     sh->v2 = k0 ^ 0x6c7967656e657261ULL;
     sh->v3 = k1 ^ 0x7465646279746573ULL;
 }
-MVM_STATIC_INLINE void siphashadd64bits (siphash *sh, const uint64_t in) {
+static inline void siphashadd64bits (siphash *sh, const uint64_t in) {
     const uint64_t mi = MVM_MAYBE_TO_LITTLE_ENDIAN_64(in);
     sh->v3 ^= mi;
     DOUBLE_ROUND(sh->v0,sh->v1,sh->v2,sh->v3);
     sh->v0 ^= mi;
 }
-MVM_STATIC_INLINE uint64_t siphashfinish_last_part (siphash *sh, uint64_t t) {
+static inline uint64_t siphashfinish_last_part (siphash *sh, uint64_t t) {
     sh->b |= MVM_MAYBE_TO_LITTLE_ENDIAN_64(t);
     sh->v3 ^= sh->b;
     DOUBLE_ROUND(sh->v0,sh->v1,sh->v2,sh->v3);
@@ -141,12 +141,12 @@ union SipHash64_union {
     uint32_t u32;
     uint8_t  u8[8];
 };
-MVM_STATIC_INLINE uint64_t siphashfinish_32bits (siphash *sh, const uint32_t src) {
+static inline uint64_t siphashfinish_32bits (siphash *sh, const uint32_t src) {
     union SipHash64_union t = { 0 };
     t.u32 = src;
     return siphashfinish_last_part(sh, t.u64);
 }
-MVM_STATIC_INLINE uint64_t siphashfinish (siphash *sh, const uint8_t *src, size_t src_sz) {
+static inline uint64_t siphashfinish (siphash *sh, const uint8_t *src, size_t src_sz) {
     union SipHash64_union t = { 0 };
     switch (src_sz) {
         /* Falls through */
@@ -171,7 +171,7 @@ MVM_STATIC_INLINE uint64_t siphashfinish (siphash *sh, const uint8_t *src, size_
     }
     return siphashfinish_last_part(sh, t.u64);
 }
-MVM_STATIC_INLINE uint64_t siphash24(const uint8_t *src, size_t src_sz, const uint64_t key[2]) {
+static inline uint64_t siphash24(const uint8_t *src, size_t src_sz, const uint64_t key[2]) {
     siphash sh;
 #if defined(MVM_CAN_UNALIGNED_INT64)
     const uint64_t *in = (uint64_t*)src;

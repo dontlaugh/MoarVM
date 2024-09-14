@@ -31,18 +31,18 @@ struct MVMIter {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMIter_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMIter_initialize(struct MVMThreadContext *tc);
 
-MVMObject * MVM_iter(MVMThreadContext *tc, MVMObject *target);
-int64_t MVM_iter_istrue(MVMThreadContext *tc, MVMIter *iter);
-MVMString * MVM_iterkey_s(MVMThreadContext *tc, MVMIter *iterator);
-MVMObject * MVM_iterval(MVMThreadContext *tc, MVMIter *iterator);
+MVMObject * MVM_iter(struct MVMThreadContext *tc, MVMObject *target);
+int64_t MVM_iter_istrue(struct MVMThreadContext *tc, MVMIter *iter);
+MVMString * MVM_iterkey_s(struct MVMThreadContext *tc, MVMIter *iterator);
+MVMObject * MVM_iterval(struct MVMThreadContext *tc, MVMIter *iterator);
 
-MVM_STATIC_INLINE int64_t MVM_iter_istrue_array(MVMThreadContext *tc, MVMIter *iterator) {
+static inline int64_t MVM_iter_istrue_array(struct MVMThreadContext *tc, MVMIter *iterator) {
     return iterator->body.array_state.index + 1 < iterator->body.array_state.limit ? 1 : 0;
 }
 
-MVM_STATIC_INLINE int64_t MVM_iter_istrue_hash(MVMThreadContext *tc, MVMIter *iterator) {
+static inline int64_t MVM_iter_istrue_hash(struct MVMThreadContext *tc, MVMIter *iterator) {
     MVMIterBody *body = &iterator->body;
     MVMStrHashTable *hashtable = &(((MVMHash *)body->target)->body.hashtable);
 

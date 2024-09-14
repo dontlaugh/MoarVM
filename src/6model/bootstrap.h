@@ -1,1 +1,1 @@
-void MVM_6model_bootstrap(MVMThreadContext *tc);
+void MVM_6model_bootstrap(struct MVMThreadContext *tc);

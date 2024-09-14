@@ -4,4 +4,4 @@ struct MVMUninstantiable {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMUninstantiable_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMUninstantiable_initialize(struct MVMThreadContext *tc);

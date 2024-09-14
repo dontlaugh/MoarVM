@@ -43,7 +43,7 @@ void MVM_platform_nanosleep(uint64_t nanos)
     }
 }
 
-void MVM_platform_decodelocaltime(MVMThreadContext *tc, int64_t time, int64_t decoded[]) {
+void MVM_platform_decodelocaltime(struct MVMThreadContext *tc, int64_t time, int64_t decoded[]) {
     const time_t t = (time_t)time;
     struct tm tm;
     errno_t error = localtime_s(&tm, &t);

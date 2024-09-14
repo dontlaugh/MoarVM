@@ -4,10 +4,10 @@
 /* Takes a pointer of a GC-allocated object, and goes through all of the
  * alive thread's fromspace/tospace regions and all gen2 pages to try and
  * find the region the pointer is part of. */
-void MVM_gc_debug_find_region(MVMThreadContext *tc, void *ptr) {
+void MVM_gc_debug_find_region(struct MVMThreadContext *tc, void *ptr) {
     MVMThread *cur_thread = tc->instance->threads;
     while (cur_thread) {
-        MVMThreadContext *thread_tc = cur_thread->body.tc;
+        struct MVMThreadContext *thread_tc = cur_thread->body.tc;
         if (thread_tc) {
             if (ptr >= thread_tc->nursery_fromspace &&
                     (char *)ptr < (char *)thread_tc->nursery_fromspace +

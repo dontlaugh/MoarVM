@@ -134,9 +134,9 @@ typedef struct {
     fields_set fields_set;
 } request_data;
 
-static void write_stacktrace_frames(MVMThreadContext *dtc, cmp_ctx_t *ctx, MVMThread *thread);
-static void request_all_threads_suspend(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument);
-static uint64_t allocate_handle(MVMThreadContext *dtc, MVMObject *target);
+static void write_stacktrace_frames(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, MVMThread *thread);
+static void request_all_threads_suspend(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument);
+static uint64_t allocate_handle(struct MVMThreadContext *dtc, MVMObject *target);
 
 /* Breakpoint stuff */
 static void normalize_filename(char *name) {
@@ -148,7 +148,7 @@ static void normalize_filename(char *name) {
         cur_bs = strchr(cur_bs + 1, '\\');
     }
 }
-MVM_PUBLIC void MVM_debugserver_register_line(MVMThreadContext *tc, char *filename, uint32_t filename_len, uint32_t line_no,  uint32_t *file_idx) {
+ void MVM_debugserver_register_line(struct MVMThreadContext *tc, char *filename, uint32_t filename_len, uint32_t line_no,  uint32_t *file_idx) {
     MVMDebugServerData *debugserver = tc->instance->debugserver;
     MVMDebugServerBreakpointTable *table = debugserver->breakpoints;
     MVMDebugServerBreakpointFileTable *found = NULL;
@@ -228,7 +228,7 @@ MVM_PUBLIC void MVM_debugserver_register_line(MVMThreadContext *tc, char *filena
     uv_mutex_unlock(&debugserver->mutex_breakpoints);
 }
 
-static void stop_point_hit(MVMThreadContext *tc) {
+static void stop_point_hit(struct MVMThreadContext *tc) {
     tc->debugserver_can_invoke_here = 1;
 
     while (1) {
@@ -255,7 +255,7 @@ static void stop_point_hit(MVMThreadContext *tc) {
     tc->debugserver_can_invoke_here = 0;
 }
 
-static uint8_t breakpoint_hit(MVMThreadContext *tc, MVMDebugServerBreakpointFileTable *file, uint32_t line_no) {
+static uint8_t breakpoint_hit(struct MVMThreadContext *tc, MVMDebugServerBreakpointFileTable *file, uint32_t line_no) {
     cmp_ctx_t *ctx = NULL;
     MVMDebugServerBreakpointInfo *info;
     uint32_t index;
@@ -296,7 +296,7 @@ static uint8_t breakpoint_hit(MVMThreadContext *tc, MVMDebugServerBreakpointFile
 
     return must_suspend;
 }
-static void step_point_hit(MVMThreadContext *tc) {
+static void step_point_hit(struct MVMThreadContext *tc) {
     cmp_ctx_t *ctx = (cmp_ctx_t*)tc->instance->debugserver->messagepack_data;
 
     uv_mutex_lock(&tc->instance->debugserver->mutex_network_send);
@@ -315,7 +315,7 @@ static void step_point_hit(MVMThreadContext *tc) {
     tc->step_mode_frame = NULL;
 }
 
-MVM_PUBLIC int32_t MVM_debugserver_breakpoint_check(MVMThreadContext *tc, uint32_t file_idx, uint32_t line_no) {
+ int32_t MVM_debugserver_breakpoint_check(struct MVMThreadContext *tc, uint32_t file_idx, uint32_t line_no) {
     MVMDebugServerData *debugserver = tc->instance->debugserver;
     uint8_t shall_suspend = 0;
 
@@ -369,7 +369,7 @@ MVM_PUBLIC int32_t MVM_debugserver_breakpoint_check(MVMThreadContext *tc, uint32
 
 #define REQUIRE(field, message) do { if (!(data->fields_set & (field))) { data->parse_fail = 1; data->parse_fail_message = (message); return 0; }; accepted = accepted | (field); } while (0)
 
-static uint8_t check_requirements(MVMThreadContext *tc, request_data *data) {
+static uint8_t check_requirements(struct MVMThreadContext *tc, request_data *data) {
     fields_set accepted = FS_id | FS_type;
 
     uint8_t allow_optional = 0;
@@ -496,7 +496,7 @@ static int receive_greeting(MVMSocket *sock) {
     return 0;
 }
 
-static void communicate_error(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *argument) {
+static void communicate_error(struct MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *argument) {
     if (argument) {
         if (tc->instance->debugserver->debugspam_protocol)
             fprintf(stderr, "communicating an error\n");
@@ -508,7 +508,7 @@ static void communicate_error(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data
     }
 }
 
-static void communicate_success(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *argument) {
+static void communicate_success(struct MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *argument) {
     if (argument) {
         if (tc->instance->debugserver->debugspam_protocol)
             fprintf(stderr, "communicating success\n");
@@ -521,7 +521,7 @@ static void communicate_success(MVMThreadContext *tc, cmp_ctx_t *ctx, request_da
 }
 
 /* Send spontaneous events */
-MVM_PUBLIC void MVM_debugserver_notify_thread_creation(MVMThreadContext *tc) {
+ void MVM_debugserver_notify_thread_creation(struct MVMThreadContext *tc) {
     if (tc->instance->debugserver && tc->instance->debugserver->messagepack_data) {
         cmp_ctx_t *ctx = (cmp_ctx_t*)tc->instance->debugserver->messagepack_data;
         uint64_t event_id;
@@ -550,7 +550,7 @@ MVM_PUBLIC void MVM_debugserver_notify_thread_creation(MVMThreadContext *tc) {
     }
 }
 
-MVM_PUBLIC void MVM_debugserver_notify_thread_destruction(MVMThreadContext *tc) {
+ void MVM_debugserver_notify_thread_destruction(struct MVMThreadContext *tc) {
     if (tc->instance->debugserver && tc->instance->debugserver->messagepack_data) {
         cmp_ctx_t *ctx = (cmp_ctx_t*)tc->instance->debugserver->messagepack_data;
         uint64_t event_id;
@@ -573,7 +573,7 @@ MVM_PUBLIC void MVM_debugserver_notify_thread_destruction(MVMThreadContext *tc) 
     }
 }
 
-MVM_PUBLIC void MVM_debugserver_notify_unhandled_exception(MVMThreadContext *tc, MVMException *ex) {
+ void MVM_debugserver_notify_unhandled_exception(struct MVMThreadContext *tc, MVMException *ex) {
     if (tc->instance->debugserver && tc->instance->debugserver->messagepack_data) {
         cmp_ctx_t *ctx = (cmp_ctx_t*)tc->instance->debugserver->messagepack_data;
         uint64_t event_id;
@@ -636,9 +636,9 @@ static MVMThread *find_thread_by_id(MVMInstance *vm, uint32_t id) {
     return cur_thread;
 }
 
-static int32_t request_thread_suspends(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
+static int32_t request_thread_suspends(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
     MVMThread *to_do = thread ? thread : find_thread_by_id(dtc->instance, argument->thread_id);
-    MVMThreadContext *tc = to_do ? to_do->body.tc : NULL;
+    struct MVMThreadContext *tc = to_do ? to_do->body.tc : NULL;
 
     if (!tc)
         return 1;
@@ -678,7 +678,7 @@ static int32_t request_thread_suspends(MVMThreadContext *dtc, cmp_ctx_t *ctx, re
     return 0;
 }
 
-static void request_all_threads_suspend(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static void request_all_threads_suspend(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     MVMThread *cur_thread = 0;
     uint32_t success = 1;
@@ -711,10 +711,10 @@ static void request_all_threads_suspend(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
     uv_mutex_unlock(&vm->mutex_threads);
 }
 
-static int32_t request_thread_resumes(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
+static int32_t request_thread_resumes(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
     MVMInstance *vm = dtc->instance;
     MVMThread *to_do = thread ? thread : find_thread_by_id(vm, argument->thread_id);
-    MVMThreadContext *tc = to_do ? to_do->body.tc : NULL;
+    struct MVMThreadContext *tc = to_do ? to_do->body.tc : NULL;
     int32_t is_one = !argument || argument->type != MT_ResumeAll;
     atomic_uintptr_t current;
 
@@ -777,7 +777,7 @@ static int32_t request_thread_resumes(MVMThreadContext *dtc, cmp_ctx_t *ctx, req
     return 0;
 }
 
-static void request_all_threads_resume(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static void request_all_threads_resume(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     MVMThread *cur_thread = 0;
     uint8_t success = 1;
@@ -816,8 +816,8 @@ static void request_all_threads_resume(MVMThreadContext *dtc, cmp_ctx_t *ctx, re
     uv_mutex_unlock(&vm->mutex_threads);
 }
 
-static void write_stacktrace_frames(MVMThreadContext *dtc, cmp_ctx_t *ctx, MVMThread *thread) {
-    MVMThreadContext *tc = thread->body.tc;
+static void write_stacktrace_frames(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, MVMThread *thread) {
+    struct MVMThreadContext *tc = thread->body.tc;
     uint64_t stack_size = 0;
 
     MVMFrame *cur_frame = tc->cur_frame;
@@ -891,7 +891,7 @@ static void write_stacktrace_frames(MVMThreadContext *dtc, cmp_ctx_t *ctx, MVMTh
     }
 }
 
-static int32_t request_thread_stacktrace(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
+static int32_t request_thread_stacktrace(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
     MVMThread *to_do = thread ? thread : find_thread_by_id(dtc->instance, argument->thread_id);
 
     if (!to_do)
@@ -913,7 +913,7 @@ static int32_t request_thread_stacktrace(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
     return 0;
 }
 
-static void send_thread_info(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static void send_thread_info(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     int32_t threadcount = 0;
     MVMThread *cur_thread;
@@ -973,7 +973,7 @@ static void send_thread_info(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data
     uv_mutex_unlock(&vm->mutex_threads);
 }
 
-static void send_is_execution_suspended_info(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static void send_is_execution_suspended_info(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     uint8_t result = 1;
     MVMThread *cur_thread;
@@ -1001,9 +1001,9 @@ static void send_is_execution_suspended_info(MVMThreadContext *dtc, cmp_ctx_t *c
     cmp_write_bool(ctx, result);
 }
 
-static uint8_t setup_step(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMDebugSteppingMode mode, MVMThread *thread) {
+static uint8_t setup_step(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMDebugSteppingMode mode, MVMThread *thread) {
     MVMThread *to_do = thread ? thread : find_thread_by_id(dtc->instance, argument->thread_id);
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
 
     if (!to_do) {
         if (dtc->instance->debugserver->debugspam_protocol)
@@ -1033,7 +1033,7 @@ static uint8_t setup_step(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *a
     return 0;
 }
 
-void MVM_debugserver_add_breakpoint(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *argument) {
+void MVM_debugserver_add_breakpoint(struct MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *argument) {
     MVMDebugServerData *debugserver = tc->instance->debugserver;
     MVMDebugServerBreakpointTable *table = debugserver->breakpoints;
     MVMDebugServerBreakpointFileTable *found = NULL;
@@ -1090,7 +1090,7 @@ void MVM_debugserver_add_breakpoint(MVMThreadContext *tc, cmp_ctx_t *ctx, reques
     uv_mutex_unlock(&debugserver->mutex_breakpoints);
 }
 
-void MVM_debugserver_clear_all_breakpoints(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *argument) {
+void MVM_debugserver_clear_all_breakpoints(struct MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *argument) {
     MVMDebugServerData *debugserver = tc->instance->debugserver;
     MVMDebugServerBreakpointTable *table = debugserver->breakpoints;
     MVMDebugServerBreakpointFileTable *found = NULL;
@@ -1114,7 +1114,7 @@ void MVM_debugserver_clear_all_breakpoints(MVMThreadContext *tc, cmp_ctx_t *ctx,
         communicate_success(tc, ctx, argument);
 }
 
-void MVM_debugserver_clear_breakpoint(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *argument) {
+void MVM_debugserver_clear_breakpoint(struct MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *argument) {
     MVMDebugServerData *debugserver = tc->instance->debugserver;
     MVMDebugServerBreakpointTable *table = debugserver->breakpoints;
     MVMDebugServerBreakpointFileTable *found = NULL;
@@ -1164,13 +1164,13 @@ void MVM_debugserver_clear_breakpoint(MVMThreadContext *tc, cmp_ctx_t *ctx, requ
         communicate_error(tc, ctx, argument);
 }
 
-static void release_all_handles(MVMThreadContext *dtc) {
+static void release_all_handles(struct MVMThreadContext *dtc) {
     MVMDebugServerHandleTable *dht = dtc->instance->debugserver->handle_table;
     dht->used = 0;
     dht->next_id = 1;
 }
 
-static uint64_t release_handles(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static uint64_t release_handles(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMDebugServerHandleTable *dht = dtc->instance->debugserver->handle_table;
 
     uint32_t handle_index = 0;
@@ -1195,7 +1195,7 @@ static uint64_t release_handles(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_d
     }
 }
 
-static uint64_t allocate_handle(MVMThreadContext *dtc, MVMObject *target) {
+static uint64_t allocate_handle(struct MVMThreadContext *dtc, MVMObject *target) {
     if (!target || MVM_is_null(dtc, target)) {
         return 0;
     } else {
@@ -1219,7 +1219,7 @@ static uint64_t allocate_handle(MVMThreadContext *dtc, MVMObject *target) {
     }
 }
 
-static uint64_t allocate_and_send_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMObject *target) {
+static uint64_t allocate_and_send_handle(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMObject *target) {
     uint64_t id = allocate_handle(dtc, target);
     cmp_write_map(ctx, 3);
     cmp_write_str(ctx, "id", 2);
@@ -1232,7 +1232,7 @@ static uint64_t allocate_and_send_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
     return id;
 }
 
-static MVMObject *find_handle_target(MVMThreadContext *dtc, uint64_t id) {
+static MVMObject *find_handle_target(struct MVMThreadContext *dtc, uint64_t id) {
     MVMDebugServerHandleTable *dht = dtc->instance->debugserver->handle_table;
     uint32_t index;
 
@@ -1253,7 +1253,7 @@ static uint64_t find_representant(uint16_t *representant, uint64_t index) {
     return last;
 }
 
-static void send_handle_equivalence_classes(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static void send_handle_equivalence_classes(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     uint16_t  *representant = MVM_calloc(argument->handle_count, sizeof(uint64_t));
     MVMObject **objects      = MVM_calloc(argument->handle_count, sizeof(MVMObject *));
     uint16_t  *counts       = MVM_calloc(argument->handle_count, sizeof(uint16_t));
@@ -1322,7 +1322,7 @@ static void send_handle_equivalence_classes(MVMThreadContext *dtc, cmp_ctx_t *ct
     MVM_free(counts);
 }
 
-static uint64_t request_hll_symbol_data(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static uint64_t request_hll_symbol_data(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
 
     MVMHash *hll_syms;
@@ -1454,7 +1454,7 @@ typedef struct {
     MVMRegister return_target;
 } DebugserverInvocationSpecialReturnData;
 
-static void debugserver_invocation_special_return(MVMThreadContext *tc, void *data_in) {
+static void debugserver_invocation_special_return(struct MVMThreadContext *tc, void *data_in) {
     DebugserverInvocationSpecialReturnData *data = (DebugserverInvocationSpecialReturnData *)data_in;
     cmp_ctx_t *ctx = (cmp_ctx_t*)tc->instance->debugserver->messagepack_data;
 
@@ -1550,17 +1550,17 @@ static void debugserver_invocation_special_return(MVMThreadContext *tc, void *da
     // tc->cur_frame->caller->return_type = data->orig_return_type;
 }
 
-static void debugserver_invocation_special_unwind(MVMThreadContext *tc, void *data_in) {
+static void debugserver_invocation_special_unwind(struct MVMThreadContext *tc, void *data_in) {
     // DebugserverInvocationSpecialReturnData *data = (DebugserverInvocationSpecialReturnData *)data_in;
     MVM_panic(1, "Debugserver: Handling exceptions thrown in invoked code NYI.");
 }
 
 
-static uint64_t request_invoke_code(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static uint64_t request_invoke_code(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     MVMThread *to_do = find_thread_by_id(vm, argument->thread_id);
     MVMObject *target = find_handle_target(dtc, argument->handle_id);
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     MVMCallsite *cs = NULL;
     MVMRegister *arguments_to_pass = NULL;
     MVMDebugServerData *debugserver = vm->debugserver;
@@ -1712,7 +1712,7 @@ static uint64_t request_invoke_code(MVMThreadContext *dtc, cmp_ctx_t *ctx, reque
     }
 }
 
-static uint64_t request_object_decontainerize(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static uint64_t request_object_decontainerize(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     MVMThread *to_do = find_thread_by_id(vm, argument->thread_id);
     MVMObject *target = find_handle_target(dtc, argument->handle_id);
@@ -1745,7 +1745,7 @@ static uint64_t request_object_decontainerize(MVMThreadContext *dtc, cmp_ctx_t *
 }
 
 
-static int32_t create_context_or_code_obj_debug_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
+static int32_t create_context_or_code_obj_debug_handle(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
     MVMInstance *vm = dtc->instance;
     MVMThread *to_do = thread ? thread : find_thread_by_id(vm, argument->thread_id);
 
@@ -1796,7 +1796,7 @@ static int32_t create_context_or_code_obj_debug_handle(MVMThreadContext *dtc, cm
     return 0;
 }
 
-static int32_t create_caller_or_outer_context_debug_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
+static int32_t create_caller_or_outer_context_debug_handle(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
     MVMObject *this_ctx = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
         : dtc->instance->VMNull;
@@ -1819,7 +1819,7 @@ static int32_t create_caller_or_outer_context_debug_handle(MVMThreadContext *dtc
     return 0;
 }
 
-static void write_one_context_lexical(MVMThreadContext *dtc, cmp_ctx_t *ctx, const char *c_key_name,
+static void write_one_context_lexical(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, const char *c_key_name,
         uint16_t lextype, MVMRegister *result) {
     cmp_write_str(ctx, c_key_name, strlen(c_key_name));
 
@@ -1878,7 +1878,7 @@ static void write_one_context_lexical(MVMThreadContext *dtc, cmp_ctx_t *ctx, con
     }
 }
 
-static int32_t request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static int32_t request_context_lexicals(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMObject *this_ctx = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
         : dtc->instance->VMNull;
@@ -1993,11 +1993,11 @@ static int32_t request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
     return 0;
 }
 
-MVM_STATIC_INLINE MVMObject * get_obj_at_offset(void *data, int64_t offset) {
+static inline MVMObject * get_obj_at_offset(void *data, int64_t offset) {
     void *location = (char *)data + offset;
     return *((MVMObject **)location);
 }
-static int32_t request_object_attributes(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static int32_t request_object_attributes(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     MVMObject *target = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
@@ -2166,7 +2166,7 @@ static int32_t request_object_attributes(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
 
     return 1;
 }
-static void write_object_features(MVMThreadContext *tc, cmp_ctx_t *ctx, uint8_t attributes, uint8_t positional, uint8_t associative) {
+static void write_object_features(struct MVMThreadContext *tc, cmp_ctx_t *ctx, uint8_t attributes, uint8_t positional, uint8_t associative) {
     cmp_write_str(ctx, "attr_features", 13);
     cmp_write_bool(ctx, attributes);
     cmp_write_str(ctx, "pos_features", 12);
@@ -2174,7 +2174,7 @@ static void write_object_features(MVMThreadContext *tc, cmp_ctx_t *ctx, uint8_t 
     cmp_write_str(ctx, "ass_features", 12);
     cmp_write_bool(ctx, associative);
 }
-static void write_vmarray_slot_type(MVMThreadContext *tc, cmp_ctx_t *ctx, uint8_t slot_type) {
+static void write_vmarray_slot_type(struct MVMThreadContext *tc, cmp_ctx_t *ctx, uint8_t slot_type) {
     char *text = "unknown";
     switch (slot_type) {
         case MVM_ARRAY_OBJ: text = "obj"; break;
@@ -2198,7 +2198,7 @@ static void write_vmarray_slot_type(MVMThreadContext *tc, cmp_ctx_t *ctx, uint8_
     }
     cmp_write_str(ctx, text, strlen(text));
 }
-static uint16_t write_vmarray_slot_kind(MVMThreadContext *tc, cmp_ctx_t *ctx, uint8_t slot_type) {
+static uint16_t write_vmarray_slot_kind(struct MVMThreadContext *tc, cmp_ctx_t *ctx, uint8_t slot_type) {
     char *text = "unknown";
     uint16_t kind = 0;
     switch (slot_type) {
@@ -2224,7 +2224,7 @@ static uint16_t write_vmarray_slot_kind(MVMThreadContext *tc, cmp_ctx_t *ctx, ui
     cmp_write_str(ctx, text, strlen(text));
     return kind;
 }
-static int32_t request_object_metadata(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static int32_t request_object_metadata(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMObject *target = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
         : dtc->instance->VMNull;
@@ -2531,7 +2531,7 @@ static int32_t request_object_metadata(MVMThreadContext *dtc, cmp_ctx_t *ctx, re
     return 0;
 }
 
-static int32_t request_object_positionals(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static int32_t request_object_positionals(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMObject *target = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
         : dtc->instance->VMNull;
@@ -2611,7 +2611,7 @@ static int32_t request_object_positionals(MVMThreadContext *dtc, cmp_ctx_t *ctx,
     return 1;
 }
 
-static int32_t request_object_associatives(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static int32_t request_object_associatives(struct MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMObject *target = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
         : dtc->instance->VMNull;
@@ -2804,7 +2804,7 @@ static int8_t skip_all_read_data(cmp_ctx_t *ctx, uint32_t size) {
     return 1;
 }
 
-static int8_t skip_whole_object(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *data) {
+static int8_t skip_whole_object(struct MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *data) {
     cmp_object_t obj;
     uint32_t obj_size = 0;
     uint32_t index;
@@ -2879,7 +2879,7 @@ static int8_t skip_whole_object(MVMThreadContext *tc, cmp_ctx_t *ctx, request_da
     return 1;
 }
 
-static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *data) {
+static int32_t parse_message_map(struct MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *data) {
     uint32_t map_size = 0;
     uint32_t i;
     cmp_object_t obj;
@@ -3181,7 +3181,7 @@ static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_d
 #define COMMUNICATE_RESULT(operation) do { if ((operation)) { communicate_error(tc, &ctx, &argument); } else { communicate_success(tc, &ctx, &argument); } } while (0)
 #define COMMUNICATE_ERROR(operation) do { if ((operation)) { communicate_error(tc, &ctx, &argument); } } while (0)
 
-static void debugserver_worker(MVMThreadContext *tc, MVMArgs arg_info) {
+static void debugserver_worker(struct MVMThreadContext *tc, MVMArgs arg_info) {
     int continue_running = 1;
     MVMSocket listensocket;
     MVMInstance *vm = tc->instance;
@@ -3434,7 +3434,7 @@ static void debugserver_worker(MVMThreadContext *tc, MVMArgs arg_info) {
         exit(1); \
     } \
 } while (0)
-MVM_PUBLIC void MVM_debugserver_init(MVMThreadContext *tc, uint32_t port) {
+ void MVM_debugserver_init(struct MVMThreadContext *tc, uint32_t port) {
     MVMInstance *vm = tc->instance;
     MVMDebugServerData *debugserver = MVM_calloc(1, sizeof(MVMDebugServerData));
     MVMObject *worker_entry_point;
@@ -3483,7 +3483,7 @@ MVM_PUBLIC void MVM_debugserver_init(MVMThreadContext *tc, uint32_t port) {
     MVM_thread_run(tc, MVM_thread_new(tc, worker_entry_point, 1));
 }
 
-MVM_PUBLIC void MVM_debugserver_mark_handles(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
+ void MVM_debugserver_mark_handles(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
     MVMInstance *vm = tc->instance;
     if (vm->debugserver) {
         MVMDebugServerHandleTable *table = vm->debugserver->handle_table;

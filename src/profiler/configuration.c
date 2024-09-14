@@ -30,7 +30,7 @@
 
 // see src/profiler/log.c for the define for debug level 4, which is PROFILER_RESULTS
 
-static void debugprint(uint8_t active, MVMThreadContext *tc, const char *str, ...) {
+static void debugprint(uint8_t active, struct MVMThreadContext *tc, const char *str, ...) {
     va_list args;
     va_start(args, str);
 
@@ -100,7 +100,7 @@ typedef union CPRegister {
 #define REGISTER_STRUCT_ACCUMULATOR 1
 #define REGISTER_FEATURE_TOGGLE 2
 
-static uint8_t operand_size(MVMThreadContext *tc, uint8_t operand) {
+static uint8_t operand_size(struct MVMThreadContext *tc, uint8_t operand) {
     uint32_t type = operand & MVM_operand_type_mask;
     uint32_t kind = operand & MVM_operand_rw_mask;
     uint32_t size;
@@ -155,7 +155,7 @@ static uint8_t operand_size(MVMThreadContext *tc, uint8_t operand) {
     return size;
 }
 
-static void validate_reg_operand(MVMThreadContext *tc, validatorstate *state, uint16_t operand_idx, uint8_t operand) {
+static void validate_reg_operand(struct MVMThreadContext *tc, validatorstate *state, uint16_t operand_idx, uint8_t operand) {
     uint8_t size = operand_size(tc, operand);
 
     uint16_t reg_num = *((uint16_t *)state->bc_pointer);
@@ -182,12 +182,12 @@ static void validate_reg_operand(MVMThreadContext *tc, validatorstate *state, ui
     state->bc_pointer += size;
 }
 
-static void validate_literal_operand(MVMThreadContext *tc, validatorstate *state, uint16_t operand_idx, uint8_t operand) {
+static void validate_literal_operand(struct MVMThreadContext *tc, validatorstate *state, uint16_t operand_idx, uint8_t operand) {
     uint8_t size = operand_size(tc, operand);
     state->bc_pointer += size;
 }
 
-static void validate_operand(MVMThreadContext *tc, validatorstate *state, uint16_t operand_idx, uint8_t operand) {
+static void validate_operand(struct MVMThreadContext *tc, validatorstate *state, uint16_t operand_idx, uint8_t operand) {
     uint8_t rw = operand & MVM_operand_rw_mask;
 
     switch (rw) {
@@ -206,7 +206,7 @@ static void validate_operand(MVMThreadContext *tc, validatorstate *state, uint16
     }
 }
 
-static void validate_operands(MVMThreadContext *tc, validatorstate *state) {
+static void validate_operands(struct MVMThreadContext *tc, validatorstate *state) {
     const uint8_t *operands = state->cur_op->operands;
     int i = 0;
 
@@ -214,7 +214,7 @@ static void validate_operands(MVMThreadContext *tc, validatorstate *state) {
         validate_operand(tc, state, i, operands[i]);
     }
 }
-static void validate_op(MVMThreadContext *tc, validatorstate *state) {
+static void validate_op(struct MVMThreadContext *tc, validatorstate *state) {
     uint16_t opcode = *((uint16_t *)state->bc_pointer);
     const MVMOpInfo *info;
     uint8_t *prev_op_bc_ptr = state->bc_pointer;
@@ -429,7 +429,7 @@ static void validate_op(MVMThreadContext *tc, validatorstate *state) {
     state->prev_op_bc = prev_op_bc_ptr;
 }
 
-void MVM_confprog_validate(MVMThreadContext *tc, MVMConfigurationProgram *prog) {
+void MVM_confprog_validate(struct MVMThreadContext *tc, MVMConfigurationProgram *prog) {
     validatorstate state;
 
     state.confprog = prog;
@@ -464,7 +464,7 @@ void MVM_confprog_validate(MVMThreadContext *tc, MVMConfigurationProgram *prog) 
 }
 
 #define CHECK_CONC(obj, type, purpose) do { if (MVM_UNLIKELY(MVM_is_null(tc, obj) == 1 || IS_CONCRETE((MVMObject *)(obj)) == 0 || REPR((MVMObject *)(obj))->ID != MVM_REPR_ID_ ## type)) { error_concreteness(tc, (MVMObject *)(obj), MVM_REPR_ID_ ## type, purpose); } } while (0)
-static void error_concreteness(MVMThreadContext *tc, MVMObject *object, uint16_t reprid, char *purpose) {
+static void error_concreteness(struct MVMThreadContext *tc, MVMObject *object, uint16_t reprid, char *purpose) {
     if (!object)
         MVM_exception_throw_adhoc(tc, "installconfprog requires a %s for %s (got null instead)",
             MVM_repr_get_by_id(tc, reprid)->name, purpose);
@@ -476,7 +476,7 @@ static void error_concreteness(MVMThreadContext *tc, MVMObject *object, uint16_t
             MVM_repr_get_by_id(tc, reprid)->name, purpose, MVM_6model_get_debug_name(tc, object), REPR(object)->name);
 }
 
-static int16_t stats_position_for_value(MVMThreadContext *tc, uint8_t entrypoint, uint64_t return_value) {
+static int16_t stats_position_for_value(struct MVMThreadContext *tc, uint8_t entrypoint, uint64_t return_value) {
     switch (entrypoint) {
         case MVM_PROGRAM_ENTRYPOINT_PROFILER_STATIC:
             if (return_value == MVM_CONFPROG_SF_RESULT_TO_BE_DETERMINED
@@ -507,7 +507,7 @@ static int16_t stats_position_for_value(MVMThreadContext *tc, uint8_t entrypoint
     }
 }
 
-void MVM_confprog_install(MVMThreadContext *tc, MVMObject *bytecode, MVMObject *string_array, MVMObject *entrypoints) {
+void MVM_confprog_install(struct MVMThreadContext *tc, MVMObject *bytecode, MVMObject *string_array, MVMObject *entrypoints) {
     uint64_t bytecode_size;
     uint8_t *array_contents;
     MVMConfigurationProgram *confprog;
@@ -599,7 +599,7 @@ void MVM_confprog_install(MVMThreadContext *tc, MVMObject *bytecode, MVMObject *
     tc->instance->confprog = confprog;
 }
 
-uint8_t MVM_confprog_has_entrypoint(MVMThreadContext *tc, uint8_t entrypoint) {
+uint8_t MVM_confprog_has_entrypoint(struct MVMThreadContext *tc, uint8_t entrypoint) {
     return tc->instance->confprog && entrypoint < MVM_PROGRAM_ENTRYPOINT_COUNT && tc->instance->confprog->entrypoints[entrypoint] != CONFPROG_UNUSED_ENTRYPOINT;
 }
 
@@ -614,7 +614,7 @@ uint8_t MVM_confprog_has_entrypoint(MVMThreadContext *tc, uint8_t entrypoint) {
 
 #define STRING_OR_EMPTY(input) ((input) == 0 ? tc->instance->str_consts.empty : (input))
 
-int64_t MVM_confprog_run(MVMThreadContext *tc, void *subject, uint8_t entrypoint, int64_t initial_feature_value) {
+int64_t MVM_confprog_run(struct MVMThreadContext *tc, void *subject, uint8_t entrypoint, int64_t initial_feature_value) {
     MVMConfigurationProgram *prog = tc->instance->confprog;
     uint8_t *cur_op;
     uint8_t *last_op;
@@ -1049,7 +1049,7 @@ finish_main_loop:
         } \
     } while (0)
 
-void MVM_confprog_mark(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
+void MVM_confprog_mark(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
     MVMConfigurationProgram *confprog = tc->instance->confprog;
     add_collectable(tc, worklist, snapshot, confprog->string_heap,
         "Configuration Program String Heap");

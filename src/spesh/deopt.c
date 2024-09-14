@@ -8,7 +8,7 @@
 
 /* Uninlining can invalidate what the dynlex cache points to, so we'll
  * clear it in various caches. */
-MVM_STATIC_INLINE void clear_dynlex_cache(MVMThreadContext *tc, MVMFrame *f) {
+static inline void clear_dynlex_cache(struct MVMThreadContext *tc, MVMFrame *f) {
     MVMFrameExtra *e = f->extra;
     if (e) {
         e->dynlex_cache_name = NULL;
@@ -26,7 +26,7 @@ MVM_STATIC_INLINE void clear_dynlex_cache(MVMThreadContext *tc, MVMFrame *f) {
  * We can rely on the frame we are doing uninling on always being the top
  * record on the callstack.
  */
-static void uninline(MVMThreadContext *tc, MVMFrame *f, MVMSpeshCandidate *cand,
+static void uninline(struct MVMThreadContext *tc, MVMFrame *f, MVMSpeshCandidate *cand,
                      uint32_t offset, int32_t all, int32_t is_pre) {
     /* Make absolutely sure this is the top thing on the callstack. */
     assert(MVM_callstack_current_frame(tc) == f);
@@ -148,13 +148,13 @@ static void uninline(MVMThreadContext *tc, MVMFrame *f, MVMSpeshCandidate *cand,
 
 /* We optimize away some bits of args checking; here we re-instate the used named
  * arguments bit field, which is required in unoptimized code. */
-static void deopt_named_args_used(MVMThreadContext *tc, MVMFrame *f) {
+static void deopt_named_args_used(struct MVMThreadContext *tc, MVMFrame *f) {
     if (f->spesh_cand->body.deopt_named_used_bit_field)
         f->params.named_used.bit_field = f->spesh_cand->body.deopt_named_used_bit_field;
 }
 
 /* Materialize an individual replaced object. */
-static void materialize_object(MVMThreadContext *tc, MVMFrame *f, uint16_t **materialized,
+static void materialize_object(struct MVMThreadContext *tc, MVMFrame *f, uint16_t **materialized,
                                uint16_t info_idx, uint16_t target_reg) {
     MVMSpeshCandidate *cand = f->spesh_cand;
     MVMObject *obj;
@@ -215,7 +215,7 @@ static void materialize_object(MVMThreadContext *tc, MVMFrame *f, uint16_t **mat
 }
 
 /* Materialize all replaced objects that need to be at this deopt index. */
-static void materialize_replaced_objects(MVMThreadContext *tc, MVMFrame *f, int32_t deopt_index) {
+static void materialize_replaced_objects(struct MVMThreadContext *tc, MVMFrame *f, int32_t deopt_index) {
     uint32_t i;
     MVMSpeshCandidate *cand = f->spesh_cand;
     uint32_t num_deopt_points = MVM_VECTOR_ELEMS(cand->body.deopt_pea.deopt_point);
@@ -232,7 +232,7 @@ static void materialize_replaced_objects(MVMThreadContext *tc, MVMFrame *f, int3
 
 /* Perform actions common to the deopt of a frame before we do any kind of
  * address rewriting, whether eager or lazy. */
-static void begin_frame_deopt(MVMThreadContext *tc, MVMFrame *f, uint32_t deopt_idx) {
+static void begin_frame_deopt(struct MVMThreadContext *tc, MVMFrame *f, uint32_t deopt_idx) {
     deopt_named_args_used(tc, f);
     clear_dynlex_cache(tc, f);
 
@@ -244,7 +244,7 @@ static void begin_frame_deopt(MVMThreadContext *tc, MVMFrame *f, uint32_t deopt_
 
 /* Perform actions common to the deopt of a frame after we do any kind of
  * address rewriting, whether eager or lazy. */
-static void finish_frame_deopt(MVMThreadContext *tc, MVMFrame *f) {
+static void finish_frame_deopt(struct MVMThreadContext *tc, MVMFrame *f) {
     f->effective_spesh_slots = NULL;
     f->spesh_cand = NULL;
     f->jit_entry_label = NULL;
@@ -252,7 +252,7 @@ static void finish_frame_deopt(MVMThreadContext *tc, MVMFrame *f) {
 
 /* De-optimizes the currently executing frame, provided it is specialized and
  * at a valid de-optimization point. Typically used when a guard fails. */
-void MVM_spesh_deopt_one(MVMThreadContext *tc, uint32_t deopt_idx) {
+void MVM_spesh_deopt_one(struct MVMThreadContext *tc, uint32_t deopt_idx) {
     MVMFrame *f = tc->cur_frame;
     if (tc->instance->profiling)
         MVM_profiler_log_deopt_one(tc);
@@ -313,7 +313,7 @@ void MVM_spesh_deopt_one(MVMThreadContext *tc, uint32_t deopt_idx) {
  * call frames. If we find them, mark them as needing to be lazily deopt'd
  * when unwind reaches them. (This allows us to only ever deopt the stack
  * top.) */
-void MVM_spesh_deopt_all(MVMThreadContext *tc) {
+void MVM_spesh_deopt_all(struct MVMThreadContext *tc) {
     /* Logging/profiling for global deopt. */
 #if MVM_LOG_DEOPTS
     fprintf(stderr, "Deopt all requested in frame '%s' (cuid '%s')\n",
@@ -351,7 +351,7 @@ void MVM_spesh_deopt_all(MVMThreadContext *tc) {
 /* Takes a frame that we're lazily deoptimizing and finds the currently
  * active deopt index at the point of the call it was making. Returns -1 if
  * none can be resolved. */
-int32_t MVM_spesh_deopt_find_inactive_frame_deopt_idx(MVMThreadContext *tc,
+int32_t MVM_spesh_deopt_find_inactive_frame_deopt_idx(struct MVMThreadContext *tc,
     MVMFrame *f, MVMSpeshCandidate *spesh_cand)
 {
     /* Is it JITted code? */
@@ -391,7 +391,7 @@ int32_t MVM_spesh_deopt_find_inactive_frame_deopt_idx(MVMThreadContext *tc,
  * needing to be deoptimized lazily. Performs that deoptimization. Note
  * that this may actually modify the call stack by adding new records on
  * top of it, if we have to uninline. */
-void MVM_spesh_deopt_during_unwind(MVMThreadContext *tc) {
+void MVM_spesh_deopt_during_unwind(struct MVMThreadContext *tc) {
     /* Get the frame from the record. If we're calling this, we know it's the
      * stack top one. */
     MVMCallStackRecord *record = tc->stack_top;

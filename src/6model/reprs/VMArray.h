@@ -62,7 +62,7 @@ struct MVMArray {
 #define MVM_ARRAY_I1    17
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMArray_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMArray_initialize(struct MVMThreadContext *tc);
 
 /* Array REPR data specifies the type of array elements we have. */
 struct MVMArrayREPRData {
@@ -75,8 +75,8 @@ struct MVMArrayREPRData {
     /* Type object for the element type. */
     MVMObject *elem_type;
 };
-void MVM_VMArray_at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind);
-void *MVM_VMArray_find_fast_impl_for_jit(MVMThreadContext *tc, MVMSTable *st, int16_t op, uint16_t kind);
-void MVM_VMArray_bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister value, uint16_t kind);
+void MVM_VMArray_at_pos(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind);
+void *MVM_VMArray_find_fast_impl_for_jit(struct MVMThreadContext *tc, MVMSTable *st, int16_t op, uint16_t kind);
+void MVM_VMArray_bind_pos(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister value, uint16_t kind);
 
-void MVM_VMArray_push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind);
+void MVM_VMArray_push(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind);

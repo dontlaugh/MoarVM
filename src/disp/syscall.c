@@ -12,7 +12,7 @@
 #define get_num_arg(arg_info, idx) ((arg_info).source[(arg_info).map[idx]].n64)
 
 /* dispatcher-register */
-static void dispatcher_register_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_register_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMString *id = get_str_arg(arg_info, 0);
     MVMObject *dispatch = get_obj_arg(arg_info, 1);
     MVMObject *resume = arg_info.callsite->num_pos > 2
@@ -32,7 +32,7 @@ static MVMDispSysCall dispatcher_register = {
 };
 
 /* dispatcher-delegate */
-static void dispatcher_delegate_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_delegate_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMString *id = get_str_arg(arg_info, 0);
     MVMObject *capture = get_obj_arg(arg_info, 1);
     MVM_disp_program_record_delegate(tc, id, capture);
@@ -49,7 +49,7 @@ static MVMDispSysCall dispatcher_delegate = {
 };
 
 /* dispatcher-track-arg */
-static void dispatcher_track_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_track_arg_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVMObject *tracked = MVM_disp_program_record_track_arg(tc, capture, (uint32_t)idx);
@@ -66,7 +66,7 @@ static MVMDispSysCall dispatcher_track_arg = {
 };
 
 /* dispatcher-track-attr */
-static void dispatcher_track_attr_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_track_attr_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *tracked_in = get_obj_arg(arg_info, 0);
     MVMObject *class_handle = get_obj_arg(arg_info, 1);
     MVMString *name = get_str_arg(arg_info, 2);
@@ -85,7 +85,7 @@ static MVMDispSysCall dispatcher_track_attr = {
 };
 
 /* dispatcher-track-unbox-int */
-static void dispatcher_track_unbox_int_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_track_unbox_int_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *tracked_in = get_obj_arg(arg_info, 0);
     MVMObject *tracked_out = MVM_disp_program_record_track_unbox_int(tc, tracked_in);
     MVM_args_set_result_obj(tc, tracked_out, MVM_RETURN_CURRENT_FRAME);
@@ -101,7 +101,7 @@ static MVMDispSysCall dispatcher_track_unbox_int = {
 };
 
 /* dispatcher-track-unbox-num */
-static void dispatcher_track_unbox_num_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_track_unbox_num_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *tracked_in = get_obj_arg(arg_info, 0);
     MVMObject *tracked_out = MVM_disp_program_record_track_unbox_num(tc, tracked_in);
     MVM_args_set_result_obj(tc, tracked_out, MVM_RETURN_CURRENT_FRAME);
@@ -117,7 +117,7 @@ static MVMDispSysCall dispatcher_track_unbox_num = {
 };
 
 /* dispatcher-track-unbox-str */
-static void dispatcher_track_unbox_str_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_track_unbox_str_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *tracked_in = get_obj_arg(arg_info, 0);
     MVMObject *tracked_out = MVM_disp_program_record_track_unbox_str(tc, tracked_in);
     MVM_args_set_result_obj(tc, tracked_out, MVM_RETURN_CURRENT_FRAME);
@@ -133,7 +133,7 @@ static MVMDispSysCall dispatcher_track_unbox_str = {
 };
 
 /* dispatcher-track-how */
-static void dispatcher_track_how_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_track_how_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *tracked_in = get_obj_arg(arg_info, 0);
     MVMObject *tracked_out = MVM_disp_program_record_track_how(tc, tracked_in);
     MVM_args_set_result_obj(tc, tracked_out, MVM_RETURN_CURRENT_FRAME);
@@ -149,7 +149,7 @@ static MVMDispSysCall dispatcher_track_how = {
 };
 
 /* dispatcher-drop-arg */
-static void dispatcher_drop_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_drop_arg_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVMObject *derived = MVM_disp_program_record_capture_drop_args(tc, capture, (uint32_t)idx, 1);
@@ -166,7 +166,7 @@ static MVMDispSysCall dispatcher_drop_arg = {
 };
 
 /* dispatcher-drop-n-args */
-static void dispatcher_drop_n_args_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_drop_n_args_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx   = get_int_arg(arg_info, 1);
     int64_t count = get_int_arg(arg_info, 2);
@@ -184,7 +184,7 @@ static MVMDispSysCall dispatcher_drop_n_args = {
 };
 
 /* dispatcher-insert-arg */
-static void dispatcher_insert_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_insert_arg_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVMObject *tracked = get_obj_arg(arg_info, 2);
@@ -203,7 +203,7 @@ static MVMDispSysCall dispatcher_insert_arg = {
 };
 
 /* dispatcher-replace-arg */
-static void dispatcher_replace_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_replace_arg_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVMObject *tracked = get_obj_arg(arg_info, 2);
@@ -222,7 +222,7 @@ static MVMDispSysCall dispatcher_replace_arg = {
 };
 
 /* dispatcher-replace-arg-literal-obj */
-static void dispatcher_replace_arg_literal_obj_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_replace_arg_literal_obj_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .o = get_obj_arg(arg_info, 2) };
@@ -242,7 +242,7 @@ static MVMDispSysCall dispatcher_replace_arg_literal_obj = {
 
 
 /* dispatcher-insert-arg-literal-obj */
-static void dispatcher_insert_arg_literal_obj_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_insert_arg_literal_obj_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .o = get_obj_arg(arg_info, 2) };
@@ -261,7 +261,7 @@ static MVMDispSysCall dispatcher_insert_arg_literal_obj = {
 };
 
 /* dispatcher-insert-arg-literal-str */
-static void dispatcher_insert_arg_literal_str_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_insert_arg_literal_str_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .s = get_str_arg(arg_info, 2) };
@@ -280,7 +280,7 @@ static MVMDispSysCall dispatcher_insert_arg_literal_str = {
 };
 
 /* dispatcher-insert-arg-literal-int */
-static void dispatcher_insert_arg_literal_int_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_insert_arg_literal_int_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .i64 = get_int_arg(arg_info, 2) };
@@ -299,7 +299,7 @@ static MVMDispSysCall dispatcher_insert_arg_literal_int = {
 };
 
 /* dispatcher-insert-arg-literal-num */
-static void dispatcher_insert_arg_literal_num_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_insert_arg_literal_num_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .n64 = get_num_arg(arg_info, 2) };
@@ -318,7 +318,7 @@ static MVMDispSysCall dispatcher_insert_arg_literal_num = {
 };
 
 /* dispatcher-is-arg-literal */
-static void dispatcher_is_arg_literal_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_is_arg_literal_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     int64_t literal = MVM_disp_program_record_capture_is_arg_literal(tc, capture,
@@ -336,7 +336,7 @@ static MVMDispSysCall dispatcher_is_arg_literal = {
 };
 
 /* dispatcher-guard-type */
-static void dispatcher_guard_type_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_guard_type_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *tracked = get_obj_arg(arg_info, 0);
     MVM_disp_program_record_guard_type(tc, tracked);
     MVM_args_set_result_obj(tc, tracked, MVM_RETURN_CURRENT_FRAME);
@@ -352,7 +352,7 @@ static MVMDispSysCall dispatcher_guard_type = {
 };
 
 /* dispatcher-guard-concreteness */
-static void dispatcher_guard_concreteness_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_guard_concreteness_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *tracked = get_obj_arg(arg_info, 0);
     MVM_disp_program_record_guard_concreteness(tc, tracked);
     MVM_args_set_result_obj(tc, tracked, MVM_RETURN_CURRENT_FRAME);
@@ -368,7 +368,7 @@ static MVMDispSysCall dispatcher_guard_concreteness = {
 };
 
 /* dispatcher-guard-literal */
-static void dispatcher_guard_literal_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_guard_literal_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *tracked = get_obj_arg(arg_info, 0);
     MVM_disp_program_record_guard_literal(tc, tracked);
     MVM_args_set_result_obj(tc, tracked, MVM_RETURN_CURRENT_FRAME);
@@ -384,7 +384,7 @@ static MVMDispSysCall dispatcher_guard_literal = {
 };
 
 /* dispatcher-guard-not-literal-obj */
-static void dispatcher_guard_not_literal_obj_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_guard_not_literal_obj_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *tracked = get_obj_arg(arg_info, 0);
     MVMObject *object = get_obj_arg(arg_info, 1);
     MVM_disp_program_record_guard_not_literal_obj(tc, tracked, object);
@@ -401,7 +401,7 @@ static MVMDispSysCall dispatcher_guard_not_literal_obj = {
 };
 
 /* dispatcher-index-lookup-table */
-static void dispatcher_index_lookup_table_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_index_lookup_table_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *lookup = get_obj_arg(arg_info, 0);
     MVMObject *tracked_key = get_obj_arg(arg_info, 1);
     MVMObject *tracked_result = MVM_disp_program_record_index_lookup_table(tc,
@@ -419,7 +419,7 @@ static MVMDispSysCall dispatcher_index_lookup_table = {
 };
 
 /* dispatcher-index-tracked-lookup-table */
-static void dispatcher_index_tracked_lookup_table_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_index_tracked_lookup_table_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *tracked_lookup = get_obj_arg(arg_info, 0);
     MVMObject *tracked_key = get_obj_arg(arg_info, 1);
     MVMObject *tracked_result = MVM_disp_program_record_index_tracked_lookup_table(tc,
@@ -437,7 +437,7 @@ static MVMDispSysCall dispatcher_index_tracked_lookup_table = {
 };
 
 /* dispatcher-set-resume-init-args */
-static void dispatcher_set_resume_init_args_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_set_resume_init_args_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     MVM_disp_program_record_set_resume_init_args(tc, capture);
     MVM_args_set_result_obj(tc, tc->instance->VMNull, MVM_RETURN_CURRENT_FRAME);
@@ -453,7 +453,7 @@ static MVMDispSysCall dispatcher_set_resume_init_args = {
 };
 
 /* dispatcher-get-resume-init-args */
-static void dispatcher_get_resume_init_args_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_get_resume_init_args_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = MVM_disp_program_record_get_resume_init_args(tc);
     MVM_args_set_result_obj(tc, capture, MVM_RETURN_CURRENT_FRAME);
 }
@@ -468,7 +468,7 @@ static MVMDispSysCall dispatcher_get_resume_init_args = {
 };
 
 /* dispatcher-set-resume-state */
-static void dispatcher_set_resume_state_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_set_resume_state_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *new_state = get_obj_arg(arg_info, 0);
     MVM_disp_program_record_set_resume_state(tc, new_state);
     MVM_args_set_result_obj(tc, tc->instance->VMNull, MVM_RETURN_CURRENT_FRAME);
@@ -484,7 +484,7 @@ static MVMDispSysCall dispatcher_set_resume_state = {
 };
 
 /* dispatcher-set-resume-state-literal */
-static void dispatcher_set_resume_state_literal_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_set_resume_state_literal_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *new_state = get_obj_arg(arg_info, 0);
     MVM_disp_program_record_set_resume_state_literal(tc, new_state);
     MVM_args_set_result_obj(tc, tc->instance->VMNull, MVM_RETURN_CURRENT_FRAME);
@@ -500,7 +500,7 @@ static MVMDispSysCall dispatcher_set_resume_state_literal = {
 };
 
 /* dispatcher-get-resume-state */
-static void dispatcher_get_resume_state_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_get_resume_state_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *state = MVM_disp_program_record_get_resume_state(tc);
     MVM_args_set_result_obj(tc, state, MVM_RETURN_CURRENT_FRAME);
 }
@@ -515,7 +515,7 @@ static MVMDispSysCall dispatcher_get_resume_state = {
 };
 
 /* dispatcher-track-resume-state */
-static void dispatcher_track_resume_state_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_track_resume_state_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *state = MVM_disp_program_record_track_resume_state(tc);
     MVM_args_set_result_obj(tc, state, MVM_RETURN_CURRENT_FRAME);
 }
@@ -530,7 +530,7 @@ static MVMDispSysCall dispatcher_track_resume_state = {
 };
 
 /* dispatcher-next-resumption */
-static void dispatcher_next_resumption_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_next_resumption_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     int32_t have_next_resumption = MVM_disp_program_record_next_resumption(tc,
             arg_info.callsite->num_pos == 1 ? get_obj_arg(arg_info, 0) : NULL);
     MVM_args_set_result_int(tc, have_next_resumption, MVM_RETURN_CURRENT_FRAME);
@@ -546,7 +546,7 @@ static MVMDispSysCall dispatcher_next_resumption = {
 };
 
 /* dispatcher-resume-on-bind-failure */
-static void dispatcher_resume_on_bind_failure_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_resume_on_bind_failure_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     int64_t flag = get_int_arg(arg_info, 0);
     MVM_disp_program_record_resume_on_bind_failure(tc, flag);
     MVM_args_set_result_obj(tc, tc->instance->VMNull, MVM_RETURN_CURRENT_FRAME);
@@ -562,7 +562,7 @@ static MVMDispSysCall dispatcher_resume_on_bind_failure = {
 };
 
 /* dispatcher-resume-after-bind */
-static void dispatcher_resume_after_bind_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_resume_after_bind_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     int64_t failure_flag = get_int_arg(arg_info, 0);
     int64_t success_flag = get_int_arg(arg_info, 1);
     MVM_disp_program_record_resume_after_bind(tc, failure_flag, success_flag);
@@ -579,7 +579,7 @@ static MVMDispSysCall dispatcher_resume_after_bind = {
 };
 
 /* dispatcher-inline-cache-size */
-static void dispatcher_inline_cache_size_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_inline_cache_size_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVM_args_set_result_int(tc, MVM_disp_program_record_get_inline_cache_size(tc),
             MVM_RETURN_CURRENT_FRAME);
 }
@@ -594,7 +594,7 @@ static MVMDispSysCall dispatcher_inline_cache_size = {
 };
 
 /* dispatcher-do-not-install */
-static void dispatcher_do_not_install_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void dispatcher_do_not_install_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVM_disp_program_record_do_not_install(tc);
     MVM_args_set_result_obj(tc, tc->instance->VMNull, MVM_RETURN_CURRENT_FRAME);
 }
@@ -609,7 +609,7 @@ static MVMDispSysCall dispatcher_do_not_install = {
 };
 
 /* boolify-bigint */
-static void boolify_bigint_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boolify_bigint_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     MVM_args_set_result_int(tc, MVM_bigint_bool(tc, obj), MVM_RETURN_CURRENT_FRAME);
 }
@@ -624,7 +624,7 @@ static MVMDispSysCall boolify_bigint = {
 };
 
 /* boolify-boxed-int */
-void MVM_disp_syscall_boolify_boxed_int_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+void MVM_disp_syscall_boolify_boxed_int_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     int64_t unboxed = REPR(obj)->box_funcs.get_int(tc, STABLE(obj), obj, OBJECT_BODY(obj));
     MVM_args_set_result_int(tc, unboxed != 0, MVM_RETURN_CURRENT_FRAME);
@@ -640,7 +640,7 @@ static MVMDispSysCall boolify_boxed_int = {
 };
 
 /* boolify-boxed-num */
-static void boolify_boxed_num_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boolify_boxed_num_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     double unboxed = REPR(obj)->box_funcs.get_num(tc, STABLE(obj), obj, OBJECT_BODY(obj));
     MVM_args_set_result_int(tc, unboxed != 0.0, MVM_RETURN_CURRENT_FRAME);
@@ -656,7 +656,7 @@ static MVMDispSysCall boolify_boxed_num = {
 };
 
 /* boolify-boxed-str */
-static void boolify_boxed_str_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boolify_boxed_str_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     MVMString *unboxed = REPR(obj)->box_funcs.get_str(tc, STABLE(obj), obj, OBJECT_BODY(obj));
     MVM_args_set_result_int(tc, MVM_coerce_istrue_s(tc, unboxed), MVM_RETURN_CURRENT_FRAME);
@@ -672,7 +672,7 @@ static MVMDispSysCall boolify_boxed_str = {
 };
 
 /* boolify-boxed-str-with-zero-false */
-static void boolify_boxed_str_with_zero_false_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boolify_boxed_str_with_zero_false_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     MVMString *str = REPR(obj)->box_funcs.get_str(tc, STABLE(obj), obj, OBJECT_BODY(obj));
     int64_t result;
@@ -698,7 +698,7 @@ static MVMDispSysCall boolify_boxed_str_with_zero_false = {
 };
 
 /* boolify-iter */
-static void boolify_iter_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boolify_iter_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     MVM_args_set_result_int(tc, MVM_iter_istrue(tc, (MVMIter *)obj), MVM_RETURN_CURRENT_FRAME);
 }
@@ -713,7 +713,7 @@ static MVMDispSysCall boolify_iter = {
 };
 
 /* boolify-using-elems */
-static void boolify_using_elems_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boolify_using_elems_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     MVM_args_set_result_int(tc, MVM_repr_elems(tc, obj) != 0, MVM_RETURN_CURRENT_FRAME);
 }
@@ -728,7 +728,7 @@ static MVMDispSysCall boolify_using_elems = {
 };
 
 /* capture-is-literal-arg */
-static void capture_is_literal_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void capture_is_literal_arg_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVM_args_set_result_int(tc, MVM_capture_is_literal_arg(tc, capture, idx),
@@ -745,7 +745,7 @@ static MVMDispSysCall capture_is_literal_arg = {
 };
 
 /* capture-pos-args */
-static void capture_pos_args_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void capture_pos_args_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     /* Obtain the capture we are passed. */
     MVMObject *capture = get_obj_arg(arg_info, 0);
 
@@ -771,7 +771,7 @@ static MVMDispSysCall capture_pos_args = {
 };
 
 /* capture-named-args */
-static void capture_named_args_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void capture_named_args_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     /* Obtain the capture we are passed. */
     MVMObject *capture = get_obj_arg(arg_info, 0);
     MVMObject *result = MVM_capture_get_nameds(tc, capture);
@@ -788,7 +788,7 @@ static MVMDispSysCall capture_named_args = {
 };
 
 /* capture-names-list */
-static void capture_names_list_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void capture_names_list_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     /* Obtain the capture we are passed. */
     MVMObject *capture = get_obj_arg(arg_info, 0);
     MVMObject *names = MVM_capture_get_names_list(tc, capture);
@@ -805,7 +805,7 @@ static MVMDispSysCall capture_names_list = {
 };
 
 /* capture-num-args */
-static void capture_num_args_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void capture_num_args_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     MVM_args_set_result_int(tc, MVM_capture_num_args(tc, capture), MVM_RETURN_CURRENT_FRAME);
 }
@@ -820,7 +820,7 @@ static MVMDispSysCall capture_num_args = {
 };
 
 /* capture-arg-prim-spec */
-static void capture_arg_prim_spec_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void capture_arg_prim_spec_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVM_args_set_result_int(tc, MVM_capture_arg_primspec(tc, capture, idx), MVM_RETURN_CURRENT_FRAME);
@@ -836,7 +836,7 @@ static MVMDispSysCall capture_arg_prim_spec = {
 };
 
 /* capture-arg-value */
-static void capture_arg_value_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void capture_arg_value_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister value;
@@ -873,7 +873,7 @@ static MVMDispSysCall capture_arg_value = {
 };
 
 /* can-unbox-to-int */
-static void can_unbox_to_int_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void can_unbox_to_int_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     const MVMStorageSpec *ss = REPR(obj)->get_storage_spec(tc, STABLE(obj));
     int64_t result = ss->can_box & MVM_STORAGE_SPEC_CAN_BOX_INT;
@@ -890,7 +890,7 @@ static MVMDispSysCall can_unbox_to_int = {
 };
 
 /* can-unbox-to-num */
-static void can_unbox_to_num_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void can_unbox_to_num_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     const MVMStorageSpec *ss = REPR(obj)->get_storage_spec(tc, STABLE(obj));
     int64_t result = ss->can_box & MVM_STORAGE_SPEC_CAN_BOX_NUM;
@@ -907,7 +907,7 @@ static MVMDispSysCall can_unbox_to_num = {
 };
 
 /* can-unbox-to-str */
-static void can_unbox_to_str_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void can_unbox_to_str_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     const MVMStorageSpec *ss = REPR(obj)->get_storage_spec(tc, STABLE(obj));
     int64_t result = ss->can_box & MVM_STORAGE_SPEC_CAN_BOX_STR;
@@ -924,7 +924,7 @@ static MVMDispSysCall can_unbox_to_str = {
 };
 
 /* coerce-boxed-int-to-str */
-static void coerce_boxed_int_to_str_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void coerce_boxed_int_to_str_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     MVMString *result = MVM_coerce_i_s(tc,
         REPR(obj)->box_funcs.get_int(tc, STABLE(obj), obj, OBJECT_BODY(obj)));
@@ -941,7 +941,7 @@ static MVMDispSysCall coerce_boxed_int_to_str = {
 };
 
 /* coerce-boxed-num-to-str */
-static void coerce_boxed_num_to_str_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void coerce_boxed_num_to_str_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     MVMString *result = MVM_coerce_n_s(tc,
         REPR(obj)->box_funcs.get_num(tc, STABLE(obj), obj, OBJECT_BODY(obj)));
@@ -958,7 +958,7 @@ static MVMDispSysCall coerce_boxed_num_to_str = {
 };
 
 /* coerce-boxed-str-to-int */
-static void coerce_boxed_str_to_int_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void coerce_boxed_str_to_int_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     int64_t result = MVM_coerce_s_i(tc,
         REPR(obj)->box_funcs.get_str(tc, STABLE(obj), obj, OBJECT_BODY(obj)));
@@ -975,7 +975,7 @@ static MVMDispSysCall coerce_boxed_str_to_int = {
 };
 
 /* coerce-boxed-num-to-int */
-static void coerce_boxed_num_to_int_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void coerce_boxed_num_to_int_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     int64_t result = (int64_t)REPR(obj)->box_funcs.get_num(tc, STABLE(obj),
             obj, OBJECT_BODY(obj));
@@ -992,7 +992,7 @@ static MVMDispSysCall coerce_boxed_num_to_int = {
 };
 
 /* coerce-boxed-int-to-num */
-static void coerce_boxed_int_to_num_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void coerce_boxed_int_to_num_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     double result = (double)REPR(obj)->box_funcs.get_int(tc, STABLE(obj),
             obj, OBJECT_BODY(obj));
@@ -1009,7 +1009,7 @@ static MVMDispSysCall coerce_boxed_int_to_num = {
 };
 
 /* coerce-boxed-str-to-num */
-static void coerce_boxed_str_to_num_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void coerce_boxed_str_to_num_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     double result = MVM_coerce_s_n(tc, REPR(obj)->box_funcs.get_str(tc, STABLE(obj),
             obj, OBJECT_BODY(obj)));
@@ -1026,7 +1026,7 @@ static MVMDispSysCall coerce_boxed_str_to_num = {
 };
 
 /* elems */
-static void elems_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void elems_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     MVM_args_set_result_int(tc, MVM_repr_elems(tc, obj), MVM_RETURN_CURRENT_FRAME);
 }
@@ -1041,7 +1041,7 @@ static MVMDispSysCall elems = {
 };
 
 /* try-capture-lex */
-static void try_capture_lex_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void try_capture_lex_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *code = get_obj_arg(arg_info, 0);
     if (((MVMCode *)code)->body.sf->body.outer == tc->cur_frame->static_info)
         MVM_frame_capturelex(tc, code);
@@ -1058,7 +1058,7 @@ static MVMDispSysCall try_capture_lex = {
 };
 
 /* try-capture-lex-callers */
-static void try_capture_lex_callers_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void try_capture_lex_callers_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *code = get_obj_arg(arg_info, 0);
     MVMFrame *find;
     MVMROOT(tc, code) {
@@ -1090,7 +1090,7 @@ static MVMDispSysCall try_capture_lex_callers = {
 
 
 /* get-code-outer-ctx */
-static void get_code_outer_ctx_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void get_code_outer_ctx_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *code = get_obj_arg(arg_info, 0);
     MVMFrame *outer = ((MVMCode *)code)->body.outer;
     if (!outer)
@@ -1109,7 +1109,7 @@ static MVMDispSysCall get_code_outer_ctx = {
 };
 
 /* bind-will-resume-on-failure */
-static void bind_will_resume_on_failure_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void bind_will_resume_on_failure_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMCallStackIterator iter;
     int64_t result = 0;
     MVM_callstack_iter_frame_init(tc, &iter, tc->stack_top);
@@ -1132,7 +1132,7 @@ static MVMDispSysCall bind_will_resume_on_failure = {
 };
 
 /* type-check-mode-flags */
-static void type_check_mode_flags_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void type_check_mode_flags_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *type = get_obj_arg(arg_info, 0);
     int64_t mode = STABLE(type)->mode_flags & MVM_TYPE_CHECK_CACHE_FLAG_MASK;
     MVM_args_set_result_int(tc, mode, MVM_RETURN_CURRENT_FRAME);
@@ -1148,7 +1148,7 @@ static MVMDispSysCall type_check_mode_flags = {
 };
 
 /* has-type-check-cache */
-static void has_type_check_cache_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void has_type_check_cache_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     int64_t has_cache = STABLE(obj)->type_check_cache != NULL;
     MVM_args_set_result_int(tc, has_cache, MVM_RETURN_CURRENT_FRAME);
@@ -1164,7 +1164,7 @@ static MVMDispSysCall has_type_check_cache = {
 };
 
 /* code-is-stub */
-static void code_is_stub_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void code_is_stub_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     int64_t is_stub = ((MVMCode *)obj)->body.is_compiler_stub;
     MVM_args_set_result_int(tc, is_stub, MVM_RETURN_CURRENT_FRAME);
@@ -1180,7 +1180,7 @@ static MVMDispSysCall code_is_stub = {
 };
 
 /* set-cur-hll-config-key */
-static void set_cur_hll_config_key_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void set_cur_hll_config_key_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMString *key = get_str_arg(arg_info, 0);
     MVMObject *value = get_obj_arg(arg_info, 1);
     MVMHLLConfig *hll = MVM_hll_current(tc);
@@ -1199,7 +1199,7 @@ static MVMDispSysCall set_cur_hll_config_key = {
 
 
 /* code-bytecode-size */
-static void code_bytecode_size_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void code_bytecode_size_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     uint32_t bytecode_size = ((MVMCode *)obj)->body.sf->body.bytecode_size;
     MVM_args_set_result_int(tc, bytecode_size, MVM_RETURN_CURRENT_FRAME);
@@ -1215,7 +1215,7 @@ static MVMDispSysCall code_bytecode_size = {
 };
 
 /* set-compunit-resolver */
-static void set_compunit_resolver_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void set_compunit_resolver_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMCompUnit *comp_unit    = (MVMCompUnit*)get_obj_arg(arg_info, 0);
     MVMCode *resolver         = (MVMCode*)    get_obj_arg(arg_info, 1);
     MVMCode *dynamic_resolver = (MVMCode*)    get_obj_arg(arg_info, 2);
@@ -1234,7 +1234,7 @@ static MVMDispSysCall set_compunit_resolver = {
 };
 
 /* async-linux-connect */
-static void async_unix_connect_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void async_unix_connect_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *queue      = get_obj_arg(arg_info, 0);
     MVMObject *schedulee  = get_obj_arg(arg_info, 1);
     MVMString *path       = get_str_arg(arg_info, 2);
@@ -1252,7 +1252,7 @@ static MVMDispSysCall async_unix_connect = {
 };
 
 /* async-unix-listen */
-static void async_unix_listen_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void async_unix_listen_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *queue      = get_obj_arg(arg_info, 0);
     MVMObject *schedulee  = get_obj_arg(arg_info, 1);
     MVMString *path       = get_str_arg(arg_info, 2);
@@ -1271,7 +1271,7 @@ static MVMDispSysCall async_unix_listen = {
 };
 
 /* handle-open-mode */
-static void handle_open_mode_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void handle_open_mode_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMOSHandle *handle  = (MVMOSHandle *)get_obj_arg(arg_info, 0);
 
     if (handle->body.ops->introspection && handle->body.ops->introspection->mvm_open_mode) {
@@ -1296,7 +1296,7 @@ static MVMDispSysCall handle_open_mode = {
 };
 
 /* file-stat */
-static void file_stat_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void file_stat_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMString *filename = get_str_arg(arg_info, 0);
     int32_t  use_lstat = get_int_arg(arg_info, 1);
     MVMStat   *stat_obj = (MVMStat *)MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTStat);
@@ -1316,7 +1316,7 @@ static MVMDispSysCall file_stat = {
 };
 
 /* stat-flags */
-static void stat_flags_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void stat_flags_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat   *stat_obj  = (MVMStat *)get_obj_arg(arg_info, 0);
     int32_t   stat_flag = get_int_arg(arg_info, 1);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
@@ -1381,7 +1381,7 @@ static MVMDispSysCall stat_flags = {
 };
 
 /* stat-time */
-static void stat_time_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void stat_time_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat   *stat_obj  = (MVMStat *)get_obj_arg(arg_info, 0);
     int32_t   stat_flag = get_int_arg(arg_info, 1);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
@@ -1413,7 +1413,7 @@ static MVMDispSysCall stat_time = {
 };
 
 /* stat-time-nanos */
-static void stat_time_nanos_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void stat_time_nanos_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat   *stat_obj  = (MVMStat *)get_obj_arg(arg_info, 0);
     int32_t   stat_flag = get_int_arg(arg_info, 1);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
@@ -1445,7 +1445,7 @@ static MVMDispSysCall stat_time_nanos = {
 };
 
 /* stat-is-readable */
-static void stat_is_readable_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void stat_is_readable_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat    *stat_obj = (MVMStat *)get_obj_arg(arg_info, 0);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
     int64_t    readable;
@@ -1476,7 +1476,7 @@ static MVMDispSysCall stat_is_readable = {
 };
 
 /* stat-is-writable */
-static void stat_is_writable_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void stat_is_writable_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat    *stat_obj = (MVMStat *)get_obj_arg(arg_info, 0);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
     int64_t    writable;
@@ -1507,7 +1507,7 @@ static MVMDispSysCall stat_is_writable = {
 };
 
 /* stat-is-executable */
-static void stat_is_executable_impl(MVMThreadContext *tc, MVMArgs arg_info) {
+static void stat_is_executable_impl(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat    *stat_obj = (MVMStat *)get_obj_arg(arg_info, 0);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
     int64_t    executable;
@@ -1559,7 +1559,7 @@ static MVMDispSysCall stat_is_executable = {
 };
 
 /* Add all of the syscalls into the hash. */
-MVM_STATIC_INLINE void add_to_hash(MVMThreadContext *tc, MVMDispSysCall *syscall) {
+static inline void add_to_hash(struct MVMThreadContext *tc, MVMDispSysCall *syscall) {
     MVMString *name = MVM_string_ascii_decode_nt(tc, tc->instance->VMString, syscall->c_name);
     syscall->name = name;
     MVMDispSysCall **target = MVM_fixkey_hash_insert_nocheck(tc, &tc->instance->syscalls, name);
@@ -1573,7 +1573,7 @@ MVM_STATIC_INLINE void add_to_hash(MVMThreadContext *tc, MVMDispSysCall *syscall
     MVM_gc_root_add_permanent_desc(tc, (MVMCollectable **)&(syscall->wrapper), "MoarVM syscall wrapper");
 }
 
-void MVM_disp_syscall_setup(MVMThreadContext *tc) {
+void MVM_disp_syscall_setup(struct MVMThreadContext *tc) {
     MVM_gc_allocate_gen2_default_set(tc);
     MVM_fixkey_hash_build(tc, &tc->instance->syscalls, 0);
     add_to_hash(tc, &dispatcher_register);
@@ -1659,6 +1659,6 @@ void MVM_disp_syscall_setup(MVMThreadContext *tc) {
 }
 
 /* Look up a syscall by name. Returns NULL if it's not found. */
-MVMDispSysCall * MVM_disp_syscall_find(MVMThreadContext *tc, MVMString *name) {
+MVMDispSysCall * MVM_disp_syscall_find(struct MVMThreadContext *tc, MVMString *name) {
     return MVM_fixkey_hash_fetch_nocheck(tc, &tc->instance->syscalls, name);
 }

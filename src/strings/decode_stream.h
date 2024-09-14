@@ -92,7 +92,7 @@ struct MVMDecodeStreamSeparators {
  * see if we hit the final grapheme of any of the separators, which is all we
  * demand the actual encodings themselves work out (multi-grapheme separators
  * are handled in the decode stream logic itself). */
-MVM_STATIC_INLINE int32_t MVM_string_decode_stream_maybe_sep(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec, MVMGrapheme32 g) {
+static inline int32_t MVM_string_decode_stream_maybe_sep(struct MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec, MVMGrapheme32 g) {
     if (sep_spec && g <= sep_spec->max_final_grapheme) {
         int32_t i;
         for (i = 0; i < sep_spec->num_seps; i++)
@@ -102,21 +102,21 @@ MVM_STATIC_INLINE int32_t MVM_string_decode_stream_maybe_sep(MVMThreadContext *t
     return 0;
 }
 
-MVMDecodeStream * MVM_string_decodestream_create(MVMThreadContext *tc, int32_t encoding, int64_t abs_byte_pos, int32_t translate_newlines);
-void MVM_string_decodestream_add_bytes(MVMThreadContext *tc, MVMDecodeStream *ds, uint8_t *bytes, int32_t length);
-void MVM_string_decodestream_add_chars(MVMThreadContext *tc, MVMDecodeStream *ds, MVMGrapheme32 *chars, int32_t length);
-void MVM_string_decodestream_discard_to(MVMThreadContext *tc, MVMDecodeStream *ds, const MVMDecodeStreamBytes *bytes, int32_t pos);
-MVMString * MVM_string_decodestream_get_chars(MVMThreadContext *tc, MVMDecodeStream *ds, int32_t chars, int64_t eof);
-MVMString * MVM_string_decodestream_get_until_sep(MVMThreadContext *tc, MVMDecodeStream *ds, MVMDecodeStreamSeparators *seps, int32_t chomp);
-MVMString * MVM_string_decodestream_get_until_sep_eof(MVMThreadContext *tc, MVMDecodeStream *ds, MVMDecodeStreamSeparators *sep_spec, int32_t chomp);
-MVMString * MVM_string_decodestream_get_all(MVMThreadContext *tc, MVMDecodeStream *ds);
-MVMString * MVM_string_decodestream_get_available(MVMThreadContext *tc, MVMDecodeStream *ds);
-int64_t MVM_string_decodestream_have_bytes(MVMThreadContext *tc, const MVMDecodeStream *ds, int32_t bytes);
-int64_t MVM_string_decodestream_bytes_available(MVMThreadContext *tc, const MVMDecodeStream *ds);
-int64_t MVM_string_decodestream_bytes_to_buf(MVMThreadContext *tc, MVMDecodeStream *ds, uint8_t **buf, int32_t bytes);
-int64_t MVM_string_decodestream_tell_bytes(MVMThreadContext *tc, const MVMDecodeStream *ds);
-int32_t MVM_string_decodestream_is_empty(MVMThreadContext *tc, MVMDecodeStream *ds);
-void MVM_string_decodestream_destroy(MVMThreadContext *tc, MVMDecodeStream *ds);
-void MVM_string_decode_stream_sep_default(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec);
-void MVM_string_decode_stream_sep_from_strings(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec, MVMString **seps, int32_t num_seps);
-void MVM_string_decode_stream_sep_destroy(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec);
+MVMDecodeStream * MVM_string_decodestream_create(struct MVMThreadContext *tc, int32_t encoding, int64_t abs_byte_pos, int32_t translate_newlines);
+void MVM_string_decodestream_add_bytes(struct MVMThreadContext *tc, MVMDecodeStream *ds, uint8_t *bytes, int32_t length);
+void MVM_string_decodestream_add_chars(struct MVMThreadContext *tc, MVMDecodeStream *ds, MVMGrapheme32 *chars, int32_t length);
+void MVM_string_decodestream_discard_to(struct MVMThreadContext *tc, MVMDecodeStream *ds, const MVMDecodeStreamBytes *bytes, int32_t pos);
+MVMString * MVM_string_decodestream_get_chars(struct MVMThreadContext *tc, MVMDecodeStream *ds, int32_t chars, int64_t eof);
+MVMString * MVM_string_decodestream_get_until_sep(struct MVMThreadContext *tc, MVMDecodeStream *ds, MVMDecodeStreamSeparators *seps, int32_t chomp);
+MVMString * MVM_string_decodestream_get_until_sep_eof(struct MVMThreadContext *tc, MVMDecodeStream *ds, MVMDecodeStreamSeparators *sep_spec, int32_t chomp);
+MVMString * MVM_string_decodestream_get_all(struct MVMThreadContext *tc, MVMDecodeStream *ds);
+MVMString * MVM_string_decodestream_get_available(struct MVMThreadContext *tc, MVMDecodeStream *ds);
+int64_t MVM_string_decodestream_have_bytes(struct MVMThreadContext *tc, const MVMDecodeStream *ds, int32_t bytes);
+int64_t MVM_string_decodestream_bytes_available(struct MVMThreadContext *tc, const MVMDecodeStream *ds);
+int64_t MVM_string_decodestream_bytes_to_buf(struct MVMThreadContext *tc, MVMDecodeStream *ds, uint8_t **buf, int32_t bytes);
+int64_t MVM_string_decodestream_tell_bytes(struct MVMThreadContext *tc, const MVMDecodeStream *ds);
+int32_t MVM_string_decodestream_is_empty(struct MVMThreadContext *tc, MVMDecodeStream *ds);
+void MVM_string_decodestream_destroy(struct MVMThreadContext *tc, MVMDecodeStream *ds);
+void MVM_string_decode_stream_sep_default(struct MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec);
+void MVM_string_decode_stream_sep_from_strings(struct MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec, MVMString **seps, int32_t num_seps);
+void MVM_string_decode_stream_sep_destroy(struct MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec);

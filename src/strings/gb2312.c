@@ -1,7 +1,7 @@
 #include "moar.h"
 #include "gb2312_codeindex.h"
 
-MVMString * MVM_string_gb2312_decode(MVMThreadContext *tc, const MVMObject *result_type, const char *gb2312_char, size_t bytes) {
+MVMString * MVM_string_gb2312_decode(struct MVMThreadContext *tc, const MVMObject *result_type, const char *gb2312_char, size_t bytes) {
     uint8_t *gb2312 = (uint8_t*)gb2312_char;
     size_t i, result_graphs;
 
@@ -59,7 +59,7 @@ MVMString * MVM_string_gb2312_decode(MVMThreadContext *tc, const MVMObject *resu
 #define GB2312_DECODE_CODEPOINT_EXCEPTION -4
 #define GB2312_DECODE_CHINESE_CODEPOINT -5
 
-static int gb2312_decode_handler(MVMThreadContext *tc, int32_t last_was_first_byte,
+static int gb2312_decode_handler(struct MVMThreadContext *tc, int32_t last_was_first_byte,
                                  uint16_t codepoint, uint16_t last_codepoint, MVMGrapheme32 *out) {
     MVMGrapheme32 graph;
     if (codepoint <= 127) {
@@ -86,7 +86,7 @@ static int gb2312_decode_handler(MVMThreadContext *tc, int32_t last_was_first_by
     }
 }
 
-uint32_t MVM_string_gb2312_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_gb2312_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                          const uint32_t *stopper_chars, MVMDecodeStreamSeparators *seps) {
     uint32_t count = 0, total = 0;
     uint32_t bufsize;
@@ -202,7 +202,7 @@ done:
     return reached_stopper;
 }
 
-char * MVM_string_gb2312_encode_substr(MVMThreadContext *tc, MVMString *str,
+char * MVM_string_gb2312_encode_substr(struct MVMThreadContext *tc, MVMString *str,
                                        uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement,
                                        int32_t translate_newlines) {
 

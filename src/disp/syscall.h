@@ -10,7 +10,7 @@ struct MVMDispSysCall {
      * any validation being required on argument count, kinds, and
      * representations, which are checked below (and their checks thus
      * lifted out as guards, which may be eliminated in optimized code). */
-    void (*implementation) (MVMThreadContext *tc, MVMArgs arg_info);
+    void (*implementation) (struct MVMThreadContext *tc, MVMArgs arg_info);
 
     /* The function wrapper around the implementation. */
     MVMCFunction *wrapper;
@@ -33,6 +33,6 @@ struct MVMDispSysCall {
     uint8_t expected_concrete[MVM_DISP_SYSCALL_MAX_ARGS];
 };
 
-void MVM_disp_syscall_setup(MVMThreadContext *tc);
-MVMDispSysCall * MVM_disp_syscall_find(MVMThreadContext *tc, MVMString *name);
-void MVM_disp_syscall_boolify_boxed_int_impl(MVMThreadContext *tc, MVMArgs arg_info);
+void MVM_disp_syscall_setup(struct MVMThreadContext *tc);
+MVMDispSysCall * MVM_disp_syscall_find(struct MVMThreadContext *tc, MVMString *name);
+void MVM_disp_syscall_boolify_boxed_int_impl(struct MVMThreadContext *tc, MVMArgs arg_info);

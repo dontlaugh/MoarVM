@@ -5,7 +5,7 @@ static const MVMREPROps SpeshCandidate_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &SpeshCandidate_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,11 +18,11 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Initialize the representation. */
-const MVMREPROps * MVMSpeshCandidate_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMSpeshCandidate_initialize(struct MVMThreadContext *tc) {
     return &SpeshCandidate_this_repr;
 }
 
-static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
+static void describe_refs(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
     MVMSpeshCandidateBody *body = (MVMSpeshCandidateBody *)data;
 
     uint32_t i;
@@ -37,12 +37,12 @@ static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTa
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot copy object with representation SpeshCandidate");
 }
 
 /* Called by the VM to mark any GCable items. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMSpeshCandidateBody *candidate = (MVMSpeshCandidateBody *)data;
     uint32_t i;
     if (candidate->type_tuple) {
@@ -60,7 +60,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMSpeshCandidate *candidate = (MVMSpeshCandidate *)obj;
     MVM_free(candidate->body.type_tuple);
     MVM_free(candidate->body.bytecode);
@@ -90,22 +90,22 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMSpeshCandidate);
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMSpeshCandidateBody *body = (MVMSpeshCandidateBody *)data;
     uint64_t size = 0;
 
@@ -173,7 +173,7 @@ static const MVMREPROps SpeshCandidate_this_repr = {
 
 /* Calculates the work and env sizes based on the number of locals and
  * lexicals. */
-static void calculate_work_env_sizes(MVMThreadContext *tc, MVMStaticFrame *sf,
+static void calculate_work_env_sizes(struct MVMThreadContext *tc, MVMStaticFrame *sf,
                                      MVMSpeshCandidate *c) {
     uint32_t jit_spill_size;
 
@@ -184,7 +184,7 @@ static void calculate_work_env_sizes(MVMThreadContext *tc, MVMStaticFrame *sf,
 }
 
 /* Called at points where we can GC safely during specialization. */
-static void spesh_gc_point(MVMThreadContext *tc) {
+static void spesh_gc_point(struct MVMThreadContext *tc) {
 #if MVM_GC_DEBUG
     tc->in_spesh = 0;
 #endif
@@ -196,7 +196,7 @@ static void spesh_gc_point(MVMThreadContext *tc) {
 
 /* Produces and installs a specialized version of the code, according to the
  * specified plan. */
-void MVM_spesh_candidate_add(MVMThreadContext *tc, MVMSpeshPlanned *p) {
+void MVM_spesh_candidate_add(struct MVMThreadContext *tc, MVMSpeshPlanned *p) {
     MVMSpeshGraph *sg;
     MVMSpeshCode *sc;
     MVMSpeshCandidate *candidate;
@@ -390,7 +390,7 @@ void MVM_spesh_candidate_add(MVMThreadContext *tc, MVMSpeshPlanned *p) {
 
 /* Discards existing candidates. Used when we instrument bytecode, and so
  * need to ignore these ones from here on. */
-void MVM_spesh_candidate_discard_existing(MVMThreadContext *tc, MVMStaticFrame *sf) {
+void MVM_spesh_candidate_discard_existing(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     MVMStaticFrameSpesh *spesh = sf->body.spesh;
     if (spesh) {
         uint32_t num_candidates = spesh->body.num_spesh_candidates;

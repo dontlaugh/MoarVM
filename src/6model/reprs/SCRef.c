@@ -5,7 +5,7 @@ static const MVMREPROps SCRef_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &SCRef_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,7 +18,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Initializes a new instance. */
-static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static void initialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMObject *root_codes, *rep_indexes, *rep_scs, *owned_objects, *rm;
 
     MVMInstance       *instance     = tc->instance;
@@ -51,12 +51,12 @@ static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot copy object with representation SCRef");
 }
 
 /* Called by the VM to mark any GCable items. */
-static void SCRef_gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void SCRef_gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMSerializationContextBody *sc = ((MVMSerializationContextBody **)data)[0];
     uint64_t i;
 
@@ -110,7 +110,7 @@ static void SCRef_gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGC
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMSerializationContext *sc = (MVMSerializationContext *)obj;
 
     if (sc->body == NULL)
@@ -155,16 +155,16 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMSerializationContextBody     *body      = ((MVMSerializationContextBody **)data)[0];
     uint64_t size = 0;
 
@@ -176,7 +176,7 @@ static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) 
     return size;
 }
 
-static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
+static void describe_refs(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
     MVMSerializationContextBody *body = ((MVMSerializationContextBody **)data)[0];
     uint64_t index;
 
@@ -227,7 +227,7 @@ static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTa
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMSCRef_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMSCRef_initialize(struct MVMThreadContext *tc) {
     return &SCRef_this_repr;
 }
 

@@ -284,28 +284,28 @@ struct MVMSpeshAnn {
 #define MVM_SPESH_ANN_COMMENT       4096
 
 /* Functions to create/destroy the spesh graph. */
-MVMSpeshGraph * MVM_spesh_graph_create(MVMThreadContext *tc, MVMStaticFrame *sf,
+MVMSpeshGraph * MVM_spesh_graph_create(struct MVMThreadContext *tc, MVMStaticFrame *sf,
     uint32_t cfg_only, uint32_t insert_object_nulls);
-MVMSpeshGraph * MVM_spesh_graph_create_from_cand(MVMThreadContext *tc, MVMStaticFrame *sf,
+MVMSpeshGraph * MVM_spesh_graph_create_from_cand(struct MVMThreadContext *tc, MVMStaticFrame *sf,
     MVMSpeshCandidate *cand, uint32_t cfg_only, MVMSpeshIns ***deopt_usage_ins_out);
-MVMSpeshBB * MVM_spesh_graph_linear_prev(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *search);
-void MVM_spesh_graph_grow_deopt_table(MVMThreadContext *tc, MVMSpeshGraph *g);
-int32_t MVM_spesh_graph_add_deopt_annotation(MVMThreadContext *tc, MVMSpeshGraph *g,
+MVMSpeshBB * MVM_spesh_graph_linear_prev(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *search);
+void MVM_spesh_graph_grow_deopt_table(struct MVMThreadContext *tc, MVMSpeshGraph *g);
+int32_t MVM_spesh_graph_add_deopt_annotation(struct MVMThreadContext *tc, MVMSpeshGraph *g,
     MVMSpeshIns *ins_node, uint32_t deopt_target, int32_t type);
-MVMSpeshBB ** MVM_spesh_graph_reverse_postorder(MVMThreadContext *tc, MVMSpeshGraph *g);
-void MVM_spesh_graph_recompute_dominance(MVMThreadContext *tc, MVMSpeshGraph *g);
-void MVM_spesh_graph_mark(MVMThreadContext *tc, MVMSpeshGraph *g, MVMGCWorklist *worklist);
-void MVM_spesh_graph_describe(MVMThreadContext *tc, MVMSpeshGraph *g, MVMHeapSnapshotState *snapshot);
-void MVM_spesh_graph_destroy(MVMThreadContext *tc, MVMSpeshGraph *g);
-MVM_PUBLIC void * MVM_spesh_alloc(MVMThreadContext *tc, MVMSpeshGraph *g, size_t bytes);
-MVMOpInfo *MVM_spesh_graph_get_phi(MVMThreadContext *tc, MVMSpeshGraph *g, uint32_t nrargs);
-void MVM_spesh_graph_place_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, int32_t n, uint16_t var);
+MVMSpeshBB ** MVM_spesh_graph_reverse_postorder(struct MVMThreadContext *tc, MVMSpeshGraph *g);
+void MVM_spesh_graph_recompute_dominance(struct MVMThreadContext *tc, MVMSpeshGraph *g);
+void MVM_spesh_graph_mark(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMGCWorklist *worklist);
+void MVM_spesh_graph_describe(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMHeapSnapshotState *snapshot);
+void MVM_spesh_graph_destroy(struct MVMThreadContext *tc, MVMSpeshGraph *g);
+ void * MVM_spesh_alloc(struct MVMThreadContext *tc, MVMSpeshGraph *g, size_t bytes);
+MVMOpInfo *MVM_spesh_graph_get_phi(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint32_t nrargs);
+void MVM_spesh_graph_place_phi(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, int32_t n, uint16_t var);
 
-MVM_PUBLIC void MVM_spesh_graph_add_comment(MVMThreadContext *tc, MVMSpeshGraph *g,
+ void MVM_spesh_graph_add_comment(struct MVMThreadContext *tc, MVMSpeshGraph *g,
     MVMSpeshIns *ins, const char *fmt, ...);
 
-MVM_STATIC_INLINE uint32_t MVM_spesh_is_inc_dec_op(uint16_t opcode) {
+static inline uint32_t MVM_spesh_is_inc_dec_op(uint16_t opcode) {
     return opcode == MVM_OP_inc_i || opcode == MVM_OP_dec_i ||
            opcode == MVM_OP_inc_u || opcode == MVM_OP_dec_u;
 }
-int MVM_spesh_graph_ins_ends_bb(MVMThreadContext *tc, const MVMOpInfo *info);
+int MVM_spesh_graph_ins_ends_bb(struct MVMThreadContext *tc, const MVMOpInfo *info);

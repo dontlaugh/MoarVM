@@ -1,6 +1,6 @@
 #include "moar.h"
 
-MVMHLLConfig *MVM_hll_get_config_for(MVMThreadContext *tc, MVMString *name) {
+MVMHLLConfig *MVM_hll_get_config_for(struct MVMThreadContext *tc, MVMString *name) {
     MVMHLLConfig *entry;
 
     if (!MVM_str_hash_key_is_valid(tc, name)) {
@@ -99,7 +99,7 @@ MVMHLLConfig *MVM_hll_get_config_for(MVMThreadContext *tc, MVMString *name) {
     MVMObject *val = MVM_repr_at_key_o((tc), (hash), key); \
     if (!MVM_is_null(tc, val)) (config)->member = MVM_repr_get_str(tc, val); \
 } while (0)
-static void set_max_inline_size(MVMThreadContext *tc, MVMObject *config_hash, MVMHLLConfig *config) {
+static void set_max_inline_size(struct MVMThreadContext *tc, MVMObject *config_hash, MVMHLLConfig *config) {
     MVMROOT(tc, config_hash) {
         MVMString *key = MVM_string_ascii_decode_nt(tc, tc->instance->VMString, "max_inline_size");
         MVMObject *size = MVM_repr_at_key_o(tc, config_hash, key);
@@ -107,10 +107,10 @@ static void set_max_inline_size(MVMThreadContext *tc, MVMObject *config_hash, MV
             config->max_inline_size = MVM_repr_get_int(tc, size);
     }
 }
-void MVM_hll_set_config_key(MVMThreadContext *tc, MVMHLLConfig *hll, MVMString *key, MVMObject *value) {
+void MVM_hll_set_config_key(struct MVMThreadContext *tc, MVMHLLConfig *hll, MVMString *key, MVMObject *value) {
     hll->uint_box_type = value;
 }
-MVMObject * MVM_hll_set_config(MVMThreadContext *tc, MVMString *name, MVMObject *config_hash) {
+MVMObject * MVM_hll_set_config(struct MVMThreadContext *tc, MVMString *name, MVMObject *config_hash) {
     MVMHLLConfig *config;
 
     config = MVM_hll_get_config_for(tc, name);
@@ -198,26 +198,26 @@ MVMObject * MVM_hll_set_config(MVMThreadContext *tc, MVMString *name, MVMObject 
 }
 
 /* Gets the current HLL configuration. */
-MVMHLLConfig *MVM_hll_current(MVMThreadContext *tc) {
+MVMHLLConfig *MVM_hll_current(struct MVMThreadContext *tc) {
     return tc->cur_frame->static_info->body.cu->body.hll_config;
 }
 
 /* Enter a level of compilee HLL configuration mode. */
-void MVM_hll_enter_compilee_mode(MVMThreadContext *tc) {
+void MVM_hll_enter_compilee_mode(struct MVMThreadContext *tc) {
     uv_mutex_lock(&tc->instance->mutex_hllconfigs);
     tc->instance->hll_compilee_depth++;
     uv_mutex_unlock(&tc->instance->mutex_hllconfigs);
 }
 
 /* Leave a level of compilee HLL configuration mode. */
-void MVM_hll_leave_compilee_mode(MVMThreadContext *tc) {
+void MVM_hll_leave_compilee_mode(struct MVMThreadContext *tc) {
     uv_mutex_lock(&tc->instance->mutex_hllconfigs);
     tc->instance->hll_compilee_depth--;
     uv_mutex_unlock(&tc->instance->mutex_hllconfigs);
 }
 
 /* Looks up an object in the HLL symbols stash. */
-MVMObject * MVM_hll_sym_get(MVMThreadContext *tc, MVMString *hll, MVMString *sym) {
+MVMObject * MVM_hll_sym_get(struct MVMThreadContext *tc, MVMString *hll, MVMString *sym) {
     MVMObject *syms = tc->instance->hll_syms, *hash, *result;
     uv_mutex_lock(&tc->instance->mutex_hll_syms);
     hash = MVM_repr_at_key_o(tc, syms, hll);

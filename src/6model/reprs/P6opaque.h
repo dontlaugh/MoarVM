@@ -99,45 +99,45 @@ struct MVMP6opaqueREPRData {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMP6opaque_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMP6opaque_initialize(struct MVMThreadContext *tc);
 
 /* If an object gets mixed in to, we need to be sure we look at its real body,
  * which may have been moved to hang off the specified pointer.
  *
  * NB: This has been hardcoded into the jit compilation. Thus, consider it
  * set into stone :-). That is the price you pay for disintermediation. */
-MVM_STATIC_INLINE void * MVM_p6opaque_real_data(MVMThreadContext *tc, void *data) {
+static inline void * MVM_p6opaque_real_data(struct MVMThreadContext *tc, void *data) {
     MVMP6opaqueBody *body = (MVMP6opaqueBody *)data;
     return body->replaced ? body->replaced : data;
 }
 
 /* Reads an attribute using an offset. This is only safe on an exact type
  * match. */
-MVM_STATIC_INLINE MVMObject * MVM_p6opaque_read_object(MVMThreadContext *tc,
+static inline MVMObject * MVM_p6opaque_read_object(struct MVMThreadContext *tc,
                                                        MVMObject *o, size_t offset) {
     char *data  = MVM_p6opaque_real_data(tc, OBJECT_BODY(o));
     return *((MVMObject **)(data + offset));
 }
-MVM_STATIC_INLINE int64_t MVM_p6opaque_read_int64(MVMThreadContext *tc,
+static inline int64_t MVM_p6opaque_read_int64(struct MVMThreadContext *tc,
                                                    MVMObject *o, size_t offset) {
     char *data  = MVM_p6opaque_real_data(tc, OBJECT_BODY(o));
     return *((int64_t *)(data + offset));
 }
-MVM_STATIC_INLINE double MVM_p6opaque_read_num64(MVMThreadContext *tc,
+static inline double MVM_p6opaque_read_num64(struct MVMThreadContext *tc,
                                                    MVMObject *o, size_t offset) {
     char *data  = MVM_p6opaque_real_data(tc, OBJECT_BODY(o));
     return *((double *)(data + offset));
 }
-MVM_STATIC_INLINE MVMString * MVM_p6opaque_read_str(MVMThreadContext *tc,
+static inline MVMString * MVM_p6opaque_read_str(struct MVMThreadContext *tc,
                                                     MVMObject *o, size_t offset) {
     char *data  = MVM_p6opaque_real_data(tc, OBJECT_BODY(o));
     return *((MVMString **)(data + offset));
 }
 
-size_t MVM_p6opaque_attr_offset(MVMThreadContext *tc, MVMObject *type,
+size_t MVM_p6opaque_attr_offset(struct MVMThreadContext *tc, MVMObject *type,
     MVMObject *class_handle, MVMString *name);
-void MVM_p6opaque_attr_offset_and_arg_type(MVMThreadContext *tc, MVMObject *type,
+void MVM_p6opaque_attr_offset_and_arg_type(struct MVMThreadContext *tc, MVMObject *type,
     MVMObject *class_handle, MVMString *name, size_t *offset_out, MVMCallsiteFlags *type_out);
-uint16_t MVM_p6opaque_get_bigint_offset(MVMThreadContext *tc, MVMSTable *st);
-uint32_t MVM_p6opaque_offset_to_attr_idx(MVMThreadContext *tc, MVMObject *type, size_t offset);
-void MVM_P6opaque_at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind);
+uint16_t MVM_p6opaque_get_bigint_offset(struct MVMThreadContext *tc, MVMSTable *st);
+uint32_t MVM_p6opaque_offset_to_attr_idx(struct MVMThreadContext *tc, MVMObject *type, size_t offset);
+void MVM_P6opaque_at_pos(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind);

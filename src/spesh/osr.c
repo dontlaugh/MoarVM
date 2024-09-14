@@ -4,7 +4,7 @@
 #define MVM_LOG_OSR 0
 
 /* Locates deopt index matching OSR point. */
-static int32_t get_osr_deopt_index(MVMThreadContext *tc, MVMSpeshCandidate *cand) {
+static int32_t get_osr_deopt_index(struct MVMThreadContext *tc, MVMSpeshCandidate *cand) {
     /* Calculate offset. */
     int32_t offset = (*(tc->interp_cur_op) - *(tc->interp_bytecode_start));
 
@@ -19,7 +19,7 @@ static int32_t get_osr_deopt_index(MVMThreadContext *tc, MVMSpeshCandidate *cand
 }
 
 /* Does the jump into the optimized code. */
-static void perform_osr(MVMThreadContext *tc, MVMSpeshCandidate *specialized) {
+static void perform_osr(struct MVMThreadContext *tc, MVMSpeshCandidate *specialized) {
     /* Ensure there is space for the work area. */
     if (specialized->body.work_size > tc->cur_frame->allocd_work ||
             specialized->body.env_size > tc->cur_frame->allocd_env) {
@@ -92,7 +92,7 @@ static void perform_osr(MVMThreadContext *tc, MVMSpeshCandidate *specialized) {
 }
 
 /* Polls for an optimization and, when one is produced, jumps into it. */
-void MVM_spesh_osr_poll_for_result(MVMThreadContext *tc) {
+void MVM_spesh_osr_poll_for_result(struct MVMThreadContext *tc) {
     MVMStaticFrame *sf = tc->cur_frame->static_info;
     MVMStaticFrameSpesh *spesh = sf->body.spesh;
     int32_t num_cands = spesh->body.num_spesh_candidates;

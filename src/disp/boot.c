@@ -1,7 +1,7 @@
 #include "moar.h"
 
 /* Wraps a C function into a BOOTCCode object. */
-static MVMObject * wrap(MVMThreadContext *tc, void (*func) (MVMThreadContext *, MVMArgs)) {
+static MVMObject * wrap(struct MVMThreadContext *tc, void (*func) (struct MVMThreadContext *, MVMArgs)) {
     MVMObject *BOOTCCode = tc->instance->boot_types.BOOTCCode;
     MVMObject *code_obj = REPR(BOOTCCode)->allocate(tc, STABLE(BOOTCCode));
     ((MVMCFunction *)code_obj)->body.func = func;
@@ -11,7 +11,7 @@ static MVMObject * wrap(MVMThreadContext *tc, void (*func) (MVMThreadContext *, 
 /* The boot-constant dispatcher takes the first position argument of the
  * incoming argument capture and treats it as a constant that should always
  * be produced as the result of the dispatch (modulo established guards). */
-static void boot_constant(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boot_constant(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -24,13 +24,13 @@ static void boot_constant(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Gets the MVMCFunction object wrapping the boot constant dispatcher. */
-MVMObject * MVM_disp_boot_constant_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_boot_constant_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, boot_constant);
 }
 
 /* The boot-value dispatcher returns the first positional argument of the
  * incoming argument capture. */
-static void boot_value(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boot_value(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -41,7 +41,7 @@ static void boot_value(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Gets the MVMCFunction object wrapping the boot value dispatcher. */
-MVMObject * MVM_disp_boot_value_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_boot_value_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, boot_value);
 }
 
@@ -49,7 +49,7 @@ MVMObject * MVM_disp_boot_value_dispatch(MVMThreadContext *tc) {
  * the incoming argument capture, which should be either an MVMCode or an
  * MVMCFunction. It invokes it with the rest of the args. The provided
  * code object is considered a constant. */
-static void boot_code_constant(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boot_code_constant(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -76,11 +76,11 @@ static void boot_code_constant(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Gets the MVMCFunction object wrapping the boot code constant dispatcher. */
-MVMObject * MVM_disp_boot_code_constant_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_boot_code_constant_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, boot_code_constant);
 }
 
-static void boot_foreign_code(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boot_foreign_code(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -103,7 +103,7 @@ static void boot_foreign_code(MVMThreadContext *tc, MVMArgs arg_info) {
     MVM_args_set_result_obj(tc, tc->instance->VMNull, MVM_RETURN_CURRENT_FRAME);
 }
 
-MVMObject * MVM_disp_boot_foreign_code_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_boot_foreign_code_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, boot_foreign_code);
 }
 
@@ -111,7 +111,7 @@ MVMObject * MVM_disp_boot_foreign_code_dispatch(MVMThreadContext *tc) {
  * incoming argument capture, which should be either an MVMCode or an
  * MVMCFunction. It establishes a type and concreteness guard on it,
  * then invokes it with the rest of the args. */
-static void boot_code(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boot_code(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -143,7 +143,7 @@ static void boot_code(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Gets the MVMCFunction object wrapping the boot code dispatcher. */
-MVMObject * MVM_disp_boot_code_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_boot_code_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, boot_code);
 }
 
@@ -151,7 +151,7 @@ MVMObject * MVM_disp_boot_code_dispatch(MVMThreadContext *tc) {
  * which will typically be a literal. It uses this to invoke functionality
  * provided by the VM. The rest of the arguments are the arguments that go
  * to that call. */
-static void boot_syscall(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boot_syscall(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -251,13 +251,13 @@ static void boot_syscall(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Gets the MVMCFunction object wrapping the boot syscall dispatcher. */
-MVMObject * MVM_disp_boot_syscall_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_boot_syscall_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, boot_syscall);
 }
 
 /* The boot-resume dispatcher resumes the first dispatcher found
  * by walking down the call stack (not counting the current one). */
-static void boot_resume(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boot_resume(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -266,14 +266,14 @@ static void boot_resume(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Gets the MVMCFunction object wrapping the boot resume dispatcher. */
-MVMObject * MVM_disp_boot_resume_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_boot_resume_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, boot_resume);
 }
 
 /* The boot-resume-caller dispatcher skips past the current frame on
  * the callstack (and any immediately preceding dispatcher), and then
  * proceeds as `boot-resume` would. */
-static void boot_resume_caller(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boot_resume_caller(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -282,7 +282,7 @@ static void boot_resume_caller(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Gets the MVMCFunction object wrapping the boot resume caller dispatcher. */
-MVMObject * MVM_disp_boot_resume_caller_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_boot_resume_caller_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, boot_resume_caller);
 }
 
@@ -293,7 +293,7 @@ MVMObject * MVM_disp_boot_resume_caller_dispatch(MVMThreadContext *tc) {
  * HLL in question, an exception is thrown. It expects the first argument in
  * the capture to be the target of the invocation and the rest to be the
  * arguments. Establishes a type guard on the callee. */
-static void lang_call(MVMThreadContext *tc, MVMArgs arg_info) {
+static void lang_call(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -340,7 +340,7 @@ static void lang_call(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Gets the MVMCFunction object wrapping the language-sensitive call dispatcher. */
-MVMObject * MVM_disp_lang_call_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_lang_call_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, lang_call);
 }
 
@@ -356,7 +356,7 @@ MVMObject * MVM_disp_lang_call_dispatch(MVMThreadContext *tc) {
  * repeated or possibly in a container) should follow the method name. If
  * there is neither a language set on the invocant and it does not have a
  * KnowHOW metaclass, an exception will be thrown. */
-static void lang_meth_call(MVMThreadContext *tc, MVMArgs arg_info) {
+static void lang_meth_call(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -420,7 +420,7 @@ static void lang_meth_call(MVMThreadContext *tc, MVMArgs arg_info) {
 
 /* Gets the MVMCFunction object wrapping the language-sensitive method call
  * dispatcher. */
-MVMObject * MVM_disp_lang_meth_call_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_lang_meth_call_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, lang_meth_call);
 }
 
@@ -428,7 +428,7 @@ MVMObject * MVM_disp_lang_meth_call_dispatch(MVMThreadContext *tc) {
  * indicating that failure to find the method is an exception. Evaluates to
  * a value that is either the resolved method or, in the case that a method
  * is not found but the exception flag is not set, a VMNull. */
-static void lang_find_meth(MVMThreadContext *tc, MVMArgs arg_info) {
+static void lang_find_meth(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -514,14 +514,14 @@ static void lang_find_meth(MVMThreadContext *tc, MVMArgs arg_info) {
 
 /* Gets the MVMCFunction object wrapping the language-sensitive find method
  * dispatcher. */
-MVMObject * MVM_disp_lang_find_meth_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_lang_find_meth_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, lang_find_meth);
 }
 
 /* Checks if the calling language has a method not found handler configured,
  * and if so invokes it. Failing that, throws an exception. Expects the same
  * arguments that lang-meth-call does. */
-static void lang_meth_not_found(MVMThreadContext *tc, MVMArgs arg_info) {
+static void lang_meth_not_found(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -549,13 +549,13 @@ static void lang_meth_not_found(MVMThreadContext *tc, MVMArgs arg_info) {
 
 /* Gets the MVMCFunction object wrapping the language-aware method not found
  * error production dispatcher. */
-MVMObject * MVM_disp_lang_meth_not_found_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_lang_meth_not_found_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, lang_meth_not_found);
 }
 
 /* The boot-boolify dispatcher looks at the boolification protocol setting
  * configured on the target object and uses it to decide what to do. */
-static void boot_boolify(MVMThreadContext *tc, MVMArgs arg_info) {
+static void boot_boolify(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);
@@ -639,13 +639,13 @@ static void boot_boolify(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Gets the MVMCFunction object wrapping the boolification dispatcher. */
-MVMObject * MVM_disp_boot_boolify_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_boot_boolify_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, boot_boolify);
 }
 
 /* The lang-hllize dispatcher looks at the current HLL and delegates
  * to the registered language hllization dispatcher */
-static void lang_hllize(MVMThreadContext *tc, MVMArgs arg_info) {
+static void lang_hllize(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 2);
@@ -694,7 +694,7 @@ static void lang_hllize(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Gets the MVMCFunction object wrapping the hllization dispatcher. */
-MVMObject * MVM_disp_lang_hllize_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_lang_hllize_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, lang_hllize);
 }
 
@@ -703,7 +703,7 @@ MVMObject * MVM_disp_lang_hllize_dispatch(MVMThreadContext *tc) {
  * handle, and if so evalutes to 1. Failing that, it looks at the HLL of the
  * type of the object, sees if it has an isinvokable dispatcher registered,
  * and delegates to it if so. Otherwise, evalutes to 0. */
-static void lang_isinvokable(MVMThreadContext *tc, MVMArgs arg_info) {
+static void lang_isinvokable(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 2);
@@ -750,6 +750,6 @@ static void lang_isinvokable(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Gets the MVMCFunction object wrapping the lang-isinvokable dispatcher. */
-MVMObject * MVM_disp_lang_isinvokable_dispatch(MVMThreadContext *tc) {
+MVMObject * MVM_disp_lang_isinvokable_dispatch(struct MVMThreadContext *tc) {
     return wrap(tc, lang_isinvokable);
 }

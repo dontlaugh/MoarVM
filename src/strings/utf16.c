@@ -5,23 +5,23 @@ static uint8_t BOM_UTF16BE[2] = { 0xFE, 0xFF };
 #define UTF16_DECODE_BIG_ENDIAN 1
 #define UTF16_DECODE_LITTLE_ENDIAN 2
 #define UTF16_DECODE_AUTO_ENDIAN 4
-MVM_STATIC_INLINE int has_little_endian_bom (uint8_t *buf8) {
+static inline int has_little_endian_bom (uint8_t *buf8) {
     return buf8[0] == BOM_UTF16LE[0] && buf8[1] == BOM_UTF16LE[1];
 }
-MVM_STATIC_INLINE int has_big_endian_bom (uint8_t *buf8) {
+static inline int has_big_endian_bom (uint8_t *buf8) {
     return buf8[0] == BOM_UTF16BE[0] && buf8[1] == BOM_UTF16BE[1];
 }
-MVM_STATIC_INLINE void init_utf16_decoder_state(MVMDecodeStream *ds, int setting) {
+static inline void init_utf16_decoder_state(MVMDecodeStream *ds, int setting) {
     if (!ds->decoder_state) {
         ds->decoder_state = MVM_malloc(sizeof(int32_t));
     }
     *((int32_t*)ds->decoder_state) = setting;
 }
 #define utf16_decoder_state(ds) (*((int32_t*)(ds)->decoder_state))
-uint32_t MVM_string_utf16_decodestream_main(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_utf16_decodestream_main(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                     const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps, int endianess);
-uint32_t MVM_string_utf16_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_utf16_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                     const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps) {
     if (!ds->decoder_state) {
@@ -33,13 +33,13 @@ uint32_t MVM_string_utf16_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds
     }
     return MVM_string_utf16_decodestream_main(tc, ds, stopper_chars, seps, UTF16_DECODE_AUTO_ENDIAN);
 }
-uint32_t MVM_string_utf16le_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_utf16le_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                     const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps) {
     init_utf16_decoder_state(ds, UTF16_DECODE_LITTLE_ENDIAN);
     return MVM_string_utf16_decodestream_main(tc, ds, stopper_chars, seps, UTF16_DECODE_LITTLE_ENDIAN);
 }
-uint32_t MVM_string_utf16be_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_utf16be_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                     const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps) {
     init_utf16_decoder_state(ds, UTF16_DECODE_BIG_ENDIAN);
@@ -48,7 +48,7 @@ uint32_t MVM_string_utf16be_decodestream(MVMThreadContext *tc, MVMDecodeStream *
 /* mostly from YAML-LibYAML */
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-uint32_t MVM_string_utf16_decodestream_main(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_utf16_decodestream_main(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                     const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps, int endianess) {
     uint32_t count = 0, total = 0;
@@ -180,17 +180,17 @@ uint32_t MVM_string_utf16_decodestream_main(MVMThreadContext *tc, MVMDecodeStrea
 
     return reached_stopper;
 }
-static MVMString * MVM_string_utf16_decode_main(MVMThreadContext *tc,
+static MVMString * MVM_string_utf16_decode_main(struct MVMThreadContext *tc,
         const MVMObject *result_type, uint8_t *utf16_chars, size_t bytes, int endianess);
-MVMString * MVM_string_utf16be_decode(MVMThreadContext *tc,
+MVMString * MVM_string_utf16be_decode(struct MVMThreadContext *tc,
         const MVMObject *result_type, char *utf16_chars, size_t bytes) {
     return MVM_string_utf16_decode_main(tc, result_type, (uint8_t*)utf16_chars, bytes, UTF16_DECODE_BIG_ENDIAN);
 }
-MVMString * MVM_string_utf16le_decode(MVMThreadContext *tc,
+MVMString * MVM_string_utf16le_decode(struct MVMThreadContext *tc,
             const MVMObject *result_type, char *utf16_chars, size_t bytes) {
     return MVM_string_utf16_decode_main(tc, result_type, (uint8_t*)utf16_chars, bytes, UTF16_DECODE_LITTLE_ENDIAN);
 }
-MVMString * MVM_string_utf16_decode(MVMThreadContext *tc,
+MVMString * MVM_string_utf16_decode(struct MVMThreadContext *tc,
             const MVMObject *result_type, char *utf16_chars_in, size_t bytes) {
     uint8_t *utf16_chars = (uint8_t*)utf16_chars_in;
 #ifdef MVM_BIGENDIAN
@@ -215,7 +215,7 @@ MVMString * MVM_string_utf16_decode(MVMThreadContext *tc,
 }
 /* Decodes the specified number of bytes of utf16 into an NFG string, creating
  * a result of the specified type. The type must have the MVMString REPR. */
-static MVMString * MVM_string_utf16_decode_main(MVMThreadContext *tc,
+static MVMString * MVM_string_utf16_decode_main(struct MVMThreadContext *tc,
         const MVMObject *result_type, uint8_t *utf16_chars, size_t bytes, int endianess) {
     MVMString *result;
     MVMGrapheme32 *buffer;
@@ -300,26 +300,26 @@ static MVMString * MVM_string_utf16_decode_main(MVMThreadContext *tc,
 
     return result;
 }
-MVM_STATIC_INLINE uint16_t swap_bytes(uint16_t uint16, int enable_byte_swap) {
+static inline uint16_t swap_bytes(uint16_t uint16, int enable_byte_swap) {
     return enable_byte_swap
         ? (uint16 << 8) | (uint16 >> 8)
         : uint16;
 }
-char * MVM_string_utf16_encode_substr_main(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines, int endianess);
+char * MVM_string_utf16_encode_substr_main(struct MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines, int endianess);
 /* Encodes the specified substring to utf16. The result string is NULL terminated, but
  * the specified size is the non-null part. (This being UTF-16, there are 2 null bytes
  * on the end.) */
-char * MVM_string_utf16be_encode_substr(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
+char * MVM_string_utf16be_encode_substr(struct MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
     return MVM_string_utf16_encode_substr_main(tc, str, output_size, start, length, replacement, translate_newlines, UTF16_DECODE_BIG_ENDIAN);
 }
-char * MVM_string_utf16le_encode_substr(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
+char * MVM_string_utf16le_encode_substr(struct MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
     return MVM_string_utf16_encode_substr_main(tc, str, output_size, start, length, replacement, translate_newlines, UTF16_DECODE_LITTLE_ENDIAN);
 }
-char * MVM_string_utf16_encode_substr(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
+char * MVM_string_utf16_encode_substr(struct MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
     return MVM_string_utf16_encode_substr_main(tc, str, output_size, start, length, replacement, translate_newlines, UTF16_DECODE_AUTO_ENDIAN);
 }
 
-char * MVM_string_utf16_encode_substr_main(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines, int endianess) {
+char * MVM_string_utf16_encode_substr_main(struct MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines, int endianess) {
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
     uint32_t lengthu = (uint32_t)(length == -1 ? strgraphs - start : length);
     uint16_t *result;
@@ -407,6 +407,6 @@ char * MVM_string_utf16_encode_substr_main(MVMThreadContext *tc, MVMString *str,
 }
 
 /* Encodes the whole string, double-NULL terminated. */
-char * MVM_string_utf16_encode(MVMThreadContext *tc, MVMString *str, int32_t translate_newlines) {
+char * MVM_string_utf16_encode(struct MVMThreadContext *tc, MVMString *str, int32_t translate_newlines) {
     return MVM_string_utf16_encode_substr(tc, str, NULL, 0, -1, NULL, translate_newlines);
 }

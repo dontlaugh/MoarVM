@@ -372,54 +372,54 @@ struct MVMCallStackSpecialReturn {
 };
 
 /* Functions for working with the call stack. */
-void MVM_callstack_init(MVMThreadContext *tc);
-MVMCallStackRecord * MVM_callstack_allocate_nested_runloop(MVMThreadContext *tc);
-MVMCallStackFrame * MVM_callstack_allocate_frame(MVMThreadContext *tc, uint32_t work_size,
+void MVM_callstack_init(struct MVMThreadContext *tc);
+MVMCallStackRecord * MVM_callstack_allocate_nested_runloop(struct MVMThreadContext *tc);
+MVMCallStackFrame * MVM_callstack_allocate_frame(struct MVMThreadContext *tc, uint32_t work_size,
         uint32_t env_size);
-MVMCallStackHeapFrame * MVM_callstack_allocate_heap_frame(MVMThreadContext *tc,
+MVMCallStackHeapFrame * MVM_callstack_allocate_heap_frame(struct MVMThreadContext *tc,
         uint32_t work_size);
-int32_t MVM_callstack_ensure_work_and_env_space(MVMThreadContext *tc, uint32_t needed_work,
+int32_t MVM_callstack_ensure_work_and_env_space(struct MVMThreadContext *tc, uint32_t needed_work,
         uint32_t needed_env);
-MVM_PUBLIC void * MVM_callstack_allocate_special_return(MVMThreadContext *tc,
+ void * MVM_callstack_allocate_special_return(struct MVMThreadContext *tc,
         MVMSpecialReturn special_return, MVMSpecialReturn special_unwind,
         MVMSpecialReturnMark mark_data, size_t data_size);
-MVMCallStackDispatchRecord * MVM_callstack_allocate_dispatch_record(MVMThreadContext *tc);
-MVMCallStackDispatchRun * MVM_callstack_allocate_dispatch_run(MVMThreadContext *tc,
+MVMCallStackDispatchRecord * MVM_callstack_allocate_dispatch_record(struct MVMThreadContext *tc);
+MVMCallStackDispatchRun * MVM_callstack_allocate_dispatch_run(struct MVMThreadContext *tc,
         uint32_t num_temps);
-MVMCallStackFlattening * MVM_callstack_allocate_flattening(MVMThreadContext *tc,
+MVMCallStackFlattening * MVM_callstack_allocate_flattening(struct MVMThreadContext *tc,
         uint16_t num_args, uint16_t num_pos);
-MVMCallStackBindControl * MVM_callstack_allocate_bind_control_failure_only(MVMThreadContext *tc,
+MVMCallStackBindControl * MVM_callstack_allocate_bind_control_failure_only(struct MVMThreadContext *tc,
         int64_t failure_flag);
-MVMCallStackBindControl * MVM_callstack_allocate_bind_control(MVMThreadContext *tc,
+MVMCallStackBindControl * MVM_callstack_allocate_bind_control(struct MVMThreadContext *tc,
         int64_t flag, int64_t success_flag);
-MVMCallStackArgsFromC * MVM_callstack_allocate_args_from_c(MVMThreadContext *tc,
+MVMCallStackArgsFromC * MVM_callstack_allocate_args_from_c(struct MVMThreadContext *tc,
         MVMCallsite *cs);
 MVMCallStackDeoptedResumeInit * MVM_callstack_allocate_deopted_resume_init(
-        MVMThreadContext *tc, MVMSpeshResumeInit *ri);
-void MVM_callstack_new_continuation_region(MVMThreadContext *tc, MVMObject *tag);
-MVMCallStackRegion * MVM_callstack_continuation_slice(MVMThreadContext *tc, MVMObject *tag,
+        struct MVMThreadContext *tc, MVMSpeshResumeInit *ri);
+void MVM_callstack_new_continuation_region(struct MVMThreadContext *tc, MVMObject *tag);
+MVMCallStackRegion * MVM_callstack_continuation_slice(struct MVMThreadContext *tc, MVMObject *tag,
         MVMActiveHandler **active_handlers);
-void MVM_callstack_continuation_append(MVMThreadContext *tc, MVMCallStackRegion *first_region,
+void MVM_callstack_continuation_append(struct MVMThreadContext *tc, MVMCallStackRegion *first_region,
         MVMCallStackRecord *stack_top, MVMObject *update_tag);
-MVMFrame * MVM_callstack_first_frame_from_region(MVMThreadContext *tc, MVMCallStackRegion *region);
-MVMCallStackDispatchRecord * MVM_callstack_find_topmost_dispatch_recording(MVMThreadContext *tc);
-uint64_t MVM_callstack_unwind_frame(MVMThreadContext *tc, uint8_t exceptional);
-void MVM_callstack_unwind_to_frame(MVMThreadContext *tc, uint8_t exceptional);
-void MVM_callstack_unwind_dispatch_record(MVMThreadContext *tc);
-void MVM_callstack_unwind_dispatch_run(MVMThreadContext *tc);
-void MVM_callstack_unwind_failed_dispatch_run(MVMThreadContext *tc);
-void MVM_callstack_unwind_nested_runloop(MVMThreadContext *tc);
-void MVM_callstack_mark_current_thread(MVMThreadContext *tc, MVMGCWorklist *worklist,
+MVMFrame * MVM_callstack_first_frame_from_region(struct MVMThreadContext *tc, MVMCallStackRegion *region);
+MVMCallStackDispatchRecord * MVM_callstack_find_topmost_dispatch_recording(struct MVMThreadContext *tc);
+uint64_t MVM_callstack_unwind_frame(struct MVMThreadContext *tc, uint8_t exceptional);
+void MVM_callstack_unwind_to_frame(struct MVMThreadContext *tc, uint8_t exceptional);
+void MVM_callstack_unwind_dispatch_record(struct MVMThreadContext *tc);
+void MVM_callstack_unwind_dispatch_run(struct MVMThreadContext *tc);
+void MVM_callstack_unwind_failed_dispatch_run(struct MVMThreadContext *tc);
+void MVM_callstack_unwind_nested_runloop(struct MVMThreadContext *tc);
+void MVM_callstack_mark_current_thread(struct MVMThreadContext *tc, MVMGCWorklist *worklist,
         MVMHeapSnapshotState *snapshot);
-void MVM_callstack_mark_detached(MVMThreadContext *tc, MVMCallStackRecord *stack_top,
+void MVM_callstack_mark_detached(struct MVMThreadContext *tc, MVMCallStackRecord *stack_top,
         MVMGCWorklist *worklist);
-void MVM_callstack_free_detached_regions(MVMThreadContext *tc, MVMCallStackRegion *first_region,
+void MVM_callstack_free_detached_regions(struct MVMThreadContext *tc, MVMCallStackRegion *first_region,
         MVMCallStackRecord *stack_top);
-void MVM_callstack_destroy(MVMThreadContext *tc);
-MVM_STATIC_INLINE uint8_t MVM_callstack_kind_ignoring_deopt(MVMCallStackRecord *record) {
+void MVM_callstack_destroy(struct MVMThreadContext *tc);
+static inline uint8_t MVM_callstack_kind_ignoring_deopt(MVMCallStackRecord *record) {
     return record->kind == MVM_CALLSTACK_RECORD_DEOPT_FRAME ? record->orig_kind : record->kind;
 }
-MVM_STATIC_INLINE MVMFrame * MVM_callstack_record_to_frame(MVMCallStackRecord *record) {
+static inline MVMFrame * MVM_callstack_record_to_frame(MVMCallStackRecord *record) {
     switch (MVM_callstack_kind_ignoring_deopt(record)) {
         case MVM_CALLSTACK_RECORD_FRAME:
             return &(((MVMCallStackFrame *)record)->frame);
@@ -431,7 +431,7 @@ MVM_STATIC_INLINE MVMFrame * MVM_callstack_record_to_frame(MVMCallStackRecord *r
             MVM_panic(1, "No frame at top of callstack");
     }
 }
-MVM_STATIC_INLINE MVMFrame * MVM_callstack_current_frame(MVMThreadContext *tc) {
+static inline MVMFrame * MVM_callstack_current_frame(struct MVMThreadContext *tc) {
     return MVM_callstack_record_to_frame(tc->stack_top);
 }
 
@@ -443,7 +443,7 @@ struct MVMCallStackIterator {
 };
 
 /* Create an iterator over a certain kind of record. */
-MVM_STATIC_INLINE void MVM_callstack_iter_one_kind_init(MVMThreadContext *tc,
+static inline void MVM_callstack_iter_one_kind_init(struct MVMThreadContext *tc,
         MVMCallStackIterator *iter, MVMCallStackRecord *start, uint8_t kind) {
     iter->start = start;
     iter->current = NULL;
@@ -451,7 +451,7 @@ MVM_STATIC_INLINE void MVM_callstack_iter_one_kind_init(MVMThreadContext *tc,
 }
 
 /* Create an iterator over bytecode frames on the call stack. */
-MVM_STATIC_INLINE void MVM_callstack_iter_frame_init(MVMThreadContext *tc,
+static inline void MVM_callstack_iter_frame_init(struct MVMThreadContext *tc,
         MVMCallStackIterator *iter, MVMCallStackRecord *start) {
     iter->start = start;
     iter->current = NULL;
@@ -463,7 +463,7 @@ MVM_STATIC_INLINE void MVM_callstack_iter_frame_init(MVMThreadContext *tc,
 
 /* Create an iterator over call stack records that we may want to consider if
  * we are doing a resume. */
-MVM_STATIC_INLINE void MVM_callstack_iter_resumeable_init(MVMThreadContext *tc,
+static inline void MVM_callstack_iter_resumeable_init(struct MVMThreadContext *tc,
         MVMCallStackIterator *iter, MVMCallStackRecord *start) {
     iter->start = start;
     iter->current = NULL;
@@ -479,7 +479,7 @@ MVM_STATIC_INLINE void MVM_callstack_iter_resumeable_init(MVMThreadContext *tc,
 
 /* Move to the next applicable record. Should be called before reading a current
  * record. Calling it again after it has returned a flase value is undefined. */
-MVM_STATIC_INLINE int32_t MVM_callstack_iter_move_next(MVMThreadContext *tc,
+static inline int32_t MVM_callstack_iter_move_next(struct MVMThreadContext *tc,
         MVMCallStackIterator *iter) {
     iter->current = iter->current ? iter->current->prev : iter->start;
     while (iter->current && !(iter->filter & (1 << iter->current->kind)))
@@ -488,20 +488,20 @@ MVM_STATIC_INLINE int32_t MVM_callstack_iter_move_next(MVMThreadContext *tc,
 }
 
 /* Get the current item in the iteration. */
-MVM_STATIC_INLINE MVMCallStackRecord * MVM_callstack_iter_current(MVMThreadContext *tc,
+static inline MVMCallStackRecord * MVM_callstack_iter_current(struct MVMThreadContext *tc,
         MVMCallStackIterator *iter) {
     return iter->current;
 }
 
 /* Get the current frame in the iteration (illegal if we are not only walking
  * frames). */
-MVM_STATIC_INLINE MVMFrame * MVM_callstack_iter_current_frame(MVMThreadContext *tc,
+static inline MVMFrame * MVM_callstack_iter_current_frame(struct MVMThreadContext *tc,
         MVMCallStackIterator *iter) {
     return MVM_callstack_record_to_frame(iter->current);
 }
 
-MVM_STATIC_INLINE MVMCallStackRecord * MVM_callstack_prev_significant_record(
-    MVMThreadContext *tc, MVMCallStackRecord *record) {
+static inline MVMCallStackRecord * MVM_callstack_prev_significant_record(
+    struct MVMThreadContext *tc, MVMCallStackRecord *record) {
     MVMCallStackRecord *prev = record->prev;
     if (prev && prev->kind == MVM_CALLSTACK_RECORD_START_REGION)
         prev = prev->prev;

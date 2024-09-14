@@ -74,10 +74,10 @@ struct MVMHLLConfig {
     uint32_t max_inline_size;
 };
 
-MVMHLLConfig * MVM_hll_get_config_for(MVMThreadContext *tc, MVMString *name);
-MVMObject * MVM_hll_set_config(MVMThreadContext *tc, MVMString *name, MVMObject *config_hash);
-void MVM_hll_set_config_key(MVMThreadContext *tc, MVMHLLConfig *hll, MVMString *key, MVMObject *value);
-MVM_PUBLIC MVMHLLConfig * MVM_hll_current(MVMThreadContext *tc);
-void MVM_hll_enter_compilee_mode(MVMThreadContext *tc);
-void MVM_hll_leave_compilee_mode(MVMThreadContext *tc);
-MVM_PUBLIC MVMObject * MVM_hll_sym_get(MVMThreadContext *tc, MVMString *hll, MVMString *sym);
+MVMHLLConfig * MVM_hll_get_config_for(struct MVMThreadContext *tc, MVMString *name);
+MVMObject * MVM_hll_set_config(struct MVMThreadContext *tc, MVMString *name, MVMObject *config_hash);
+void MVM_hll_set_config_key(struct MVMThreadContext *tc, MVMHLLConfig *hll, MVMString *key, MVMObject *value);
+ MVMHLLConfig * MVM_hll_current(struct MVMThreadContext *tc);
+void MVM_hll_enter_compilee_mode(struct MVMThreadContext *tc);
+void MVM_hll_leave_compilee_mode(struct MVMThreadContext *tc);
+ MVMObject * MVM_hll_sym_get(struct MVMThreadContext *tc, MVMString *hll, MVMString *sym);

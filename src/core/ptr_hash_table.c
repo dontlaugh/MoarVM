@@ -2,7 +2,7 @@
 
 #define PTR_INITIAL_SIZE_LOG2 3
 
-MVM_STATIC_INLINE void hash_demolish_internal(MVMThreadContext *tc,
+static inline void hash_demolish_internal(struct MVMThreadContext *tc,
                                               struct MVMPtrHashTableControl *control) {
     size_t allocated_items = MVM_ptr_hash_allocated_items(control);
     size_t entries_size = sizeof(struct MVMPtrHashEntry) * allocated_items;
@@ -12,7 +12,7 @@ MVM_STATIC_INLINE void hash_demolish_internal(MVMThreadContext *tc,
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
    which you allocated (heap, stack, inside another struct, wherever) */
-void MVM_ptr_hash_demolish(MVMThreadContext *tc, MVMPtrHashTable *hashtable) {
+void MVM_ptr_hash_demolish(struct MVMThreadContext *tc, MVMPtrHashTable *hashtable) {
     struct MVMPtrHashTableControl *control = hashtable->table;
     if (!control)
         return;
@@ -22,7 +22,7 @@ void MVM_ptr_hash_demolish(MVMThreadContext *tc, MVMPtrHashTable *hashtable) {
 /* and then free memory if you allocated it */
 
 
-MVM_STATIC_INLINE struct MVMPtrHashTableControl *hash_allocate_common(MVMThreadContext *tc,
+static inline struct MVMPtrHashTableControl *hash_allocate_common(struct MVMThreadContext *tc,
                                                                       uint8_t official_size_log2) {
     uint32_t official_size = 1 << (uint32_t)official_size_log2;
     uint32_t max_items = official_size * MVM_PTR_HASH_LOAD_FACTOR;
@@ -59,7 +59,7 @@ MVM_STATIC_INLINE struct MVMPtrHashTableControl *hash_allocate_common(MVMThreadC
     return control;
 }
 
-MVM_STATIC_INLINE struct MVMPtrHashEntry *hash_insert_internal(MVMThreadContext *tc,
+static inline struct MVMPtrHashEntry *hash_insert_internal(struct MVMThreadContext *tc,
                                                                struct MVMPtrHashTableControl *control,
                                                                const void *key) {
     if (MVM_UNLIKELY(control->cur_items >= control->max_items)) {
@@ -161,7 +161,7 @@ MVM_STATIC_INLINE struct MVMPtrHashEntry *hash_insert_internal(MVMThreadContext 
     }
 }
 
-static struct MVMPtrHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
+static struct MVMPtrHashTableControl *maybe_grow_hash(struct MVMThreadContext *tc,
                                                       struct MVMPtrHashTableControl *control) {
     /* control->max_items may have been set to 0 to trigger a call into this
      * function. */
@@ -247,7 +247,7 @@ static struct MVMPtrHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
     return control;
 }
 
-struct MVMPtrHashEntry *MVM_ptr_hash_lvalue_fetch(MVMThreadContext *tc,
+struct MVMPtrHashEntry *MVM_ptr_hash_lvalue_fetch(struct MVMThreadContext *tc,
                                                   MVMPtrHashTable *hashtable,
                                                   const void *key) {
     struct MVMPtrHashTableControl *control = hashtable->table;
@@ -281,7 +281,7 @@ struct MVMPtrHashEntry *MVM_ptr_hash_lvalue_fetch(MVMThreadContext *tc,
  * Doesn't check if the key already exists. Use with care.
  * (well that's the official line. As you can see, the XXX suggests we currently
  * don't exploit the documented freedom.) */
-void MVM_ptr_hash_insert(MVMThreadContext *tc,
+void MVM_ptr_hash_insert(struct MVMThreadContext *tc,
                          MVMPtrHashTable *hashtable,
                          const void *key,
                          uintptr_t value) {
@@ -299,7 +299,7 @@ void MVM_ptr_hash_insert(MVMThreadContext *tc,
     }
 }
 
-uintptr_t MVM_ptr_hash_fetch_and_delete(MVMThreadContext *tc,
+uintptr_t MVM_ptr_hash_fetch_and_delete(struct MVMThreadContext *tc,
                                         MVMPtrHashTable *hashtable,
                                         const void *key) {
     if (MVM_ptr_hash_is_empty(tc, hashtable)) {

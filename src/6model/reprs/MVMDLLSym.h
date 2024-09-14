@@ -8,4 +8,4 @@ struct MVMDLLSym {
     MVMDLLSymBody body;
 };
 
-const MVMREPROps * MVMDLLSym_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMDLLSym_initialize(struct MVMThreadContext *tc);

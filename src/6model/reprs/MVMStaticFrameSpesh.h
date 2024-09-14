@@ -34,4 +34,4 @@ struct MVMStaticFrameSpesh {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMStaticFrameSpesh_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMStaticFrameSpesh_initialize(struct MVMThreadContext *tc);

@@ -5,11 +5,11 @@
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
 #define MVM_STR_HASH_LOAD_FACTOR 0.75
-MVM_STATIC_INLINE uint32_t MVM_str_hash_official_size(const struct MVMStrHashTableControl *control) {
+static inline uint32_t MVM_str_hash_official_size(const struct MVMStrHashTableControl *control) {
     assert(!(control->cur_items == 0 && control->max_items == 0));
     return 1 << (uint32_t)control->official_size_log2;
 }
-MVM_STATIC_INLINE uint32_t MVM_str_hash_max_items(const struct MVMStrHashTableControl *control) {
+static inline uint32_t MVM_str_hash_max_items(const struct MVMStrHashTableControl *control) {
     assert(!(control->cur_items == 0 && control->max_items == 0));
     return MVM_str_hash_official_size(control) * MVM_STR_HASH_LOAD_FACTOR;
 }
@@ -20,7 +20,7 @@ MVM_STATIC_INLINE uint32_t MVM_str_hash_max_items(const struct MVMStrHashTableCo
  * probe distance of 2 is the first extra bucket beyond the official allocation
  * probe distance of 255 is the 254th beyond the official allocation.
  */
-MVM_STATIC_INLINE uint32_t MVM_str_hash_allocated_items(const struct MVMStrHashTableControl *control) {
+static inline uint32_t MVM_str_hash_allocated_items(const struct MVMStrHashTableControl *control) {
     assert(!(control->cur_items == 0 && control->max_items == 0));
     return MVM_str_hash_official_size(control) + control->max_probe_distance_limit - 1;
 }
@@ -29,16 +29,16 @@ MVM_STATIC_INLINE uint32_t MVM_str_hash_allocated_items(const struct MVMStrHashT
  * max_probe_distance - 1, whereas buckets are allocated up to
  * max_probe_distance_limit - 1. And if the hash is empty, it can't be using
  * any buckets. As the name is meant to imply, this function is private. */
-MVM_STATIC_INLINE uint32_t MVM_str_hash_kompromat(const struct MVMStrHashTableControl *control) {
+static inline uint32_t MVM_str_hash_kompromat(const struct MVMStrHashTableControl *control) {
     if (MVM_UNLIKELY(control->cur_items == 0))
         return 0;
     return MVM_str_hash_official_size(control) + control->max_probe_distance - 1;
 }
-MVM_STATIC_INLINE uint8_t *MVM_str_hash_metadata(const struct MVMStrHashTableControl *control) {
+static inline uint8_t *MVM_str_hash_metadata(const struct MVMStrHashTableControl *control) {
     assert(!(control->cur_items == 0 && control->max_items == 0));
     return (uint8_t *) control + sizeof(struct MVMStrHashTableControl);
 }
-MVM_STATIC_INLINE uint8_t *MVM_str_hash_entries(const struct MVMStrHashTableControl *control) {
+static inline uint8_t *MVM_str_hash_entries(const struct MVMStrHashTableControl *control) {
     assert(!(control->cur_items == 0 && control->max_items == 0));
     return (uint8_t *) control - control->entry_size;
 }
@@ -47,11 +47,11 @@ MVM_STATIC_INLINE uint8_t *MVM_str_hash_entries(const struct MVMStrHashTableCont
  * cause any extra allocation, but will both be faster for memcpy/memset, and
  * also a natural size for processing the metadata array in chunks larger than
  * byte-by-byte. */
-MVM_STATIC_INLINE size_t MVM_hash_round_size_up(size_t wanted) {
+static inline size_t MVM_hash_round_size_up(size_t wanted) {
     return (wanted - 1 + sizeof(long)) & ~(sizeof(long) - 1);
 }
 
-MVM_STATIC_INLINE size_t MVM_str_hash_allocated_size(MVMThreadContext *tc, MVMStrHashTable *hashtable) {
+static inline size_t MVM_str_hash_allocated_size(struct MVMThreadContext *tc, MVMStrHashTable *hashtable) {
     struct MVMStrHashTableControl *control = hashtable->table;
     if (!control)
         return 0;
@@ -70,16 +70,16 @@ MVM_STATIC_INLINE size_t MVM_str_hash_allocated_size(MVMThreadContext *tc, MVMSt
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
    which you allocated (heap, stack, inside another struct, wherever) */
-void MVM_str_hash_demolish(MVMThreadContext *tc, MVMStrHashTable *hashtable);
+void MVM_str_hash_demolish(struct MVMThreadContext *tc, MVMStrHashTable *hashtable);
 /* and then free memory if you allocated it */
 
 /* Call this before you use the hashtable, to initialise it. */
-void MVM_str_hash_build(MVMThreadContext *tc,
+void MVM_str_hash_build(struct MVMThreadContext *tc,
                         MVMStrHashTable *hashtable,
                         uint32_t entry_size,
                         uint32_t entries);
 
-MVM_STATIC_INLINE int MVM_str_hash_is_empty(MVMThreadContext *tc,
+static inline int MVM_str_hash_is_empty(struct MVMThreadContext *tc,
                                             MVMStrHashTable *hashtable) {
     struct MVMStrHashTableControl *control = hashtable->table;
     if (MVM_UNLIKELY(control && control->stale)) {
@@ -90,7 +90,7 @@ MVM_STATIC_INLINE int MVM_str_hash_is_empty(MVMThreadContext *tc,
 
 /* This code assumes that the destination hash is uninitialised - ie not even
  * MVM_str_hash_build has been called upon it. */
-MVM_STATIC_INLINE void MVM_str_hash_shallow_copy(MVMThreadContext *tc,
+static inline void MVM_str_hash_shallow_copy(struct MVMThreadContext *tc,
                                                  MVMStrHashTable *source,
                                                  MVMStrHashTable *dest) {
     const struct MVMStrHashTableControl *control = source->table;
@@ -122,7 +122,7 @@ MVM_STATIC_INLINE void MVM_str_hash_shallow_copy(MVMThreadContext *tc,
     }
 }
 
-MVM_STATIC_INLINE uint64_t MVM_str_hash_code(MVMThreadContext *tc,
+static inline uint64_t MVM_str_hash_code(struct MVMThreadContext *tc,
                                               uint64_t salt,
                                               MVMString *key) {
     return (MVM_string_hash_code(tc, key) ^ salt) * UINT64_C(11400714819323198485);
@@ -130,7 +130,7 @@ MVM_STATIC_INLINE uint64_t MVM_str_hash_code(MVMThreadContext *tc,
 
 /* UNCONDITIONALLY creates a new hash entry with the given key and value.
  * Doesn't check if the key already exists. Use with care. */
-void *MVM_str_hash_insert_nocheck(MVMThreadContext *tc,
+void *MVM_str_hash_insert_nocheck(struct MVMThreadContext *tc,
                                   MVMStrHashTable *hashtable,
                                   MVMString *key);
 
@@ -155,8 +155,8 @@ struct MVM_hash_loop_state {
  * the sections of this function around in the inlined code, and hopefully don't
  * initialised any values until they are used. */
 
-MVM_STATIC_INLINE struct MVM_hash_loop_state
-MVM_str_hash_create_loop_state(MVMThreadContext *tc,
+static inline struct MVM_hash_loop_state
+MVM_str_hash_create_loop_state(struct MVMThreadContext *tc,
                                struct MVMStrHashTableControl *control,
                                MVMString *key) {
     uint64_t hash_val = MVM_str_hash_code(tc, control->salt, key);
@@ -181,7 +181,7 @@ MVM_str_hash_create_loop_state(MVMThreadContext *tc,
     return retval;
 }
 
-MVM_STATIC_INLINE void *MVM_str_hash_fetch_nocheck(MVMThreadContext *tc,
+static inline void *MVM_str_hash_fetch_nocheck(struct MVMThreadContext *tc,
                                                    MVMStrHashTable *hashtable,
                                                    MVMString *key) {
     struct MVMStrHashTableControl *control = hashtable->table;
@@ -326,11 +326,11 @@ MVM_STATIC_INLINE void *MVM_str_hash_fetch_nocheck(MVMThreadContext *tc,
  * This might seem like a quirky API, but it's intended to fill a common pattern
  * we have, and the use of NULL key avoids needing two return values.
  * DON'T FORGET to fill in the NULL key. */
-void *MVM_str_hash_lvalue_fetch_nocheck(MVMThreadContext *tc,
+void *MVM_str_hash_lvalue_fetch_nocheck(struct MVMThreadContext *tc,
                                         MVMStrHashTable *hashtable,
                                         MVMString *key);
 
-void MVM_str_hash_delete_nocheck(MVMThreadContext *tc,
+void MVM_str_hash_delete_nocheck(struct MVMThreadContext *tc,
                                  MVMStrHashTable *hashtable,
                                  MVMString *want);
 
@@ -340,14 +340,14 @@ void MVM_str_hash_delete_nocheck(MVMThreadContext *tc,
  * 2: put cleanup code between them that executes before the exception is thrown
  */
 
-MVM_STATIC_INLINE int MVM_str_hash_key_is_valid(MVMThreadContext *tc,
+static inline int MVM_str_hash_key_is_valid(struct MVMThreadContext *tc,
                                                 MVMString *key) {
     return MVM_LIKELY(!MVM_is_null(tc, (MVMObject *)key)
                       && REPR(key)->ID == MVM_REPR_ID_MVMString
                       && IS_CONCRETE(key)) ? 1 : 0;
 }
 
-MVM_STATIC_INLINE void MVM_str_hash_key_throw_invalid(MVMThreadContext *tc,
+static inline void MVM_str_hash_key_throw_invalid(struct MVMThreadContext *tc,
                                                       MVMString *key) {
     MVM_exception_throw_adhoc(tc, "Hash keys must be concrete strings (got %s)",
                               MVM_6model_get_debug_name(tc, (MVMObject *)key));
@@ -360,7 +360,7 @@ MVM_STATIC_INLINE void MVM_str_hash_key_throw_invalid(MVMThreadContext *tc,
  * This might seem like a quirky API, but it's intended to fill a common pattern
  * we have, and the use of NULL key avoids needing two return values.
  * DON'T FORGET to fill in the NULL key. */
-MVM_STATIC_INLINE void *MVM_str_hash_lvalue_fetch(MVMThreadContext *tc,
+static inline void *MVM_str_hash_lvalue_fetch(struct MVMThreadContext *tc,
                                                   MVMStrHashTable *hashtable,
                                                   MVMString *key) {
     if (!MVM_str_hash_key_is_valid(tc, key)) {
@@ -369,7 +369,7 @@ MVM_STATIC_INLINE void *MVM_str_hash_lvalue_fetch(MVMThreadContext *tc,
     return MVM_str_hash_lvalue_fetch_nocheck(tc, hashtable, key);
 }
 
-MVM_STATIC_INLINE void *MVM_str_hash_fetch(MVMThreadContext *tc,
+static inline void *MVM_str_hash_fetch(struct MVMThreadContext *tc,
                                            MVMStrHashTable *hashtable,
                                            MVMString *want) {
     if (!MVM_str_hash_key_is_valid(tc, want)) {
@@ -378,7 +378,7 @@ MVM_STATIC_INLINE void *MVM_str_hash_fetch(MVMThreadContext *tc,
     return MVM_str_hash_fetch_nocheck(tc, hashtable, want);
 }
 
-MVM_STATIC_INLINE void MVM_str_hash_delete(MVMThreadContext *tc,
+static inline void MVM_str_hash_delete(struct MVMThreadContext *tc,
                                            MVMStrHashTable *hashtable,
                                            MVMString *want) {
     if (!MVM_str_hash_key_is_valid(tc, want)) {
@@ -401,14 +401,14 @@ enum {
     MVM_HASH_FSCK_CHECK_FROMSPACE   = 0x10  /* O(n) test. */
 };
 
-uint64_t MVM_str_hash_fsck(MVMThreadContext *tc, MVMStrHashTable *hashtable, uint32_t mode);
+uint64_t MVM_str_hash_fsck(struct MVMThreadContext *tc, MVMStrHashTable *hashtable, uint32_t mode);
 
 /* iterators are stored as unsigned values, metadata index plus one.
  * This is clearly an internal implementation detail. Don't cheat.
  */
 
 /* Only call this if MVM_str_hash_at_end returns false. */
-MVM_STATIC_INLINE MVMStrHashIterator MVM_str_hash_next_nocheck(MVMThreadContext *tc,
+static inline MVMStrHashIterator MVM_str_hash_next_nocheck(struct MVMThreadContext *tc,
                                                                MVMStrHashTable *hashtable,
                                                                MVMStrHashIterator iterator) {
     struct MVMStrHashTableControl *control = hashtable->table;
@@ -427,7 +427,7 @@ MVM_STATIC_INLINE MVMStrHashIterator MVM_str_hash_next_nocheck(MVMThreadContext 
     return iterator;
 }
 
-MVM_STATIC_INLINE MVMStrHashIterator MVM_str_hash_next(MVMThreadContext *tc,
+static inline MVMStrHashIterator MVM_str_hash_next(struct MVMThreadContext *tc,
                                                        MVMStrHashTable *hashtable,
                                                        MVMStrHashIterator iterator) {
 #if HASH_DEBUG_ITER
@@ -457,7 +457,7 @@ MVM_STATIC_INLINE MVMStrHashIterator MVM_str_hash_next(MVMThreadContext *tc,
     return MVM_str_hash_next_nocheck(tc, hashtable, iterator);
 }
 
-MVM_STATIC_INLINE MVMStrHashIterator MVM_str_hash_first(MVMThreadContext *tc,
+static inline MVMStrHashIterator MVM_str_hash_first(struct MVMThreadContext *tc,
                                                         MVMStrHashTable *hashtable) {
     struct MVMStrHashTableControl *control = hashtable->table;
     MVMStrHashIterator iterator;
@@ -496,7 +496,7 @@ MVM_STATIC_INLINE MVMStrHashIterator MVM_str_hash_first(MVMThreadContext *tc,
     return MVM_str_hash_next(tc, hashtable, iterator);
 }
 
-MVM_STATIC_INLINE MVMStrHashIterator MVM_str_hash_start(MVMThreadContext *tc,
+static inline MVMStrHashIterator MVM_str_hash_start(struct MVMThreadContext *tc,
                                                         MVMStrHashTable *hashtable) {
     struct MVMStrHashTableControl *control = hashtable->table;
     MVMStrHashIterator retval;
@@ -520,7 +520,7 @@ MVM_STATIC_INLINE MVMStrHashIterator MVM_str_hash_start(MVMThreadContext *tc,
     return retval;
 }
 
-MVM_STATIC_INLINE int MVM_str_hash_at_start(MVMThreadContext *tc,
+static inline int MVM_str_hash_at_start(struct MVMThreadContext *tc,
                                             MVMStrHashTable *hashtable,
                                             MVMStrHashIterator iterator) {
     struct MVMStrHashTableControl *control = hashtable->table;
@@ -546,7 +546,7 @@ MVM_STATIC_INLINE int MVM_str_hash_at_start(MVMThreadContext *tc,
 }
 
 /* Only call this if MVM_str_hash_at_end returns false. */
-MVM_STATIC_INLINE void *MVM_str_hash_current_nocheck(MVMThreadContext *tc,
+static inline void *MVM_str_hash_current_nocheck(struct MVMThreadContext *tc,
                                                      MVMStrHashTable *hashtable,
                                                      MVMStrHashIterator iterator) {
     struct MVMStrHashTableControl *control = hashtable->table;
@@ -560,7 +560,7 @@ MVM_STATIC_INLINE void *MVM_str_hash_current_nocheck(MVMThreadContext *tc,
 }
 
 /* FIXME - this needs a better name: */
-MVM_STATIC_INLINE void *MVM_str_hash_current(MVMThreadContext *tc,
+static inline void *MVM_str_hash_current(struct MVMThreadContext *tc,
                                              MVMStrHashTable *hashtable,
                                              MVMStrHashIterator iterator) {
 #if HASH_DEBUG_ITER
@@ -584,7 +584,7 @@ MVM_STATIC_INLINE void *MVM_str_hash_current(MVMThreadContext *tc,
     return MVM_str_hash_current_nocheck(tc, hashtable, iterator);
 }
 
-MVM_STATIC_INLINE MVMHashNumItems MVM_str_hash_count(MVMThreadContext *tc,
+static inline MVMHashNumItems MVM_str_hash_count(struct MVMThreadContext *tc,
                                                      MVMStrHashTable *hashtable) {
     struct MVMStrHashTableControl *control = hashtable->table;
 
@@ -596,7 +596,7 @@ MVM_STATIC_INLINE MVMHashNumItems MVM_str_hash_count(MVMThreadContext *tc,
 }
 
 /* If this returns 0, then you have not yet called MVM_str_hash_build */
-MVM_STATIC_INLINE MVMHashNumItems MVM_str_hash_entry_size(MVMThreadContext *tc,
+static inline MVMHashNumItems MVM_str_hash_entry_size(struct MVMThreadContext *tc,
                                                           MVMStrHashTable *hashtable) {
     struct MVMStrHashTableControl *control = hashtable->table;
 

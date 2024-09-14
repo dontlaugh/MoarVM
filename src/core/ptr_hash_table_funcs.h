@@ -6,7 +6,7 @@
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
 #define MVM_PTR_HASH_LOAD_FACTOR 0.75
-MVM_STATIC_INLINE uint32_t MVM_ptr_hash_official_size(const struct MVMPtrHashTableControl *control) {
+static inline uint32_t MVM_ptr_hash_official_size(const struct MVMPtrHashTableControl *control) {
     return 1 << (uint32_t)control->official_size_log2;
 }
 /* -1 because...
@@ -16,33 +16,33 @@ MVM_STATIC_INLINE uint32_t MVM_ptr_hash_official_size(const struct MVMPtrHashTab
  * probe distance of 2 is the first extra bucket beyond the official allocation
  * probe distance of 255 is the 254th beyond the official allocation.
  */
-MVM_STATIC_INLINE uint32_t MVM_ptr_hash_allocated_items(const struct MVMPtrHashTableControl *control) {
+static inline uint32_t MVM_ptr_hash_allocated_items(const struct MVMPtrHashTableControl *control) {
     return MVM_ptr_hash_official_size(control) + control->max_probe_distance_limit - 1;
 }
-MVM_STATIC_INLINE uint32_t MVM_ptr_hash_max_items(const struct MVMPtrHashTableControl *control) {
+static inline uint32_t MVM_ptr_hash_max_items(const struct MVMPtrHashTableControl *control) {
     return MVM_ptr_hash_official_size(control) * MVM_PTR_HASH_LOAD_FACTOR;
 }
-MVM_STATIC_INLINE uint8_t *MVM_ptr_hash_metadata(const struct MVMPtrHashTableControl *control) {
+static inline uint8_t *MVM_ptr_hash_metadata(const struct MVMPtrHashTableControl *control) {
     return (uint8_t *) control + sizeof(struct MVMPtrHashTableControl);
 }
-MVM_STATIC_INLINE uint8_t *MVM_ptr_hash_entries(const struct MVMPtrHashTableControl *control) {
+static inline uint8_t *MVM_ptr_hash_entries(const struct MVMPtrHashTableControl *control) {
     return (uint8_t *) control - sizeof(struct MVMPtrHashEntry);
 }
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
    which you allocated (heap, stack, inside another struct, wherever) */
-void MVM_ptr_hash_demolish(MVMThreadContext *tc, MVMPtrHashTable *hashtable);
+void MVM_ptr_hash_demolish(struct MVMThreadContext *tc, MVMPtrHashTable *hashtable);
 /* and then free memory if you allocated it */
 
 /* Call this before you use the hashtable, to initialise it.
  * Doesn't allocate memory - you can embed the struct within a larger struct if
  * you wish.
  */
-MVM_STATIC_INLINE void MVM_ptr_hash_build(MVMThreadContext *tc, MVMPtrHashTable *hashtable) {
+static inline void MVM_ptr_hash_build(struct MVMThreadContext *tc, MVMPtrHashTable *hashtable) {
     hashtable->table = NULL;
 }
 
-MVM_STATIC_INLINE int MVM_ptr_hash_is_empty(MVMThreadContext *tc,
+static inline int MVM_ptr_hash_is_empty(struct MVMThreadContext *tc,
                                             MVMPtrHashTable *hashtable) {
     struct MVMPtrHashTableControl *control = hashtable->table;
     return !control || control->cur_items == 0;
@@ -65,16 +65,16 @@ MVM_STATIC_INLINE int MVM_ptr_hash_is_empty(MVMThreadContext *tc,
  * max_hashv / phi = 11400714819323198485 */
 
 #if 8 <= MVM_PTR_SIZE
-MVM_STATIC_INLINE uint64_t MVM_ptr_hash_code(const void *ptr) {
+static inline uint64_t MVM_ptr_hash_code(const void *ptr) {
     return ((uintptr_t)ptr) * UINT64_C(11400714819323198485);
 }
 #else
-MVM_STATIC_INLINE uint32_t MVM_ptr_hash_code(const void *ptr) {
+static inline uint32_t MVM_ptr_hash_code(const void *ptr) {
     return ((uintptr_t)ptr) * 0x9e3779b7;
 }
 #endif
 
-MVM_STATIC_INLINE struct MVM_hash_loop_state
+static inline struct MVM_hash_loop_state
 MVM_ptr_hash_create_loop_state(struct MVMPtrHashTableControl *control,
                                const void *key) {
     struct MVM_hash_loop_state retval;
@@ -101,12 +101,12 @@ MVM_ptr_hash_create_loop_state(struct MVMPtrHashTableControl *control,
 
 /* UNCONDITIONALLY creates a new hash entry with the given key and value.
  * Doesn't check if the key already exists. Use with care. */
-void MVM_ptr_hash_insert(MVMThreadContext *tc,
+void MVM_ptr_hash_insert(struct MVMThreadContext *tc,
                          MVMPtrHashTable *hashtable,
                          const void *key,
                          uintptr_t value);
 
-MVM_STATIC_INLINE struct MVMPtrHashEntry *MVM_ptr_hash_fetch(MVMThreadContext *tc,
+static inline struct MVMPtrHashEntry *MVM_ptr_hash_fetch(struct MVMThreadContext *tc,
                                                              MVMPtrHashTable *hashtable,
                                                              const void *key) {
     if (MVM_ptr_hash_is_empty(tc, hashtable)) {
@@ -142,10 +142,10 @@ MVM_STATIC_INLINE struct MVMPtrHashEntry *MVM_ptr_hash_fetch(MVMThreadContext *t
     }
 }
 
-struct MVMPtrHashEntry *MVM_ptr_hash_lvalue_fetch(MVMThreadContext *tc,
+struct MVMPtrHashEntry *MVM_ptr_hash_lvalue_fetch(struct MVMThreadContext *tc,
                                                   MVMPtrHashTable *hashtable,
                                                   const void *key);
 
-uintptr_t MVM_ptr_hash_fetch_and_delete(MVMThreadContext *tc,
+uintptr_t MVM_ptr_hash_fetch_and_delete(struct MVMThreadContext *tc,
                                         MVMPtrHashTable *hashtable,
                                         const void *key);

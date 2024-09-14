@@ -73,17 +73,17 @@ struct MVMSpeshArgGuardNode {
     };
 };
 
-void MVM_spesh_arg_guard_regenerate(MVMThreadContext *tc, MVMSpeshArgGuard **guard_ptr,
+void MVM_spesh_arg_guard_regenerate(struct MVMThreadContext *tc, MVMSpeshArgGuard **guard_ptr,
         MVMSpeshCandidate **candidates, uint32_t num_spesh_candidates); 
-int32_t MVM_spesh_arg_guard_run_types(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
+int32_t MVM_spesh_arg_guard_run_types(struct MVMThreadContext *tc, MVMSpeshArgGuard *ag,
     MVMCallsite *cs, MVMSpeshStatsType *types);
-int32_t MVM_spesh_arg_guard_run(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
+int32_t MVM_spesh_arg_guard_run(struct MVMThreadContext *tc, MVMSpeshArgGuard *ag,
     MVMArgs args, int32_t *certain);
-int32_t MVM_spesh_arg_guard_run_callinfo(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
+int32_t MVM_spesh_arg_guard_run_callinfo(struct MVMThreadContext *tc, MVMSpeshArgGuard *ag,
     MVMSpeshCallInfo *info);
-void MVM_spesh_arg_guard_gc_mark(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
+void MVM_spesh_arg_guard_gc_mark(struct MVMThreadContext *tc, MVMSpeshArgGuard *ag,
     MVMGCWorklist *worklist);
-void MVM_spesh_arg_guard_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+void MVM_spesh_arg_guard_gc_describe(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                      MVMSpeshArgGuard *ag);
-void MVM_spesh_arg_guard_destroy(MVMThreadContext *tc, MVMSpeshArgGuard *ag, uint32_t safe);
-void MVM_spesh_arg_guard_discard(MVMThreadContext *tc, MVMStaticFrame *sf);
+void MVM_spesh_arg_guard_destroy(struct MVMThreadContext *tc, MVMSpeshArgGuard *ag, uint32_t safe);
+void MVM_spesh_arg_guard_discard(struct MVMThreadContext *tc, MVMStaticFrame *sf);

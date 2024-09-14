@@ -17,10 +17,10 @@ struct MVMReentrantMutex {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMReentrantMutex_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMReentrantMutex_initialize(struct MVMThreadContext *tc);
 
 /* Lock and unlock functions. */
-void MVM_reentrantmutex_lock_checked(MVMThreadContext *tc, MVMObject *lock);
-void MVM_reentrantmutex_lock(MVMThreadContext *tc, MVMReentrantMutex *rm);
-void MVM_reentrantmutex_unlock_checked(MVMThreadContext *tc, MVMObject *lock);
-void MVM_reentrantmutex_unlock(MVMThreadContext *tc, MVMReentrantMutex *rm);
+void MVM_reentrantmutex_lock_checked(struct MVMThreadContext *tc, MVMObject *lock);
+void MVM_reentrantmutex_lock(struct MVMThreadContext *tc, MVMReentrantMutex *rm);
+void MVM_reentrantmutex_unlock_checked(struct MVMThreadContext *tc, MVMObject *lock);
+void MVM_reentrantmutex_unlock(struct MVMThreadContext *tc, MVMReentrantMutex *rm);

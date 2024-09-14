@@ -40,7 +40,7 @@ struct MVMConfigurationProgram {
     uint8_t debugging_level;
 };
 
-uint8_t MVM_confprog_has_entrypoint(MVMThreadContext *tc, uint8_t entrypoint);
-int64_t MVM_confprog_run(MVMThreadContext *tc, void *subject, uint8_t entrypoint, int64_t initial_feature_value);
-void MVM_confprog_mark(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
-void MVM_confprog_install(MVMThreadContext *tc, MVMObject *bytecode, MVMObject *string_array, MVMObject *entrypoints);
+uint8_t MVM_confprog_has_entrypoint(struct MVMThreadContext *tc, uint8_t entrypoint);
+int64_t MVM_confprog_run(struct MVMThreadContext *tc, void *subject, uint8_t entrypoint, int64_t initial_feature_value);
+void MVM_confprog_mark(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
+void MVM_confprog_install(struct MVMThreadContext *tc, MVMObject *bytecode, MVMObject *string_array, MVMObject *entrypoints);

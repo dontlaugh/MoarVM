@@ -1,6 +1,6 @@
 #include "moar.h"
 #include "shiftjis_codeindex.h"
-static int16_t shift_jis_index_to_cp_array_offset (MVMThreadContext *tc, int16_t index) {
+static int16_t shift_jis_index_to_cp_array_offset (struct MVMThreadContext *tc, int16_t index) {
     uint16_t offset = 0;
     int i = 0;
     if (index < 0 || SHIFTJIS_MAX_INDEX < index) return SHIFTJIS_NULL;
@@ -12,14 +12,14 @@ static int16_t shift_jis_index_to_cp_array_offset (MVMThreadContext *tc, int16_t
     }
     return index - offset;
 }
-static MVMGrapheme32 shift_jis_index_to_cp (MVMThreadContext *tc, int16_t index) {
+static MVMGrapheme32 shift_jis_index_to_cp (struct MVMThreadContext *tc, int16_t index) {
     int16_t offset = shift_jis_index_to_cp_array_offset(tc, index);
     return offset == SHIFTJIS_NULL ? SHIFTJIS_NULL : shiftjis_index_to_cp_codepoints[offset];
 }
 /* Encodes the specified substring to ShiftJIS as specified here:
  * https://encoding.spec.whatwg.org/#shift_jis-decoder
  * The result string is NULL terminated, but the specified size is the non-null part. */
-char * MVM_string_shiftjis_encode_substr(MVMThreadContext *tc, MVMString *str,
+char * MVM_string_shiftjis_encode_substr(struct MVMThreadContext *tc, MVMString *str,
         uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement,
         int32_t translate_newlines, int64_t config) {
     uint32_t startu = (uint32_t)start;
@@ -134,7 +134,7 @@ char * MVM_string_shiftjis_encode_substr(MVMThreadContext *tc, MVMString *str,
 #define DECODE_CONTINUE -2
 #define DECODE_CODEPOINT -4
 #define DECODE_PREPEND_TO_STREAM -5
-static int decoder_handler (MVMThreadContext *tc, uint8_t *Shift_JIS_lead, uint8_t byte, MVMCodepoint *out) {
+static int decoder_handler (struct MVMThreadContext *tc, uint8_t *Shift_JIS_lead, uint8_t byte, MVMCodepoint *out) {
     /* If Shift_JIS lead is not 0x00 */
     if (*Shift_JIS_lead != 0x00) {
         /* let lead be Shift_JIS lead, */
@@ -200,7 +200,7 @@ static int decoder_handler (MVMThreadContext *tc, uint8_t *Shift_JIS_lead, uint8
     return DECODE_ERROR;
 
 }
-MVMString * MVM_string_shiftjis_decode(MVMThreadContext *tc,
+MVMString * MVM_string_shiftjis_decode(struct MVMThreadContext *tc,
         const MVMObject *result_type, char *windows125X_c, size_t num_bytes,
         MVMString *replacement, int64_t config) {
     uint8_t *bytes = (uint8_t *)windows125X_c;
@@ -328,7 +328,7 @@ MVMString * MVM_string_shiftjis_decode(MVMThreadContext *tc,
 }
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-uint32_t MVM_string_shiftjis_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_shiftjis_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                          const uint32_t *stopper_chars,
                                          MVMDecodeStreamSeparators *seps) {
     uint32_t count = 0, total = 0;

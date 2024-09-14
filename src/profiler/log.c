@@ -2,7 +2,7 @@
 
 #define CONFPROG_DEBUG_LEVEL_PROFILER_RESULTS 4
 
-static void debugprint(uint8_t active, MVMThreadContext *tc, const char *str, ...) {
+static void debugprint(uint8_t active, struct MVMThreadContext *tc, const char *str, ...) {
     va_list args;
     va_start(args, str);
 
@@ -18,7 +18,7 @@ static void debugprint(uint8_t active, MVMThreadContext *tc, const char *str, ..
 #define DEBUG_LVL(level) ((debug_level) & CONFPROG_DEBUG_LEVEL_ ## level)
 
 /* Gets the current thread's profiling data structure, creating it if needed. */
-static MVMProfileThreadData * get_thread_data(MVMThreadContext *tc) {
+static MVMProfileThreadData * get_thread_data(struct MVMThreadContext *tc) {
     if (!tc->prof_data) {
         tc->prof_data = MVM_calloc(1, sizeof(MVMProfileThreadData));
         tc->prof_data->start_time = uv_hrtime();
@@ -50,7 +50,7 @@ static MVMProfileCallNode *make_new_pcn(MVMProfileThreadData *ptd, uint64_t curr
 }
 
 /* Log that we're entering a new frame. */
-void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, uint64_t mode) {
+void MVM_profile_log_enter(struct MVMThreadContext *tc, MVMStaticFrame *sf, uint64_t mode) {
     if (tc->instance->profiling) {
         MVMProfileThreadData *ptd = get_thread_data(tc);
 
@@ -194,7 +194,7 @@ void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, uint64_t mo
 }
 
 /* Log that we've entered a native routine */
-void MVM_profile_log_enter_native(MVMThreadContext *tc, MVMObject *nativecallsite) {
+void MVM_profile_log_enter_native(struct MVMThreadContext *tc, MVMObject *nativecallsite) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
     MVMProfileCallNode *pcn = NULL;
     uint64_t current_hrtime = uv_hrtime();
@@ -233,7 +233,7 @@ void MVM_profile_log_enter_native(MVMThreadContext *tc, MVMObject *nativecallsit
 }
 
 /* Frame exit handler, used for unwind and normal exit. */
-static void log_exit(MVMThreadContext *tc, uint32_t unwind) {
+static void log_exit(struct MVMThreadContext *tc, uint32_t unwind) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
 
     /* Ensure we've a current frame. */
@@ -261,13 +261,13 @@ static void log_exit(MVMThreadContext *tc, uint32_t unwind) {
 }
 
 /* Log that we're exiting a frame normally. */
-void MVM_profile_log_exit(MVMThreadContext *tc) {
+void MVM_profile_log_exit(struct MVMThreadContext *tc) {
     log_exit(tc, 0);
 }
 
 /* Called when we unwind. Since we're also potentially leaving some inlined
  * frames, we need to exit until we hit the target one. */
-void MVM_profile_log_unwind(MVMThreadContext *tc) {
+void MVM_profile_log_unwind(struct MVMThreadContext *tc) {
     MVMProfileThreadData *ptd  = get_thread_data(tc);
     MVMProfileCallNode   *lpcn;
     do {
@@ -281,7 +281,7 @@ void MVM_profile_log_unwind(MVMThreadContext *tc) {
 
 /* Called when we take a continuation. Leaves the static frames from the point
  * of view of the profiler, and saves each of them. */
-MVMProfileContinuationData * MVM_profile_log_continuation_control(MVMThreadContext *tc, const MVMFrame *root_frame) {
+MVMProfileContinuationData * MVM_profile_log_continuation_control(struct MVMThreadContext *tc, const MVMFrame *root_frame) {
     MVMProfileThreadData        *ptd       = get_thread_data(tc);
     MVMProfileContinuationData  *cd        = MVM_malloc(sizeof(MVMProfileContinuationData));
     MVMStaticFrame             **sfs       = NULL;
@@ -323,20 +323,20 @@ MVMProfileContinuationData * MVM_profile_log_continuation_control(MVMThreadConte
 
 /* Called when we invoke a continuation. Enters all the static frames we left
  * at the point we took the continuation. */
-void MVM_profile_log_continuation_invoke(MVMThreadContext *tc, const MVMProfileContinuationData *cd) {
+void MVM_profile_log_continuation_invoke(struct MVMThreadContext *tc, const MVMProfileContinuationData *cd) {
     uint64_t i = cd->num_sfs;
     while (i--)
         MVM_profile_log_enter(tc, cd->sfs[i], cd->modes[i]);
 }
 
 /* Called when a new thread is spawned off of another thread */
-void MVM_profile_log_thread_created(MVMThreadContext *tc, MVMThreadContext *child_tc) {
+void MVM_profile_log_thread_created(struct MVMThreadContext *tc, struct MVMThreadContext *child_tc) {
     MVMProfileThreadData *prof_data = get_thread_data(child_tc);
     prof_data->parent_thread_id = tc->thread_id;
 }
 
 /* Logs one allocation, potentially scalar replaced. */
-static void log_one_allocation(MVMThreadContext *tc, MVMObject *obj, MVMProfileCallNode *pcn, uint8_t replaced) {
+static void log_one_allocation(struct MVMThreadContext *tc, MVMObject *obj, MVMProfileCallNode *pcn, uint8_t replaced) {
     MVMObject *what = STABLE(obj)->WHAT;
     uint32_t i;
     uint8_t allocation_target;
@@ -400,7 +400,7 @@ static void log_one_allocation(MVMThreadContext *tc, MVMObject *obj, MVMProfileC
 }
 
 /* Log that we've just allocated the passed object (just log the type). */
-void MVM_profile_log_allocated(MVMThreadContext *tc, MVMObject *obj) {
+void MVM_profile_log_allocated(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMProfileThreadData *ptd  = get_thread_data(tc);
     MVMProfileCallNode   *pcn  = ptd->current_call;
     if (pcn) {
@@ -422,7 +422,7 @@ void MVM_profile_log_allocated(MVMThreadContext *tc, MVMObject *obj) {
         }
     }
 }
-void MVM_profiler_log_gc_deallocate(MVMThreadContext *tc, MVMObject *object) {
+void MVM_profiler_log_gc_deallocate(struct MVMThreadContext *tc, MVMObject *object) {
     if (tc->instance->profiling && STABLE(object)) {
         MVMProfileGC *pgc = &tc->prof_data->gcs[tc->prof_data->num_gcs];
         MVMObject *what = STABLE(object)->WHAT;
@@ -476,7 +476,7 @@ void MVM_profiler_log_gc_deallocate(MVMThreadContext *tc, MVMObject *object) {
 }
 
 /* Logs a scalar-replaced allocation. */
-void MVM_profile_log_scalar_replaced(MVMThreadContext *tc, MVMSTable *st) {
+void MVM_profile_log_scalar_replaced(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMProfileThreadData *ptd  = get_thread_data(tc);
     MVMProfileCallNode   *pcn  = ptd->current_call;
     if (pcn)
@@ -484,7 +484,7 @@ void MVM_profile_log_scalar_replaced(MVMThreadContext *tc, MVMSTable *st) {
 }
 
 /* Logs the start of a GC run. */
-void MVM_profiler_log_gc_start(MVMThreadContext *tc, uint32_t full, uint32_t this_thread_responsible) {
+void MVM_profiler_log_gc_start(struct MVMThreadContext *tc, uint32_t full, uint32_t this_thread_responsible) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
     MVMProfileGC *gc;
 
@@ -517,7 +517,7 @@ void MVM_profiler_log_gc_start(MVMThreadContext *tc, uint32_t full, uint32_t thi
 }
 
 /* Logs the end of a GC run. */
-void MVM_profiler_log_gc_end(MVMThreadContext *tc) {
+void MVM_profiler_log_gc_end(struct MVMThreadContext *tc) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
     MVMProfileCallNode   *pcn = ptd->current_call;
     uint64_t gc_time;
@@ -550,13 +550,13 @@ void MVM_profiler_log_gc_end(MVMThreadContext *tc) {
     }
 }
 
-void MVM_profiler_log_unmanaged_data_promoted(MVMThreadContext *tc, uint64_t amount) {
+void MVM_profiler_log_unmanaged_data_promoted(struct MVMThreadContext *tc, uint64_t amount) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
 
     ptd->gc_promoted_unmanaged_bytes += amount;
 }
 
-void MVM_profiler_log_gen2_roots(MVMThreadContext *tc, uint64_t amount, MVMThreadContext *other) {
+void MVM_profiler_log_gen2_roots(struct MVMThreadContext *tc, uint64_t amount, struct MVMThreadContext *other) {
     if (tc != other) {
         MVMProfileThreadData *ptd = get_thread_data(tc);
 
@@ -565,14 +565,14 @@ void MVM_profiler_log_gen2_roots(MVMThreadContext *tc, uint64_t amount, MVMThrea
 }
 
 /* Log that we're starting some work on bytecode specialization or JIT. */
-void MVM_profiler_log_spesh_start(MVMThreadContext *tc) {
+void MVM_profiler_log_spesh_start(struct MVMThreadContext *tc) {
     /* Record start time. */
     MVMProfileThreadData *ptd = get_thread_data(tc->instance->main_thread);
     ptd->cur_spesh_start_time = uv_hrtime();
 }
 
 /* Log that we've finished doing bytecode specialization or JIT. */
-void MVM_profiler_log_spesh_end(MVMThreadContext *tc) {
+void MVM_profiler_log_spesh_end(struct MVMThreadContext *tc) {
     MVMProfileThreadData *ptd = get_thread_data(tc->instance->main_thread);
     uint64_t spesh_time;
 
@@ -588,7 +588,7 @@ void MVM_profiler_log_spesh_end(MVMThreadContext *tc) {
 }
 
 /* Log that an on stack replacement took place. */
-void MVM_profiler_log_osr(MVMThreadContext *tc, uint64_t jitted) {
+void MVM_profiler_log_osr(struct MVMThreadContext *tc, uint64_t jitted) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
     MVMProfileCallNode   *pcn = ptd->current_call;
     if (pcn) {
@@ -601,7 +601,7 @@ void MVM_profiler_log_osr(MVMThreadContext *tc, uint64_t jitted) {
 }
 
 /* Log that local deoptimization took pace. */
-void MVM_profiler_log_deopt_one(MVMThreadContext *tc) {
+void MVM_profiler_log_deopt_one(struct MVMThreadContext *tc) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
     MVMProfileCallNode   *pcn = ptd->current_call;
     if (pcn)
@@ -609,7 +609,7 @@ void MVM_profiler_log_deopt_one(MVMThreadContext *tc) {
 }
 
 /* Log that full-stack deoptimization took pace. */
-void MVM_profiler_log_deopt_all(MVMThreadContext *tc) {
+void MVM_profiler_log_deopt_all(struct MVMThreadContext *tc) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
     MVMProfileCallNode   *pcn = ptd->current_call;
     if (pcn)

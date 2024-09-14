@@ -1,7 +1,7 @@
 #include "moar.h"
 
 /* Eliminates any unused instructions. */
-void MVM_spesh_eliminate_dead_ins(MVMThreadContext *tc, MVMSpeshGraph *g) {
+void MVM_spesh_eliminate_dead_ins(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     /* Keep eliminating to a fixed point. */
     int8_t death = 1;
     while (death) {

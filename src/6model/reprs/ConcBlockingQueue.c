@@ -5,7 +5,7 @@ static const MVMREPROps ConcBlockingQueue_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &ConcBlockingQueue_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,7 +18,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Initializes a new instance. */
-static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static void initialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMConcBlockingQueue *cbq = (MVMConcBlockingQueue*)root;
     MVMConcBlockingQueueBody *body = MVM_calloc(1, sizeof(MVMConcBlockingQueueBody));
     /* Initialize locks. */
@@ -40,12 +40,12 @@ static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot copy object with representation ConcBlockingQueue");
 }
 
 /* Called by the VM to mark any GCable items. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     /* At this point we know the world is stopped, and thus we can safely do a
      * traversal of the data structure without needing locks. */
     MVMConcBlockingQueueBody *cbq = *(MVMConcBlockingQueueBody **)data;
@@ -56,14 +56,14 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
     }
 }
 
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMConcBlockingQueueBody *cbq = *(MVMConcBlockingQueueBody **)data;
     uint64_t total = MVM_load(&cbq->elems) * sizeof(MVMConcBlockingQueueNode);
     return total;
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMConcBlockingQueue *cbq = (MVMConcBlockingQueue *)obj;
 
     /* First, free all the nodes. */
@@ -95,16 +95,16 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
-static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind) {
+static void at_pos(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind) {
     MVMConcBlockingQueueBody *body = *(MVMConcBlockingQueueBody **)data;
 
     if (index != 0)
@@ -133,12 +133,12 @@ static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *d
     }
 }
 
-static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t elems(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMConcBlockingQueueBody *cbq = *(MVMConcBlockingQueueBody **)data;
     return MVM_load(&(cbq->elems));
 }
 
-static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
+static void push(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     MVMConcBlockingQueueBody *body = *(MVMConcBlockingQueueBody**)data;
     MVMConcBlockingQueueNode *add;
     atomic_uintptr_t orig_elems;
@@ -181,7 +181,7 @@ static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *dat
 
 /* Push to front of the queue - this should be an exceptional case, it has less
  * concurrency than the pair of push/shift */
-static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
+static void unshift(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     MVMConcBlockingQueueBody *cbq = *(MVMConcBlockingQueueBody **)data;
     MVMConcBlockingQueueNode *add;
     MVMObject *to_add = value.o;
@@ -226,7 +226,7 @@ static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
 }
 
 
-static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
+static void shift(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     MVMConcBlockingQueueBody *body = *(MVMConcBlockingQueueBody**)data;
     MVMConcBlockingQueueNode *taken;
     unsigned int interval_id;
@@ -263,12 +263,12 @@ static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *da
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMConcBlockingQueue);
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMConcBlockingQueue_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMConcBlockingQueue_initialize(struct MVMThreadContext *tc) {
     return &ConcBlockingQueue_this_repr;
 }
 
@@ -321,7 +321,7 @@ static const MVMREPROps ConcBlockingQueue_this_repr = {
     NULL /* describe_refs */
 };
 
-MVMObject * MVM_concblockingqueue_jit_poll(MVMThreadContext *tc, MVMObject *queue) {
+MVMObject * MVM_concblockingqueue_jit_poll(struct MVMThreadContext *tc, MVMObject *queue) {
     if (REPR(queue)->ID == MVM_REPR_ID_ConcBlockingQueue && IS_CONCRETE(queue))
         return MVM_concblockingqueue_poll(tc, (MVMConcBlockingQueue *)queue);
     else
@@ -330,7 +330,7 @@ MVMObject * MVM_concblockingqueue_jit_poll(MVMThreadContext *tc, MVMObject *queu
 }
 
 /* Polls a queue for a value, returning NULL if none is available. */
-MVMObject * MVM_concblockingqueue_poll(MVMThreadContext *tc, MVMConcBlockingQueue *queue) {
+MVMObject * MVM_concblockingqueue_poll(struct MVMThreadContext *tc, MVMConcBlockingQueue *queue) {
     MVMConcBlockingQueue *cbq = (MVMConcBlockingQueue *)queue;
     MVMConcBlockingQueueBody *body = cbq->body;
     MVMConcBlockingQueueNode *taken;

@@ -3,7 +3,7 @@
 /* This representation's function pointer table. */
 static const MVMREPROps MVMHash_this_repr;
 
-MVM_STATIC_INLINE MVMString * get_string_key(MVMThreadContext *tc, MVMObject *key) {
+static inline MVMString * get_string_key(struct MVMThreadContext *tc, MVMObject *key) {
     if (MVM_UNLIKELY(!key || REPR(key)->ID != MVM_REPR_ID_MVMString || !IS_CONCRETE(key)))
         MVM_exception_throw_adhoc(tc, "MVMHash representation requires MVMString keys");
     return (MVMString *)key;
@@ -11,7 +11,7 @@ MVM_STATIC_INLINE MVMString * get_string_key(MVMThreadContext *tc, MVMObject *ke
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &MVMHash_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -24,7 +24,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMHashBody *src_body  = (MVMHashBody *)src;
     MVMHashBody *dest_body = (MVMHashBody *)dest;
 
@@ -48,7 +48,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 }
 
 /* Adds held objects to the GC worklist. */
-static void MVMHash_gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void MVMHash_gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMHashBody     *body = (MVMHashBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
     uint64_t            elems = MVM_str_hash_count(tc, hashtable);
@@ -80,14 +80,14 @@ static void MVMHash_gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVM
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMHash *h = (MVMHash *)obj;
     MVMStrHashTable *hashtable = &(h->body.hashtable);
 
     MVM_str_hash_demolish(tc, hashtable);
 }
 
-void MVMHash_at_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj, MVMRegister *result, uint16_t kind) {
+void MVMHash_at_key(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj, MVMRegister *result, uint16_t kind) {
     MVMHashBody   *body = (MVMHashBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
 
@@ -99,7 +99,7 @@ void MVMHash_at_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
     result->o = entry != NULL ? entry->value : tc->instance->VMNull;
 }
 
-void MVMHash_bind_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj, MVMRegister value, uint16_t kind) {
+void MVMHash_bind_key(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj, MVMRegister value, uint16_t kind) {
     MVMHashBody   *body = (MVMHashBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
 
@@ -122,11 +122,11 @@ void MVMHash_bind_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void
         MVM_gc_write_barrier(tc, &(root->header), &(key->common.header));
     }
 }
-static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t elems(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMHashBody *body = (MVMHashBody *)data;
     return MVM_str_hash_count(tc, &(body->hashtable));}
 
-static int64_t exists_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj) {
+static int64_t exists_key(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj) {
     MVMHashBody   *body = (MVMHashBody *)data;
     /* key_obj checked in MVM_str_hash_fetch */
     MVMStrHashTable *hashtable = &(body->hashtable);
@@ -134,7 +134,7 @@ static int64_t exists_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, 
     return entry != NULL;
 }
 
-static void delete_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj) {
+static void delete_key(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj) {
     MVMHashBody *body = (MVMHashBody *)data;
     MVMString *key = get_string_key(tc, key_obj);
     MVMStrHashTable *hashtable = &(body->hashtable);
@@ -142,7 +142,7 @@ static void delete_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
     MVM_str_hash_delete(tc, hashtable, key);
 }
 
-static MVMStorageSpec get_value_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static MVMStorageSpec get_value_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMStorageSpec spec;
     spec.inlineable      = MVM_STORAGE_SPEC_REFERENCE;
     spec.boxed_primitive = MVM_STORAGE_SPEC_BP_NONE;
@@ -163,17 +163,17 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* XXX key and value types will be communicated here */
 }
 
 /* Deserialize the representation. */
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMHashBody *body = (MVMHashBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
     if (MVM_str_hash_entry_size(tc, hashtable)) {
@@ -203,11 +203,11 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 }
 
 /* Serialize the representation. */
-static MVMThreadContext *cmp_tc;
+static struct MVMThreadContext *cmp_tc;
 static int cmp_strings(const void *s1, const void *s2) {
     return MVM_string_compare(cmp_tc, *(MVMString **)s1, *(MVMString **)s2);
 }
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMHashBody *body = (MVMHashBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
     uint64_t elems = MVM_str_hash_count(tc, hashtable);
@@ -231,12 +231,12 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMHash);
 }
 
 /* Bytecode specialization for this REPR. */
-static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void spesh(struct MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     switch (ins->info->opcode) {
     case MVM_OP_create: {
         if (!(st->mode_flags & MVM_FINALIZE_TYPE)) {
@@ -259,14 +259,14 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
     }
 }
 
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMHashBody *body = (MVMHashBody *)data;
 
     return MVM_str_hash_allocated_size(tc, &(body->hashtable));
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMHash_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMHash_initialize(struct MVMThreadContext *tc) {
     return &MVMHash_this_repr;
 }
 

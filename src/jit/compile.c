@@ -3,10 +3,10 @@
 #include "platform/mmap.h"
 
 
-void MVM_jit_compiler_init(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg);
-void MVM_jit_compiler_deinit(MVMThreadContext *tc, MVMJitCompiler *compiler);
-MVMJitCode * MVM_jit_compiler_assemble(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg);
-void MVM_jit_compile_expr_tree(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *graph, MVMJitExprTree *tree);
+void MVM_jit_compiler_init(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg);
+void MVM_jit_compiler_deinit(struct MVMThreadContext *tc, MVMJitCompiler *compiler);
+MVMJitCode * MVM_jit_compiler_assemble(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg);
+void MVM_jit_compile_expr_tree(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *graph, MVMJitExprTree *tree);
 
 
 #define COPY_ARRAY(a, n) ((n) > 0) ? memcpy(MVM_malloc((n) * sizeof(a[0])), a, (n) * sizeof(a[0])) : NULL;
@@ -32,7 +32,7 @@ const char * MVM_register_type(int8_t reg_type) {
     }
 }
 
-static void debug_spill_map(MVMThreadContext *tc, MVMJitCompiler *cl) {
+static void debug_spill_map(struct MVMThreadContext *tc, MVMJitCompiler *cl) {
     uint32_t i;
     if (!MVM_jit_debug_enabled(tc))
         return;
@@ -43,7 +43,7 @@ static void debug_spill_map(MVMThreadContext *tc, MVMJitCompiler *cl) {
     }
 }
 
-void MVM_jit_compiler_init(MVMThreadContext *tc, MVMJitCompiler *cl, MVMJitGraph *jg) {
+void MVM_jit_compiler_init(struct MVMThreadContext *tc, MVMJitCompiler *cl, MVMJitGraph *jg) {
     /* Create dasm state */
     dasm_init(cl, 2);
     dasm_setupglobal(cl, cl->dasm_globals, MVM_JIT_MAX_GLOBALS);
@@ -63,12 +63,12 @@ void MVM_jit_compiler_init(MVMThreadContext *tc, MVMJitCompiler *cl, MVMJitGraph
 }
 
 
-void MVM_jit_compiler_deinit(MVMThreadContext *tc, MVMJitCompiler *cl) {
+void MVM_jit_compiler_deinit(struct MVMThreadContext *tc, MVMJitCompiler *cl) {
     dasm_free(cl);
     MVM_VECTOR_DESTROY(cl->spills);
 }
 
-MVMJitCode * MVM_jit_compile_graph(MVMThreadContext *tc, MVMJitGraph *jg) {
+MVMJitCode * MVM_jit_compile_graph(struct MVMThreadContext *tc, MVMJitGraph *jg) {
     MVMJitCompiler cl;
     MVMJitCode *code;
     MVMJitNode *node = jg->first_node;
@@ -163,7 +163,7 @@ MVMJitCode * MVM_jit_compile_graph(MVMThreadContext *tc, MVMJitGraph *jg) {
     return code;
 }
 
-MVMJitCode * MVM_jit_compiler_assemble(MVMThreadContext *tc, MVMJitCompiler *cl, MVMJitGraph *jg) {
+MVMJitCode * MVM_jit_compiler_assemble(struct MVMThreadContext *tc, MVMJitCompiler *cl, MVMJitGraph *jg) {
     MVMJitCode * code;
     uint32_t i;
     char * memory;
@@ -197,7 +197,7 @@ MVMJitCode * MVM_jit_compiler_assemble(MVMThreadContext *tc, MVMJitCompiler *cl,
     /* Create code segment */
     code = MVM_calloc(1, sizeof(MVMJitCode));
 
-    code->func_ptr   = (void (*)(MVMThreadContext*,MVMCompUnit*,void*)) memory;
+    code->func_ptr   = (void (*)(struct MVMThreadContext*,MVMCompUnit*,void*)) memory;
     code->size       = codesize;
     code->bytecode   = (uint8_t*)MAGIC_BYTECODE;
 
@@ -257,7 +257,7 @@ MVMJitCode * MVM_jit_compiler_assemble(MVMThreadContext *tc, MVMJitCompiler *cl,
     return code;
 }
 
-MVMJitCode* MVM_jit_code_copy(MVMThreadContext *tc, MVMJitCode * const code) {
+MVMJitCode* MVM_jit_code_copy(struct MVMThreadContext *tc, MVMJitCode * const code) {
 #ifdef MVM_USE_C11_ATOMICS
     atomic_fetch_add_explicit(&code->ref_cnt, 1, memory_order_relaxed);
 #else
@@ -266,7 +266,7 @@ MVMJitCode* MVM_jit_code_copy(MVMThreadContext *tc, MVMJitCode * const code) {
     return code;
 }
 
-void MVM_jit_code_destroy(MVMThreadContext *tc, MVMJitCode *code) {
+void MVM_jit_code_destroy(struct MVMThreadContext *tc, MVMJitCode *code) {
     /* fetch_and_sub1 returns previous value, so check if there's only 1 reference */
 #ifdef MVM_USE_C11_ATOMICS
     if (atomic_fetch_sub_explicit(&code->ref_cnt, 1, memory_order_relaxed) > 1)
@@ -290,48 +290,48 @@ void MVM_jit_code_destroy(MVMThreadContext *tc, MVMJitCode *code) {
 
 
 /* pseudotile emit functions */
-void MVM_jit_compile_branch(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_branch(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                             MVMJitTile *tile, MVMJitExprTree *tree) {
     MVM_jit_emit_branch(tc, compiler, tile->args[0]);
 }
 
-void MVM_jit_compile_conditional_branch(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_conditional_branch(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                                         MVMJitTile *tile, MVMJitExprTree *tree) {
     MVM_jit_emit_conditional_branch(tc, compiler, tile->args[0], tile->args[1], tile->args[2]);
 }
 
-void MVM_jit_compile_label(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_label(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                            MVMJitTile *tile, MVMJitExprTree *tree) {
     MVM_jit_emit_label(tc, compiler, tree->graph, tile->args[0]);
 }
 
-void MVM_jit_compile_store(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_store(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                            MVMJitTile *tile, MVMJitExprTree *tree) {
     MVM_jit_emit_store(tc, compiler, tile->args[0], tile->args[1], tile->values[1], sizeof(MVMRegister));
 }
 
-void MVM_jit_compile_memory_copy(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_memory_copy(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                                  MVMJitTile *tile, MVMJitExprTree *tree) {
     MVM_jit_emit_load(tc, compiler, tile->values[1], tile->args[2], tile->args[3], sizeof(MVMRegister));
     MVM_jit_emit_store(tc, compiler, tile->args[0], tile->args[1], tile->values[1], sizeof(MVMRegister));
 }
 
-void MVM_jit_compile_move(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_move(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                           MVMJitTile *tile, MVMJitExprTree *tree) {
     MVM_jit_emit_copy(tc, compiler, tile->values[0], tile->values[1]);
 }
 
-void MVM_jit_compile_load(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_load(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                           MVMJitTile *tile, MVMJitExprTree *tree) {
     MVM_jit_emit_load(tc, compiler, tile->values[0],  tile->args[0], tile->args[1], sizeof(MVMRegister));
 }
 
-void MVM_jit_compile_guard(MVMThreadContext *tc, MVMJitCompiler *compiler,
+void MVM_jit_compile_guard(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                           MVMJitTile *tile, MVMJitExprTree *tree) {
     MVM_jit_emit_control(tc, compiler, NULL, tile);
 }
 
-void MVM_jit_compile_expr_tree(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitExprTree *tree) {
+void MVM_jit_compile_expr_tree(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitExprTree *tree) {
     MVMJitTileList *list;
     MVMJitTile *tile;
     uint32_t i;
@@ -364,7 +364,7 @@ void MVM_jit_compile_expr_tree(MVMThreadContext *tc, MVMJitCompiler *compiler, M
     MVM_jit_tile_list_destroy(tc, list);
 }
 
-MVM_STATIC_INLINE int32_t reg_type_bucket(int8_t reg_type) {
+static inline int32_t reg_type_bucket(int8_t reg_type) {
     switch (reg_type) {
     case MVM_reg_num32:
     case MVM_reg_num64:
@@ -383,7 +383,7 @@ MVM_STATIC_INLINE int32_t reg_type_bucket(int8_t reg_type) {
 }
 
 
-uint32_t MVM_jit_spill_memory_select(MVMThreadContext *tc, MVMJitCompiler *compiler, int8_t reg_type) {
+uint32_t MVM_jit_spill_memory_select(struct MVMThreadContext *tc, MVMJitCompiler *compiler, int8_t reg_type) {
     uint32_t idx;
     int8_t bucket = reg_type_bucket(reg_type);
 
@@ -398,7 +398,7 @@ uint32_t MVM_jit_spill_memory_select(MVMThreadContext *tc, MVMJitCompiler *compi
     return compiler->spills_base + idx * sizeof(MVMRegister);
 }
 
-void MVM_jit_spill_memory_release(MVMThreadContext *tc, MVMJitCompiler *compiler, uint32_t pos, int8_t reg_type) {
+void MVM_jit_spill_memory_release(struct MVMThreadContext *tc, MVMJitCompiler *compiler, uint32_t pos, int8_t reg_type) {
     uint32_t idx   = (pos - compiler->spills_base) / sizeof(MVMRegister);
     int8_t bucket = reg_type_bucket(reg_type);
     compiler->spills[idx].next    = compiler->spills_free[bucket];

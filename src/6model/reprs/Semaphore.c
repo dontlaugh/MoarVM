@@ -5,7 +5,7 @@ static const MVMREPROps Semaphore_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &Semaphore_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,12 +18,12 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "Cannot copy object with representation Semaphore");
 }
 
 /* Set up the Semaphore with its initial value. */
-static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
+static void set_int(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
     MVMSemaphoreBody *body = (MVMSemaphoreBody *)data;
     int r;
     body->sem = MVM_malloc(sizeof(uv_sem_t));
@@ -35,7 +35,7 @@ static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMSemaphore *sem = (MVMSemaphore *)obj;
     if (sem->body.sem) {
         uv_sem_destroy(sem->body.sem);
@@ -54,22 +54,22 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMSemaphore);
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMSemaphore_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMSemaphore_initialize(struct MVMThreadContext *tc) {
     return &Semaphore_this_repr;
 }
 
@@ -113,14 +113,14 @@ static const MVMREPROps Semaphore_this_repr = {
     NULL, /* describe_refs */
 };
 
-int64_t MVM_semaphore_tryacquire(MVMThreadContext *tc, MVMSemaphore *sem) {
+int64_t MVM_semaphore_tryacquire(struct MVMThreadContext *tc, MVMSemaphore *sem) {
     int r;
     MVM_telemetry_timestamp(tc, "Semaphore.tryAcquire");
     r = uv_sem_trywait(sem->body.sem);
     return !r;
 }
 
-void MVM_semaphore_acquire(MVMThreadContext *tc, MVMSemaphore *sem) {
+void MVM_semaphore_acquire(struct MVMThreadContext *tc, MVMSemaphore *sem) {
     unsigned int interval_id;
     interval_id = MVM_telemetry_interval_start(tc, "Semaphore.acquire");
     MVMROOT(tc, sem) {
@@ -131,7 +131,7 @@ void MVM_semaphore_acquire(MVMThreadContext *tc, MVMSemaphore *sem) {
     MVM_telemetry_interval_stop(tc, interval_id, "Semaphore.acquire");
 }
 
-void MVM_semaphore_release(MVMThreadContext *tc, MVMSemaphore *sem) {
+void MVM_semaphore_release(struct MVMThreadContext *tc, MVMSemaphore *sem) {
     MVM_telemetry_timestamp(tc, "Semaphore.release");
     uv_sem_post(sem->body.sem);
 }

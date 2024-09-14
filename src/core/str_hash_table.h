@@ -467,7 +467,7 @@ typedef struct {
 uint32_t MVM_round_up_log_base2(uint32_t v);
 
 #if HASH_DEBUG_ITER
-MVM_STATIC_INLINE int MVM_str_hash_iterator_target_deleted(MVMThreadContext *tc,
+static inline int MVM_str_hash_iterator_target_deleted(struct MVMThreadContext *tc,
                                                            MVMStrHashTable *hashtable,
                                                            MVMStrHashIterator iterator) {
     /* Returns true if the hash entry that the iterator points to has been
@@ -490,7 +490,7 @@ MVM_STATIC_INLINE int MVM_str_hash_iterator_target_deleted(MVMThreadContext *tc,
  * as the reprs headers are included as one block, *most* of the MVMStrHashTable
  * functions need to be later. */
 
-MVM_STATIC_INLINE int MVM_str_hash_at_end(MVMThreadContext *tc,
+static inline int MVM_str_hash_at_end(struct MVMThreadContext *tc,
                                            MVMStrHashTable *hashtable,
                                            MVMStrHashIterator iterator) {
     if (MVM_UNLIKELY(hashtable->table && hashtable->table->stale)) {

@@ -5,7 +5,7 @@ static const MVMREPROps P6str_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &P6str_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,17 +18,17 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMP6strBody *src_body  = (MVMP6strBody *)src;
     MVMP6strBody *dest_body = (MVMP6strBody *)dest;
     MVM_ASSIGN_REF(tc, &(dest_root->header), dest_body->value, src_body->value);
 }
 
-void MVMP6str_set_str(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMString *value) {
+void MVMP6str_set_str(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMString *value) {
     MVM_ASSIGN_REF(tc, &(root->header), ((MVMP6strBody *)data)->value, value);
 }
 
-MVMString * MVMP6str_get_str(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+MVMString * MVMP6str_get_str(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     return ((MVMP6strBody *)data)->value;
 }
 
@@ -42,34 +42,34 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
 }
 
 /* Called by the VM to mark any GCable items. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVM_gc_worklist_add(tc, worklist, &((MVMP6strBody *)data)->value);
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMP6str);
 }
 
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVM_ASSIGN_REF(tc, &(root->header), ((MVMP6strBody *)data)->value,
         MVM_serialization_read_str(tc, reader));
 }
 
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVM_serialization_write_str(tc, writer, ((MVMP6strBody *)data)->value);
 }
 
-static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void spesh(struct MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     switch (ins->info->opcode) {
         case MVM_OP_box_s: {
             if (!(st->mode_flags & MVM_FINALIZE_TYPE)) {
@@ -119,7 +119,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMP6str_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMP6str_initialize(struct MVMThreadContext *tc) {
     return &P6str_this_repr;
 }
 

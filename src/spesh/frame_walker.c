@@ -10,7 +10,7 @@
  * managed objects, it has to register the pointers to them with the GC, and
  * unregister them after the walk. Must call MVM_spesh_frame_walker_next after
  * this to be in a valid state to interrogate the first frame. */
-static void init_common(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame *start) {
+static void init_common(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame *start) {
     fw->cur_caller_frame = start;
     fw->cur_outer_frame = NULL;
     fw->started = fw->traversed = 0;
@@ -19,7 +19,7 @@ static void init_common(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame 
     MVM_gc_root_temp_push(tc, (MVMCollectable **)&(fw->cur_caller_frame));
     MVM_gc_root_temp_push(tc, (MVMCollectable **)&(fw->cur_outer_frame));
 }
-void MVM_spesh_frame_walker_init(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame *start,
+void MVM_spesh_frame_walker_init(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame *start,
                                  uint8_t visit_outers) {
     init_common(tc, fw, start);
     fw->visit_outers = visit_outers;
@@ -28,7 +28,7 @@ void MVM_spesh_frame_walker_init(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, 
 
 /* Initializes the frame walker for the case that we only want to iterate
  * the outer chain. */
-void MVM_spesh_frame_walker_init_for_outers(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
+void MVM_spesh_frame_walker_init_for_outers(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
                                             MVMFrame *start) {
     init_common(tc, fw, start);
     fw->visit_outers = 1;
@@ -36,7 +36,7 @@ void MVM_spesh_frame_walker_init_for_outers(MVMThreadContext *tc, MVMSpeshFrameW
 }
 
 /* Go to the next inline, if any. */
-static void go_to_next_inline(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+static void go_to_next_inline(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     MVMFrame *f = fw->cur_caller_frame;
     if (fw->inline_idx == MVM_SPESH_FRAME_WALKER_NO_INLINE)
         return;
@@ -70,7 +70,7 @@ static void go_to_next_inline(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
 
 /* See if the current frame is specialized, and if so if we are in an inline.
  * If so, go to the innermost inline. */
-static void go_to_first_inline(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame *prev) {
+static void go_to_first_inline(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame *prev) {
     MVMFrame *f = fw->cur_caller_frame;
     /* Get a local copy of spesh_cand so we don't stumble over another thread
      * clearing the pointer after we checked it */
@@ -114,7 +114,7 @@ static void go_to_first_inline(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MV
 }
 
 /* Moves one caller frame deeper, accounting for inlines. */
-static uint32_t move_one_caller(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+static uint32_t move_one_caller(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     MVMFrame *caller;
 
      /* Is there an inline to try and visit? If there is one, then
@@ -143,7 +143,7 @@ static uint32_t move_one_caller(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
 /* Moves to the next frame to visit. Returns non-zero if there was a next
  * frame to move to, and zero if there is not (and as such the iteration is
  * over). */
-uint32_t MVM_spesh_frame_walker_next(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+uint32_t MVM_spesh_frame_walker_next(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     if (!fw->started) {
         go_to_first_inline(tc, fw, NULL);
         fw->started = 1;
@@ -195,7 +195,7 @@ uint32_t MVM_spesh_frame_walker_next(MVMThreadContext *tc, MVMSpeshFrameWalker *
     }
 }
 
-static void find_lex_info(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame **cur_frame_out,
+static void find_lex_info(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame **cur_frame_out,
                           MVMStaticFrame **sf_out, uint32_t *base_index_out) {
     if (fw->visiting_outers) {
         *cur_frame_out = fw->cur_outer_frame;
@@ -220,7 +220,7 @@ static void find_lex_info(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFram
  * Returns zero if there is no such lexical in that current frame. If there is
  * one, returns non-zero and populates found_out and found_kind_out. Will also
  * trigger vivification of the lexical if needed. */
-uint32_t MVM_spesh_frame_walker_get_lex(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
+uint32_t MVM_spesh_frame_walker_get_lex(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
                                          MVMString *name, MVMRegister **found_out,
                                          uint16_t *found_kind_out, uint32_t vivify,
                                          MVMFrame **found_frame) {
@@ -248,7 +248,7 @@ uint32_t MVM_spesh_frame_walker_get_lex(MVMThreadContext *tc, MVMSpeshFrameWalke
 }
 
 /* Walk one outer frame. Valid before we start iterating. */
-uint32_t MVM_spesh_frame_walker_move_outer(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+uint32_t MVM_spesh_frame_walker_move_outer(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     MVMFrame *outer;
     MVMSpeshCandidate *spesh_cand = fw->cur_caller_frame->spesh_cand;
     if (fw->inline_idx == MVM_SPESH_FRAME_WALKER_NO_INLINE || !spesh_cand) {
@@ -274,7 +274,7 @@ uint32_t MVM_spesh_frame_walker_move_outer(MVMThreadContext *tc, MVMSpeshFrameWa
 }
 
 /* Walk one caller frame. Valid before we start iterating. */
-uint32_t MVM_spesh_frame_walker_move_caller(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+uint32_t MVM_spesh_frame_walker_move_caller(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     fw->started = 1;
     if (move_one_caller(tc, fw)) {
         fw->traversed = 1;
@@ -286,7 +286,7 @@ uint32_t MVM_spesh_frame_walker_move_caller(MVMThreadContext *tc, MVMSpeshFrameW
 }
 
 /* Walk one non-thunk outer frame. Valid before we start iterating. */
-uint32_t MVM_spesh_frame_walker_move_outer_skip_thunks(MVMThreadContext *tc,
+uint32_t MVM_spesh_frame_walker_move_outer_skip_thunks(struct MVMThreadContext *tc,
                                                         MVMSpeshFrameWalker *fw) {
     while (MVM_spesh_frame_walker_move_outer(tc, fw)) {
         if (!fw->cur_caller_frame->static_info->body.is_thunk)
@@ -296,7 +296,7 @@ uint32_t MVM_spesh_frame_walker_move_outer_skip_thunks(MVMThreadContext *tc,
 }
 
 /* Walk one non-thunk caller frame. Valid before we start iterating. */
-uint32_t MVM_spesh_frame_walker_move_caller_skip_thunks(MVMThreadContext *tc,
+uint32_t MVM_spesh_frame_walker_move_caller_skip_thunks(struct MVMThreadContext *tc,
                                                          MVMSpeshFrameWalker *fw) {
     while (MVM_spesh_frame_walker_move_caller(tc, fw)) {
         MVMSpeshCandidate *spesh_cand = fw->cur_caller_frame->spesh_cand;
@@ -311,7 +311,7 @@ uint32_t MVM_spesh_frame_walker_move_caller_skip_thunks(MVMThreadContext *tc,
 
 /* If the frame walker is currently pointing to an exact frame, returns it.
  * If it's instead pointing at an inline, returns NULL. */
-MVMFrame * MVM_spesh_frame_walker_get_frame(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+MVMFrame * MVM_spesh_frame_walker_get_frame(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     if (fw->visiting_outers)
         return fw->cur_outer_frame;
     if (fw->inline_idx == MVM_SPESH_FRAME_WALKER_NO_INLINE)
@@ -320,7 +320,7 @@ MVMFrame * MVM_spesh_frame_walker_get_frame(MVMThreadContext *tc, MVMSpeshFrameW
 }
 
 /* Gets a hash of the lexicals at the current location. */
-MVMObject * MVM_spesh_frame_walker_get_lexicals_hash(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+MVMObject * MVM_spesh_frame_walker_get_lexicals_hash(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     MVMFrame *frame;
     MVMStaticFrame *sf;
     uint32_t base_index;
@@ -419,7 +419,7 @@ MVMObject * MVM_spesh_frame_walker_get_lexicals_hash(MVMThreadContext *tc, MVMSp
 
 /* Get the kind of lexical with the given name at the frame walker's current
  * location. Returns -1 if there is no such lexical. */
-int64_t MVM_spesh_frame_walker_get_lexical_primspec(MVMThreadContext *tc,
+int64_t MVM_spesh_frame_walker_get_lexical_primspec(struct MVMThreadContext *tc,
                                                      MVMSpeshFrameWalker *fw, MVMString *name) {
     MVMFrame *cur_frame;
     MVMStaticFrame *sf;
@@ -432,7 +432,7 @@ int64_t MVM_spesh_frame_walker_get_lexical_primspec(MVMThreadContext *tc,
 }
 
 /* Gets the code ref at the frame walker's current location. */
-MVMObject * MVM_spesh_frame_walker_get_code(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+MVMObject * MVM_spesh_frame_walker_get_code(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     if (fw->visiting_outers)
         return fw->cur_outer_frame->code_ref;
     MVMSpeshCandidate *spesh_cand = fw->cur_caller_frame->spesh_cand;
@@ -445,7 +445,7 @@ MVMObject * MVM_spesh_frame_walker_get_code(MVMThreadContext *tc, MVMSpeshFrameW
 
 /* Gets a count of the number of lexicals in the frame walker's current
  * location. */
-uint64_t MVM_spesh_frame_walker_get_lexical_count(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+uint64_t MVM_spesh_frame_walker_get_lexical_count(struct MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     MVMFrame *cur_frame;
     MVMStaticFrame *sf;
     uint32_t base_index;

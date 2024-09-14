@@ -1,1 +1,1 @@
-double MVM_coerce_s_n(MVMThreadContext *tc, MVMString *s);
+double MVM_coerce_s_n(struct MVMThreadContext *tc, MVMString *s);

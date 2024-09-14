@@ -1,7 +1,7 @@
 #include "moar.h"
 
 /* Allocates a dispatcher table. */
-static MVMDispRegistryTable * allocate_table(MVMThreadContext *tc, uint32_t num_entries) {
+static MVMDispRegistryTable * allocate_table(struct MVMThreadContext *tc, uint32_t num_entries) {
     MVMDispRegistryTable *table = MVM_calloc(1, sizeof(MVMDispRegistryTable));
     table->num_dispatchers = 0;
     table->alloc_dispatchers = num_entries;
@@ -10,7 +10,7 @@ static MVMDispRegistryTable * allocate_table(MVMThreadContext *tc, uint32_t num_
 }
 
 /* Hashes and adds an entry to the registry. */
-static void add_to_table(MVMThreadContext *tc, MVMDispRegistryTable *table,
+static void add_to_table(struct MVMThreadContext *tc, MVMDispRegistryTable *table,
         MVMDispDefinition *def) {
     size_t slot = (size_t)(MVM_string_hash_code(tc, def->id) % table->alloc_dispatchers);
     while (table->dispatchers[slot] != NULL)
@@ -20,7 +20,7 @@ static void add_to_table(MVMThreadContext *tc, MVMDispRegistryTable *table,
 }
 
 /* We keep the registry at maximum 75% load to avoid collisions. */
-static void grow_registry_if_needed(MVMThreadContext *tc) {
+static void grow_registry_if_needed(struct MVMThreadContext *tc) {
     MVMDispRegistry *reg = &(tc->instance->disp_registry);
     MVMDispRegistryTable *current_table = reg->table;
     if ((double)current_table->num_dispatchers / (double)current_table->alloc_dispatchers >= 0.75) {
@@ -44,7 +44,7 @@ static void grow_registry_if_needed(MVMThreadContext *tc) {
  * the setup phase *or* we hold the mutex for registering dispatchers if it's
  * a user-defined one. Also that the REPR of the dispatch (and, if non-null,
  * resume) dispatcher is MVMCFunction or MVMCode. */
-static void register_internal(MVMThreadContext *tc, MVMString *id, MVMObject *dispatch,
+static void register_internal(struct MVMThreadContext *tc, MVMString *id, MVMObject *dispatch,
         MVMObject *resume) {
     MVMDispRegistry *reg = &(tc->instance->disp_registry);
 
@@ -60,13 +60,13 @@ static void register_internal(MVMThreadContext *tc, MVMString *id, MVMObject *di
 }
 
 /* Registers a boot dispatcher (that is, one provided by the VM). */
-static void register_boot_dispatcher(MVMThreadContext *tc, const char *id, MVMObject *dispatch) {
+static void register_boot_dispatcher(struct MVMThreadContext *tc, const char *id, MVMObject *dispatch) {
     MVMString *id_str = MVM_string_ascii_decode_nt(tc, tc->instance->VMString, id);
     register_internal(tc, id_str, dispatch, NULL);
 }
 
 /* Initialize the dispatcher registry and add all of the boot dispatchers. */
-void MVM_disp_registry_init(MVMThreadContext *tc) {
+void MVM_disp_registry_init(struct MVMThreadContext *tc) {
     MVMDispRegistry *reg = &(tc->instance->disp_registry);
 
     /* Set up dispatchers table with hopefully enough slots we don't tend to
@@ -103,7 +103,7 @@ void MVM_disp_registry_init(MVMThreadContext *tc) {
 }
 
 /* Register a new dispatcher. */
-void MVM_disp_registry_register(MVMThreadContext *tc, MVMString *id, MVMObject *dispatch,
+void MVM_disp_registry_register(struct MVMThreadContext *tc, MVMString *id, MVMObject *dispatch,
         MVMObject *resume) {
     MVMDispRegistry *reg = &(tc->instance->disp_registry);
     if (!MVM_code_iscode(tc, dispatch))
@@ -116,7 +116,7 @@ void MVM_disp_registry_register(MVMThreadContext *tc, MVMString *id, MVMObject *
 }
 
 /* Find a dispatcher. Throws if there isn't one. */
-MVMDispDefinition * MVM_disp_registry_find(MVMThreadContext *tc, MVMString *id) {
+MVMDispDefinition * MVM_disp_registry_find(struct MVMThreadContext *tc, MVMString *id) {
     MVMDispRegistry *reg = &(tc->instance->disp_registry);
     MVMDispRegistryTable *table = reg->table;
     size_t start_slot = (size_t)(MVM_string_hash_code(tc, id) % table->alloc_dispatchers);
@@ -138,7 +138,7 @@ MVMDispDefinition * MVM_disp_registry_find(MVMThreadContext *tc, MVMString *id) 
 }
 
 /* Mark the dispatch registry. */
-void MVM_disp_registry_mark(MVMThreadContext *tc, MVMGCWorklist *worklist) {
+void MVM_disp_registry_mark(struct MVMThreadContext *tc, MVMGCWorklist *worklist) {
     MVMDispRegistry *reg = &(tc->instance->disp_registry);
     MVMDispRegistryTable *table = reg->table;
     size_t i;
@@ -151,7 +151,7 @@ void MVM_disp_registry_mark(MVMThreadContext *tc, MVMGCWorklist *worklist) {
         }
     }
 }
-void MVM_disp_registry_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss) {
+void MVM_disp_registry_describe(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss) {
     MVMDispRegistry *reg = &(tc->instance->disp_registry);
     MVMDispRegistryTable *table = reg->table;
     size_t i;
@@ -169,7 +169,7 @@ void MVM_disp_registry_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss) 
 }
 
 /* Tear down the dispatcher registry, freeing all memory associated with it. */
-void MVM_disp_registry_destroy(MVMThreadContext *tc) {
+void MVM_disp_registry_destroy(struct MVMThreadContext *tc) {
     MVMDispRegistry *reg = &(tc->instance->disp_registry);
     MVMDispRegistryTable *table = reg->table;
     uint32_t i;

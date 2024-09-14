@@ -127,7 +127,7 @@ static uint32_t utf8_encode(uint8_t *bp, MVMCodepoint cp) {
 
 static const uint8_t hex_chars[] = { '0', '1', '2', '3', '4', '5', '6', '7',
                                       '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-static MVMGrapheme32 synthetic_for(MVMThreadContext *tc, uint8_t invalid) {
+static MVMGrapheme32 synthetic_for(struct MVMThreadContext *tc, uint8_t invalid) {
     if (invalid > 0x7F) {
         /* A real invalid. */
         uint8_t high = invalid >> 4;
@@ -196,7 +196,7 @@ typedef struct {
  * points were encoded as. Since we can end up with index mis-matches, we just
  * spit out codepoints to catch the normalizer up to everything in the orig
  * codes buffer. */
-static int append_grapheme(MVMThreadContext *tc, DecodeState *state, MVMGrapheme32 g) {
+static int append_grapheme(struct MVMThreadContext *tc, DecodeState *state, MVMGrapheme32 g) {
     if (g == state->orig_codes[state->orig_codes_unnormalized]) {
         /* Easy case: exact match. */
         state->result[state->result_pos++] = g;
@@ -250,7 +250,7 @@ static int append_grapheme(MVMThreadContext *tc, DecodeState *state, MVMGrapheme
 }
 
 /* Called when decoding has reached an acceptable codepoint. */
-static void process_ok_codepoint(MVMThreadContext *tc, DecodeState *state) {
+static void process_ok_codepoint(struct MVMThreadContext *tc, DecodeState *state) {
     int32_t ready;
     MVMGrapheme32 g;
 
@@ -279,7 +279,7 @@ static void process_ok_codepoint(MVMThreadContext *tc, DecodeState *state) {
 }
 
 /* Called when a bad byte has been encountered, or at the end of output. */
-static void process_bad_bytes(MVMThreadContext *tc, DecodeState *state) {
+static void process_bad_bytes(struct MVMThreadContext *tc, DecodeState *state) {
     size_t i;
     int32_t ready;
 
@@ -302,13 +302,13 @@ static void process_bad_bytes(MVMThreadContext *tc, DecodeState *state) {
 }
 /* Check for if the codepoint is in range. Make sure it's not over 0x10FFFF
  * and make sure it isn't a Surrogate */
-MVM_STATIC_INLINE int in_range (MVMCodepoint cp) {
+static inline int in_range (MVMCodepoint cp) {
     return ( 0 <= cp && cp <= 0x10FFFF)
         && (cp < 0xD800 || 0xDFFF < cp); /* Surrogates */
 }
 /* Decodes the specified number of bytes of utf8 into an NFG string, creating
  * a result of the specified type. The type must have the MVMString REPR. */
-MVMString * MVM_string_utf8_c8_decode(MVMThreadContext *tc, const MVMObject *result_type,
+MVMString * MVM_string_utf8_c8_decode(struct MVMThreadContext *tc, const MVMObject *result_type,
                                       const char *utf8, size_t bytes) {
     DecodeState state;
 
@@ -409,7 +409,7 @@ MVMString * MVM_string_utf8_c8_decode(MVMThreadContext *tc, const MVMObject *res
 
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-uint32_t MVM_string_utf8_c8_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_utf8_c8_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                      const uint32_t *stopper_chars,
                                      MVMDecodeStreamSeparators *seps,
                                      int32_t eof) {
@@ -601,7 +601,7 @@ uint32_t MVM_string_utf8_c8_decodestream(MVMThreadContext *tc, MVMDecodeStream *
 }
 
 /* Encodes the specified string to UTF-8. */
-static void emit_cp(MVMThreadContext *tc, MVMCodepoint cp, uint8_t **result,
+static void emit_cp(struct MVMThreadContext *tc, MVMCodepoint cp, uint8_t **result,
                     size_t *result_pos, size_t *result_limit,
                     uint8_t *repl_bytes, uint64_t repl_length) {
     uint32_t bytes;
@@ -626,7 +626,7 @@ static void emit_cp(MVMThreadContext *tc, MVMCodepoint cp, uint8_t **result,
         MVM_string_utf8_throw_encoding_exception(tc, cp);
     }
 }
-static int hex2int(MVMThreadContext *tc, MVMCodepoint cp) {
+static int hex2int(struct MVMThreadContext *tc, MVMCodepoint cp) {
     if (cp >= '0' && cp <= '9')
         return cp - '0';
     else if (cp >= 'A' && cp <= 'F')
@@ -634,7 +634,7 @@ static int hex2int(MVMThreadContext *tc, MVMCodepoint cp) {
     else
         MVM_exception_throw_adhoc(tc, "UTF-8 C-8 encoding encountered corrupt synthetic (%"PRId32")", cp);
 }
-char * MVM_string_utf8_c8_encode_substr(MVMThreadContext *tc,
+char * MVM_string_utf8_c8_encode_substr(struct MVMThreadContext *tc,
         MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement) {
     uint8_t        *result;
     size_t           result_pos, result_limit;
@@ -694,13 +694,13 @@ char * MVM_string_utf8_c8_encode_substr(MVMThreadContext *tc,
 }
 
 /* Encodes the specified string to UTF-8 C-8. */
-char * MVM_string_utf8_c8_encode(MVMThreadContext *tc, MVMString *str, uint64_t *output_size) {
+char * MVM_string_utf8_c8_encode(struct MVMThreadContext *tc, MVMString *str, uint64_t *output_size) {
     return MVM_string_utf8_c8_encode_substr(tc, str, output_size, 0,
         MVM_string_graphs(tc, str), NULL);
 }
 
 /* Encodes the specified string to a UTF-8 C-8 C string. */
-char * MVM_string_utf8_c8_encode_C_string(MVMThreadContext *tc, MVMString *str) {
+char * MVM_string_utf8_c8_encode_C_string(struct MVMThreadContext *tc, MVMString *str) {
     uint64_t output_size;
     char * utf8_string = MVM_string_utf8_c8_encode(tc, str, &output_size);
     utf8_string = MVM_realloc(utf8_string, output_size + 1);

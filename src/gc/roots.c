@@ -4,7 +4,7 @@
  * roots, so that it will always be marked and never die. Note that the
  * address of the collectable must be passed, since it will need to be
  * updated. */
-void MVM_gc_root_add_permanent_desc(MVMThreadContext *tc, MVMCollectable **obj_ref, const char *description) {
+void MVM_gc_root_add_permanent_desc(struct MVMThreadContext *tc, MVMCollectable **obj_ref, const char *description) {
     if (obj_ref == NULL)
         MVM_panic(MVM_exitcode_gcroots, "Illegal attempt to add null object address as a permanent root");
 
@@ -27,12 +27,12 @@ void MVM_gc_root_add_permanent_desc(MVMThreadContext *tc, MVMCollectable **obj_r
     uv_mutex_unlock(&tc->instance->mutex_permroots);
 }
 
-void MVM_gc_root_add_permanent(MVMThreadContext *tc, MVMCollectable **obj_ref) {
+void MVM_gc_root_add_permanent(struct MVMThreadContext *tc, MVMCollectable **obj_ref) {
     MVM_gc_root_add_permanent_desc(tc, obj_ref, "<\?\?>");
 }
 
 /* Adds the set of permanently registered roots to a GC worklist. */
-void MVM_gc_root_add_permanents_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
+void MVM_gc_root_add_permanents_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
     uint32_t         i, num_roots;
     MVMCollectable ***permroots;
     num_roots = tc->instance->num_permroots;
@@ -64,7 +64,7 @@ void MVM_gc_root_add_permanents_to_worklist(MVMThreadContext *tc, MVMGCWorklist 
 
 /* Adds anything that is a root thanks to being referenced by instance,
  * but that isn't permanent. */
-void MVM_gc_root_add_instance_roots_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
+void MVM_gc_root_add_instance_roots_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
     MVMString                  **int_to_str_cache;
     uint32_t                    i;
 
@@ -150,7 +150,7 @@ void MVM_gc_root_add_instance_roots_to_worklist(MVMThreadContext *tc, MVMGCWorkl
 
 /* Adds anything that is a root thanks to being referenced by a thread,
  * context, but that isn't permanent. */
-void MVM_gc_root_add_tc_roots_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
+void MVM_gc_root_add_tc_roots_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
     /* The call stack. */
     MVM_callstack_mark_current_thread(tc, worklist, snapshot);
 
@@ -240,7 +240,7 @@ void MVM_gc_root_add_tc_roots_to_worklist(MVMThreadContext *tc, MVMGCWorklist *w
 }
 
 /* Pushes a temporary root onto the thread-local roots list. */
-void MVM_gc_root_temp_push_slow(MVMThreadContext *tc, MVMCollectable **obj_ref) {
+void MVM_gc_root_temp_push_slow(struct MVMThreadContext *tc, MVMCollectable **obj_ref) {
     /* Allocate extra temporary root space if needed. */
     if (tc->num_temproots == tc->alloc_temproots) {
         tc->alloc_temproots *= 2;
@@ -257,19 +257,19 @@ void MVM_gc_root_temp_push_slow(MVMThreadContext *tc, MVMCollectable **obj_ref) 
  * removing all roots. This is done so that in nested interpreter runs
  * (at present, just nativecall callbacks) we don't clear things that
  * are pushed by the native call itself. */
-uint32_t MVM_gc_root_temp_mark(MVMThreadContext *tc) {
+uint32_t MVM_gc_root_temp_mark(struct MVMThreadContext *tc) {
     int32_t current = tc->mark_temproots;
     tc->mark_temproots = tc->num_temproots;
     return current;
 }
 
 /* Resets the temporary root stack mark to the provided height. */
-void MVM_gc_root_temp_mark_reset(MVMThreadContext *tc, uint32_t mark) {
+void MVM_gc_root_temp_mark_reset(struct MVMThreadContext *tc, uint32_t mark) {
     tc->mark_temproots = mark;
 }
 
 /* Pops all temporary roots off the thread-local roots list. */
-void MVM_gc_root_temp_pop_all(MVMThreadContext *tc) {
+void MVM_gc_root_temp_pop_all(struct MVMThreadContext *tc) {
     tc->num_temproots = tc->mark_temproots;
 }
 
@@ -278,11 +278,11 @@ void MVM_gc_root_temp_pop_all(MVMThreadContext *tc) {
  * they may be GC-able; check for this and make sure such roots do not get
  * added to the worklist. (Cheaper to do it here in the event we GC than to
  * do it on every stack push). */
-static uint32_t is_stack_frame(MVMThreadContext *tc, MVMCollectable **c) {
+static uint32_t is_stack_frame(struct MVMThreadContext *tc, MVMCollectable **c) {
     MVMCollectable *maybe_frame = *c;
     return maybe_frame && maybe_frame->flags1 == 0 && maybe_frame->owner == 0;
 }
-void MVM_gc_root_add_temps_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
+void MVM_gc_root_add_temps_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
     uint32_t         i, num_roots;
     MVMCollectable ***temproots;
     num_roots = tc->num_temproots;
@@ -301,7 +301,7 @@ void MVM_gc_root_add_temps_to_worklist(MVMThreadContext *tc, MVMGCWorklist *work
 
 /* Pushes a collectable that is in generation 2, but now references a nursery
  * collectable, into the gen2 root set. */
-void MVM_gc_root_gen2_add(MVMThreadContext *tc, MVMCollectable *c) {
+void MVM_gc_root_gen2_add(struct MVMThreadContext *tc, MVMCollectable *c) {
     /* Ensure the collectable is not null. */
     if (c == NULL)
         MVM_panic(MVM_exitcode_gcroots, "Illegal attempt to add null collectable address as an inter-generational root");
@@ -325,7 +325,7 @@ void MVM_gc_root_gen2_add(MVMThreadContext *tc, MVMCollectable *c) {
 /* Adds the set of thread-local inter-generational roots to a GC worklist. As
  * a side-effect, removes gen2 roots that no longer point to any nursery
  * items (usually because all the referenced objects also got promoted). */
-void MVM_gc_root_add_gen2s_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist) {
+void MVM_gc_root_add_gen2s_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist) {
     MVMCollectable **gen2roots = tc->gen2roots;
     uint32_t        num_roots = tc->num_gen2roots;
     uint32_t        i;
@@ -370,7 +370,7 @@ void MVM_gc_root_add_gen2s_to_worklist(MVMThreadContext *tc, MVMGCWorklist *work
 }
 
 /* Adds inter-generational roots to a heap snapshot. */
-void MVM_gc_root_add_gen2s_to_snapshot(MVMThreadContext *tc, MVMHeapSnapshotState *snapshot) {
+void MVM_gc_root_add_gen2s_to_snapshot(struct MVMThreadContext *tc, MVMHeapSnapshotState *snapshot) {
     MVMCollectable **gen2roots = tc->gen2roots;
     uint32_t        num_roots = tc->num_gen2roots;
     uint32_t        i;
@@ -380,7 +380,7 @@ void MVM_gc_root_add_gen2s_to_snapshot(MVMThreadContext *tc, MVMHeapSnapshotStat
 
 /* Visits all of the roots in the gen2 list and removes those that have been
  * collected. Applied after a full collection. */
-void MVM_gc_root_gen2_cleanup(MVMThreadContext *tc) {
+void MVM_gc_root_gen2_cleanup(struct MVMThreadContext *tc) {
     MVMCollectable **gen2roots    = tc->gen2roots;
     uint32_t        num_roots    = tc->num_gen2roots;
     uint32_t        i = 0;
@@ -405,8 +405,8 @@ void MVM_gc_root_gen2_cleanup(MVMThreadContext *tc) {
 
 /* Walks frames and compilation units. Adds the roots it finds into the
  * GC worklist. */
-static void scan_lexicals(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *frame);
-void MVM_gc_root_add_frame_roots_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *cur_frame) {
+static void scan_lexicals(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *frame);
+void MVM_gc_root_add_frame_roots_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *cur_frame) {
     /* Add caller to worklist if it's heap-allocated. */
     if (cur_frame->caller && !MVM_FRAME_IS_ON_CALLSTACK(tc, cur_frame->caller))
         MVM_gc_worklist_add(tc, worklist, &cur_frame->caller);
@@ -431,7 +431,7 @@ void MVM_gc_root_add_frame_roots_to_worklist(MVMThreadContext *tc, MVMGCWorklist
 }
 
 /* Takes a frame, scans its registers and adds them to the roots. */
-void MVM_gc_root_add_frame_registers_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *frame) {
+void MVM_gc_root_add_frame_registers_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *frame) {
     uint16_t  i, count;
     uint16_t *type_map;
     /* We only need to do any of this work if the frame is in dynamic scope. */
@@ -458,7 +458,7 @@ void MVM_gc_root_add_frame_registers_to_worklist(MVMThreadContext *tc, MVMGCWork
 }
 
 /* Takes a frame, scans its lexicals and adds them to the roots. */
-static void scan_lexicals(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *frame) {
+static void scan_lexicals(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *frame) {
     if (frame->env) {
         uint16_t  i, count;
         uint16_t *type_map;

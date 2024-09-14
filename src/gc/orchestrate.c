@@ -3,7 +3,7 @@
 
 /* If we have the job of doing GC for a thread, we add it to our work
  * list. */
-static void add_work(MVMThreadContext *tc, MVMThreadContext *stolen) {
+static void add_work(struct MVMThreadContext *tc, struct MVMThreadContext *stolen) {
     uint32_t i;
     for (i = 0; i < tc->gc_work_count; i++)
         if (tc->gc_work[i].tc == stolen)
@@ -23,7 +23,7 @@ static void add_work(MVMThreadContext *tc, MVMThreadContext *stolen) {
  * GC run is starting. Those that are blocked are considered excluded from
  * the run, and are not counted. Returns the count of threads that should be
  * added to the finished countdown. */
-static uint32_t signal_one_thread(MVMThreadContext *tc, MVMThreadContext *to_signal) {
+static uint32_t signal_one_thread(struct MVMThreadContext *tc, struct MVMThreadContext *to_signal) {
     /* Loop here since we may not succeed first time (e.g. the status of the
      * thread may change between the two ways we try to twiddle it). */
     unsigned int had_suspend_request = 0;
@@ -68,7 +68,7 @@ static uint32_t signal_one_thread(MVMThreadContext *tc, MVMThreadContext *to_sig
         }
     }
 }
-static uint32_t signal_all(MVMThreadContext *tc, MVMThread *threads) {
+static uint32_t signal_all(struct MVMThreadContext *tc, MVMThread *threads) {
     MVMThread *t = threads;
     uint32_t count = 0;
     while (t) {
@@ -103,7 +103,7 @@ static uint32_t signal_all(MVMThreadContext *tc, MVMThread *threads) {
 
 /* Does work in a thread's in-tray, if any. Returns a non-zero value if work
  * was found and done, and zero otherwise. */
-static int process_in_tray(MVMThreadContext *tc, uint8_t gen) {
+static int process_in_tray(struct MVMThreadContext *tc, uint8_t gen) {
     GCDEBUG_LOG(tc, MVM_GC_DEBUG_ORCHESTRATE, "Thread %d run %d : Considering extra work\n");
     if (MVM_load(&tc->gc_in_tray)) {
         GCDEBUG_LOG(tc, MVM_GC_DEBUG_ORCHESTRATE,
@@ -116,7 +116,7 @@ static int process_in_tray(MVMThreadContext *tc, uint8_t gen) {
 
 /* Called by a thread when it thinks it is done with GC. It may get some more
  * work yet, though. */
-static void clear_intrays(MVMThreadContext *tc, uint8_t gen) {
+static void clear_intrays(struct MVMThreadContext *tc, uint8_t gen) {
     uint32_t did_work = 1;
     while (did_work) {
         MVMThread *cur_thread;
@@ -129,7 +129,7 @@ static void clear_intrays(MVMThreadContext *tc, uint8_t gen) {
         }
     }
 }
-static void finish_gc(MVMThreadContext *tc, uint8_t gen, uint8_t is_coordinator) {
+static void finish_gc(struct MVMThreadContext *tc, uint8_t gen, uint8_t is_coordinator) {
     uint32_t i, did_work;
 
     /* Do any extra work that we have been passed. */
@@ -210,7 +210,7 @@ static void finish_gc(MVMThreadContext *tc, uint8_t gen, uint8_t is_coordinator)
     /* Reset GC status flags. This is also where thread destruction happens,
      * and it needs to happen before we acknowledge this GC run is finished. */
     for (i = 0; i < tc->gc_work_count; i++) {
-        MVMThreadContext *other = tc->gc_work[i].tc;
+        struct MVMThreadContext *other = tc->gc_work[i].tc;
         MVMThread *thread_obj = other->thread_obj;
         if (MVM_load(&thread_obj->body.stage) == MVM_thread_stage_clearing_nursery) {
             GCDEBUG_LOG(tc, MVM_GC_DEBUG_ORCHESTRATE,
@@ -294,7 +294,7 @@ static void finish_gc(MVMThreadContext *tc, uint8_t gen, uint8_t is_coordinator)
 /* Called by a thread to indicate it is about to enter a blocking operation.
  * This tells any thread that is coordinating a GC run that this thread will
  * be unable to participate. */
-void MVM_gc_mark_thread_blocked(MVMThreadContext *tc) {
+void MVM_gc_mark_thread_blocked(struct MVMThreadContext *tc) {
     /* This may need more than one attempt. */
     while (1) {
         /* Try to set it from running to unable - the common case. */
@@ -319,7 +319,7 @@ void MVM_gc_mark_thread_blocked(MVMThreadContext *tc) {
 /* Called by a thread to indicate it has completed a block operation and is
  * thus able to particpate in a GC run again. Note that this case needs some
  * special handling if it comes out of this mode when a GC run is taking place. */
-void MVM_gc_mark_thread_unblocked(MVMThreadContext *tc) {
+void MVM_gc_mark_thread_unblocked(struct MVMThreadContext *tc) {
     /* Try to set it from unable to running. */
     while (MVM_cas(&tc->gc_status, MVMGCStatus_UNABLE,
             MVMGCStatus_NONE) != MVMGCStatus_UNABLE) {
@@ -372,13 +372,13 @@ void MVM_gc_mark_thread_unblocked(MVMThreadContext *tc) {
  * blocked between checking this and calling unblock, it's safe anyway since
  * these cases are handled in MVM_gc_mark_thread_unblocked. Note that this
  * relies on a thread itself only ever calling block/unblock. */
-int32_t MVM_gc_is_thread_blocked(MVMThreadContext *tc) {
+int32_t MVM_gc_is_thread_blocked(struct MVMThreadContext *tc) {
     atomic_uintptr_t gc_status = MVM_load(&(tc->gc_status)) & MVMGCSTATUS_MASK;
     return gc_status == MVMGCStatus_UNABLE ||
            gc_status == MVMGCStatus_STOLEN;
 }
 
-static int32_t is_full_collection(MVMThreadContext *tc) {
+static int32_t is_full_collection(struct MVMThreadContext *tc) {
     uint64_t percent_growth, promoted;
     size_t rss;
 
@@ -400,7 +400,7 @@ static int32_t is_full_collection(MVMThreadContext *tc) {
     return percent_growth >= MVM_GC_GEN2_THRESHOLD_PERCENT;
 }
 
-static void run_gc(MVMThreadContext *tc, uint8_t what_to_do) {
+static void run_gc(struct MVMThreadContext *tc, uint8_t what_to_do) {
     uint8_t   gen;
     uint32_t  i, n;
 
@@ -433,7 +433,7 @@ static void run_gc(MVMThreadContext *tc, uint8_t what_to_do) {
 
     /* Do GC work for ourselves and any work threads. */
     for (i = 0, n = tc->gc_work_count ; i < n; i++) {
-        MVMThreadContext *other = tc->gc_work[i].tc;
+        struct MVMThreadContext *other = tc->gc_work[i].tc;
         tc->gc_work[i].limit = other->nursery_alloc;
         GCDEBUG_LOG(tc, MVM_GC_DEBUG_ORCHESTRATE, "Thread %d run %d : starting collection for thread %d\n",
             other->thread_id);
@@ -491,7 +491,7 @@ static void run_gc(MVMThreadContext *tc, uint8_t what_to_do) {
  * to trigger a GC run. In this case, it's possible (probable, really) that it
  * will need to do that triggering, notifying other running threads that the
  * time has come to GC. */
-void MVM_gc_enter_from_allocator(MVMThreadContext *tc) {
+void MVM_gc_enter_from_allocator(struct MVMThreadContext *tc) {
     GCDEBUG_LOG(tc, MVM_GC_DEBUG_ORCHESTRATE, "Thread %d run %d : Entered from allocate\n");
 
     MVM_telemetry_timestamp(tc, "gc_enter_from_allocator");
@@ -623,7 +623,7 @@ void MVM_gc_enter_from_allocator(MVMThreadContext *tc) {
  * Those cases can be distinguished by the gc state masked with
  * MVMSUSPENDSTATUS_MASK.
  *   */
-static int react_to_debugserver_request(MVMThreadContext *tc) {
+static int react_to_debugserver_request(struct MVMThreadContext *tc) {
     if (tc->instance->debugserver && tc->instance->debugserver->debugspam_protocol)
         fprintf(stderr, "thread %p has received a request.\n", tc);
 
@@ -663,7 +663,7 @@ static int react_to_debugserver_request(MVMThreadContext *tc) {
 
     return 1;
 }
-void MVM_gc_enter_from_interrupt(MVMThreadContext *tc) {
+void MVM_gc_enter_from_interrupt(struct MVMThreadContext *tc) {
     GCDEBUG_LOG(tc, MVM_GC_DEBUG_ORCHESTRATE, "Thread %d run %d : Entered from interrupt\n");
 
 
@@ -739,7 +739,7 @@ void MVM_gc_enter_from_interrupt(MVMThreadContext *tc) {
 }
 
 /* Run the global destruction phase. */
-void MVM_gc_global_destruction(MVMThreadContext *tc) {
+void MVM_gc_global_destruction(struct MVMThreadContext *tc) {
     char *nursery_tmp;
 
     MVMInstance *vm = tc->instance;

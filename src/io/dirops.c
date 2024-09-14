@@ -34,10 +34,10 @@ static char * UnicodeToUTF8(const wchar_t *str)
      return result;
 }
 
-static int mkdir_p(MVMThreadContext *tc, wchar_t *pathname, int64_t mode) {
+static int mkdir_p(struct MVMThreadContext *tc, wchar_t *pathname, int64_t mode) {
     wchar_t *p = pathname, ch;
 #else
-static int mkdir_p(MVMThreadContext *tc, char *pathname, int64_t mode) {
+static int mkdir_p(struct MVMThreadContext *tc, char *pathname, int64_t mode) {
     char *p = pathname, ch;
     uv_fs_t req;
     int mkdir_error = 0;
@@ -68,7 +68,7 @@ static int mkdir_p(MVMThreadContext *tc, char *pathname, int64_t mode) {
 }
 
 /* Create a directory recursively. */
-void MVM_dir_mkdir(MVMThreadContext *tc, MVMString *path, int64_t mode) {
+void MVM_dir_mkdir(struct MVMThreadContext *tc, MVMString *path, int64_t mode) {
     char * const pathname = MVM_string_utf8_c8_encode_C_string(tc, path);
 
 #ifdef _WIN32
@@ -118,7 +118,7 @@ void MVM_dir_mkdir(MVMThreadContext *tc, MVMString *path, int64_t mode) {
 }
 
 /* Remove a directory recursively. */
-void MVM_dir_rmdir(MVMThreadContext *tc, MVMString *path) {
+void MVM_dir_rmdir(struct MVMThreadContext *tc, MVMString *path) {
     char * const pathname = MVM_string_utf8_c8_encode_C_string(tc, path);
     uv_fs_t req;
 
@@ -131,7 +131,7 @@ void MVM_dir_rmdir(MVMThreadContext *tc, MVMString *path) {
 }
 
 /* Get the current working directory. */
-MVMString * MVM_dir_cwd(MVMThreadContext *tc) {
+MVMString * MVM_dir_cwd(struct MVMThreadContext *tc) {
 #ifdef _WIN32
     char path[MAX_PATH];
     size_t max_path = MAX_PATH;
@@ -148,11 +148,11 @@ MVMString * MVM_dir_cwd(MVMThreadContext *tc) {
 
     return MVM_string_utf8_c8_decode(tc, tc->instance->VMString, path, strlen(path));
 }
-int MVM_dir_chdir_C_string(MVMThreadContext *tc, const char *dirstring) {
+int MVM_dir_chdir_C_string(struct MVMThreadContext *tc, const char *dirstring) {
     return uv_chdir(dirstring);
 }
 /* Change directory. */
-void MVM_dir_chdir(MVMThreadContext *tc, MVMString *dir) {
+void MVM_dir_chdir(struct MVMThreadContext *tc, MVMString *dir) {
     const char *dirstring = MVM_string_utf8_c8_encode_C_string(tc, dir);
     int chdir_error = MVM_dir_chdir_C_string(tc, dirstring);
     MVM_free((void*)dirstring);
@@ -172,7 +172,7 @@ typedef struct {
 } MVMIODirIter;
 
 /* Frees data associated with the directory handle. */
-static void gc_free(MVMThreadContext *tc, MVMObject *h, void *d) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *h, void *d) {
     MVMIODirIter *data = (MVMIODirIter *)d;
     if (data) {
 #ifdef _WIN32
@@ -208,7 +208,7 @@ static const MVMIOOps op_table = {
 };
 
 /* Open a filehandle, returning a handle. */
-MVMObject * MVM_dir_open(MVMThreadContext *tc, MVMString *dirname) {
+MVMObject * MVM_dir_open(struct MVMThreadContext *tc, MVMString *dirname) {
     MVMOSHandle  * result;
     MVMIODirIter * const data   = MVM_calloc(1, sizeof(MVMIODirIter));
     MVMROOT(tc, dirname) {
@@ -281,7 +281,7 @@ MVMObject * MVM_dir_open(MVMThreadContext *tc, MVMString *dirname) {
 }
 
 /* Casts to a handle, checking it's a directory handle along the way. */
-static MVMOSHandle * get_dirhandle(MVMThreadContext *tc, MVMObject *oshandle, const char *msg) {
+static MVMOSHandle * get_dirhandle(struct MVMThreadContext *tc, MVMObject *oshandle, const char *msg) {
     MVMOSHandle *handle = (MVMOSHandle *)oshandle;
     if (REPR(oshandle)->ID != MVM_REPR_ID_MVMOSHandle)
         MVM_exception_throw_adhoc(tc, "%s requires an object with REPR MVMOSHandle (got %s with REPR %s)", msg, MVM_6model_get_debug_name(tc, (MVMObject *)handle), REPR(handle)->name);
@@ -291,7 +291,7 @@ static MVMOSHandle * get_dirhandle(MVMThreadContext *tc, MVMObject *oshandle, co
 }
 
 /* Reads a directory entry from a directory. */
-MVMString * MVM_dir_read(MVMThreadContext *tc, MVMObject *oshandle) {
+MVMString * MVM_dir_read(struct MVMThreadContext *tc, MVMObject *oshandle) {
     MVMOSHandle  *handle = get_dirhandle(tc, oshandle, "readdir");
     MVMIODirIter *data   = (MVMIODirIter *)handle->body.data;
 #ifdef _WIN32
@@ -347,7 +347,7 @@ MVMString * MVM_dir_read(MVMThreadContext *tc, MVMObject *oshandle) {
 #endif
 }
 
-void MVM_dir_close(MVMThreadContext *tc, MVMObject *oshandle) {
+void MVM_dir_close(struct MVMThreadContext *tc, MVMObject *oshandle) {
     MVMOSHandle  *handle = get_dirhandle(tc, oshandle, "readdir");
     MVMIODirIter *data   = (MVMIODirIter *)handle->body.data;
 

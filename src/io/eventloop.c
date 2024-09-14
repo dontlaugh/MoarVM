@@ -11,7 +11,7 @@
  */
 
 /* Sets up an async task to be done on the loop. */
-static void setup_work(MVMThreadContext *tc) {
+static void setup_work(struct MVMThreadContext *tc) {
     MVMConcBlockingQueue *queue = (MVMConcBlockingQueue *)tc->instance->event_loop_todo_queue;
     MVMObject *task_obj;
 
@@ -30,7 +30,7 @@ static void setup_work(MVMThreadContext *tc) {
 }
 
 /* Performs an async emit permit grant on the loop. */
-static void permit_work(MVMThreadContext *tc) {
+static void permit_work(struct MVMThreadContext *tc) {
     MVMConcBlockingQueue *queue = (MVMConcBlockingQueue *)tc->instance->event_loop_permit_queue;
     MVMObject *task_arr;
 
@@ -49,7 +49,7 @@ static void permit_work(MVMThreadContext *tc) {
 }
 
 /* Performs an async cancellation on the loop. */
-static void cancel_work(MVMThreadContext *tc) {
+static void cancel_work(struct MVMThreadContext *tc) {
     MVMConcBlockingQueue *queue = (MVMConcBlockingQueue *)tc->instance->event_loop_cancel_queue;
     MVMObject *task_obj;
 
@@ -71,7 +71,7 @@ static void cancel_work(MVMThreadContext *tc) {
 /* Fired whenever we were signalled that there is a new task or a new
  * cancellation for the event loop to process. */
 static void async_handler(uv_async_t *handle) {
-    MVMThreadContext *tc = (MVMThreadContext *)handle->data;
+    struct MVMThreadContext *tc = (struct MVMThreadContext *)handle->data;
     GC_SYNC_POINT(tc);
     setup_work(tc);
     permit_work(tc);
@@ -79,7 +79,7 @@ static void async_handler(uv_async_t *handle) {
 }
 
 /* Enters the event loop. */
-static void enter_loop(MVMThreadContext *tc, MVMArgs arg_info) {
+static void enter_loop(struct MVMThreadContext *tc, MVMArgs arg_info) {
     uv_loop_t    *loop = tc->instance->event_loop;
     uv_async_t   *async = tc->instance->event_loop_wakeup;
 
@@ -96,7 +96,7 @@ static void enter_loop(MVMThreadContext *tc, MVMArgs arg_info) {
 
 /* Sees if we have an event loop processing thread set up already, and
  * sets it up if not. */
-void MVM_io_eventloop_start(MVMThreadContext *tc) {
+void MVM_io_eventloop_start(struct MVMThreadContext *tc) {
     MVMInstance *instance = tc->instance;
     MVMObject *loop_runner;
     unsigned int interval_id;
@@ -155,7 +155,7 @@ void MVM_io_eventloop_start(MVMThreadContext *tc) {
 
 
 /* Adds a work item into the event loop work queue. */
-void MVM_io_eventloop_queue_work(MVMThreadContext *tc, MVMObject *work) {
+void MVM_io_eventloop_queue_work(struct MVMThreadContext *tc, MVMObject *work) {
     MVMROOT(tc, work) {
         MVM_io_eventloop_start(tc);
         MVM_repr_push_o(tc, tc->instance->event_loop_todo_queue, work);
@@ -165,7 +165,7 @@ void MVM_io_eventloop_queue_work(MVMThreadContext *tc, MVMObject *work) {
 
 /* Permits an asynchronous task to emit more events. This is used to provide a
  * back-pressure mechanism. */
-void MVM_io_eventloop_permit(MVMThreadContext *tc, MVMObject *task_obj,
+void MVM_io_eventloop_permit(struct MVMThreadContext *tc, MVMObject *task_obj,
                               int64_t channel, int64_t permits) {
     if (REPR(task_obj)->ID == MVM_REPR_ID_MVMOSHandle)
         task_obj = MVM_io_get_async_task_handle(tc, task_obj);
@@ -193,7 +193,7 @@ void MVM_io_eventloop_permit(MVMThreadContext *tc, MVMObject *task_obj,
 }
 
 /* Cancels a piece of async work. */
-void MVM_io_eventloop_cancel_work(MVMThreadContext *tc, MVMObject *task_obj,
+void MVM_io_eventloop_cancel_work(struct MVMThreadContext *tc, MVMObject *task_obj,
         MVMObject *notify_queue, MVMObject *notify_schedulee) {
     if (REPR(task_obj)->ID == MVM_REPR_ID_MVMAsyncTask) {
         if (notify_queue && notify_schedulee) {
@@ -215,7 +215,7 @@ void MVM_io_eventloop_cancel_work(MVMThreadContext *tc, MVMObject *task_obj,
 }
 
 /* Sends a task cancellation notification if requested for the specified task. */
-void MVM_io_eventloop_send_cancellation_notification(MVMThreadContext *tc, MVMAsyncTask *task) {
+void MVM_io_eventloop_send_cancellation_notification(struct MVMThreadContext *tc, MVMAsyncTask *task) {
     MVMObject *notify_queue = task->body.cancel_notify_queue;
     MVMObject *notify_schedulee = task->body.cancel_notify_schedulee;
     if (notify_queue && notify_schedulee)
@@ -223,7 +223,7 @@ void MVM_io_eventloop_send_cancellation_notification(MVMThreadContext *tc, MVMAs
 }
 
 /* Adds a work item to the active async task set. */
-int MVM_io_eventloop_add_active_work(MVMThreadContext *tc, MVMObject *async_task) {
+int MVM_io_eventloop_add_active_work(struct MVMThreadContext *tc, MVMObject *async_task) {
     uint64_t work_idx = MVM_repr_elems(tc, tc->instance->event_loop_free_indices) > 0
         ? (uint64_t)MVM_repr_pop_i(tc, tc->instance->event_loop_free_indices)
         : MVM_repr_elems(tc, tc->instance->event_loop_active);
@@ -233,7 +233,7 @@ int MVM_io_eventloop_add_active_work(MVMThreadContext *tc, MVMObject *async_task
 }
 
 /* Gets an active work item from the active work eventloop. */
-MVMAsyncTask * MVM_io_eventloop_get_active_work(MVMThreadContext *tc, int work_idx) {
+MVMAsyncTask * MVM_io_eventloop_get_active_work(struct MVMThreadContext *tc, int work_idx) {
     if (work_idx >= 0 && work_idx < (int)MVM_repr_elems(tc, tc->instance->event_loop_active)) {
         MVMObject *task_obj = MVM_repr_at_pos_o(tc, tc->instance->event_loop_active, work_idx);
         if (REPR(task_obj)->ID != MVM_REPR_ID_MVMAsyncTask)
@@ -249,7 +249,7 @@ MVMAsyncTask * MVM_io_eventloop_get_active_work(MVMThreadContext *tc, int work_i
 /* Removes an active work index from the active work list, enabling any
  * memory associated with it to be collected. Replaces the work index with -1
  * so that any future use of the task will be a failed lookup. */
-void MVM_io_eventloop_remove_active_work(MVMThreadContext *tc, int *work_idx_to_clear) {
+void MVM_io_eventloop_remove_active_work(struct MVMThreadContext *tc, int *work_idx_to_clear) {
     int work_idx = *work_idx_to_clear;
     if (work_idx >= 0 && work_idx < (int)MVM_repr_elems(tc, tc->instance->event_loop_active)) {
         *work_idx_to_clear = -1;
@@ -264,7 +264,7 @@ void MVM_io_eventloop_remove_active_work(MVMThreadContext *tc, int *work_idx_to_
 
 
 /* Send the stop signal - no synchronization required */
-void MVM_io_eventloop_stop(MVMThreadContext *tc) {
+void MVM_io_eventloop_stop(struct MVMThreadContext *tc) {
     MVMInstance *instance = tc->instance;
     if (!instance->event_loop_thread)
         return;
@@ -274,7 +274,7 @@ void MVM_io_eventloop_stop(MVMThreadContext *tc) {
 }
 
 /* Wait for exit (again, no synchronizaiton required) */
-void MVM_io_eventloop_join(MVMThreadContext *tc) {
+void MVM_io_eventloop_join(struct MVMThreadContext *tc) {
     MVMInstance *instance = tc->instance;
     if (!instance->event_loop_thread)
         return;
@@ -282,7 +282,7 @@ void MVM_io_eventloop_join(MVMThreadContext *tc) {
 }
 
 /* Clean up used resources. Synchronization required - other threads might modify them as well */
-void MVM_io_eventloop_destroy(MVMThreadContext *tc) {
+void MVM_io_eventloop_destroy(struct MVMThreadContext *tc) {
     MVMInstance *instance = tc->instance;
     MVM_gc_mark_thread_blocked(tc);
     uv_mutex_lock(&instance->mutex_event_loop);

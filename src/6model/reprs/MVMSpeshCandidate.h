@@ -90,8 +90,8 @@ struct MVMSpeshCandidate {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMSpeshCandidate_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMSpeshCandidate_initialize(struct MVMThreadContext *tc);
 
 /* Functions for creating and clearing up specializations. */
-void MVM_spesh_candidate_add(MVMThreadContext *tc, MVMSpeshPlanned *p);
-void MVM_spesh_candidate_discard_existing(MVMThreadContext *tc, MVMStaticFrame *sf);
+void MVM_spesh_candidate_add(struct MVMThreadContext *tc, MVMSpeshPlanned *p);
+void MVM_spesh_candidate_discard_existing(struct MVMThreadContext *tc, MVMStaticFrame *sf);

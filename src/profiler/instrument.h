@@ -1,8 +1,8 @@
-void MVM_profile_dump_instrumented_data(MVMThreadContext *tc);
-void MVM_profile_instrument(MVMThreadContext *tc, MVMStaticFrame *sf);
-void MVM_profile_ensure_uninstrumented(MVMThreadContext *tc, MVMStaticFrame *sf);
-void MVM_profile_instrumented_start(MVMThreadContext *tc, MVMObject *config);
-MVMObject * MVM_profile_instrumented_end(MVMThreadContext *tc);
-void MVM_profile_free_node(MVMThreadContext *tc, MVMProfileCallNode *node);
-void MVM_profile_instrumented_free_data(MVMThreadContext *tc);
-void MVM_profile_instrumented_mark_data(MVMThreadContext *tc, MVMGCWorklist *worklist);
+void MVM_profile_dump_instrumented_data(struct MVMThreadContext *tc);
+void MVM_profile_instrument(struct MVMThreadContext *tc, MVMStaticFrame *sf);
+void MVM_profile_ensure_uninstrumented(struct MVMThreadContext *tc, MVMStaticFrame *sf);
+void MVM_profile_instrumented_start(struct MVMThreadContext *tc, MVMObject *config);
+MVMObject * MVM_profile_instrumented_end(struct MVMThreadContext *tc);
+void MVM_profile_free_node(struct MVMThreadContext *tc, MVMProfileCallNode *node);
+void MVM_profile_instrumented_free_data(struct MVMThreadContext *tc);
+void MVM_profile_instrumented_mark_data(struct MVMThreadContext *tc, MVMGCWorklist *worklist);

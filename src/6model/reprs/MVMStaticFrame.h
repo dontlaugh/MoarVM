@@ -155,9 +155,9 @@ struct MVMStaticFrameDebugLocal {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMStaticFrame_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMStaticFrame_initialize(struct MVMThreadContext *tc);
 
 /* Debugging help. */
-char * MVM_staticframe_file_location(MVMThreadContext *tc, MVMStaticFrame *sf);
+char * MVM_staticframe_file_location(struct MVMThreadContext *tc, MVMStaticFrame *sf);
 
-uint32_t MVM_get_lexical_by_name(MVMThreadContext *tc, MVMStaticFrame *sf, MVMString *name);
+uint32_t MVM_get_lexical_by_name(struct MVMThreadContext *tc, MVMStaticFrame *sf, MVMString *name);

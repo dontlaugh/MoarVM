@@ -11,7 +11,7 @@ typedef struct {
     MVMOSHandle      *handle;
     MVMObject        *buf_type;
     int               seq_number;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int               work_idx;
 } ReadInfo;
 
@@ -30,7 +30,7 @@ static void free_on_close_cb(uv_handle_t *handle) {
 /* Read handler. */
 static void on_read(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf) {
     ReadInfo         *ri  = (ReadInfo *)handle->data;
-    MVMThreadContext *tc  = ri->tc;
+    struct MVMThreadContext *tc  = ri->tc;
     MVMObject        *arr = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
     MVMAsyncTask     *t   = MVM_io_eventloop_get_active_work(tc, ri->work_idx);
     MVM_repr_push_o(tc, arr, t->body.schedulee);
@@ -90,7 +90,7 @@ static void on_read(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf) {
 }
 
 /* Does setup work for setting up asynchronous reads. */
-static void read_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void read_setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     MVMIOAsyncSocketData *handle_data;
     ReadInfo             *ri;
     int                   r;
@@ -144,7 +144,7 @@ static void read_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_t
 }
 
 /* Stops reading. */
-static void read_cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void read_cancel(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     ReadInfo *ri = (ReadInfo *)data;
     if (ri->work_idx >= 0) {
         MVMIOAsyncSocketData *handle_data = (MVMIOAsyncSocketData *)ri->handle->body.data;
@@ -155,14 +155,14 @@ static void read_cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_
 }
 
 /* Marks objects for a read task. */
-static void read_gc_mark(MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
+static void read_gc_mark(struct MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
     ReadInfo *ri = (ReadInfo *)data;
     MVM_gc_worklist_add(tc, worklist, &ri->buf_type);
     MVM_gc_worklist_add(tc, worklist, &ri->handle);
 }
 
 /* Frees info for a read task. */
-static void read_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void read_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data)
         MVM_free(data);
 }
@@ -176,7 +176,7 @@ static const MVMAsyncTaskOps read_op_table = {
     read_gc_free
 };
 
-static MVMAsyncTask * read_bytes(MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
+static MVMAsyncTask * read_bytes(struct MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
                                  MVMObject *schedulee, MVMObject *buf_type, MVMObject *async_type) {
     MVMAsyncTask *task;
     ReadInfo    *ri;
@@ -224,14 +224,14 @@ typedef struct {
     MVMObject        *buf_data;
     uv_write_t       *req;
     uv_buf_t          buf;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int               work_idx;
 } WriteInfo;
 
 /* Completion handler for an asynchronous write. */
 static void on_write(uv_write_t *req, int status) {
     WriteInfo        *wi  = (WriteInfo *)req->data;
-    MVMThreadContext *tc  = wi->tc;
+    struct MVMThreadContext *tc  = wi->tc;
     MVMObject        *arr = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
     MVMAsyncTask     *t   = MVM_io_eventloop_get_active_work(tc, wi->work_idx);
     MVM_repr_push_o(tc, arr, t->body.schedulee);
@@ -260,7 +260,7 @@ static void on_write(uv_write_t *req, int status) {
 }
 
 /* Does setup work for an asynchronous write. */
-static void write_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void write_setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     MVMIOAsyncSocketData *handle_data;
     MVMArray             *buffer;
     WriteInfo            *wi;
@@ -324,14 +324,14 @@ static void write_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_
 }
 
 /* Marks objects for a write task. */
-static void write_gc_mark(MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
+static void write_gc_mark(struct MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
     WriteInfo *wi = (WriteInfo *)data;
     MVM_gc_worklist_add(tc, worklist, &wi->handle);
     MVM_gc_worklist_add(tc, worklist, &wi->buf_data);
 }
 
 /* Frees info for a write task. */
-static void write_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void write_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data)
         MVM_free(data);
 }
@@ -345,7 +345,7 @@ static const MVMAsyncTaskOps write_op_table = {
     write_gc_free
 };
 
-static MVMAsyncTask * write_bytes(MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
+static MVMAsyncTask * write_bytes(struct MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
                                   MVMObject *schedulee, MVMObject *buffer, MVMObject *async_type) {
     MVMAsyncTask *task;
     WriteInfo    *wi;
@@ -389,7 +389,7 @@ typedef struct {
 } CloseInfo;
 
 /* Does an asynchronous close (since it must run on the event loop). */
-static void close_perform(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void close_perform(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     CloseInfo *ci = (CloseInfo *)data;
     MVMIOAsyncSocketData *handle_data = (MVMIOAsyncSocketData *)ci->handle->body.data;
     uv_handle_t *handle = (uv_handle_t *)handle_data->handle;
@@ -400,13 +400,13 @@ static void close_perform(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *asyn
 }
 
 /* Marks objects for a close task. */
-static void close_gc_mark(MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
+static void close_gc_mark(struct MVMThreadContext *tc, void *data, MVMGCWorklist *worklist) {
     CloseInfo *ci = (CloseInfo *)data;
     MVM_gc_worklist_add(tc, worklist, &ci->handle);
 }
 
 /* Frees info for a close task. */
-static void close_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void close_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data)
         MVM_free(data);
 }
@@ -420,7 +420,7 @@ static const MVMAsyncTaskOps close_op_table = {
     close_gc_free
 };
 
-static int64_t close_socket(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t close_socket(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMAsyncTask *task;
     CloseInfo *ci;
 
@@ -437,13 +437,13 @@ static int64_t close_socket(MVMThreadContext *tc, MVMOSHandle *h) {
     return 0;
 }
 
-static int64_t socket_is_tty(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_is_tty(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncSocketData *data   = (MVMIOAsyncSocketData *)h->body.data;
     uv_handle_t          *handle = (uv_handle_t *)data->handle;
     return (int64_t)(handle->type == UV_TTY);
 }
 
-static int64_t socket_handle(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_handle(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncSocketData *data   = (MVMIOAsyncSocketData *)h->body.data;
     uv_handle_t          *handle = (uv_handle_t *)data->handle;
     int        fd;
@@ -477,7 +477,7 @@ static const MVMIOOps op_table = {
     NULL
 };
 
-static void push_name_and_port(MVMThreadContext *tc, struct sockaddr_storage *name, MVMObject *arr) {
+static void push_name_and_port(struct MVMThreadContext *tc, struct sockaddr_storage *name, MVMObject *arr) {
     char addrstr[INET6_ADDRSTRLEN + 1];
     /* XXX windows support kludge. 64 bit is much too big, but we'll
      * get the proper data from the struct anyway, however windows
@@ -518,14 +518,14 @@ typedef struct {
     struct sockaddr  *dest;
     uv_tcp_t         *socket;
     uv_connect_t     *connect;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int               work_idx;
 } ConnectInfo;
 
 /* When a connection takes place, need to send result. */
 static void on_connect(uv_connect_t* req, int status) {
     ConnectInfo      *ci  = (ConnectInfo *)req->data;
-    MVMThreadContext *tc  = ci->tc;
+    struct MVMThreadContext *tc  = ci->tc;
     MVMObject        *arr = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
     MVMAsyncTask     *t   = MVM_io_eventloop_get_active_work(tc, ci->work_idx);
     MVM_repr_push_o(tc, arr, t->body.schedulee);
@@ -573,7 +573,7 @@ static void on_connect(uv_connect_t* req, int status) {
 }
 
 /* Initilalize the connection on the event loop. */
-static void connect_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void connect_setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     int r;
 
     /* Add to work in progress. */
@@ -615,7 +615,7 @@ static void connect_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *asyn
 }
 
 /* Frees info for a connection task. */
-static void connect_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void connect_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data) {
         ConnectInfo *ci = (ConnectInfo *)data;
         if (ci->dest)
@@ -634,7 +634,7 @@ static const MVMAsyncTaskOps connect_op_table = {
 };
 
 /* Sets off an asynchronous socket connection. */
-MVMObject * MVM_io_socket_connect_async(MVMThreadContext *tc, MVMObject *queue,
+MVMObject * MVM_io_socket_connect_async(struct MVMThreadContext *tc, MVMObject *queue,
                                         MVMObject *schedulee, MVMString *host,
                                         int64_t port, MVMObject *async_type) {
     MVMAsyncTask *task;
@@ -673,7 +673,7 @@ MVMObject * MVM_io_socket_connect_async(MVMThreadContext *tc, MVMObject *queue,
     return (MVMObject *)task;
 }
 
-static void push_path(MVMThreadContext *tc, const char* name, MVMObject *arr) {
+static void push_path(struct MVMThreadContext *tc, const char* name, MVMObject *arr) {
     /* XXX windows support kludge. 64 bit is much too big, but we'll
      * get the proper data from the struct anyway, however windows
      * decides to declare it. */
@@ -695,14 +695,14 @@ typedef struct {
     char              *dest;
     uv_pipe_t         *socket;
     uv_connect_t     *connect;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int               work_idx;
 } UnixConnectInfo;
 
 /* When a connection takes place, need to send result. */
 static void on_unix_connect(uv_connect_t* req, int status) {
     UnixConnectInfo      *ci  = (UnixConnectInfo *)req->data;
-    MVMThreadContext *tc  = ci->tc;
+    struct MVMThreadContext *tc  = ci->tc;
     MVMObject        *arr = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
     MVMAsyncTask     *t   = MVM_io_eventloop_get_active_work(tc, ci->work_idx);
     MVM_repr_push_o(tc, arr, t->body.schedulee);
@@ -750,7 +750,7 @@ static void on_unix_connect(uv_connect_t* req, int status) {
 }
 
 /* Initilalize the connection on the event loop. */
-static void unix_connect_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void unix_connect_setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     int r;
 
     /* Add to work in progress. */
@@ -792,7 +792,7 @@ static void unix_connect_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject 
 }
 
 /* Frees info for a connection task. */
-static void unix_connect_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void unix_connect_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data) {
         UnixConnectInfo *ci = (UnixConnectInfo *)data;
         if (ci->dest)
@@ -810,7 +810,7 @@ static const MVMAsyncTaskOps unix_connect_op_table = {
     unix_connect_gc_free
 };
 /* Sets off an asynchronous socket connection. */
-MVMObject * MVM_io_socket_connect_unix_async(MVMThreadContext *tc, MVMObject *queue,
+MVMObject * MVM_io_socket_connect_unix_async(struct MVMThreadContext *tc, MVMObject *queue,
                                         MVMObject *schedulee, MVMString *path,
                                         MVMObject *async_type) {
     MVMAsyncTask *task;
@@ -840,7 +840,7 @@ MVMObject * MVM_io_socket_connect_unix_async(MVMThreadContext *tc, MVMObject *qu
 typedef struct {
     struct sockaddr  *dest;
     uv_tcp_t         *socket;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int               work_idx;
     int               backlog;
 } ListenInfo;
@@ -849,7 +849,7 @@ typedef struct {
 /* Handles an incoming connection. */
 static void on_connection(uv_stream_t *server, int status) {
     ListenInfo       *li     = (ListenInfo *)server->data;
-    MVMThreadContext *tc     = li->tc;
+    struct MVMThreadContext *tc     = li->tc;
     MVMObject        *arr    = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
     MVMAsyncTask     *t      = MVM_io_eventloop_get_active_work(tc, li->work_idx);
 
@@ -913,7 +913,7 @@ static void on_connection(uv_stream_t *server, int status) {
 }
 
 /* Sets up a socket listener. */
-static void listen_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void listen_setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     int r;
 
     /* Add to work in progress. */
@@ -987,12 +987,12 @@ static void listen_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async
 /* Stops listening. */
 static void on_listen_cancelled(uv_handle_t *handle) {
     ListenInfo       *li = (ListenInfo *)handle->data;
-    MVMThreadContext *tc = li->tc;
+    struct MVMThreadContext *tc = li->tc;
     MVM_io_eventloop_send_cancellation_notification(tc,
         MVM_io_eventloop_get_active_work(tc, li->work_idx));
     MVM_io_eventloop_remove_active_work(tc, &(li->work_idx));
 }
-static void listen_cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void listen_cancel(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     ListenInfo *li = (ListenInfo *)data;
     if (li->socket) {
         uv_close((uv_handle_t *)li->socket, on_listen_cancelled);
@@ -1001,7 +1001,7 @@ static void listen_cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *asyn
 }
 
 /* Frees info for a listen task. */
-static void listen_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void listen_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data) {
         ListenInfo *li = (ListenInfo *)data;
         if (li->dest)
@@ -1020,7 +1020,7 @@ static const MVMAsyncTaskOps listen_op_table = {
 };
 
 /* Initiates an async socket listener. */
-MVMObject * MVM_io_socket_listen_async(MVMThreadContext *tc, MVMObject *queue,
+MVMObject * MVM_io_socket_listen_async(struct MVMThreadContext *tc, MVMObject *queue,
                                        MVMObject *schedulee, MVMString *host,
                                        int64_t port, int32_t backlog, MVMObject *async_type) {
     MVMAsyncTask *task;
@@ -1065,7 +1065,7 @@ MVMObject * MVM_io_socket_listen_async(MVMThreadContext *tc, MVMObject *queue,
 typedef struct {
     char             *dest;
     uv_pipe_t        *socket;
-    MVMThreadContext *tc;
+    struct MVMThreadContext *tc;
     int               work_idx;
     int               backlog;
 } UnixListenInfo;
@@ -1073,7 +1073,7 @@ typedef struct {
 /* Handles an incoming connection. */
 static void on_unix_connection(uv_stream_t *server, int status) {
     UnixListenInfo   *li     = (UnixListenInfo *)server->data;
-    MVMThreadContext *tc     = li->tc;
+    struct MVMThreadContext *tc     = li->tc;
     MVMObject        *arr    = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
     MVMAsyncTask     *t      = MVM_io_eventloop_get_active_work(tc, li->work_idx);
 
@@ -1136,7 +1136,7 @@ static void on_unix_connection(uv_stream_t *server, int status) {
 }
 
 /* Sets up a socket listener. */
-static void unix_listen_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void unix_listen_setup(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     int r;
 
     /* Add to work in progress. */
@@ -1207,7 +1207,7 @@ static void unix_listen_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *
     }
 }
 
-static void unix_listen_cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
+static void unix_listen_cancel(struct MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
     UnixListenInfo *li = (UnixListenInfo *)data;
     if (li->socket) {
         uv_close((uv_handle_t *)li->socket, on_listen_cancelled);
@@ -1216,7 +1216,7 @@ static void unix_listen_cancel(MVMThreadContext *tc, uv_loop_t *loop, MVMObject 
 }
 
 /* Frees info for a listen task. */
-static void unix_listen_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
+static void unix_listen_gc_free(struct MVMThreadContext *tc, MVMObject *t, void *data) {
     if (data) {
         UnixListenInfo *li = (UnixListenInfo *)data;
         if (li->dest)
@@ -1235,7 +1235,7 @@ static const MVMAsyncTaskOps unix_listen_op_table = {
 };
 
 /* Initiates an async socket listener. */
-MVMObject * MVM_io_socket_listen_unix_async(MVMThreadContext *tc, MVMObject *queue,
+MVMObject * MVM_io_socket_listen_unix_async(struct MVMThreadContext *tc, MVMObject *queue,
                                        MVMObject *schedulee, MVMString *path,
                                        int32_t backlog, MVMObject *async_type) {
     MVMAsyncTask *task;

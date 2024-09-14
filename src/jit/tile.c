@@ -35,7 +35,7 @@ struct TreeTiler {
 /* Make complete tiles. Note that any argument passed is interpreted as an
  * int32. Used primarily for making 'synthetic' tiles introduced by the
  * compiler */
-MVMJitTile* MVM_jit_tile_make(MVMThreadContext *tc, MVMJitCompiler *compiler,
+MVMJitTile* MVM_jit_tile_make(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                               void *emit, int32_t num_args, int32_t num_values, ...) {
     MVMJitTile *tile;
     int32_t i;
@@ -55,7 +55,7 @@ MVMJitTile* MVM_jit_tile_make(MVMThreadContext *tc, MVMJitCompiler *compiler,
 }
 
 /* Postorder collection of tile states (rulesets) */
-static void tile_node(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
+static void tile_node(struct MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
                       MVMJitExprTree *tree, int32_t node) {
     struct TreeTiler *tiler      = traverser->data;
     int32_t op            = tree->nodes[node];
@@ -138,7 +138,7 @@ static void tile_node(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
  * implemented by realloc. As a result, it is unsafe to take references to tree
  * elements while it is being modified. */
 
-static int32_t assign_tile(MVMThreadContext *tc, MVMJitExprTree *tree,
+static int32_t assign_tile(struct MVMThreadContext *tc, MVMJitExprTree *tree,
                             MVMJitTreeTraverser *traverser,
                             int32_t node, int32_t rule_nr) {
     const MVMJitTileTemplate *template = &MVM_jit_tile_templates[rule_nr];
@@ -180,7 +180,7 @@ static int32_t assign_tile(MVMThreadContext *tc, MVMJitExprTree *tree,
 
 
 
-static void assign_labels(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
+static void assign_labels(struct MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
                           MVMJitExprTree *tree, int32_t node) {
     /* IF has two blocks, the first I call left, the second I call right.
        Regular IF is implemented by the following sequence:
@@ -315,7 +315,7 @@ static void assign_labels(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
 
 
 /* Preorder propagation of rules downward */
-static void select_tiles(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
+static void select_tiles(struct MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
                          MVMJitExprTree *tree, int32_t node) {
     int32_t first_child = MVM_JIT_EXPR_FIRST_CHILD(tree, node);
     int32_t nchild      = MVM_JIT_EXPR_NCHILD(tree, node);
@@ -392,7 +392,7 @@ static void select_tiles(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
 }
 
 
-static void start_basic_block(MVMThreadContext *tc, struct TreeTiler *tiler, int32_t node) {
+static void start_basic_block(struct MVMThreadContext *tc, struct TreeTiler *tiler, int32_t node) {
     /* After the last tile of a basic block (e.g. after a branch) or before the
      * first tile of a new basic block (before a label), 'split' off a new basic
      * block from the old one; tag the node with this basic block, so the
@@ -408,7 +408,7 @@ static void start_basic_block(MVMThreadContext *tc, struct TreeTiler *tiler, int
     tiler->states[node].block = block_idx;
 }
 
-static void extend_last_block(MVMThreadContext *tc, struct TreeTiler *tiler, int32_t node) {
+static void extend_last_block(struct MVMThreadContext *tc, struct TreeTiler *tiler, int32_t node) {
     /* In some cases (ANY in WHEN, ALL in ANY, ANY in ALL) the last basic block
      * of the inner block has functionally the same successors as the outer node
      * block; in this case we can 'extend' this block to include the
@@ -422,7 +422,7 @@ static void extend_last_block(MVMThreadContext *tc, struct TreeTiler *tiler, int
     tiler->states[node].block = block_idx - 1;
 }
 
-static void patch_shortcircuit_blocks(MVMThreadContext *tc, struct TreeTiler *tiler, MVMJitExprTree *tree, int32_t node, int32_t alt) {
+static void patch_shortcircuit_blocks(struct MVMThreadContext *tc, struct TreeTiler *tiler, MVMJitExprTree *tree, int32_t node, int32_t alt) {
     /* Shortcircuit operators (ALL/ANY), are series of tests and conditional
      * jumps to a common label (i.e. basic block). Hence every block associated
      * with a child has two successors, namely the following block (block + 1)
@@ -454,7 +454,7 @@ static void patch_shortcircuit_blocks(MVMThreadContext *tc, struct TreeTiler *ti
     }
 }
 
-static void patch_basic_blocks(MVMThreadContext *tc, struct TreeTiler *tiler, MVMJitExprTree *tree, int32_t node) {
+static void patch_basic_blocks(struct MVMThreadContext *tc, struct TreeTiler *tiler, MVMJitExprTree *tree, int32_t node) {
     /* Postorder assign the successors to blocks associated with nodes */
     MVMJitTileList *list = tiler->list;
     int32_t first_child = MVM_JIT_EXPR_FIRST_CHILD(tree, node);
@@ -494,7 +494,7 @@ static void patch_basic_blocks(MVMThreadContext *tc, struct TreeTiler *tiler, MV
 }
 
 /* Insert labels, compute basic block extents (eventually) */
-static void build_blocks(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
+static void build_blocks(struct MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
                          MVMJitExprTree *tree, int32_t node, int32_t i) {
     struct TreeTiler *tiler = traverser->data;
     MVMJitTileList *list    = tiler->list;
@@ -679,7 +679,7 @@ static void build_blocks(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
 }
 
 
-static void build_tilelist(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
+static void build_tilelist(struct MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
                            MVMJitExprTree *tree, int32_t node) {
     struct TreeTiler *tiler = traverser->data;
     const MVMJitTileTemplate *template = tiler->states[node].template;
@@ -709,7 +709,7 @@ static void build_tilelist(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
 }
 
 /* Create a tile from a template */
-MVMJitTile * MVM_jit_tile_make_from_template(MVMThreadContext *tc, MVMJitCompiler *compiler,
+MVMJitTile * MVM_jit_tile_make_from_template(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                                              const MVMJitTileTemplate *template,
                                              MVMJitExprTree *tree, int32_t node) {
     MVMJitTile *tile;
@@ -769,7 +769,7 @@ MVMJitTile * MVM_jit_tile_make_from_template(MVMThreadContext *tc, MVMJitCompile
     return tile;
 }
 
-MVMJitTileList * MVM_jit_tile_expr_tree(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitExprTree *tree) {
+MVMJitTileList * MVM_jit_tile_expr_tree(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitExprTree *tree) {
     MVMJitTreeTraverser traverser;
     uint32_t i;
     struct TreeTiler tiler;
@@ -845,12 +845,12 @@ static int cmp_tile_insert(const void *p1, const void *p2) {
  * - relative to other inserts at the same position, indicated by the order
  */
 
-void MVM_jit_tile_list_insert(MVMThreadContext *tc, MVMJitTileList *list, MVMJitTile *tile, uint32_t position, int32_t order) {
+void MVM_jit_tile_list_insert(struct MVMThreadContext *tc, MVMJitTileList *list, MVMJitTile *tile, uint32_t position, int32_t order) {
     struct MVMJitTileInsert i = { position, order, tile };
     MVM_VECTOR_PUSH(list->inserts, i);
 }
 
-void MVM_jit_tile_list_edit(MVMThreadContext *tc, MVMJitTileList *list) {
+void MVM_jit_tile_list_edit(struct MVMThreadContext *tc, MVMJitTileList *list) {
     MVMJitTile **worklist;
     uint32_t i, j, k, n;
     if (list->inserts_num == 0)
@@ -896,7 +896,7 @@ void MVM_jit_tile_list_edit(MVMThreadContext *tc, MVMJitTileList *list) {
     MVM_VECTOR_INIT(list->inserts, 0);
 }
 
-void MVM_jit_tile_list_destroy(MVMThreadContext *tc, MVMJitTileList *list) {
+void MVM_jit_tile_list_destroy(struct MVMThreadContext *tc, MVMJitTileList *list) {
     MVM_free(list->items);
     MVM_free(list->inserts);
     MVM_free(list->blocks);

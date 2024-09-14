@@ -9,4 +9,4 @@ struct MVMCPointer {
 };
 
 /* Initializes the CPointer REPR. */
-const MVMREPROps * MVMCPointer_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMCPointer_initialize(struct MVMThreadContext *tc);

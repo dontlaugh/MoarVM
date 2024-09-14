@@ -1,5 +1,5 @@
 struct MVMJitTileTemplate {
-    void (*emit)(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTile *tile, MVMJitExprTree *tree);
+    void (*emit)(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTile *tile, MVMJitExprTree *tree);
     const char    *path;
     const char    *expr;
     int32_t  left_sym;
@@ -11,7 +11,7 @@ struct MVMJitTileTemplate {
 };
 
 struct MVMJitTile {
-    void (*emit)(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTile *tile, MVMJitExprTree *tree);
+    void (*emit)(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTile *tile, MVMJitExprTree *tree);
     int32_t node;
     enum MVMJitExprOperator op;
 
@@ -54,20 +54,20 @@ struct MVMJitTileList {
 
 
 
-MVMJitTile     * MVM_jit_tile_make(MVMThreadContext *tc, MVMJitCompiler *compiler, void *emit,
+MVMJitTile     * MVM_jit_tile_make(struct MVMThreadContext *tc, MVMJitCompiler *compiler, void *emit,
                                    int32_t num_args, int32_t num_values, ...);
-MVMJitTile     * MVM_jit_tile_make_from_template(MVMThreadContext *tc, MVMJitCompiler *compiler,
+MVMJitTile     * MVM_jit_tile_make_from_template(struct MVMThreadContext *tc, MVMJitCompiler *compiler,
                                                  const MVMJitTileTemplate *template,
                                                  MVMJitExprTree *tree, int32_t node);
-MVMJitTileList * MVM_jit_tile_expr_tree(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitExprTree *tree);
+MVMJitTileList * MVM_jit_tile_expr_tree(struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitExprTree *tree);
 
 
-void MVM_jit_tile_list_insert(MVMThreadContext *tc, MVMJitTileList *list, MVMJitTile *tile, uint32_t position, int32_t order);
-void MVM_jit_tile_list_edit(MVMThreadContext *tc, MVMJitTileList *list);
-void MVM_jit_tile_list_destroy(MVMThreadContext *tc, MVMJitTileList *list);
+void MVM_jit_tile_list_insert(struct MVMThreadContext *tc, MVMJitTileList *list, MVMJitTile *tile, uint32_t position, int32_t order);
+void MVM_jit_tile_list_edit(struct MVMThreadContext *tc, MVMJitTileList *list);
+void MVM_jit_tile_list_destroy(struct MVMThreadContext *tc, MVMJitTileList *list);
 
 #define MVM_JIT_TILE_YIELDS_VALUE(t) (MVM_JIT_REGISTER_IS_USED(t->register_spec[0]))
 
 #define MVM_JIT_TILE_NAME(name) MVM_jit_tile_ ## name
 #define MVM_JIT_TILE_DECL(name) \
-    void MVM_JIT_TILE_NAME(name) (MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTile *tile, MVMJitExprTree *tree)
+    void MVM_JIT_TILE_NAME(name) (struct MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTile *tile, MVMJitExprTree *tree)

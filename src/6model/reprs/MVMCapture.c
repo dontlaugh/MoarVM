@@ -5,7 +5,7 @@ static const MVMREPROps MVMCapture_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. Also sets the invocation protocol handler in the STable. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &MVMCapture_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,7 +18,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMCaptureBody *src_body  = (MVMCaptureBody *)src;
     MVMCaptureBody *dest_body = (MVMCaptureBody *)dest;
     dest_body->callsite = src_body->callsite->is_interned
@@ -35,7 +35,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 }
 
 /* Adds held objects to the GC worklist. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMCaptureBody *body = (MVMCaptureBody *)data;
     uint8_t *flags = body->callsite->arg_flags;
     uint16_t count = body->callsite->flag_count;
@@ -48,7 +48,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMCapture *capture = (MVMCapture *)obj;
     if (capture->body.args)
         MVM_free(capture->body.args);
@@ -66,17 +66,17 @@ static const MVMStorageSpec storage_spec = {
 };
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMCapture_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMCapture_initialize(struct MVMThreadContext *tc) {
     return &MVMCapture_this_repr;
 }
 
@@ -113,7 +113,7 @@ static const MVMREPROps MVMCapture_this_repr = {
 /* Form a capture object from an argument description. If the callsite is not an
  * interned one, then it will be copied, since an MVMCapture assumes that it
  * owns a non-interned callsite. */
-MVMObject * MVM_capture_from_args(MVMThreadContext *tc, MVMArgs arg_info) {
+MVMObject * MVM_capture_from_args(struct MVMThreadContext *tc, MVMArgs arg_info) {
     /* Allocate capture before we begin, otherwise we might end up with outdated
      * pointeres in args. */
     MVMObject *capture = MVM_repr_alloc(tc, tc->instance->boot_types.BOOTCapture);
@@ -139,7 +139,7 @@ MVMObject * MVM_capture_from_args(MVMThreadContext *tc, MVMArgs arg_info) {
     return capture;
 }
 
-static MVMCapture * validate_capture(MVMThreadContext *tc, MVMObject *capture) {
+static MVMCapture * validate_capture(struct MVMThreadContext *tc, MVMObject *capture) {
     if (REPR(capture)->ID != MVM_REPR_ID_MVMCapture)
         MVM_exception_throw_adhoc(tc, "Capture operation requires an MVMCapture");
     if (!IS_CONCRETE(capture))
@@ -149,7 +149,7 @@ static MVMCapture * validate_capture(MVMThreadContext *tc, MVMObject *capture) {
 
 /* Extract an MVMArgs structure from the capture. One must ensure the capture
  * lives for the entire lifetime of the MVMArgs that are populated. */
-MVMArgs MVM_capture_to_args(MVMThreadContext *tc, MVMObject *capture_obj) {
+MVMArgs MVM_capture_to_args(struct MVMThreadContext *tc, MVMObject *capture_obj) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     MVMArgs args;
     args.callsite = capture->body.callsite;
@@ -159,13 +159,13 @@ MVMArgs MVM_capture_to_args(MVMThreadContext *tc, MVMObject *capture_obj) {
 }
 
 /* Get the number of positional arguments that the capture has. */
-int64_t MVM_capture_num_pos_args(MVMThreadContext *tc, MVMObject *capture_obj) {
+int64_t MVM_capture_num_pos_args(struct MVMThreadContext *tc, MVMObject *capture_obj) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     return capture->body.callsite->num_pos;
 }
 
 /* Get the number of arguments (positional and named) that the capture has. */
-int64_t MVM_capture_num_args(MVMThreadContext *tc, MVMObject *capture_obj) {
+int64_t MVM_capture_num_args(struct MVMThreadContext *tc, MVMObject *capture_obj) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     return capture->body.callsite->flag_count;
 }
@@ -185,7 +185,7 @@ static int64_t flag_to_spec(int64_t flag) {
             return MVM_STORAGE_SPEC_BP_NONE;
     }
 }
-int64_t MVM_capture_arg_pos_primspec(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
+int64_t MVM_capture_arg_pos_primspec(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx >= capture->body.callsite->num_pos)
         MVM_exception_throw_adhoc(tc, "Capture argument index (%u) out of range (0..^%u) for captureposprimspec", idx, capture->body.callsite->num_pos);
@@ -193,7 +193,7 @@ int64_t MVM_capture_arg_pos_primspec(MVMThreadContext *tc, MVMObject *capture_ob
 }
 
 /* Get the primitive value kind for an argument. */
-int64_t MVM_capture_arg_primspec(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
+int64_t MVM_capture_arg_primspec(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx >= capture->body.callsite->flag_count)
         MVM_exception_throw_adhoc(tc, "Capture argument index (%u) out of range (0..^%u)", idx, capture->body.callsite->flag_count);
@@ -201,7 +201,7 @@ int64_t MVM_capture_arg_primspec(MVMThreadContext *tc, MVMObject *capture_obj, u
 }
 
 /* Access a positional object argument of an argument capture object. */
-MVMObject * MVM_capture_arg_pos_o(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
+MVMObject * MVM_capture_arg_pos_o(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx >= capture->body.callsite->num_pos)
         MVM_exception_throw_adhoc(tc, "Capture argument index (%u) out of range (0..^%u) for captureposarg", idx, capture->body.callsite->num_pos);
@@ -212,7 +212,7 @@ MVMObject * MVM_capture_arg_pos_o(MVMThreadContext *tc, MVMObject *capture_obj, 
 }
 
 /* Access an object argument of an argument capture object. */
-MVMObject * MVM_capture_arg_o(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
+MVMObject * MVM_capture_arg_o(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx >= capture->body.callsite->flag_count)
         MVM_exception_throw_adhoc(tc, "Capture argument index (%u) out of range (0..^%u)", idx, capture->body.callsite->flag_count);
@@ -222,7 +222,7 @@ MVMObject * MVM_capture_arg_o(MVMThreadContext *tc, MVMObject *capture_obj, uint
 }
 
 /* Access a positional string argument of an argument capture object. */
-MVMString * MVM_capture_arg_pos_s(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
+MVMString * MVM_capture_arg_pos_s(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx >= capture->body.callsite->num_pos)
         MVM_exception_throw_adhoc(tc, "Capture argument index (%u) out of range (0..^%u) for captureposarg_s", idx, capture->body.callsite->num_pos);
@@ -232,7 +232,7 @@ MVMString * MVM_capture_arg_pos_s(MVMThreadContext *tc, MVMObject *capture_obj, 
 }
 
 /* Access a positional integer argument of an argument capture object. */
-int64_t MVM_capture_arg_pos_i(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
+int64_t MVM_capture_arg_pos_i(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx >= capture->body.callsite->num_pos)
         MVM_exception_throw_adhoc(tc, "Capture argument index (%u) out of range (0..^%u) for captureposarg_i", idx, capture->body.callsite->num_pos);
@@ -242,7 +242,7 @@ int64_t MVM_capture_arg_pos_i(MVMThreadContext *tc, MVMObject *capture_obj, uint
 }
 
 /* Access a positional unsigned integer argument of an argument capture object. */
-uint64_t MVM_capture_arg_pos_u(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
+uint64_t MVM_capture_arg_pos_u(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx >= capture->body.callsite->num_pos)
         MVM_exception_throw_adhoc(tc, "Capture argument index (%u) out of range (0..^%u) for captureposarg_u", idx, capture->body.callsite->num_pos);
@@ -252,7 +252,7 @@ uint64_t MVM_capture_arg_pos_u(MVMThreadContext *tc, MVMObject *capture_obj, uin
 }
 
 /* Access a positional number argument of an argument capture object. */
-double MVM_capture_arg_pos_n(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
+double MVM_capture_arg_pos_n(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx >= capture->body.callsite->num_pos)
         MVM_exception_throw_adhoc(tc, "Capture argument index (%u) out of range (0..^%u) for captureposarg_n", idx, capture->body.callsite->num_pos);
@@ -262,7 +262,7 @@ double MVM_capture_arg_pos_n(MVMThreadContext *tc, MVMObject *capture_obj, uint3
 }
 
 /* Obtain a positional argument's value and type together. */
-void MVM_capture_arg_pos(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx,
+void MVM_capture_arg_pos(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx,
         MVMRegister *arg_out, MVMCallsiteFlags *arg_type_out) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx >= capture->body.callsite->num_pos)
@@ -272,7 +272,7 @@ void MVM_capture_arg_pos(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t 
 }
 
 /* Obtain an argument's value and type together. */
-void MVM_capture_arg(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx,
+void MVM_capture_arg(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx,
         MVMRegister *arg_out, MVMCallsiteFlags *arg_type_out) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx >= capture->body.callsite->flag_count)
@@ -282,7 +282,7 @@ void MVM_capture_arg(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx,
 }
 
 /* Checks if the capture has a named arg with the specified name. */
-int64_t MVM_capture_has_named_arg(MVMThreadContext *tc, MVMObject *capture_obj, MVMString *name) {
+int64_t MVM_capture_has_named_arg(struct MVMThreadContext *tc, MVMObject *capture_obj, MVMString *name) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     MVMCallsite *cs = capture->body.callsite;
     uint32_t num_nameds = cs->flag_count - cs->num_pos;
@@ -294,7 +294,7 @@ int64_t MVM_capture_has_named_arg(MVMThreadContext *tc, MVMObject *capture_obj, 
 }
 
 /* Checks if the capture has nameds at all. */
-int64_t MVM_capture_has_nameds(MVMThreadContext *tc, MVMObject *capture_obj) {
+int64_t MVM_capture_has_nameds(struct MVMThreadContext *tc, MVMObject *capture_obj) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     MVMCallsite *cs = capture->body.callsite;
     return cs->flag_count != cs->num_pos;
@@ -302,7 +302,7 @@ int64_t MVM_capture_has_nameds(MVMThreadContext *tc, MVMObject *capture_obj) {
 
 /* Gets a string array of the nameds that the capture has. Evaluates to a type
  * object if there are no nameds. */
-MVMObject * MVM_capture_get_names_list(MVMThreadContext *tc, MVMObject *capture_obj) {
+MVMObject * MVM_capture_get_names_list(struct MVMThreadContext *tc, MVMObject *capture_obj) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     MVMCallsite *cs = capture->body.callsite;
     uint16_t num_nameds = cs->flag_count - cs->num_pos;
@@ -315,7 +315,7 @@ MVMObject * MVM_capture_get_names_list(MVMThreadContext *tc, MVMObject *capture_
 }
 
 /* Get a hash of the named arguments. */
-MVMObject * MVM_capture_get_nameds(MVMThreadContext *tc, MVMObject *capture) {
+MVMObject * MVM_capture_get_nameds(struct MVMThreadContext *tc, MVMObject *capture) {
     /* Set up an args processing context and use the standard slurpy args
      * handler to extract all nameds */
     MVMObject *result;
@@ -332,7 +332,7 @@ MVMObject * MVM_capture_get_nameds(MVMThreadContext *tc, MVMObject *capture) {
 /* Obtain an argument by its flag index (that is, positional arguments have
  * their positions, and then names are according the order that the names
  * appear in in the callsite's argument name list). */
-void MVM_capture_arg_by_flag_index(MVMThreadContext *tc, MVMObject *capture_obj,
+void MVM_capture_arg_by_flag_index(struct MVMThreadContext *tc, MVMObject *capture_obj,
         uint32_t idx, MVMRegister *arg_out, MVMCallsiteFlags *arg_type_out) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx >= capture->body.callsite->flag_count)
@@ -342,14 +342,14 @@ void MVM_capture_arg_by_flag_index(MVMThreadContext *tc, MVMObject *capture_obj,
 }
 
 /* Check if the argument at the given position is marked as literal. */
-int64_t MVM_capture_is_literal_arg(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
+int64_t MVM_capture_is_literal_arg(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     return (capture->body.callsite->arg_flags[idx] & MVM_CALLSITE_ARG_LITERAL) ? 1 : 0;
 }
 
 /* Produce a new capture by taking the current one and dropping the specified
  * positional argument from it. */
-MVMObject * MVM_capture_drop_args(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx, uint32_t count) {
+MVMObject * MVM_capture_drop_args(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx, uint32_t count) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx + count > capture->body.callsite->num_pos)
         MVM_exception_throw_adhoc(tc, "Capture argument index (%u) out of range (0..%u)", idx + count, capture->body.callsite->num_pos);
@@ -388,7 +388,7 @@ MVMObject * MVM_capture_drop_args(MVMThreadContext *tc, MVMObject *capture_obj, 
 
 /* Produce a new capture by taking the current one and inserting the specified
  * arg into it. */
-MVMObject * MVM_capture_insert_arg(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx,
+MVMObject * MVM_capture_insert_arg(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx,
         MVMCallsiteFlags kind, MVMRegister value) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx > capture->body.callsite->num_pos)
@@ -436,7 +436,7 @@ MVMObject * MVM_capture_insert_arg(MVMThreadContext *tc, MVMObject *capture_obj,
  * argument with a new value.
  *
  * The callsite argument type is expected to be the same. */
-MVMObject * MVM_capture_replace_arg(MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx,
+MVMObject * MVM_capture_replace_arg(struct MVMThreadContext *tc, MVMObject *capture_obj, uint32_t idx,
         MVMCallsiteEntry kind, MVMRegister value) {
     MVMCapture *capture = validate_capture(tc, capture_obj);
     if (idx > capture->body.callsite->num_pos)

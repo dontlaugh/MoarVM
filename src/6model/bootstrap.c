@@ -10,7 +10,7 @@
 
 /* Creates a stub VMString. Note we didn't initialize the
  * representation yet, so have to do this somewhat pokily. */
-static void create_stub_VMString(MVMThreadContext *tc) {
+static void create_stub_VMString(struct MVMThreadContext *tc) {
     /* Need to create the REPR function table "in advance". */
     const MVMREPROps *repr = MVMString_initialize(tc);
 
@@ -20,7 +20,7 @@ static void create_stub_VMString(MVMThreadContext *tc) {
 }
 
 /* KnowHOW.new_type method. Creates a new type with this HOW as its meta-object. */
-static void new_type(MVMThreadContext *tc, MVMArgs arg_info) {
+static void new_type(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *self, *HOW, *type_object, *BOOTHash, *stash;
     MVMArgInfo repr_arg, name_arg;
     MVMString *repr_name, *name;
@@ -74,7 +74,7 @@ static void new_type(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Adds a method. */
-static void add_method(MVMThreadContext *tc, MVMArgs arg_info) {
+static void add_method(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *self, *method, *method_table;
     MVMString *name;
 
@@ -98,7 +98,7 @@ static void add_method(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Adds an method. */
-static void add_attribute(MVMThreadContext *tc, MVMArgs arg_info) {
+static void add_attribute(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *self, *attr, *attributes;
 
     /* Get arguments. */
@@ -124,7 +124,7 @@ static void add_attribute(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Finds a method. */
-static void find_method(MVMThreadContext *tc, MVMArgs arg_info) {
+static void find_method(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *self, *method, *method_table;
     MVMString *name;
 
@@ -147,7 +147,7 @@ static void find_method(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Composes the meta-object. */
-static void compose(MVMThreadContext *tc, MVMArgs arg_info) {
+static void compose(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *self, *type_obj, *attributes, *BOOTArray, *BOOTHash,
               *repr_info_hash, *repr_info, *type_info, *attr_info_list, *parent_info;
     uint64_t   num_attrs, i;
@@ -240,7 +240,7 @@ static void compose(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 #define introspect_member(member, set_result, result) \
-static void member(MVMThreadContext *tc, MVMArgs arg_info) { \
+static void member(struct MVMThreadContext *tc, MVMArgs arg_info) { \
     MVMObject *self, *member; \
     MVMArgProcContext arg_ctx; \
     MVM_args_proc_setup(tc, &arg_ctx, arg_info); \
@@ -263,8 +263,8 @@ introspect_member(methods, MVM_args_set_result_obj, methods)
 introspect_member(name, MVM_args_set_result_str, (MVMString *)name)
 
 /* Adds a method into the KnowHOW.HOW method table. */
-static void add_knowhow_how_method(MVMThreadContext *tc, MVMKnowHOWREPR *knowhow_how,
-        char *name, void (*func) (MVMThreadContext *, MVMArgs)) {
+static void add_knowhow_how_method(struct MVMThreadContext *tc, MVMKnowHOWREPR *knowhow_how,
+        char *name, void (*func) (struct MVMThreadContext *, MVMArgs)) {
     MVMObject *BOOTCCode, *code_obj, *method_table;
     MVMString *name_str;
 
@@ -282,7 +282,7 @@ static void add_knowhow_how_method(MVMThreadContext *tc, MVMKnowHOWREPR *knowhow
 }
 
 /* Bootstraps the KnowHOW type. */
-static void bootstrap_KnowHOW(MVMThreadContext *tc) {
+static void bootstrap_KnowHOW(struct MVMThreadContext *tc) {
     MVMObject *VMString  = tc->instance->VMString;
 
     /* Create our KnowHOW type object. Note we don't have a HOW just yet, so
@@ -326,7 +326,7 @@ static void bootstrap_KnowHOW(MVMThreadContext *tc) {
 
 /* Takes a stub object that existed before we had bootstrapped things and
  * gives it a meta-object. */
-static void add_meta_object(MVMThreadContext *tc, MVMObject *type_obj, char *name) {
+static void add_meta_object(struct MVMThreadContext *tc, MVMObject *type_obj, char *name) {
     MVMObject *meta_obj;
     MVMString *name_str;
 
@@ -344,7 +344,7 @@ static void add_meta_object(MVMThreadContext *tc, MVMObject *type_obj, char *nam
 }
 
 /* Creates a new attribute meta-object. */
-static void attr_new(MVMThreadContext *tc, MVMArgs arg_info) {
+static void attr_new(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject   *self, *obj;
     MVMArgInfo   type_arg, name_arg, bt_arg;
     const MVMREPROps  *repr;
@@ -379,7 +379,7 @@ static void attr_new(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Composes the attribute; actually, nothing to do really. */
-static void attr_compose(MVMThreadContext *tc, MVMArgs arg_info) {
+static void attr_compose(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *self;
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
@@ -390,7 +390,7 @@ static void attr_compose(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Introspects the attribute's name. */
-static void attr_name(MVMThreadContext *tc, MVMArgs arg_info) {
+static void attr_name(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *self;
     MVMString *name;
     MVMArgProcContext arg_ctx;
@@ -403,7 +403,7 @@ static void attr_name(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Introspects the attribute's type. */
-static void attr_type(MVMThreadContext *tc, MVMArgs arg_info) {
+static void attr_type(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *self, *type;
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
@@ -415,7 +415,7 @@ static void attr_type(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Introspects the attribute's box target flag. */
-static void attr_box_target(MVMThreadContext *tc, MVMArgs arg_info) {
+static void attr_box_target(struct MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *self;
     int64_t   box_target;
     MVMArgProcContext arg_ctx;
@@ -428,7 +428,7 @@ static void attr_box_target(MVMThreadContext *tc, MVMArgs arg_info) {
 }
 
 /* Creates and installs the KnowHOWAttribute type. */
-static void create_KnowHOWAttribute(MVMThreadContext *tc) {
+static void create_KnowHOWAttribute(struct MVMThreadContext *tc) {
     MVMObject      *meta_obj, *type_obj;
     MVMString      *name_str;
     const MVMREPROps     *repr;
@@ -460,7 +460,7 @@ static void create_KnowHOWAttribute(MVMThreadContext *tc) {
 }
 
 /* Bootstraps a typed array. */
-static MVMObject * boot_typed_array(MVMThreadContext *tc, char *name, MVMObject *type) {
+static MVMObject * boot_typed_array(struct MVMThreadContext *tc, char *name, MVMObject *type) {
     MVMBoolificationSpec *bs;
     MVMObject  *repr_info;
     MVMInstance  *instance  = tc->instance;
@@ -490,7 +490,7 @@ static MVMObject * boot_typed_array(MVMThreadContext *tc, char *name, MVMObject 
 
 /* Sets up the core serialization context. It is marked as the SC of various
  * rooted objects, which means in turn it will never be collected. */
-static void setup_core_sc(MVMThreadContext *tc) {
+static void setup_core_sc(struct MVMThreadContext *tc) {
     MVMString *handle = MVM_string_ascii_decode_nt(tc,
         tc->instance->VMString, "__6MODEL_CORE__");
     MVMSerializationContext * const sc = (MVMSerializationContext *)MVM_sc_create(tc, handle);
@@ -529,7 +529,7 @@ static void setup_core_sc(MVMThreadContext *tc) {
 }
 
 /* Sets up some string constants. */
-static void string_consts(MVMThreadContext *tc) {
+static void string_consts(struct MVMThreadContext *tc) {
     MVMInstance * const instance = tc->instance;
 
 /* Set up some strings. */
@@ -614,7 +614,7 @@ static void string_consts(MVMThreadContext *tc) {
 }
 
 /* Drives the overall bootstrap process. */
-void MVM_6model_bootstrap(MVMThreadContext *tc) {
+void MVM_6model_bootstrap(struct MVMThreadContext *tc) {
     /* First, we have to get the VMString type to exist; this has to
      * come even before REPR registry setup because it relies on
      * being able to create strings. */

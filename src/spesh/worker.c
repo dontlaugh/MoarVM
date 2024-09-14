@@ -5,7 +5,7 @@
  * specialized versions of code. */
 
 /* Enters the work loop. */
-static void worker(MVMThreadContext *tc, MVMArgs arg_info) {
+static void worker(struct MVMThreadContext *tc, MVMArgs arg_info) {
     uint64_t work_sequence_number = 0;
     MVMObject *updated_static_frames = MVM_repr_alloc_init(tc,
         tc->instance->boot_types.BOOTArray);
@@ -86,7 +86,7 @@ static void worker(MVMThreadContext *tc, MVMArgs arg_info) {
                     overview_data[4] = sl->body.thread->body.tc->thread_id;
                 }
                 MVMROOT(tc, sl) {
-                    MVMThreadContext *stc;
+                    struct MVMThreadContext *stc;
                     uint32_t i;
                     uint32_t n;
                     uint64_t newly_seen;
@@ -265,7 +265,7 @@ static void worker(MVMThreadContext *tc, MVMArgs arg_info) {
 
 /* Not thread safe per instance, but normally only used when instance is still
  * single-threaded */
-void MVM_spesh_worker_start(MVMThreadContext *tc) {
+void MVM_spesh_worker_start(struct MVMThreadContext *tc) {
     MVMObject *worker_entry_point;
     if (tc->instance->spesh_enabled) {
 
@@ -283,14 +283,14 @@ void MVM_spesh_worker_start(MVMThreadContext *tc) {
     }
 }
 
-void MVM_spesh_worker_stop(MVMThreadContext *tc) {
+void MVM_spesh_worker_stop(struct MVMThreadContext *tc) {
     /* Send stop sentinel */
     if (tc->instance->spesh_enabled) {
         MVM_repr_unshift_o(tc, tc->instance->spesh_queue, tc->instance->VMNull);
     }
 }
 
-void MVM_spesh_worker_join(MVMThreadContext *tc) {
+void MVM_spesh_worker_join(struct MVMThreadContext *tc) {
     /* Join thread */
     if (tc->instance->spesh_enabled) {
         assert(tc->instance->spesh_thread != NULL);

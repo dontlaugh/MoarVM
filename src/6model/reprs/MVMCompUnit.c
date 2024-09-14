@@ -6,7 +6,7 @@ static const MVMREPROps MVMCompUnit_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. Also sets the invocation protocol handler in the STable. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &MVMCompUnit_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -19,7 +19,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Initializes a new instance. */
-static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static void initialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     /* We're only ever called with tc->allocate_in_gen2 set, so no need to MVMROOT */
     MVMCompUnit *cu = (MVMCompUnit *)root;
     MVMObject *rm = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTReentrantMutex);
@@ -29,12 +29,12 @@ static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVM_exception_throw_adhoc(tc, "this representation (CompUnit) cannot be cloned");
 }
 
 /* Adds held objects to the GC worklist. */
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMCompUnitBody *body = (MVMCompUnitBody *)data;
     uint32_t i;
 
@@ -68,7 +68,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Called by the VM in order to free memory associated with this object. */
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMCompUnitBody *body = &((MVMCompUnit *)obj)->body;
 
     uint32_t i;
@@ -116,18 +116,18 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     /* XXX in the end we'll support inlining of this... */
     return &storage_spec;
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMCompUnitBody *body = (MVMCompUnitBody *)data;
     uint64_t size = 0;
     uint32_t index;
@@ -168,7 +168,7 @@ static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) 
     return size;
 }
 
-static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
+static void describe_refs(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
     MVMCompUnitBody     *body      = (MVMCompUnitBody *)data;
     uint32_t i;
 
@@ -208,7 +208,7 @@ static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTa
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMCompUnit_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMCompUnit_initialize(struct MVMThreadContext *tc) {
     return &MVMCompUnit_this_repr;
 }
 

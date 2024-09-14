@@ -593,7 +593,7 @@ static uint16_t shiftjis_index_to_cp_codepoints[7350] = {
 38737,38741,38999,39013,64042,64043,39207,64044,39326,39502,39641,39644,39797,
 39794,39823,39857,39867,39936,40304,40299,64045,40473,40657};
 
-static int16_t shift_jis_cp_to_index (MVMThreadContext *tc, MVMGrapheme32 codepoint) {
+static int16_t shift_jis_cp_to_index (struct MVMThreadContext *tc, MVMGrapheme32 codepoint) {
     switch (codepoint) {
         case 0xA7: return 87;
         case 0xA8: return 14;

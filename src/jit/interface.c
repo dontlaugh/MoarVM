@@ -4,7 +4,7 @@
 
 /* Enter the JIT code segment. The label is a continuation point where control
  * is resumed after the frame is properly setup. */
-void MVM_jit_code_enter(MVMThreadContext *tc, MVMJitCode *code, MVMCompUnit *cu) {
+void MVM_jit_code_enter(struct MVMThreadContext *tc, MVMJitCode *code, MVMCompUnit *cu) {
     void *label = tc->cur_frame->jit_entry_label;
 
     MVM_jit_code_assert_within_region(tc, code, label);
@@ -12,7 +12,7 @@ void MVM_jit_code_enter(MVMThreadContext *tc, MVMJitCode *code, MVMCompUnit *cu)
     code->func_ptr(tc, cu, label);
 }
 
-void * MVM_jit_code_get_current_position(MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame) {
+void * MVM_jit_code_get_current_position(struct MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame) {
     if (tc->cur_frame == frame && tc->jit_return_address != NULL) {
         /* currently on C stack */
         void *return_address = *tc->jit_return_address;
@@ -24,7 +24,7 @@ void * MVM_jit_code_get_current_position(MVMThreadContext *tc, MVMJitCode *code,
     }
 }
 
-void MVM_jit_code_set_current_position(MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame, void *position) {
+void MVM_jit_code_set_current_position(struct MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame, void *position) {
     MVM_jit_code_assert_within_region(tc, code, position);
     if (tc->cur_frame == frame && tc->jit_return_address != NULL) {
         /* this overwrites the address on the stack that MVM_frame_invoke_code will ret to! */
@@ -34,7 +34,7 @@ void MVM_jit_code_set_current_position(MVMThreadContext *tc, MVMJitCode *code, M
     }
 }
 
-void MVM_jit_code_trampoline(MVMThreadContext *tc) {
+void MVM_jit_code_trampoline(struct MVMThreadContext *tc) {
     if (tc->jit_return_address != NULL) {
         MVMJitCode *code  = tc->cur_frame->spesh_cand->body.jitcode;
         void *reentry_label = *tc->jit_return_address;
@@ -51,7 +51,7 @@ void MVM_jit_code_trampoline(MVMThreadContext *tc) {
 }
 
 
-uint32_t MVM_jit_code_get_active_deopt_idx(MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame) {
+uint32_t MVM_jit_code_get_active_deopt_idx(struct MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame) {
     uint32_t i;
     void *current_position = MVM_jit_code_get_current_position(tc, code, frame);
     for (i = 0; i < code->num_deopts; i++) {
@@ -62,7 +62,7 @@ uint32_t MVM_jit_code_get_active_deopt_idx(MVMThreadContext *tc, MVMJitCode *cod
     return i;
 }
 
-uint32_t MVM_jit_code_get_active_handlers(MVMThreadContext *tc, MVMJitCode *code, void *current_position, uint32_t i) {
+uint32_t MVM_jit_code_get_active_handlers(struct MVMThreadContext *tc, MVMJitCode *code, void *current_position, uint32_t i) {
     for (; i < code->num_handlers; i++) {
         void *start_label = code->labels[code->handlers[i].start_label];
         void *end_label   = code->labels[code->handlers[i].end_label];
@@ -73,7 +73,7 @@ uint32_t MVM_jit_code_get_active_handlers(MVMThreadContext *tc, MVMJitCode *code
     return i;
 }
 
-uint32_t MVM_jit_code_get_active_inlines(MVMThreadContext *tc, MVMJitCode *code, void *current_position, uint32_t i) {
+uint32_t MVM_jit_code_get_active_inlines(struct MVMThreadContext *tc, MVMJitCode *code, void *current_position, uint32_t i) {
     for (;i < code->num_inlines; i++) {
         void *inline_start = code->labels[code->inlines[i].start_label];
         void *inline_end   = code->labels[code->inlines[i].end_label];

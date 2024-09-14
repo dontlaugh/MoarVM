@@ -1,6 +1,6 @@
 #include "moar.h"
 
-void MVM_intcache_for(MVMThreadContext *tc, MVMObject *type) {
+void MVM_intcache_for(struct MVMThreadContext *tc, MVMObject *type) {
     int type_index;
     int right_slot = -1;
     uv_mutex_lock(&tc->instance->mutex_int_const_cache);
@@ -35,7 +35,7 @@ void MVM_intcache_for(MVMThreadContext *tc, MVMObject *type) {
     uv_mutex_unlock(&tc->instance->mutex_int_const_cache);
 }
 
-MVMObject *MVM_intcache_get(MVMThreadContext *tc, MVMObject *type, int64_t value) {
+MVMObject *MVM_intcache_get(struct MVMThreadContext *tc, MVMObject *type, int64_t value) {
     int type_index;
     int right_slot = -1;
 
@@ -54,7 +54,7 @@ MVMObject *MVM_intcache_get(MVMThreadContext *tc, MVMObject *type, int64_t value
     return NULL;
 }
 
-int32_t MVM_intcache_type_index(MVMThreadContext *tc, MVMObject *type) {
+int32_t MVM_intcache_type_index(struct MVMThreadContext *tc, MVMObject *type) {
     int type_index;
     int found = -1;
     uv_mutex_lock(&tc->instance->mutex_int_const_cache);

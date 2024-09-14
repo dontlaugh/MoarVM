@@ -54,7 +54,7 @@ void MVM_platform_nanosleep(uint64_t nanos)
     while (nanosleep(&timeout, &timeout) && errno == EINTR);
 }
 
-void MVM_platform_decodelocaltime(MVMThreadContext *tc, int64_t time, int64_t decoded[]) {
+void MVM_platform_decodelocaltime(struct MVMThreadContext *tc, int64_t time, int64_t decoded[]) {
     const time_t t = (time_t)time;
     struct tm tm;
     if (localtime_r(&t, &tm) == NULL)

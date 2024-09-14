@@ -32,15 +32,15 @@ typedef int (gzFile);
     #define MAX(x, y) ((y) > (x) ? (y) : (x))
 #endif
 /* Check if we're currently taking heap snapshots. */
-int32_t MVM_profile_heap_profiling(MVMThreadContext *tc) {
+int32_t MVM_profile_heap_profiling(struct MVMThreadContext *tc) {
     return tc->instance->heap_snapshots != NULL;
 }
 
-static void filemeta_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection *col);
-static void snapmeta_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection *col);
+static void filemeta_to_filehandle_ver3(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col);
+static void snapmeta_to_filehandle_ver3(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col);
 
 /* Start heap profiling. */
-void MVM_profile_heap_start(MVMThreadContext *tc, MVMObject *config) {
+void MVM_profile_heap_start(struct MVMThreadContext *tc, MVMObject *config) {
     MVMHeapSnapshotCollection *col = MVM_calloc(1, sizeof(MVMHeapSnapshotCollection));
     char *path;
     MVMString *path_str;
@@ -101,7 +101,7 @@ static void grow_storage(void *store_ptr, uint64_t *num, uint64_t *alloc, size_t
 #define STR_MODE_OWN    0
 #define STR_MODE_CONST  1
 #define STR_MODE_DUP    2
-static uint64_t get_string_index(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static uint64_t get_string_index(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                    char *str, char str_mode) {
      uint64_t i;
 
@@ -126,7 +126,7 @@ static uint64_t get_string_index(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
 }
 
 /* Gets a string index in the string heap for a VM string. */
-static uint64_t get_vm_string_index(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMString *str) {
+static uint64_t get_vm_string_index(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMString *str) {
     return str
         ? get_string_index(tc, ss, MVM_string_utf8_encode_C_string(tc, str), STR_MODE_OWN)
         : get_string_index(tc, ss, "<null>", STR_MODE_CONST);
@@ -134,7 +134,7 @@ static uint64_t get_vm_string_index(MVMThreadContext *tc, MVMHeapSnapshotState *
 
 /* Push a collectable to the list of work items, allocating space for it and
  * returning the collectable index. */
-static uint64_t push_workitem(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static uint64_t push_workitem(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                uint16_t kind, void *target) {
     MVMHeapSnapshotWorkItem *wi;
     uint64_t col_idx;
@@ -158,13 +158,13 @@ static uint64_t push_workitem(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
 }
 
 /* Pop a work item. */
-static MVMHeapSnapshotWorkItem pop_workitem(MVMThreadContext *tc, MVMHeapSnapshotState *ss) {
+static MVMHeapSnapshotWorkItem pop_workitem(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss) {
     ss->num_workitems--;
     return ss->workitems[ss->num_workitems];
 }
 
 /* Sets the current reference "from" collectable. */
-static void set_ref_from(MVMThreadContext *tc, MVMHeapSnapshotState *ss, uint64_t col_idx) {
+static void set_ref_from(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, uint64_t col_idx) {
     /* The references should be contiguous, so if this collectable already
      * has any, something's wrong. */
     if (ss->hs->collectables[col_idx].num_refs)
@@ -175,7 +175,7 @@ static void set_ref_from(MVMThreadContext *tc, MVMHeapSnapshotState *ss, uint64_
 }
 
 /* Adds a reference. */
-static void add_reference(MVMThreadContext *tc, MVMHeapSnapshotState *ss, uint16_t ref_kind,
+static void add_reference(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, uint16_t ref_kind,
                           uint64_t index, uint64_t to) {
     /* Add to the references collection. */
     MVMHeapSnapshotReference *ref;
@@ -192,26 +192,26 @@ static void add_reference(MVMThreadContext *tc, MVMHeapSnapshotState *ss, uint16
 }
 
 /* Adds a reference with an integer description. */
-static void add_reference_idx(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static void add_reference_idx(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                uint64_t idx,  uint64_t to) {
     add_reference(tc, ss, MVM_SNAPSHOT_REF_KIND_INDEX, idx, to);
 }
 
 /* Adds a reference with a C string description. */
-static void add_reference_cstr(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static void add_reference_cstr(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                char *cstr,  uint64_t to) {
     uint64_t str_idx = get_string_index(tc, ss, cstr, STR_MODE_OWN);
     add_reference(tc, ss, MVM_SNAPSHOT_REF_KIND_STRING, str_idx, to);
 }
 
 /* Adds a reference with a constant C string description. */
-static void add_reference_const_cstr(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static void add_reference_const_cstr(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                      const char *cstr,  uint64_t to) {
     uint64_t str_idx = get_string_index(tc, ss, (char *)cstr, STR_MODE_CONST);
     add_reference(tc, ss, MVM_SNAPSHOT_REF_KIND_STRING, str_idx, to);
 }
 
-static uint64_t get_const_string_index_cached(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static uint64_t get_const_string_index_cached(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                                const char *cstr, uint64_t *cache, uint64_t str_mode) {
     uint64_t str_idx;
     if (cache && *cache < ss->col->num_strings) {
@@ -234,14 +234,14 @@ static uint64_t get_const_string_index_cached(MVMThreadContext *tc, MVMHeapSnaps
     return str_idx;
 }
 
-static void add_reference_const_cstr_cached(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static void add_reference_const_cstr_cached(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                      const char *cstr,  uint64_t to, uint64_t *cache) {
     uint64_t str_idx = get_const_string_index_cached(tc, ss, cstr, cache, STR_MODE_CONST);
     add_reference(tc, ss, MVM_SNAPSHOT_REF_KIND_STRING, str_idx, to);
 }
 
 /* Adds a reference with a VM string description. */
-static void add_reference_vm_str(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static void add_reference_vm_str(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                MVMString *str,  uint64_t to) {
    uint64_t str_idx = get_vm_string_index(tc, ss, str);
    add_reference(tc, ss, MVM_SNAPSHOT_REF_KIND_STRING, str_idx, to);
@@ -249,7 +249,7 @@ static void add_reference_vm_str(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
 
 /* Gets the index of a collectable, either returning an existing index if we've
  * seen it before or adding it if not. */
-static uint64_t get_collectable_idx(MVMThreadContext *tc,
+static uint64_t get_collectable_idx(struct MVMThreadContext *tc,
         MVMHeapSnapshotState *ss, MVMCollectable *collectable) {
     struct MVMPtrHashEntry *entry = MVM_ptr_hash_lvalue_fetch(tc, &ss->seen, collectable);
 
@@ -282,7 +282,7 @@ static uint64_t get_collectable_idx(MVMThreadContext *tc,
 
 /* Gets the index of a frame, either returning an existing index if we've seen
  * it before or adding it if not. */
-static uint64_t get_frame_idx(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static uint64_t get_frame_idx(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
         MVMFrame *frame) {
     struct MVMPtrHashEntry *entry = MVM_ptr_hash_lvalue_fetch(tc, &ss->seen, frame);
 
@@ -299,7 +299,7 @@ static uint64_t get_frame_idx(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
 
 /* Adds a type table index reference to the collectable snapshot entry, either
  * using an existing type table entry or adding a new one. */
-static void set_type_index(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static void set_type_index(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
        MVMHeapSnapshotCollectable *col, MVMSTable *st) {
     uint64_t repr_idx = get_const_string_index_cached(tc, ss, (char *)st->REPR->name, &ss->repr_str_idx_cache[st->REPR->ID], STR_MODE_CONST);
     char *debug_name = MVM_6model_get_stable_debug_name(tc, st);
@@ -352,7 +352,7 @@ static void set_type_index(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
 
 /* Adds a static frame table index reference to the collectable snapshot entry,
  * either using an existing table entry or adding a new one. */
-static void set_static_frame_index(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static void set_static_frame_index(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
        MVMHeapSnapshotCollectable *col, MVMStaticFrame *sf) {
     uint64_t name_idx = get_vm_string_index(tc, ss, sf->body.name);
     uint64_t cuid_idx = get_vm_string_index(tc, ss, sf->body.cuuid);
@@ -405,7 +405,7 @@ static void set_static_frame_index(MVMThreadContext *tc, MVMHeapSnapshotState *s
 }
 
 /* Processes the work items, until we've none left. */
-static void process_collectable(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static void process_collectable(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
         MVMHeapSnapshotCollectable *col, MVMCollectable *c, uint64_t *sc_cache) {
     uint32_t sc_idx = MVM_sc_get_idx_of_sc(c);
     if (sc_idx > 0)
@@ -414,7 +414,7 @@ static void process_collectable(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                 (MVMCollectable *)tc->instance->all_scs[sc_idx]->sc), sc_cache);
     col->collectable_size = c->size;
 }
-static void process_gc_worklist(MVMThreadContext *tc, MVMHeapSnapshotState *ss, char *desc) {
+static void process_gc_worklist(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, char *desc) {
     MVMCollectable **c_ptr;
     uint16_t ref_kind = desc
         ? MVM_SNAPSHOT_REF_KIND_STRING
@@ -429,7 +429,7 @@ static void process_gc_worklist(MVMThreadContext *tc, MVMHeapSnapshotState *ss, 
                 get_collectable_idx(tc, ss, c));
     }
 }
-static void incorporate_type_stats(MVMThreadContext *tc, MVMHeapSnapshotStats *stats, MVMHeapSnapshotCollectable *col) {
+static void incorporate_type_stats(struct MVMThreadContext *tc, MVMHeapSnapshotStats *stats, MVMHeapSnapshotCollectable *col) {
     if (col->type_or_frame_index >= stats->type_stats_alloc) {
         uint32_t prev_alloc = stats->type_stats_alloc;
         while (col->type_or_frame_index >= stats->type_stats_alloc) {
@@ -445,7 +445,7 @@ static void incorporate_type_stats(MVMThreadContext *tc, MVMHeapSnapshotStats *s
     stats->type_counts[col->type_or_frame_index]++;
     stats->type_size_sum[col->type_or_frame_index] += col->collectable_size + col->unmanaged_size;
 }
-static void incorporate_sf_stats(MVMThreadContext *tc, MVMHeapSnapshotStats *stats, MVMHeapSnapshotCollectable *col) {
+static void incorporate_sf_stats(struct MVMThreadContext *tc, MVMHeapSnapshotStats *stats, MVMHeapSnapshotCollectable *col) {
     if (col->type_or_frame_index >= stats->sf_stats_alloc) {
         uint32_t prev_alloc = stats->sf_stats_alloc;
         while (col->type_or_frame_index >= stats->sf_stats_alloc) {
@@ -461,7 +461,7 @@ static void incorporate_sf_stats(MVMThreadContext *tc, MVMHeapSnapshotStats *sta
     stats->sf_counts[col->type_or_frame_index]++;
     stats->sf_size_sum[col->type_or_frame_index] += col->collectable_size + col->unmanaged_size;
 }
-static void process_object(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
+static void process_object(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss,
         MVMHeapSnapshotCollectable *col, MVMObject *obj, uint64_t *stable_cache, uint64_t *sc_cache) {
     process_collectable(tc, ss, col, (MVMCollectable *)obj, sc_cache);
     set_type_index(tc, ss, col, obj->st);
@@ -485,7 +485,7 @@ static void process_object(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
         }
     }
 }
-static void process_workitems(MVMThreadContext *tc, MVMHeapSnapshotState *ss) {
+static void process_workitems(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss) {
     uint64_t stable_cache = 0;
     uint64_t sc_cache = 0;
 
@@ -628,10 +628,10 @@ static void process_workitems(MVMThreadContext *tc, MVMHeapSnapshotState *ss) {
                 MVM_gc_root_add_instance_roots_to_worklist(tc, NULL, ss);
                 break;
             case MVM_SNAPSHOT_COL_KIND_CSTACK_ROOTS:
-                MVM_gc_root_add_temps_to_worklist((MVMThreadContext *)item.target, NULL, ss);
+                MVM_gc_root_add_temps_to_worklist((struct MVMThreadContext *)item.target, NULL, ss);
                 break;
             case MVM_SNAPSHOT_COL_KIND_THREAD_ROOTS: {
-                MVMThreadContext *thread_tc = (MVMThreadContext *)item.target;
+                struct MVMThreadContext *thread_tc = (struct MVMThreadContext *)item.target;
                 MVM_gc_root_add_tc_roots_to_worklist(thread_tc, NULL, ss);
                 if (thread_tc->cur_frame &&
                         !MVM_FRAME_IS_ON_CALLSTACK(thread_tc, thread_tc->cur_frame))
@@ -673,12 +673,12 @@ static void process_workitems(MVMThreadContext *tc, MVMHeapSnapshotState *ss) {
                 break;
             }
             case MVM_SNAPSHOT_COL_KIND_INTERGEN_ROOTS: {
-                MVMThreadContext *thread_tc = (MVMThreadContext *)item.target;
+                struct MVMThreadContext *thread_tc = (struct MVMThreadContext *)item.target;
                 MVM_gc_root_add_gen2s_to_snapshot(thread_tc, ss);
                 break;
             }
             case MVM_SNAPSHOT_COL_KIND_CALLSTACK_ROOTS: {
-                MVMThreadContext *thread_tc = (MVMThreadContext *)item.target;
+                struct MVMThreadContext *thread_tc = (struct MVMThreadContext *)item.target;
                 if (thread_tc->cur_frame && MVM_FRAME_IS_ON_CALLSTACK(tc, thread_tc->cur_frame)) {
                     MVMFrame *cur_frame = thread_tc->cur_frame;
                     int32_t idx = 0;
@@ -708,13 +708,13 @@ static void process_workitems(MVMThreadContext *tc, MVMHeapSnapshotState *ss) {
 /* API function for adding a collectable to the snapshot, describing its
  * relation to the current collectable with a constant C string that we
  * should not free. */
-void MVM_profile_heap_add_collectable_rel_const_cstr(MVMThreadContext *tc,
+void MVM_profile_heap_add_collectable_rel_const_cstr(struct MVMThreadContext *tc,
         MVMHeapSnapshotState *ss, MVMCollectable *collectable, const char *desc) {
     if (collectable)
         add_reference_const_cstr(tc, ss, desc,
             get_collectable_idx(tc, ss, collectable));
 }
-void MVM_profile_heap_add_collectable_rel_const_cstr_cached(MVMThreadContext *tc,
+void MVM_profile_heap_add_collectable_rel_const_cstr_cached(struct MVMThreadContext *tc,
         MVMHeapSnapshotState *ss, MVMCollectable *collectable, const char *desc, uint64_t *cache) {
     if (collectable)
         add_reference_const_cstr_cached(tc, ss, desc,
@@ -723,7 +723,7 @@ void MVM_profile_heap_add_collectable_rel_const_cstr_cached(MVMThreadContext *tc
 
 /* API function for adding a collectable to the snapshot, describing its
  * relation to the current collectable with an MVMString. */
-void MVM_profile_heap_add_collectable_rel_vm_str(MVMThreadContext *tc,
+void MVM_profile_heap_add_collectable_rel_vm_str(struct MVMThreadContext *tc,
         MVMHeapSnapshotState *ss, MVMCollectable *collectable, MVMString *desc) {
     if (collectable)
         add_reference_vm_str(tc, ss, desc,
@@ -732,7 +732,7 @@ void MVM_profile_heap_add_collectable_rel_vm_str(MVMThreadContext *tc,
 
 /* API function for adding a collectable to the snapshot, describing its
  * relation to the current collectable with an integer index. */
-void MVM_profile_heap_add_collectable_rel_idx(MVMThreadContext *tc,
+void MVM_profile_heap_add_collectable_rel_idx(struct MVMThreadContext *tc,
         MVMHeapSnapshotState *ss, MVMCollectable *collectable, uint64_t idx) {
     if (collectable)
         add_reference_idx(tc, ss, idx,
@@ -740,7 +740,7 @@ void MVM_profile_heap_add_collectable_rel_idx(MVMThreadContext *tc,
 }
 
 /* Drives the overall process of recording a snapshot of the heap. */
-static void record_snapshot(MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapSnapshot *hs) {
+static void record_snapshot(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapSnapshot *hs) {
     /* Initialize state for taking a snapshot. */
     MVMHeapSnapshotState ss;
     memset(&ss, 0, sizeof(MVMHeapSnapshotState));
@@ -759,7 +759,7 @@ static void record_snapshot(MVMThreadContext *tc, MVMHeapSnapshotCollection *col
     MVM_gc_worklist_destroy(tc, ss.gcwl);
 }
 
-static void destroy_current_heap_snapshot(MVMThreadContext *tc) {
+static void destroy_current_heap_snapshot(struct MVMThreadContext *tc) {
     MVMHeapSnapshotCollection *col = tc->instance->heap_snapshots;
 
     MVM_free(col->snapshot->stats->type_counts);
@@ -779,7 +779,7 @@ static void destroy_toc(MVMHeapDumpTableOfContents *toc) {
 }
 
 /* Frees all memory associated with the heap snapshot. */
-static void destroy_heap_snapshot_collection(MVMThreadContext *tc) {
+static void destroy_heap_snapshot_collection(struct MVMThreadContext *tc) {
     MVMHeapSnapshotCollection *col = tc->instance->heap_snapshots;
     uint64_t i;
 
@@ -823,7 +823,7 @@ static gzFile open_coll_file(MVMHeapSnapshotCollection *col, char *typename) {
 #endif
 
 #if MVM_HEAPSNAPSHOT_FORMAT == 3
-uint32_t get_new_toc_entry(MVMThreadContext *tc, MVMHeapDumpTableOfContents *toc) {
+uint32_t get_new_toc_entry(struct MVMThreadContext *tc, MVMHeapDumpTableOfContents *toc) {
     uint32_t i = toc->toc_entry_used++;
 
     if (toc->toc_entry_used >= toc->toc_entry_alloc) {
@@ -835,7 +835,7 @@ uint32_t get_new_toc_entry(MVMThreadContext *tc, MVMHeapDumpTableOfContents *toc
     return i;
 }
 
-static void serialize_attribute_stream(MVMThreadContext *tc, MVMHeapSnapshotCollection *col, char *name, char *start, size_t offset, size_t elem_size, size_t count, FILE* fh) {
+static void serialize_attribute_stream(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col, char *name, char *start, size_t offset, size_t elem_size, size_t count, FILE* fh) {
     char *pointer = (char *)start;
 
     ZSTD_CStream *cstream;
@@ -944,7 +944,7 @@ static void serialize_attribute_stream(MVMThreadContext *tc, MVMHeapSnapshotColl
 }
 
 
-void string_heap_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+void string_heap_to_filehandle_ver3(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     FILE *fh = col->fh;
     uint64_t i = col->strings_written;
 
@@ -1079,7 +1079,7 @@ void string_heap_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollect
         (count),\
         col->fh);
 
-void types_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+void types_to_filehandle_ver3(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     if (col->types_written < col->num_types) {
 
         char *first_type = (char *)&col->types[col->types_written];
@@ -1110,7 +1110,7 @@ void types_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection *c
     }
 }
 
-void static_frames_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+void static_frames_to_filehandle_ver3(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     if (col->static_frames_written < col->num_static_frames) {
 
         char *first_sf = (char *)&col->static_frames[col->static_frames_written];
@@ -1147,7 +1147,7 @@ void static_frames_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotColle
         col->static_frames_written = col->num_static_frames;
     }
 }
-void collectables_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapDumpIndexSnapshotEntry *entry) {
+void collectables_to_filehandle_ver3(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapDumpIndexSnapshotEntry *entry) {
     MVMHeapSnapshot *s = col->snapshot;
 
     char *first_coll = (char *)&s->collectables[0];
@@ -1191,7 +1191,7 @@ void collectables_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollec
 #endif
 }
 
-void references_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapDumpIndexSnapshotEntry *entry) {
+void references_to_filehandle_ver3(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapDumpIndexSnapshotEntry *entry) {
     MVMHeapSnapshot *s = col->snapshot;
 
     char *first_ref = (char *)&s->references[0];
@@ -1201,7 +1201,7 @@ void references_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollecti
     SERIALIZE_ATTR_STREAM("reftrget",  first_ref, second_ref, MVMHeapSnapshotReference, collectable_index, s->num_references);
 }
 
-void write_toc_to_filehandle(MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapDumpTableOfContents *to_write, MVMHeapDumpTableOfContents *to_register) {
+void write_toc_to_filehandle(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapDumpTableOfContents *to_write, MVMHeapDumpTableOfContents *to_register) {
     uint64_t toc_start_pos;
     uint64_t toc_end_pos;
 
@@ -1267,7 +1267,7 @@ typedef struct leaderboard {
 
 #define LEADERBOARDS_TOP_SPOTS 40
 
-static void make_leaderboards(MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapSnapshot *hs) {
+static void make_leaderboards(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapSnapshot *hs) {
     MVMHeapSnapshotStats *stats = hs->stats;
     to_sort_entry *data_body;
     uint32_t i;
@@ -1330,7 +1330,7 @@ static void make_leaderboards(MVMThreadContext *tc, MVMHeapSnapshotCollection *c
     MVM_free(data_body);
 }
 
-void snapshot_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+void snapshot_to_filehandle_ver3(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     MVMHeapDumpIndexSnapshotEntry *entry = NULL;
 
     MVMHeapDumpTableOfContents *outer_toc = col->toplevel_toc;
@@ -1366,7 +1366,7 @@ void snapshot_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection
 }
 #endif /* heapsnapshot version 3 */
 
-static void static_frames_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+static void static_frames_to_filehandle_ver2(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     uint64_t i;
     MVMHeapDumpIndex *index = col->index;
     FILE *fh = col->fh;
@@ -1415,7 +1415,7 @@ static void static_frames_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapsh
 }
 
 
-static void string_heap_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+static void string_heap_to_filehandle_ver2(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     uint64_t i;
     MVMHeapDumpIndex *index = col->index;
     FILE *fh = col->fh;
@@ -1474,7 +1474,7 @@ static void string_heap_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshot
  * so that the parser can confidently skip to the exact middle of
  * the references table and parse it with two threads in parallel.
  */
-static void references_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapDumpIndexSnapshotEntry *entry) {
+static void references_to_filehandle_ver2(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapDumpIndexSnapshotEntry *entry) {
     uint64_t i;
     uint64_t halfway;
     FILE *fh = col->fh;
@@ -1569,7 +1569,7 @@ static void references_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshotC
  * We also write a partial table after every snapshot so that if the process
  * crashes we still have a usable file.
  */
-static void types_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+static void types_to_filehandle_ver2(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     uint64_t i;
     MVMHeapDumpIndex *index = col->index;
     FILE *fh = col->fh;
@@ -1615,7 +1615,7 @@ static void types_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshotCollec
  * This sizes table has three entries for each entry. The first one is the
  * size of the collectables table.
  */
-static void collectables_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapDumpIndexSnapshotEntry *entry) {
+static void collectables_to_filehandle_ver2(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapDumpIndexSnapshotEntry *entry) {
     uint64_t i;
     FILE *fh = col->fh;
     MVMHeapSnapshot *s = col->snapshot;
@@ -1674,7 +1674,7 @@ static void collectables_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapsho
 }
 
 
-static void snapshot_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+static void snapshot_to_filehandle_ver2(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     MVMHeapDumpIndex *index = col->index;
     uint64_t i = col->snapshot_idx;
     MVMHeapDumpIndexSnapshotEntry *entry;
@@ -1700,7 +1700,7 @@ static void snapshot_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshotCol
 
     /*entry->incremental_data = index->stringheap_size + index->types_size + index->staticframes_size;*/
 }
-static void index_to_filehandle(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+static void index_to_filehandle(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     MVMHeapDumpIndex *index = col->index;
     FILE *fh = col->fh;
 
@@ -1712,7 +1712,7 @@ static void index_to_filehandle(MVMThreadContext *tc, MVMHeapSnapshotCollection 
 }
 
 #if MVM_HEAPSNAPSHOT_FORMAT == 3
-static void filemeta_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+static void filemeta_to_filehandle_ver3(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     char *metadata = MVM_malloc(1024);
     uint64_t size_position;
     uint64_t end_position;
@@ -1760,7 +1760,7 @@ static void filemeta_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCol
     }
 }
 
-static void snapmeta_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+static void snapmeta_to_filehandle_ver3(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     char *metadata = MVM_malloc(1024);
     MVMHeapSnapshot *s = col->snapshot;
     uint64_t size_position;
@@ -1813,7 +1813,7 @@ static void snapmeta_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCol
 }
 #endif
 
-static void finish_collection_to_filehandle(MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
+static void finish_collection_to_filehandle(struct MVMThreadContext *tc, MVMHeapSnapshotCollection *col) {
     /*col->strings_written = 0;*/
     /*col->types_written = 0;*/
     /*col->static_frames_written = 0;*/
@@ -1848,7 +1848,7 @@ static void finish_collection_to_filehandle(MVMThreadContext *tc, MVMHeapSnapsho
 }
 
 /* Takes a snapshot of the heap, outputting it to the filehandle */
-void MVM_profile_heap_take_snapshot(MVMThreadContext *tc) {
+void MVM_profile_heap_take_snapshot(struct MVMThreadContext *tc) {
     if (MVM_profile_heap_profiling(tc)) {
         MVMHeapSnapshotCollection *col = tc->instance->heap_snapshots;
         int64_t do_heapsnapshot = 1;
@@ -1886,7 +1886,7 @@ void MVM_profile_heap_take_snapshot(MVMThreadContext *tc) {
 }
 
 /* Finishes heap profiling, getting the data. */
-MVMObject * MVM_profile_heap_end(MVMThreadContext *tc) {
+MVMObject * MVM_profile_heap_end(struct MVMThreadContext *tc) {
     MVMHeapSnapshotCollection *col = tc->instance->heap_snapshots;
     MVMObject *dataset;
 

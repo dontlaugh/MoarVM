@@ -1,4 +1,4 @@
-MVM_STATIC_INLINE void * MVM_malloc(size_t size) {
+static inline void * MVM_malloc(size_t size) {
 #ifdef MVM_USE_MIMALLOC
     void *ptr = mi_malloc(size);
 #else
@@ -11,7 +11,7 @@ MVM_STATIC_INLINE void * MVM_malloc(size_t size) {
     return ptr;
 }
 
-MVM_STATIC_INLINE void * MVM_calloc(size_t num, size_t size) {
+static inline void * MVM_calloc(size_t num, size_t size) {
 #ifdef MVM_USE_MIMALLOC
     void *ptr = mi_calloc(num, size);
 #else
@@ -24,7 +24,7 @@ MVM_STATIC_INLINE void * MVM_calloc(size_t num, size_t size) {
     return ptr;
 }
 
-MVM_STATIC_INLINE void * MVM_realloc(void *p, size_t size) {
+static inline void * MVM_realloc(void *p, size_t size) {
 #ifdef MVM_USE_MIMALLOC
     void *ptr = mi_realloc(p, size);
 #else
@@ -37,7 +37,7 @@ MVM_STATIC_INLINE void * MVM_realloc(void *p, size_t size) {
     return ptr;
 }
 
-MVM_STATIC_INLINE void * MVM_recalloc(void *p, size_t old_size, size_t size) {
+static inline void * MVM_recalloc(void *p, size_t old_size, size_t size) {
 #ifdef MVM_USE_MIMALLOC
     void *ptr = mi_realloc(p, size);
 #else
@@ -55,7 +55,7 @@ MVM_STATIC_INLINE void * MVM_recalloc(void *p, size_t old_size, size_t size) {
     return ptr;
 }
 
-MVM_STATIC_INLINE void MVM_free(void *p) {
+static inline void MVM_free(void *p) {
 #ifdef MVM_USE_MIMALLOC
     mi_free(p);
 #else
@@ -77,7 +77,7 @@ struct MVMAllocSafepointFreeListEntry {
 /* Race to add a piece of memory to be freed at the next global safe point.
  * A global safe point is defined as one in which all threads, since we
  * requested the freeing of the memory, have reached a safe point. */
-MVM_STATIC_INLINE void MVM_free_at_safepoint(MVMThreadContext *tc, void *to_free) {
+static inline void MVM_free_at_safepoint(struct MVMThreadContext *tc, void *to_free) {
     MVMAllocSafepointFreeListEntry *orig;
     MVMAllocSafepointFreeListEntry *to_add = MVM_malloc(sizeof(MVMAllocSafepointFreeListEntry));
     to_add->to_free = to_free;
@@ -87,7 +87,7 @@ MVM_STATIC_INLINE void MVM_free_at_safepoint(MVMThreadContext *tc, void *to_free
     } while (!MVM_trycas(&(tc->instance->free_at_safepoint), orig, to_add));
 }
 
-MVM_STATIC_INLINE void * MVM_realloc_at_safepoint(MVMThreadContext *tc, void *p, size_t old_bytes, size_t new_bytes) {
+static inline void * MVM_realloc_at_safepoint(struct MVMThreadContext *tc, void *p, size_t old_bytes, size_t new_bytes) {
     void *allocd;
 #ifdef MVM_USE_MIMALLOC
     /* mi_expand() is guaranteed to expand in-place or returns NULL if it can't,
@@ -107,7 +107,7 @@ MVM_STATIC_INLINE void * MVM_realloc_at_safepoint(MVMThreadContext *tc, void *p,
 /* Called when we're at a safepoint, to free everything queued up to be freed
  * at the next safepoint. Assumes that it is only called on one thread at a
  * time, while the world is stopped. */
-MVM_STATIC_INLINE void MVM_alloc_safepoint(MVMThreadContext *tc) {
+static inline void MVM_alloc_safepoint(struct MVMThreadContext *tc) {
     MVMAllocSafepointFreeListEntry *cur, *next;
     cur = tc->instance->free_at_safepoint;
     while (cur) {

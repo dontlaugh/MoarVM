@@ -16,7 +16,7 @@
   #define ROTL64(x,r)  ( ( (uint64_t)(x) << (r) ) | ( (uint64_t)(x) >> ( 64 - (r) ) ) )
 #endif
 
-MVM_STATIC_INLINE uint64_t jfs64_generate_uint64(uint64_t *rand_state) {
+static inline uint64_t jfs64_generate_uint64(uint64_t *rand_state) {
     uint64_t e = rand_state[0] - ROTL64(rand_state[1], 7);
     rand_state[0] = rand_state[1] ^ ROTL64(rand_state[2], 13);
     rand_state[1] = rand_state[2] + ROTL64(rand_state[3], 37);
@@ -25,7 +25,7 @@ MVM_STATIC_INLINE uint64_t jfs64_generate_uint64(uint64_t *rand_state) {
     return rand_state[3];
 }
 
-MVM_STATIC_INLINE void jfs64_init(uint64_t *rand_state, uint64_t seed) {
+static inline void jfs64_init(uint64_t *rand_state, uint64_t seed) {
     rand_state[0] = 0xf1ea5eed;
     rand_state[1] = rand_state[2] = rand_state[3] = seed;
     for (int i = 0; i < 20; ++i) {

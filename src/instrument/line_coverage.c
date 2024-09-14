@@ -4,7 +4,7 @@
 #define snprintf _snprintf
 #endif
 
-static void instrument_graph_with_breakpoints(MVMThreadContext *tc, MVMSpeshGraph *g) {
+static void instrument_graph_with_breakpoints(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB *bb = g->entry->linear_next;
 
     int32_t last_filename = -1;
@@ -118,7 +118,7 @@ static void instrument_graph_with_breakpoints(MVMThreadContext *tc, MVMSpeshGrap
         MVM_free(filename_buf);
 }
 
-static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
+static void instrument_graph(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB *bb = g->entry->linear_next;
     uint16_t array_slot = 0;
 
@@ -255,7 +255,7 @@ static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
 }
 
 /* Adds instrumented version of the unspecialized bytecode. */
-static void add_instrumentation(MVMThreadContext *tc, MVMStaticFrame *sf, uint8_t want_coverage) {
+static void add_instrumentation(struct MVMThreadContext *tc, MVMStaticFrame *sf, uint8_t want_coverage) {
     MVMSpeshCode  *sc;
     MVMStaticFrameInstrumentation *ins;
     MVMSpeshGraph *sg = MVM_spesh_graph_create(tc, sf, 1, 0);
@@ -280,7 +280,7 @@ static void add_instrumentation(MVMThreadContext *tc, MVMStaticFrame *sf, uint8_
 
 
 /* Instruments code with per-line logging of code coverage */
-static void line_numbers_instrument(MVMThreadContext *tc, MVMStaticFrame *sf, uint8_t want_coverage) {
+static void line_numbers_instrument(struct MVMThreadContext *tc, MVMStaticFrame *sf, uint8_t want_coverage) {
     if (!sf->body.instrumentation || sf->body.bytecode != sf->body.instrumentation->instrumented_bytecode) {
         /* Handle main, non-specialized, bytecode. */
         if (!sf->body.instrumentation || !sf->body.instrumentation->instrumented_bytecode)
@@ -297,16 +297,16 @@ static void line_numbers_instrument(MVMThreadContext *tc, MVMStaticFrame *sf, ui
 }
 
 /* Instruments code with per-line logging of code coverage */
-void MVM_line_coverage_instrument(MVMThreadContext *tc, MVMStaticFrame *sf) {
+void MVM_line_coverage_instrument(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     line_numbers_instrument(tc, sf, 1);
 }
 
 /* Instruments code with a breakpoint check instruction af every line number change */
-void MVM_breakpoint_instrument(MVMThreadContext *tc, MVMStaticFrame *sf) {
+void MVM_breakpoint_instrument(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     line_numbers_instrument(tc, sf, 0);
 }
 
-void MVM_line_coverage_report(MVMThreadContext *tc, MVMString *filename, uint32_t line_number, uint16_t cache_slot, char *cache) {
+void MVM_line_coverage_report(struct MVMThreadContext *tc, MVMString *filename, uint32_t line_number, uint16_t cache_slot, char *cache) {
     if (tc->instance->coverage_control == 2 || (!tc->instance->coverage_control && cache[cache_slot] == 0)) {
         char *encoded_filename;
         char composed_line[256];

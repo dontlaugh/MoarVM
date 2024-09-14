@@ -5,7 +5,7 @@ static const MVMREPROps CStr_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &CStr_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,19 +18,19 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* TODO: move encoding stuff into here */
 }
 
 /* Copies to the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMCStrBody *src_body  = (MVMCStrBody *)src;
     MVMCStrBody *dest_body = (MVMCStrBody *)dest;
     MVM_ASSIGN_REF(tc, &(dest_root->header), dest_body->orig, src_body->orig);
     dest_body->cstr = src_body->cstr;
 }
 
-static void set_str(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMString *value) {
+static void set_str(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMString *value) {
     MVMCStrBody *body = (MVMCStrBody *)data;
     MVM_ASSIGN_REF(tc, &(root->header), body->orig, value);
 #ifdef MVM_USE_MIMALLOC
@@ -40,7 +40,7 @@ static void set_str(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
 #endif
 }
 
-static MVMString * get_str(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static MVMString * get_str(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMCStrBody *body = (MVMCStrBody *)data;
     return body->orig;
 }
@@ -56,16 +56,16 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMCStrBody *body = (MVMCStrBody *)data;
     MVM_gc_worklist_add(tc, worklist, &body->orig);
 }
 
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     MVMCStr *cstr = (MVMCStr *)obj;
     if (obj && cstr->body.cstr)
 #ifdef MVM_USE_MIMALLOC
@@ -75,11 +75,11 @@ static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
 #endif
 }
 
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMCStr);
 }
 
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMString *orig = MVM_serialization_read_str(tc, reader);
     MVMCStrBody *body = (MVMCStrBody *)data;
     MVM_ASSIGN_REF(tc, &(root->header), body->orig, orig);
@@ -91,12 +91,12 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 #endif
 }
 
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVM_serialization_write_str(tc, writer, ((MVMCStrBody *)data)->orig);
 }
 
 /* Initializes the representation. */
-const MVMREPROps * MVMCStr_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMCStr_initialize(struct MVMThreadContext *tc) {
     return &CStr_this_repr;
 }
 

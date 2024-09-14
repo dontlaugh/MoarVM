@@ -1,6 +1,6 @@
 #include "moar.h"
 
-static void mark_handler_unreachable(MVMThreadContext *tc, MVMSpeshGraph *g, int32_t index) {
+static void mark_handler_unreachable(struct MVMThreadContext *tc, MVMSpeshGraph *g, int32_t index) {
     if (!g->unreachable_handlers)
         g->unreachable_handlers = MVM_spesh_alloc(tc, g, g->num_handlers);
     g->unreachable_handlers[index] = 1;
@@ -15,7 +15,7 @@ static MVMSpeshBB * linear_next_with_ins(MVMSpeshBB *cur_bb) {
     return NULL;
 }
 
-static MVMSpeshBB * linear_prev_with_ins(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *cur_bb) {
+static MVMSpeshBB * linear_prev_with_ins(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *cur_bb) {
     cur_bb = MVM_spesh_graph_linear_prev(tc, g, cur_bb);
     while (cur_bb) {
         if (cur_bb->first_ins)
@@ -25,7 +25,7 @@ static MVMSpeshBB * linear_prev_with_ins(MVMThreadContext *tc, MVMSpeshGraph *g,
     return NULL;
 }
 
-static void cleanup_dead_bb_instructions(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void cleanup_dead_bb_instructions(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                                          MVMSpeshBB *dead_bb, int32_t cleanup_facts,
                                          uint8_t *deleted_inline) {
     MVMSpeshIns *ins = dead_bb->first_ins;
@@ -106,7 +106,7 @@ static void cleanup_dead_bb_instructions(MVMThreadContext *tc, MVMSpeshGraph *g,
     MVM_free(frame_handlers_started);
 }
 
-static void mark_bb_seen(MVMThreadContext *tc, MVMSpeshBB *bb, int8_t *seen) {
+static void mark_bb_seen(struct MVMThreadContext *tc, MVMSpeshBB *bb, int8_t *seen) {
     if (!seen[bb->idx]) {
         uint16_t i;
         seen[bb->idx] = 1;
@@ -118,7 +118,7 @@ static void mark_bb_seen(MVMThreadContext *tc, MVMSpeshBB *bb, int8_t *seen) {
 /* Eliminates dead basic blocks, optionally cleaning up facts. (In the case
  * this is called during spesh graph construction, the facts do not yet
  * exist). */
-void MVM_spesh_eliminate_dead_bbs(MVMThreadContext *tc, MVMSpeshGraph *g, int32_t update_facts) {
+void MVM_spesh_eliminate_dead_bbs(struct MVMThreadContext *tc, MVMSpeshGraph *g, int32_t update_facts) {
     MVMSpeshBB *cur_bb;
     uint8_t deleted_inline = 0;
 

@@ -15,12 +15,12 @@
 #define PACKET_SIZE 65535
 
 /* Error handling varies between POSIX and WinSock. */
-MVM_NO_RETURN static void throw_error(MVMThreadContext *tc, int r, char *operation) MVM_NO_RETURN_ATTRIBUTE;
+MVM_NO_RETURN static void throw_error(struct MVMThreadContext *tc, int r, char *operation) MVM_NO_RETURN_ATTRIBUTE;
 #ifdef _WIN32
     #define MVM_IS_INVALID_SOCKET(x) ((x) == INVALID_SOCKET)
     #define MVM_IS_SOCKET_ERROR(x)   ((x) == SOCKET_ERROR)
 
-    static void throw_error(MVMThreadContext *tc, int r, char *operation) {
+    static void throw_error(struct MVMThreadContext *tc, int r, char *operation) {
         int error = WSAGetLastError();
         LPTSTR error_string = NULL;
         if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
@@ -33,7 +33,7 @@ MVM_NO_RETURN static void throw_error(MVMThreadContext *tc, int r, char *operati
 #else
     #define MVM_IS_INVALID_SOCKET(x) ((x) == -1)
     #define MVM_IS_SOCKET_ERROR(x) ((x) < 0)
-    static void throw_error(MVMThreadContext *tc, int r, char *operation) {
+    static void throw_error(struct MVMThreadContext *tc, int r, char *operation) {
         MVM_exception_throw_adhoc(tc, "Could not %s: %s", operation, strerror(errno));
     }
 #endif
@@ -57,7 +57,7 @@ typedef struct {
 } MVMIOSyncSocketData;
 
 /* Read a packet worth of data into the last packet buffer. */
-static void read_one_packet(MVMThreadContext *tc, MVMIOSyncSocketData *data) {
+static void read_one_packet(struct MVMThreadContext *tc, MVMIOSyncSocketData *data) {
     unsigned int interval_id = MVM_telemetry_interval_start(tc, "syncsocket.read_one_packet");
     int r;
     data->last_packet = MVM_malloc(PACKET_SIZE);
@@ -78,7 +78,7 @@ static void read_one_packet(MVMThreadContext *tc, MVMIOSyncSocketData *data) {
     }
 }
 
-static int64_t socket_read_bytes(MVMThreadContext *tc, MVMOSHandle *h, char **buf, uint64_t bytes) {
+static int64_t socket_read_bytes(struct MVMThreadContext *tc, MVMOSHandle *h, char **buf, uint64_t bytes) {
     MVMIOSyncSocketData *data = (MVMIOSyncSocketData *)h->body.data;
     char *use_last_packet = NULL;
     uint16_t use_last_packet_start = 0, use_last_packet_end = 0;
@@ -173,21 +173,21 @@ static int64_t socket_read_bytes(MVMThreadContext *tc, MVMOSHandle *h, char **bu
 }
 
 /* Checks if EOF has been reached on the incoming data. */
-static int64_t socket_eof(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_eof(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOSyncSocketData *data = (MVMIOSyncSocketData *)h->body.data;
     return data->eof;
 }
 
-static void socket_flush(MVMThreadContext *tc, MVMOSHandle *h, int32_t sync) {
+static void socket_flush(struct MVMThreadContext *tc, MVMOSHandle *h, int32_t sync) {
     /* A no-op for sockets; we don't buffer. */
 }
 
-static void socket_truncate(MVMThreadContext *tc, MVMOSHandle *h, int64_t bytes) {
+static void socket_truncate(struct MVMThreadContext *tc, MVMOSHandle *h, int64_t bytes) {
     MVM_exception_throw_adhoc(tc, "Cannot truncate a socket");
 }
 
 /* Writes the specified bytes to the stream. */
-static int64_t socket_write_bytes(MVMThreadContext *tc, MVMOSHandle *h, char *buf, uint64_t bytes) {
+static int64_t socket_write_bytes(struct MVMThreadContext *tc, MVMOSHandle *h, char *buf, uint64_t bytes) {
     MVMIOSyncSocketData *data = (MVMIOSyncSocketData *)h->body.data;
     unsigned int interval_id;
 
@@ -212,18 +212,18 @@ static int64_t socket_write_bytes(MVMThreadContext *tc, MVMOSHandle *h, char *bu
     return bytes;
 }
 
-static int64_t do_close(MVMThreadContext *tc, MVMIOSyncSocketData *data) {
+static int64_t do_close(struct MVMThreadContext *tc, MVMIOSyncSocketData *data) {
     if (data->handle) {
         MVM_platform_close_socket(data->handle);
         data->handle = 0;
     }
     return 0;
 }
-static int64_t close_socket(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t close_socket(struct MVMThreadContext *tc, MVMOSHandle *h) {
     return do_close(tc, (MVMIOSyncSocketData *)h->body.data);
 }
 
-static void gc_free(MVMThreadContext *tc, MVMObject *h, void *d) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *h, void *d) {
     MVMIOSyncSocketData *data = (MVMIOSyncSocketData *)d;
     do_close(tc, data);
     MVM_free(data);
@@ -269,7 +269,7 @@ static size_t get_struct_size_for_family(sa_family_t family) {
  * - SOCKET_PROTOCOL_ANY (any acceptable protocol)
  */
 
-struct sockaddr * MVM_io_resolve_host_name(MVMThreadContext *tc,
+struct sockaddr * MVM_io_resolve_host_name(struct MVMThreadContext *tc,
         MVMString *host, int64_t port,
         uint16_t family, int64_t type, int64_t protocol,
         int32_t passive) {
@@ -390,7 +390,7 @@ struct sockaddr * MVM_io_resolve_host_name(MVMThreadContext *tc,
 }
 
 /* Establishes a connection. */
-static void socket_connect(MVMThreadContext *tc, MVMOSHandle *h, MVMString *host, int64_t port, uint16_t family) {
+static void socket_connect(struct MVMThreadContext *tc, MVMOSHandle *h, MVMString *host, int64_t port, uint16_t family) {
     MVMIOSyncSocketData *data = (MVMIOSyncSocketData *)h->body.data;
     unsigned int interval_id;
 
@@ -423,7 +423,7 @@ static void socket_connect(MVMThreadContext *tc, MVMOSHandle *h, MVMString *host
     }
 }
 
-static void socket_bind(MVMThreadContext *tc, MVMOSHandle *h, MVMString *host, int64_t port, uint16_t family, int32_t backlog) {
+static void socket_bind(struct MVMThreadContext *tc, MVMOSHandle *h, MVMString *host, int64_t port, uint16_t family, int32_t backlog) {
     MVMIOSyncSocketData *data = (MVMIOSyncSocketData *)h->body.data;
     if (!data->handle) {
         struct sockaddr *dest = MVM_io_resolve_host_name(tc, host, port, family, MVM_SOCKET_TYPE_STREAM, MVM_SOCKET_PROTOCOL_ANY, 1);
@@ -462,7 +462,7 @@ static void socket_bind(MVMThreadContext *tc, MVMOSHandle *h, MVMString *host, i
     }
 }
 
-static int64_t socket_getport(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_getport(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOSyncSocketData *data = (MVMIOSyncSocketData *)h->body.data;
 
     struct sockaddr_storage name;
@@ -487,17 +487,17 @@ static int64_t socket_getport(MVMThreadContext *tc, MVMOSHandle *h) {
     return port;
 }
 
-static int64_t socket_is_tty(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_is_tty(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOSyncSocketData *data = (MVMIOSyncSocketData *)h->body.data;
     return (int64_t)MVM_platform_isatty(data->handle);
 }
 
-static int64_t socket_handle(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_handle(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOSyncSocketData *data = (MVMIOSyncSocketData *)h->body.data;
     return (int64_t)data->handle;
 }
 
-static MVMObject * socket_accept(MVMThreadContext *tc, MVMOSHandle *h);
+static MVMObject * socket_accept(struct MVMThreadContext *tc, MVMOSHandle *h);
 
 /* IO ops table, populated with functions. */
 static const MVMIOClosable      closable      = { close_socket };
@@ -530,7 +530,7 @@ static const MVMIOOps op_table = {
     gc_free
 };
 
-static MVMObject * socket_accept(MVMThreadContext *tc, MVMOSHandle *h) {
+static MVMObject * socket_accept(struct MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOSyncSocketData *data = (MVMIOSyncSocketData *)h->body.data;
     MVMSocket            s;
 
@@ -556,7 +556,7 @@ static MVMObject * socket_accept(MVMThreadContext *tc, MVMOSHandle *h) {
     }
 }
 
-MVMObject * MVM_io_socket_create(MVMThreadContext *tc, int64_t listen) {
+MVMObject * MVM_io_socket_create(struct MVMThreadContext *tc, int64_t listen) {
     MVMOSHandle         * const result = (MVMOSHandle *)MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTIO);
     MVMIOSyncSocketData * const data   = MVM_calloc(1, sizeof(MVMIOSyncSocketData));
     result->body.ops  = &op_table;
@@ -564,7 +564,7 @@ MVMObject * MVM_io_socket_create(MVMThreadContext *tc, int64_t listen) {
     return (MVMObject *)result;
 }
 
-MVMString * MVM_io_get_hostname(MVMThreadContext *tc) {
+MVMString * MVM_io_get_hostname(struct MVMThreadContext *tc) {
     char hostname[UV_MAXHOSTNAMESIZE];
     size_t size = UV_MAXHOSTNAMESIZE;
     int result = uv_os_gethostname(hostname, &size);

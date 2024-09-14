@@ -32,4 +32,4 @@ struct MVMAsyncTask {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMAsyncTask_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMAsyncTask_initialize(struct MVMThreadContext *tc);

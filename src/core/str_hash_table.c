@@ -26,7 +26,7 @@ uint32_t MVM_round_up_log_base2(uint32_t v) {
     return MultiplyDeBruijnBitPosition[(uint32_t)(v * 0x07C4ACDDU) >> 27];
 }
 
-MVM_STATIC_INLINE void hash_demolish_internal(MVMThreadContext *tc,
+static inline void hash_demolish_internal(struct MVMThreadContext *tc,
                                               struct MVMStrHashTableControl *control) {
     if (control->cur_items == 0 && control->max_items == 0) {
         MVM_free(control);
@@ -41,7 +41,7 @@ MVM_STATIC_INLINE void hash_demolish_internal(MVMThreadContext *tc,
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
    which you allocated (heap, stack, inside another struct, wherever) */
-void MVM_str_hash_demolish(MVMThreadContext *tc, MVMStrHashTable *hashtable) {
+void MVM_str_hash_demolish(struct MVMThreadContext *tc, MVMStrHashTable *hashtable) {
     struct MVMStrHashTableControl *control = hashtable->table;
     if (!control)
         return;
@@ -108,7 +108,7 @@ void MVM_str_hash_demolish(MVMThreadContext *tc, MVMStrHashTable *hashtable) {
  * always hit the probe distance limit first and resize to a 16 + 11 hash.
  */
 
-MVM_STATIC_INLINE struct MVMStrHashTableControl *hash_allocate_common(MVMThreadContext *tc,
+static inline struct MVMStrHashTableControl *hash_allocate_common(struct MVMThreadContext *tc,
                                                                       uint8_t entry_size,
                                                                       uint8_t official_size_log2) {
     uint32_t official_size = 1 << (uint32_t)official_size_log2;
@@ -155,7 +155,7 @@ MVM_STATIC_INLINE struct MVMStrHashTableControl *hash_allocate_common(MVMThreadC
     return control;
 }
 
-void MVM_str_hash_build(MVMThreadContext *tc,
+void MVM_str_hash_build(struct MVMThreadContext *tc,
                         MVMStrHashTable *hashtable,
                         uint32_t entry_size,
                         uint32_t entries)
@@ -206,9 +206,9 @@ void MVM_str_hash_build(MVMThreadContext *tc,
     hashtable->table = control;
 }
 
-static uint64_t hash_fsck_internal(MVMThreadContext *tc, struct MVMStrHashTableControl *hashtable, uint32_t mode);
+static uint64_t hash_fsck_internal(struct MVMThreadContext *tc, struct MVMStrHashTableControl *hashtable, uint32_t mode);
 
-MVM_STATIC_INLINE struct MVMStrHashHandle *hash_insert_internal(MVMThreadContext *tc,
+static inline struct MVMStrHashHandle *hash_insert_internal(struct MVMThreadContext *tc,
                                                                 struct MVMStrHashTableControl *control,
                                                                 MVMString *key) {
     if (MVM_UNLIKELY(control->cur_items >= control->max_items)) {
@@ -318,7 +318,7 @@ MVM_STATIC_INLINE struct MVMStrHashHandle *hash_insert_internal(MVMThreadContext
     }
 }
 
-static struct MVMStrHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
+static struct MVMStrHashTableControl *maybe_grow_hash(struct MVMThreadContext *tc,
                                                       struct MVMStrHashTableControl *control) {
     if (MVM_UNLIKELY(control->cur_items == 0 && control->max_items == 0)) {
         /* This is the case where we had initially allocated just a control
@@ -451,7 +451,7 @@ static struct MVMStrHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
     return control;
 }
 
-void *MVM_str_hash_lvalue_fetch_nocheck(MVMThreadContext *tc,
+void *MVM_str_hash_lvalue_fetch_nocheck(struct MVMThreadContext *tc,
                                         MVMStrHashTable *hashtable,
                                         MVMString *key) {
     struct MVMStrHashTableControl *control = hashtable->table;
@@ -501,7 +501,7 @@ void *MVM_str_hash_lvalue_fetch_nocheck(MVMThreadContext *tc,
  * (well that's the official line. As you can see, the exception suggests we
  * currently don't exploit the documented freedom, and actually sanity check
  * what we are given.) */
-void *MVM_str_hash_insert_nocheck(MVMThreadContext *tc,
+void *MVM_str_hash_insert_nocheck(struct MVMThreadContext *tc,
                                   MVMStrHashTable *hashtable,
                                   MVMString *key) {
     struct MVMStrHashHandle *new_entry = MVM_str_hash_lvalue_fetch(tc, hashtable, key);
@@ -517,7 +517,7 @@ void *MVM_str_hash_insert_nocheck(MVMThreadContext *tc,
 }
 
 
-void MVM_str_hash_delete_nocheck(MVMThreadContext *tc,
+void MVM_str_hash_delete_nocheck(struct MVMThreadContext *tc,
                                  MVMStrHashTable *hashtable,
                                  MVMString *key) {
     struct MVMStrHashTableControl *control = hashtable->table;
@@ -697,7 +697,7 @@ void MVM_str_hash_delete_nocheck(MVMThreadContext *tc,
 }
 
 
-static uint64_t hash_fsck_internal(MVMThreadContext *tc, struct MVMStrHashTableControl *control, uint32_t mode) {
+static uint64_t hash_fsck_internal(struct MVMThreadContext *tc, struct MVMStrHashTableControl *control, uint32_t mode) {
     const char *prefix_hashes = mode & MVM_HASH_FSCK_PREFIX_HASHES ? "# " : "";
     uint32_t display = mode & 3;
     uint64_t errors = 0;
@@ -748,7 +748,7 @@ static uint64_t hash_fsck_internal(MVMThreadContext *tc, struct MVMStrHashTableC
                     if (mode & MVM_HASH_FSCK_CHECK_FROMSPACE) {
                         MVMThread *cur_thread = tc->instance->threads;
                         while (cur_thread) {
-                            MVMThreadContext *thread_tc = cur_thread->body.tc;
+                            struct MVMThreadContext *thread_tc = cur_thread->body.tc;
                             if (thread_tc && thread_tc->nursery_fromspace &&
                             (char *)(key) >= (char *)thread_tc->nursery_fromspace &&
                             (char *)(key) < (char *)thread_tc->nursery_fromspace +
@@ -873,6 +873,6 @@ static uint64_t hash_fsck_internal(MVMThreadContext *tc, struct MVMStrHashTableC
 /* This is not part of the public API, and subject to change at any point.
    (possibly in ways that are actually incompatible but won't generate compiler
    warnings.) */
-uint64_t MVM_str_hash_fsck(MVMThreadContext *tc, MVMStrHashTable *hashtable, uint32_t mode) {
+uint64_t MVM_str_hash_fsck(struct MVMThreadContext *tc, MVMStrHashTable *hashtable, uint32_t mode) {
     return hash_fsck_internal(tc, hashtable->table, mode);
 }

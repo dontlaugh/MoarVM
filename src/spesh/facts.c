@@ -5,7 +5,7 @@
  * can. */
 
 /* Copies facts from one var to another. */
-static void copy_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t to_orig,
+static void copy_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t to_orig,
                        uint16_t to_i, uint16_t from_orig, uint16_t from_i) {
     MVMSpeshFacts *tfacts = &g->facts[to_orig][to_i];
     MVMSpeshFacts *ffacts = &g->facts[from_orig][from_i];
@@ -19,14 +19,14 @@ static void copy_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t to_orig,
 
 /* Called when one set of facts depend on another, allowing any log guard
  * that is to thank to be marked used as needed later on. */
-void MVM_spesh_facts_depend(MVMThreadContext *tc, MVMSpeshGraph *g,
+void MVM_spesh_facts_depend(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                             MVMSpeshFacts *target, MVMSpeshFacts *source) {
     target->log_guards = source->log_guards;
     target->num_log_guards = source->num_log_guards;
 }
 
 /* Handles object-creating instructions. */
-static void create_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t obj_orig,
+static void create_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t obj_orig,
                          uint16_t obj_i, uint16_t type_orig, uint16_t type_i) {
     MVMSpeshFacts *type_facts = &(g->facts[type_orig][type_i]);
     MVMSpeshFacts *obj_facts  = &(g->facts[obj_orig][obj_i]);
@@ -42,7 +42,7 @@ static void create_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t obj_or
     obj_facts->flags |= MVM_SPESH_FACT_CONCRETE;
 }
 
-static void create_facts_with_type(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void create_facts_with_type(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                                    uint16_t obj_orig, uint16_t obj_i,
                                    MVMObject *type) {
     MVMSpeshFacts *obj_facts  = &(g->facts[obj_orig][obj_i]);
@@ -56,7 +56,7 @@ static void create_facts_with_type(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* Adds facts from knowing the exact value being put into an object local. */
-static void object_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_orig,
+static void object_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_orig,
                          uint16_t tgt_i, MVMObject *obj) {
     /* Ensure it's non-null. */
     if (!obj)
@@ -76,13 +76,13 @@ static void object_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_or
     else
         g->facts[tgt_orig][tgt_i].flags |= MVM_SPESH_FACT_TYPEOBJ;
 }
-void MVM_spesh_facts_object_facts(MVMThreadContext *tc, MVMSpeshGraph *g,
+void MVM_spesh_facts_object_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                                   MVMSpeshOperand tgt, MVMObject *obj) {
     object_facts(tc, g, tgt.reg.orig, tgt.reg.i, obj);
 }
 
 /* Propagates information relating to decontainerization. */
-static void decont_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
+static void decont_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
                          uint16_t out_orig, uint16_t out_i, uint16_t in_orig,
                          uint16_t in_i) {
     MVMSpeshFacts *out_facts = &(g->facts[out_orig][out_i]);
@@ -115,7 +115,7 @@ static void decont_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *in
 }
 
 /* Looks up a wval and adds information based on it. */
-static void wval_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_orig,
+static void wval_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_orig,
                        uint16_t tgt_i, uint16_t dep, int64_t idx) {
     MVMCompUnit *cu = g->sf->body.cu;
     if (dep < cu->body.num_scs) {
@@ -124,7 +124,7 @@ static void wval_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_orig
             object_facts(tc, g, tgt_orig, tgt_i, MVM_sc_try_get_object(tc, sc, idx));
     }
 }
-static void wvalfrom_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_orig,
+static void wvalfrom_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_orig,
                            uint16_t tgt_i, uint16_t sslot, int64_t idx) {
     MVMSerializationContext *sc = (MVMSerializationContext *)g->spesh_slots[sslot];
     if (MVM_sc_is_object_immediately_available(tc, sc, idx)) {
@@ -134,7 +134,7 @@ static void wvalfrom_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_
 }
 
 /* Let's figure out what exact type of iter we'll get from an iter op */
-static void iter_facts(MVMThreadContext *tc, MVMSpeshGraph *g,
+static void iter_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g,
                        uint16_t out_orig, uint16_t out_i,
                        uint16_t in_orig, uint16_t in_i) {
     MVMSpeshFacts *out_facts = &(g->facts[out_orig][out_i]);
@@ -160,7 +160,7 @@ static void iter_facts(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* constant ops on literals give us a specialize-time-known value */
-static void literal_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void literal_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMSpeshFacts *tgt_facts = &g->facts[ins->operands[0].reg.orig][ins->operands[0].reg.i];
     switch (ins->info->opcode) {
         case MVM_OP_const_i64:
@@ -196,7 +196,7 @@ static void literal_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *i
     }
     tgt_facts->flags |= MVM_SPESH_FACT_KNOWN_VALUE;
 }
-static void getstringfrom_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void getstringfrom_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMCompUnit *dep = (MVMCompUnit *)g->spesh_slots[ins->operands[1].lit_i16];
     uint32_t idx = ins->operands[2].lit_ui32;
     MVMString *str = MVM_cu_string(tc, dep, idx);
@@ -204,7 +204,7 @@ static void getstringfrom_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpesh
     tgt_facts->value.s = str;
     tgt_facts->flags |= MVM_SPESH_FACT_KNOWN_VALUE;
 }
-static void trunc_i16_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void trunc_i16_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMSpeshFacts *src_facts = &g->facts[ins->operands[1].reg.orig][ins->operands[1].reg.i];
     if (src_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
         MVMSpeshFacts *tgt_facts = &g->facts[ins->operands[0].reg.orig][ins->operands[0].reg.i];
@@ -212,7 +212,7 @@ static void trunc_i16_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
         tgt_facts->flags |= MVM_SPESH_FACT_KNOWN_VALUE;
     }
 }
-static void coerce_iu_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void coerce_iu_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMSpeshFacts *src_facts = &g->facts[ins->operands[1].reg.orig][ins->operands[1].reg.i];
     if (src_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
         MVMSpeshFacts *tgt_facts = &g->facts[ins->operands[0].reg.orig][ins->operands[0].reg.i];
@@ -222,7 +222,7 @@ static void coerce_iu_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
 }
 
 /* Discover facts from extops. */
-static void discover_extop(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
+static void discover_extop(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMExtOpRecord *extops     = g->sf->body.cu->body.extops;
     uint16_t       num_extops = g->sf->body.cu->body.num_extops;
     uint16_t       i;
@@ -236,7 +236,7 @@ static void discover_extop(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *
     }
 }
 
-void MVM_spesh_facts_guard_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+void MVM_spesh_facts_guard_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         MVMSpeshIns *ins) {
     uint16_t opcode = ins->info->opcode;
 
@@ -265,7 +265,7 @@ void MVM_spesh_facts_guard_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
 }
 
 /* Considers logged types and, if they are stable, adds facts and a guard. */
-static void log_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void log_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                       MVMSpeshIns *ins, MVMSpeshPlanned *p,
                       MVMSpeshAnn *deopt_one_ann, MVMSpeshAnn *logged_ann) {
     /* See if we have stable type information. For now, we need consistent
@@ -421,7 +421,7 @@ static void log_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
 }
 
 /* Visits the blocks in dominator tree order, recursively. */
-static void add_bb_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void add_bb_facts(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                          MVMSpeshPlanned *p) {
     int32_t i;
 
@@ -762,7 +762,7 @@ static void add_bb_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
 /* Exception handlers that use a block to store the handler must not have the
  * instructions that install the block eliminated. This tweaks the usage of
  * them. */
-static void tweak_block_handler_usage(MVMThreadContext *tc, MVMSpeshGraph *g) {
+static void tweak_block_handler_usage(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     uint32_t i;
     for (i = 0; i < g->sf->body.num_handlers; i++) {
         if (g->sf->body.handlers[i].action == MVM_EX_ACTION_INVOKE) {
@@ -781,7 +781,7 @@ static void tweak_block_handler_usage(MVMThreadContext *tc, MVMSpeshGraph *g) {
 }
 
 /* Kicks off fact discovery from the top of the (dominator) tree. */
-void MVM_spesh_facts_discover(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshPlanned *p,
+void MVM_spesh_facts_discover(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshPlanned *p,
         uint32_t is_specialized) {
     /* Set up normal usage information. */
     MVM_spesh_usages_create_usage(tc, g);

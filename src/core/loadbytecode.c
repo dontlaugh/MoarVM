@@ -6,16 +6,16 @@
 typedef struct {
     MVMCompUnit *cu;
 } CompUnitToLoad;
-static void run_load(MVMThreadContext *tc, MVMCompUnit *cu);
-static void sr_on_return(MVMThreadContext *tc, void *sr_data) {
+static void run_load(struct MVMThreadContext *tc, MVMCompUnit *cu);
+static void sr_on_return(struct MVMThreadContext *tc, void *sr_data) {
     CompUnitToLoad *cul = (CompUnitToLoad *)sr_data;
     run_load(tc, cul->cu);
 }
-static void mark_sr_data(MVMThreadContext *tc, void *sr_data, MVMGCWorklist *worklist) {
+static void mark_sr_data(struct MVMThreadContext *tc, void *sr_data, MVMGCWorklist *worklist) {
     CompUnitToLoad *cul = (CompUnitToLoad *)sr_data;
     MVM_gc_worklist_add(tc, worklist, &(cul->cu));
 }
-static void run_comp_unit(MVMThreadContext *tc, MVMCompUnit *cu) {
+static void run_comp_unit(struct MVMThreadContext *tc, MVMCompUnit *cu) {
     /* If there's a deserialization frame, need to run that. */
     if (cu->body.deserialize_frame) {
         /* Set up special return to delegate to running the load frame,
@@ -34,7 +34,7 @@ static void run_comp_unit(MVMThreadContext *tc, MVMCompUnit *cu) {
         run_load(tc, cu);
     }
 }
-void MVM_load_bytecode_buffer(MVMThreadContext *tc, MVMObject *buf) {
+void MVM_load_bytecode_buffer(struct MVMThreadContext *tc, MVMObject *buf) {
     MVMCompUnit *cu;
     uint8_t    *data_start;
     uint32_t    data_size;
@@ -58,7 +58,7 @@ void MVM_load_bytecode_buffer(MVMThreadContext *tc, MVMObject *buf) {
     cu = MVM_cu_from_bytes(tc, data_start, data_size);
     run_comp_unit(tc, cu);
 }
-void MVM_load_bytecode_buffer_to_cu(MVMThreadContext *tc, MVMObject *buf, MVMRegister *res) {
+void MVM_load_bytecode_buffer_to_cu(struct MVMThreadContext *tc, MVMObject *buf, MVMRegister *res) {
     MVMCompUnit *cu;
     uint8_t    *data_start;
     uint32_t    data_size;
@@ -93,7 +93,7 @@ void MVM_load_bytecode_buffer_to_cu(MVMThreadContext *tc, MVMObject *buf, MVMReg
         MVM_frame_dispatch_zero_args(tc, cu->body.deserialize_frame->body.static_code);
     }
 }
-void MVM_load_bytecode(MVMThreadContext *tc, MVMString *filename) {
+void MVM_load_bytecode(struct MVMThreadContext *tc, MVMString *filename) {
 
     /* Work out actual filename to use, taking --libpath into account. */
     filename = MVM_file_in_libpath(tc, filename);
@@ -128,7 +128,7 @@ LEAVE:
     MVM_tc_clear_ex_release_mutex(tc);
     uv_mutex_unlock(&tc->instance->mutex_loaded_compunits);
 }
-void MVM_load_bytecode_fh(MVMThreadContext *tc, MVMObject *oshandle, MVMString *filename) {
+void MVM_load_bytecode_fh(struct MVMThreadContext *tc, MVMObject *oshandle, MVMString *filename) {
     MVMCompUnit *cu;
 
     if (REPR(oshandle)->ID != MVM_REPR_ID_MVMOSHandle)
@@ -145,7 +145,7 @@ void MVM_load_bytecode_fh(MVMThreadContext *tc, MVMObject *oshandle, MVMString *
 }
 
 /* Callback after running deserialize code to run the load code. */
-static void run_load(MVMThreadContext *tc, MVMCompUnit *cu) {
+static void run_load(struct MVMThreadContext *tc, MVMCompUnit *cu) {
     /* If there's a load frame, need to run that. If not, we're done. */
     if (cu->body.load_frame) {
         /* Make sure the call happens in void context. No special return

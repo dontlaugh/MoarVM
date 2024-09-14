@@ -17,7 +17,7 @@
     } \
 } while (0)
 
-MVMObject *MVM_backend_config(MVMThreadContext *tc) {
+MVMObject *MVM_backend_config(struct MVMThreadContext *tc) {
     MVMObject *config = tc->instance->cached_backend_config;
     if (config)
         return config;

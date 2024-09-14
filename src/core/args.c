@@ -1,12 +1,12 @@
 #include "moar.h"
 
-MVM_STATIC_INLINE int32_t is_named_used(MVMArgProcContext *ctx, uint32_t idx) {
+static inline int32_t is_named_used(MVMArgProcContext *ctx, uint32_t idx) {
     return ctx->named_used_size > 64
         ? ctx->named_used.byte_array[idx]
         : ctx->named_used.bit_field & ((uint64_t)1 << idx);
 }
 
-MVM_STATIC_INLINE void mark_named_used(MVMArgProcContext *ctx, uint32_t idx) {
+static inline void mark_named_used(MVMArgProcContext *ctx, uint32_t idx) {
     if (ctx->named_used_size > 64)
         ctx->named_used.byte_array[idx] = 1;
     else
@@ -14,7 +14,7 @@ MVM_STATIC_INLINE void mark_named_used(MVMArgProcContext *ctx, uint32_t idx) {
 }
 
 /* An identity map is just an array { 0, 1, 2, ... }. */
-static uint16_t * create_identity_map(MVMThreadContext *tc, uint32_t size) {
+static uint16_t * create_identity_map(struct MVMThreadContext *tc, uint32_t size) {
     uint16_t *map = MVM_malloc(size * sizeof(uint16_t));
     uint32_t i;
     for (i = 0; i < size; i++)
@@ -24,7 +24,7 @@ static uint16_t * create_identity_map(MVMThreadContext *tc, uint32_t size) {
 
 /* Set up an initial identity map, big enough assuming nobody passes a
  * really large number of arguments. */
-void MVM_args_setup_identity_map(MVMThreadContext *tc) {
+void MVM_args_setup_identity_map(struct MVMThreadContext *tc) {
     tc->instance->identity_arg_map_alloc = MVM_ARGS_SMALL_IDENTITY_MAP_SIZE;
     tc->instance->identity_arg_map = create_identity_map(tc,
             tc->instance->identity_arg_map_alloc);
@@ -32,7 +32,7 @@ void MVM_args_setup_identity_map(MVMThreadContext *tc) {
 }
 
 /* Free memory associated with the identity map(s). */
-void MVM_args_destroy_identity_map(MVMThreadContext *tc) {
+void MVM_args_destroy_identity_map(struct MVMThreadContext *tc) {
     MVM_free(tc->instance->identity_arg_map);
     if (tc->instance->identity_arg_map != tc->instance->small_identity_arg_map)
         MVM_free(tc->instance->small_identity_arg_map);
@@ -40,7 +40,7 @@ void MVM_args_destroy_identity_map(MVMThreadContext *tc) {
 
 /* Perform flattening of arguments as provided, and return the resulting
  * callstack record. */
-static int32_t callsite_name_index(MVMThreadContext *tc, MVMCallStackFlattening *record,
+static int32_t callsite_name_index(struct MVMThreadContext *tc, MVMCallStackFlattening *record,
         uint16_t names_so_far, MVMString *search_name) {
     MVMCallsite *cs = &(record->produced_cs);
     uint16_t i;
@@ -62,7 +62,7 @@ static int key_sort_by_hash(const void *a, const void *b) {
            ha < hb ? -1 :
                       0;
 }
-MVMCallStackFlattening * MVM_args_perform_flattening(MVMThreadContext *tc, MVMCallsite *cs,
+MVMCallStackFlattening * MVM_args_perform_flattening(struct MVMThreadContext *tc, MVMCallsite *cs,
         MVMRegister *source, uint16_t *map) {
     /* Go through the callsite and find the flattening things, counting up the
      * number of arguments it will provide and validating that we know how to
@@ -258,7 +258,7 @@ MVMCallStackFlattening * MVM_args_perform_flattening(MVMThreadContext *tc, MVMCa
 }
 
 /* Grows the identity map to a full size one if we overflow the small one. */
-void MVM_args_grow_identity_map(MVMThreadContext *tc, MVMCallsite *callsite) {
+void MVM_args_grow_identity_map(struct MVMThreadContext *tc, MVMCallsite *callsite) {
     uv_mutex_lock(&tc->instance->mutex_callsite_interns);
     assert(callsite->flag_count <= MVM_ARGS_LIMIT);
     uint32_t full_size = MVM_ARGS_LIMIT + 1;
@@ -271,16 +271,16 @@ void MVM_args_grow_identity_map(MVMThreadContext *tc, MVMCallsite *callsite) {
 }
 
 /* Marks a named used in the current callframe. */
-void MVM_args_marked_named_used(MVMThreadContext *tc, uint32_t idx) {
+void MVM_args_marked_named_used(struct MVMThreadContext *tc, uint32_t idx) {
     mark_named_used(&(tc->cur_frame->params), idx);
 }
 
 /* Make a copy of the callsite. */
-MVMCallsite * MVM_args_copy_callsite(MVMThreadContext *tc, MVMArgProcContext *ctx) {
+MVMCallsite * MVM_args_copy_callsite(struct MVMThreadContext *tc, MVMArgProcContext *ctx) {
     return MVM_callsite_copy(tc, ctx->arg_info.callsite);
 }
 
-MVMObject * MVM_args_use_capture(MVMThreadContext *tc, MVMFrame *f) {
+MVMObject * MVM_args_use_capture(struct MVMThreadContext *tc, MVMFrame *f) {
     /* We used to try and avoid some GC churn by keeping one call capture per
      * thread that was mutated. However, its lifetime was difficult to manage,
      * leading to leaks and subtle bugs. So, we use save_capture always now
@@ -289,12 +289,12 @@ MVMObject * MVM_args_use_capture(MVMThreadContext *tc, MVMFrame *f) {
     return MVM_args_save_capture(tc, f);
 }
 
-MVMObject * MVM_args_save_capture(MVMThreadContext *tc, MVMFrame *frame) {
+MVMObject * MVM_args_save_capture(struct MVMThreadContext *tc, MVMFrame *frame) {
     return MVM_capture_from_args(tc, frame->params.arg_info);
 }
 
 /* Checks that the passed arguments fall within the expected arity. */
-static void arity_fail(MVMThreadContext *tc, uint16_t got, uint16_t min, uint16_t max) {
+static void arity_fail(struct MVMThreadContext *tc, uint16_t got, uint16_t min, uint16_t max) {
     char *problem = got > max ? "Too many" : "Too few";
     if (min == max)
         MVM_exception_throw_adhoc(tc, "%s positionals passed; expected %d argument%s but got %d",
@@ -306,7 +306,7 @@ static void arity_fail(MVMThreadContext *tc, uint16_t got, uint16_t min, uint16_
         MVM_exception_throw_adhoc(tc, "%s positionals passed; expected %d %s %d arguments but got %d",
             problem, min, (min + 1 == max ? "or" : "to"), max, got);
 }
-void MVM_args_checkarity(MVMThreadContext *tc, MVMArgProcContext *ctx, uint16_t min, uint16_t max) {
+void MVM_args_checkarity(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint16_t min, uint16_t max) {
     uint16_t num_pos = ctx->arg_info.callsite->num_pos;
     if (num_pos < min || num_pos > max)
         arity_fail(tc, num_pos, min, max);
@@ -325,7 +325,7 @@ void MVM_args_checkarity(MVMThreadContext *tc, MVMArgProcContext *ctx, uint16_t 
     } \
 } while (0)
 
-static MVMObject * decont_arg(MVMThreadContext *tc, MVMObject *arg) {
+static MVMObject * decont_arg(struct MVMThreadContext *tc, MVMObject *arg) {
     MVMContainerSpec const *contspec = STABLE(arg)->container_spec;
     if (contspec) {
         if (contspec->fetch_never_invokes) {
@@ -496,61 +496,61 @@ static MVMObject * decont_arg(MVMThreadContext *tc, MVMObject *arg) {
     } \
 } while (0)
 
-MVMObject * MVM_args_get_required_pos_obj(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
+MVMObject * MVM_args_get_required_pos_obj(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_REQUIRED, result);
     autobox_switch(tc, result);
     return result.arg.o;
 }
-MVMArgInfo MVM_args_get_optional_pos_obj(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
+MVMArgInfo MVM_args_get_optional_pos_obj(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_OPTIONAL, result);
     autobox_switch(tc, result);
     return result;
 }
-int64_t MVM_args_get_required_pos_int(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
+int64_t MVM_args_get_required_pos_int(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_REQUIRED, result);
     autounbox(tc, MVM_CALLSITE_ARG_INT, "integer", result);
     return result.arg.i64;
 }
-MVMArgInfo MVM_args_get_optional_pos_int(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
+MVMArgInfo MVM_args_get_optional_pos_int(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_OPTIONAL, result);
     autounbox(tc, MVM_CALLSITE_ARG_INT, "integer", result);
     return result;
 }
-double MVM_args_get_required_pos_num(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
+double MVM_args_get_required_pos_num(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_REQUIRED, result);
     autounbox(tc, MVM_CALLSITE_ARG_NUM, "number", result);
     return result.arg.n64;
 }
-MVMArgInfo MVM_args_get_optional_pos_num(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
+MVMArgInfo MVM_args_get_optional_pos_num(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_OPTIONAL, result);
     autounbox(tc, MVM_CALLSITE_ARG_NUM, "number", result);
     return result;
 }
-MVMString * MVM_args_get_required_pos_str(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
+MVMString * MVM_args_get_required_pos_str(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_REQUIRED, result);
     autounbox(tc, MVM_CALLSITE_ARG_STR, "string", result);
     return result.arg.s;
 }
-MVMArgInfo MVM_args_get_optional_pos_str(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
+MVMArgInfo MVM_args_get_optional_pos_str(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_OPTIONAL, result);
     autounbox(tc, MVM_CALLSITE_ARG_STR, "string", result);
     return result;
 }
-uint64_t MVM_args_get_required_pos_uint(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
+uint64_t MVM_args_get_required_pos_uint(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_REQUIRED, result);
     autounbox(tc, MVM_CALLSITE_ARG_UINT, "unsigned integer", result);
     return result.arg.u64;
 }
-MVMArgInfo MVM_args_get_optional_pos_uint(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
+MVMArgInfo MVM_args_get_optional_pos_uint(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_OPTIONAL, result);
     autounbox(tc, MVM_CALLSITE_ARG_UINT, "unsigned integer", result);
@@ -585,37 +585,37 @@ MVMArgInfo MVM_args_get_optional_pos_uint(MVMThreadContext *tc, MVMArgProcContex
     } \
 } while (0)
 
-MVMArgInfo MVM_args_get_named_obj(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required) {
+MVMArgInfo MVM_args_get_named_obj(struct MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required) {
     MVMArgInfo result;
     args_get_named(tc, ctx, name, required);
     autobox_switch(tc, result);
     return result;
 }
-MVMArgInfo MVM_args_get_named_int(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required) {
+MVMArgInfo MVM_args_get_named_int(struct MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required) {
     MVMArgInfo result;
     args_get_named(tc, ctx, name, required);
     autounbox(tc, MVM_CALLSITE_ARG_INT, "integer", result);
     return result;
 }
-MVMArgInfo MVM_args_get_named_num(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required) {
+MVMArgInfo MVM_args_get_named_num(struct MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required) {
     MVMArgInfo result;
     args_get_named(tc, ctx, name, required);
     autounbox(tc, MVM_CALLSITE_ARG_NUM, "number", result);
     return result;
 }
-MVMArgInfo MVM_args_get_named_str(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required) {
+MVMArgInfo MVM_args_get_named_str(struct MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required) {
     MVMArgInfo result;
     args_get_named(tc, ctx, name, required);
     autounbox(tc, MVM_CALLSITE_ARG_STR, "string", result);
     return result;
 }
-MVMArgInfo MVM_args_get_named_uint(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required) {
+MVMArgInfo MVM_args_get_named_uint(struct MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required) {
     MVMArgInfo result;
     args_get_named(tc, ctx, name, required);
     autounbox(tc, MVM_CALLSITE_ARG_UINT, "unsigned integer", result);
     return result;
 }
-void MVM_args_assert_nameds_used(MVMThreadContext *tc, MVMArgProcContext *ctx) {
+void MVM_args_assert_nameds_used(struct MVMThreadContext *tc, MVMArgProcContext *ctx) {
     uint16_t size = ctx->named_used_size;
     uint16_t i;
     if (size > 64) {
@@ -630,7 +630,7 @@ void MVM_args_assert_nameds_used(MVMThreadContext *tc, MVMArgProcContext *ctx) {
     }
 }
 
-void MVM_args_throw_named_unused_error(MVMThreadContext *tc, MVMString *name) {
+void MVM_args_throw_named_unused_error(struct MVMThreadContext *tc, MVMString *name) {
     char *c_param = MVM_string_utf8_encode_C_string(tc, name);
     char *waste[] = { c_param, NULL };
     MVM_exception_throw_adhoc_free(tc, waste,
@@ -640,7 +640,7 @@ void MVM_args_throw_named_unused_error(MVMThreadContext *tc, MVMString *name) {
 
 /* Result setting. The frameless flag indicates that the currently
  * executing code does not have a MVMFrame of its own. */
-static MVMObject * decont_result(MVMThreadContext *tc, MVMObject *result) {
+static MVMObject * decont_result(struct MVMThreadContext *tc, MVMObject *result) {
     MVMContainerSpec const *contspec = STABLE(result)->container_spec;
     if (contspec) {
         if (contspec->fetch_never_invokes) {
@@ -656,11 +656,11 @@ static MVMObject * decont_result(MVMThreadContext *tc, MVMObject *result) {
         return result;
     }
 }
-static void save_for_exit_handler(MVMThreadContext *tc, MVMObject *result) {
+static void save_for_exit_handler(struct MVMThreadContext *tc, MVMObject *result) {
     MVMFrameExtra *e = MVM_frame_extra(tc, tc->cur_frame);
     e->exit_handler_result = result;
 }
-void MVM_args_set_result_obj(MVMThreadContext *tc, MVMObject *result, int32_t frameless) {
+void MVM_args_set_result_obj(struct MVMThreadContext *tc, MVMObject *result, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;
@@ -705,7 +705,7 @@ void MVM_args_set_result_obj(MVMThreadContext *tc, MVMObject *result, int32_t fr
     }
 }
 
-void MVM_args_set_dispatch_result_obj(MVMThreadContext *tc, MVMFrame *target, MVMObject *result) {
+void MVM_args_set_dispatch_result_obj(struct MVMThreadContext *tc, MVMFrame *target, MVMObject *result) {
     switch (target->return_type) {
         case MVM_RETURN_VOID:
             break;
@@ -729,7 +729,7 @@ void MVM_args_set_dispatch_result_obj(MVMThreadContext *tc, MVMFrame *target, MV
     }
 }
 
-void MVM_args_set_result_int(MVMThreadContext *tc, int64_t result, int32_t frameless) {
+void MVM_args_set_result_int(struct MVMThreadContext *tc, int64_t result, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;
@@ -773,7 +773,7 @@ void MVM_args_set_result_int(MVMThreadContext *tc, int64_t result, int32_t frame
     }
 }
 
-void MVM_args_set_result_uint(MVMThreadContext *tc, uint64_t result, int32_t frameless) {
+void MVM_args_set_result_uint(struct MVMThreadContext *tc, uint64_t result, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;
@@ -817,7 +817,7 @@ void MVM_args_set_result_uint(MVMThreadContext *tc, uint64_t result, int32_t fra
     }
 }
 
-void MVM_args_set_dispatch_result_int(MVMThreadContext *tc, MVMFrame *target, int64_t result) {
+void MVM_args_set_dispatch_result_int(struct MVMThreadContext *tc, MVMFrame *target, int64_t result) {
     switch (target->return_type) {
         case MVM_RETURN_VOID:
             break;
@@ -840,7 +840,7 @@ void MVM_args_set_dispatch_result_int(MVMThreadContext *tc, MVMFrame *target, in
     }
 }
 
-void MVM_args_set_dispatch_result_uint(MVMThreadContext *tc, MVMFrame *target, uint64_t result) {
+void MVM_args_set_dispatch_result_uint(struct MVMThreadContext *tc, MVMFrame *target, uint64_t result) {
     switch (target->return_type) {
         case MVM_RETURN_VOID:
             break;
@@ -863,7 +863,7 @@ void MVM_args_set_dispatch_result_uint(MVMThreadContext *tc, MVMFrame *target, u
     }
 }
 
-void MVM_args_set_result_num(MVMThreadContext *tc, double result, int32_t frameless) {
+void MVM_args_set_result_num(struct MVMThreadContext *tc, double result, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;
@@ -907,7 +907,7 @@ void MVM_args_set_result_num(MVMThreadContext *tc, double result, int32_t framel
     }
 }
 
-void MVM_args_set_dispatch_result_num(MVMThreadContext *tc, MVMFrame *target, double result) {
+void MVM_args_set_dispatch_result_num(struct MVMThreadContext *tc, MVMFrame *target, double result) {
     switch (target->return_type) {
         case MVM_RETURN_VOID:
             break;
@@ -930,7 +930,7 @@ void MVM_args_set_dispatch_result_num(MVMThreadContext *tc, MVMFrame *target, do
     }
 }
 
-void MVM_args_set_result_str(MVMThreadContext *tc, MVMString *result, int32_t frameless) {
+void MVM_args_set_result_str(struct MVMThreadContext *tc, MVMString *result, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;
@@ -974,7 +974,7 @@ void MVM_args_set_result_str(MVMThreadContext *tc, MVMString *result, int32_t fr
     }
 }
 
-void MVM_args_set_dispatch_result_str(MVMThreadContext *tc, MVMFrame *target, MVMString *result) {
+void MVM_args_set_dispatch_result_str(struct MVMThreadContext *tc, MVMFrame *target, MVMString *result) {
     switch (target->return_type) {
         case MVM_RETURN_VOID:
             if (tc->cur_frame->static_info->body.has_exit_handler)
@@ -994,7 +994,7 @@ void MVM_args_set_dispatch_result_str(MVMThreadContext *tc, MVMFrame *target, MV
     }
 }
 
-void MVM_args_assert_void_return_ok(MVMThreadContext *tc, int32_t frameless) {
+void MVM_args_assert_void_return_ok(struct MVMThreadContext *tc, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;
@@ -1048,7 +1048,7 @@ void MVM_args_assert_void_return_ok(MVMThreadContext *tc, int32_t frameless) {
         OBJECT_BODY(result), reg, MVM_reg_obj); \
 } while (0)
 
-MVMObject * MVM_args_slurpy_positional(MVMThreadContext *tc, MVMArgProcContext *ctx, uint16_t pos) {
+MVMObject * MVM_args_slurpy_positional(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint16_t pos) {
     MVMObject *type = (*(tc->interp_cu))->body.hll_config->slurpy_array_type, *result = NULL, *box = NULL;
     MVMArgInfo arg_info;
     MVMRegister reg;
@@ -1142,7 +1142,7 @@ MVMObject * MVM_args_slurpy_positional(MVMThreadContext *tc, MVMArgProcContext *
         OBJECT_BODY(result), (MVMObject *)key, reg, MVM_reg_obj); \
 } while (0)
 
-MVMObject * MVM_args_slurpy_named(MVMThreadContext *tc, MVMArgProcContext *ctx) {
+MVMObject * MVM_args_slurpy_named(struct MVMThreadContext *tc, MVMArgProcContext *ctx) {
     MVMObject *type = (*(tc->interp_cu))->body.hll_config->slurpy_hash_type, *result = NULL, *box = NULL;
     MVMArgInfo arg_info;
     MVMRegister reg;
@@ -1232,7 +1232,7 @@ MVMObject * MVM_args_slurpy_named(MVMThreadContext *tc, MVMArgProcContext *ctx) 
 
 /* Custom bind failure handling. Invokes the HLL's bind failure handler, with
  * an argument capture */
-static void bind_error_return(MVMThreadContext *tc, void *sr_data) {
+static void bind_error_return(struct MVMThreadContext *tc, void *sr_data) {
     MVMRegister *r = (MVMRegister *)sr_data;
     MVMObject *res = r->o;
     if (tc->cur_frame->caller)
@@ -1241,11 +1241,11 @@ static void bind_error_return(MVMThreadContext *tc, void *sr_data) {
         MVM_exception_throw_adhoc(tc, "No caller to return to after bind_error");
     MVM_frame_try_return(tc);
 }
-static void mark_sr_data(MVMThreadContext *tc, void *sr_data, MVMGCWorklist *worklist) {
+static void mark_sr_data(struct MVMThreadContext *tc, void *sr_data, MVMGCWorklist *worklist) {
     MVMRegister *r = (MVMRegister *)sr_data;
     MVM_gc_worklist_add(tc, worklist, &r->o);
 }
-void MVM_args_bind_failed(MVMThreadContext *tc, MVMDispInlineCacheEntry **ice_ptr) {
+void MVM_args_bind_failed(struct MVMThreadContext *tc, MVMDispInlineCacheEntry **ice_ptr) {
     /* There are two situations we may be in. Either we are doing a dispatch
      * that wishes to resume upon a bind failure, or we need to trigger the
      * bind failure handler. This is determined by if there is a bind failure
@@ -1287,7 +1287,7 @@ void MVM_args_bind_failed(MVMThreadContext *tc, MVMDispInlineCacheEntry **ice_pt
 /* Called when args binding is completed successfully. A no-op unless we're
  * below a bind control record that wants to turn bind success into a
  * dispatch resumption. */
-void MVM_args_bind_succeeded(MVMThreadContext *tc, MVMDispInlineCacheEntry **ice_ptr) {
+void MVM_args_bind_succeeded(struct MVMThreadContext *tc, MVMDispInlineCacheEntry **ice_ptr) {
     MVMCallStackRecord *under_us = tc->stack_top->prev;
     while (under_us->kind == MVM_CALLSTACK_RECORD_START_REGION)
         under_us = under_us->prev;

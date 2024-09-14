@@ -32,7 +32,7 @@ struct MVMP6bigint {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMP6bigint_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMP6bigint_initialize(struct MVMThreadContext *tc);
 
-int64_t MVM_p6bigint_get_int64(MVMThreadContext *tc, MVMP6bigintBody *body);
-void MVM_p6bigint_store_as_mp_int(MVMThreadContext *tc, MVMP6bigintBody *body, int64_t value);
+int64_t MVM_p6bigint_get_int64(struct MVMThreadContext *tc, MVMP6bigintBody *body);
+void MVM_p6bigint_store_as_mp_int(struct MVMThreadContext *tc, MVMP6bigintBody *body, int64_t value);

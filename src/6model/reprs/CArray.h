@@ -49,4 +49,4 @@ struct MVMCArrayREPRData {
 };
 
 /* Initializes the CArray REPR. */
-const MVMREPROps * MVMCArray_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMCArray_initialize(struct MVMThreadContext *tc);

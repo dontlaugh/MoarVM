@@ -2,7 +2,7 @@
 
 static const MVMREPROps MVMDLLSym_this_repr;
 
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &MVMDLLSym_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -14,7 +14,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
     return st->WHAT;
 }
 
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src,
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src,
         MVMObject *dest_root, void *dest) {
     MVMDLLSymBody *src_body = src;
     MVMDLLSymBody *dest_body = dest;
@@ -34,15 +34,15 @@ static const MVMStorageSpec storage_spec = {
     0,                          /* is_unsigned */
 };
 
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* noop */
 }
 
-const MVMREPROps * MVMDLLSym_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMDLLSym_initialize(struct MVMThreadContext *tc) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &MVMDLLSym_this_repr, NULL);
 
     MVMROOT(tc, st) {

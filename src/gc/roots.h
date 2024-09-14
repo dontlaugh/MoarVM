@@ -1,3 +1,5 @@
+
+
 /* Set this flag to debug temporary root pushes/pops. */
 #define MVM_TEMP_ROOT_DEBUG 0
 
@@ -6,10 +8,10 @@
 #define MVM_TEMP_ROOT_BASE_ALLOC 16
 
 /* Temp root push slow-path case. */
-MVM_PUBLIC void MVM_gc_root_temp_push_slow(MVMThreadContext *tc, MVMCollectable **obj_ref);
+ void MVM_gc_root_temp_push_slow(struct MVMThreadContext *tc, MVMCollectable **obj_ref);
 
 /* Fast-path case of pushing a root onto the per-thread temporary roots. */
-MVM_STATIC_INLINE void MVM_gc_root_temp_push(MVMThreadContext *tc, MVMCollectable **obj_ref) {
+static inline void MVM_gc_root_temp_push(struct MVMThreadContext *tc, MVMCollectable **obj_ref) {
     /* If debugging, ensure the root is not null. */
 #if MVM_TEMP_ROOT_DEBUG
     if (obj_ref == NULL)
@@ -29,7 +31,7 @@ MVM_STATIC_INLINE void MVM_gc_root_temp_push(MVMThreadContext *tc, MVMCollectabl
 }
 
 /* Special forms of root pushing only needed for the MVMROOT macros */
-static uint8_t __MVM_gc_root_temp_push_ensure_space_slow(MVMThreadContext *tc, uint8_t amount) {
+static uint8_t __MVM_gc_root_temp_push_ensure_space_slow(struct MVMThreadContext *tc, uint8_t amount) {
     if (tc->num_temproots + amount > tc->alloc_temproots) {
         tc->alloc_temproots *= 2;
         tc->temproots = MVM_realloc(tc->temproots,
@@ -37,7 +39,7 @@ static uint8_t __MVM_gc_root_temp_push_ensure_space_slow(MVMThreadContext *tc, u
     }
     return 1;
 }
-MVM_STATIC_INLINE uint8_t __MVM_gc_root_temp_push_ensure_space(MVMThreadContext *tc, uint8_t amount) {
+static inline uint8_t __MVM_gc_root_temp_push_ensure_space(struct MVMThreadContext *tc, uint8_t amount) {
     /* If less than the number of always-allocated roots, we are happy */
     if (MVM_LIKELY(tc->num_temproots + amount < MVM_TEMP_ROOT_BASE_ALLOC)) {
         return 1;
@@ -50,7 +52,7 @@ MVM_STATIC_INLINE uint8_t __MVM_gc_root_temp_push_ensure_space(MVMThreadContext 
     }
 }
 /* We only use this after having manually assured that there is space. */
-MVM_STATIC_INLINE uint8_t __MVM_gc_root_temp_push_nonvoid_noslow(MVMThreadContext *tc, MVMCollectable **obj_ref, uint8_t chain_in) {
+static inline uint8_t __MVM_gc_root_temp_push_nonvoid_noslow(struct MVMThreadContext *tc, MVMCollectable **obj_ref, uint8_t chain_in) {
     /* If debugging, ensure the root is not null. */
 #if MVM_TEMP_ROOT_DEBUG
     if (obj_ref == NULL)
@@ -63,13 +65,13 @@ MVM_STATIC_INLINE uint8_t __MVM_gc_root_temp_push_nonvoid_noslow(MVMThreadContex
 }
 /* Special version of gc_root_temp_push that returns a value so it is
  * allowed to be chained together without the compiler complaining. */
-MVM_STATIC_INLINE uint8_t __MVM_gc_root_temp_push_nonvoid(MVMThreadContext *tc, MVMCollectable **obj_ref, uint8_t chain_in) {
+static inline uint8_t __MVM_gc_root_temp_push_nonvoid(struct MVMThreadContext *tc,struct  MVMCollectable **obj_ref, uint8_t chain_in) {
     MVM_gc_root_temp_push(tc, obj_ref);
     return 1;
 }
 
 /* Pop top root from the per-thread temporary roots stack. */
-MVM_STATIC_INLINE void MVM_gc_root_temp_pop(MVMThreadContext *tc) {
+static inline void MVM_gc_root_temp_pop(struct MVMThreadContext *tc) {
 #if MVM_TEMP_ROOT_DEBUG
     if (tc->num_temproots <= 0)
         MVM_panic(1, "Illegal attempt to pop empty temporary root stack");
@@ -78,7 +80,7 @@ MVM_STATIC_INLINE void MVM_gc_root_temp_pop(MVMThreadContext *tc) {
 }
 
 /* Pop top n roots from the per-thread temporary roots stack. */
-MVM_STATIC_INLINE void MVM_gc_root_temp_pop_n(MVMThreadContext *tc, uint32_t n) {
+static inline void MVM_gc_root_temp_pop_n(struct MVMThreadContext *tc, uint32_t n) {
 #if MVM_TEMP_ROOT_DEBUG
     if (tc->num_temproots < n)
         MVM_panic(MVM_exitcode_gcroots, "Illegal attempt to pop insufficiently large temporary root stack");
@@ -87,21 +89,21 @@ MVM_STATIC_INLINE void MVM_gc_root_temp_pop_n(MVMThreadContext *tc, uint32_t n) 
 }
 
 /* Other functions related to roots. */
-MVM_PUBLIC void MVM_gc_root_add_permanent(MVMThreadContext *tc, MVMCollectable **obj_ref);
-MVM_PUBLIC void MVM_gc_root_add_permanent_desc(MVMThreadContext *tc, MVMCollectable **obj_ref, const char *description);
-void MVM_gc_root_add_permanents_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
-void MVM_gc_root_add_instance_roots_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
-void MVM_gc_root_add_tc_roots_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
-uint32_t MVM_gc_root_temp_mark(MVMThreadContext *tc);
-void MVM_gc_root_temp_mark_reset(MVMThreadContext *tc, uint32_t mark);
-void MVM_gc_root_temp_pop_all(MVMThreadContext *tc);
-void MVM_gc_root_add_temps_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
-void MVM_gc_root_gen2_add(MVMThreadContext *tc, MVMCollectable *c);
-void MVM_gc_root_add_gen2s_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist);
-void MVM_gc_root_add_gen2s_to_snapshot(MVMThreadContext *tc, MVMHeapSnapshotState *snapshot);
-void MVM_gc_root_gen2_cleanup(MVMThreadContext *tc);
-void MVM_gc_root_add_frame_roots_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *start_frame);
-void MVM_gc_root_add_frame_registers_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *frame);
+ void MVM_gc_root_add_permanent(struct MVMThreadContext *tc, MVMCollectable **obj_ref);
+ void MVM_gc_root_add_permanent_desc(struct MVMThreadContext *tc, MVMCollectable **obj_ref, const char *description);
+void MVM_gc_root_add_permanents_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
+void MVM_gc_root_add_instance_roots_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
+void MVM_gc_root_add_tc_roots_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
+uint32_t MVM_gc_root_temp_mark(struct MVMThreadContext *tc);
+void MVM_gc_root_temp_mark_reset(struct MVMThreadContext *tc, uint32_t mark);
+void MVM_gc_root_temp_pop_all(struct MVMThreadContext *tc);
+void MVM_gc_root_add_temps_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
+void MVM_gc_root_gen2_add(struct MVMThreadContext *tc, MVMCollectable *c);
+void MVM_gc_root_add_gen2s_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist);
+void MVM_gc_root_add_gen2s_to_snapshot(struct MVMThreadContext *tc, MVMHeapSnapshotState *snapshot);
+void MVM_gc_root_gen2_cleanup(struct MVMThreadContext *tc);
+void MVM_gc_root_add_frame_roots_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *start_frame);
+void MVM_gc_root_add_frame_registers_to_worklist(struct MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *frame);
 
 /* C preprocessor macros are basically the worst thing ever.
  * So here's an explanation of the cool new MVMROOT macro:

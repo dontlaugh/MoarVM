@@ -1,7 +1,7 @@
 #include "moar.h"
 
 /* Gets the HOW (meta-object), which may be lazily deserialized. */
-MVMObject * MVM_6model_get_how(MVMThreadContext *tc, MVMSTable *st) {
+MVMObject * MVM_6model_get_how(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMObject *HOW = st->HOW;
     if (!HOW && st->HOW_sc)
         MVM_ASSIGN_REF(tc, &(st->header), st->HOW, HOW = MVM_sc_get_object(tc, st->HOW_sc, st->HOW_idx));
@@ -10,7 +10,7 @@ MVMObject * MVM_6model_get_how(MVMThreadContext *tc, MVMSTable *st) {
 
 /* Gets the HOW (meta-object), which may be lazily deserialized, through the
  * STable of the passed object. */
-MVMObject * MVM_6model_get_how_obj(MVMThreadContext *tc, MVMObject *obj) {
+MVMObject * MVM_6model_get_how_obj(struct MVMThreadContext *tc, MVMObject *obj) {
     return MVM_6model_get_how(tc, STABLE(obj));
 }
 
@@ -19,7 +19,7 @@ MVMObject * MVM_6model_get_how_obj(MVMThreadContext *tc, MVMObject *obj) {
  * is not in the cache and the cache is authoritative, then we know the answer
  * too; result is set to zero and a true value is returned. Otherwise, we can
  * not tell and a false value is returned and result is undefined. */
-int64_t MVM_6model_try_cache_type_check(MVMThreadContext *tc, MVMObject *obj,
+int64_t MVM_6model_try_cache_type_check(struct MVMThreadContext *tc, MVMObject *obj,
         MVMObject *type, int64_t *result) {
     /* A null is always false. */
     if (MVM_is_null(tc, obj)) {
@@ -47,7 +47,7 @@ int64_t MVM_6model_try_cache_type_check(MVMThreadContext *tc, MVMObject *obj,
 }
 
 /* Clean up STable memory. */
-void MVM_6model_stable_gc_free(MVMThreadContext *tc, MVMSTable *st) {
+void MVM_6model_stable_gc_free(struct MVMThreadContext *tc, MVMSTable *st) {
     /* First have it free its repr_data if it wants. */
     if (st->REPR->gc_free_repr_data)
         st->REPR->gc_free_repr_data(tc, st);
@@ -61,13 +61,13 @@ void MVM_6model_stable_gc_free(MVMThreadContext *tc, MVMSTable *st) {
 }
 
 /* Get the next type cache ID for a newly created STable. */
-uint64_t MVM_6model_next_type_cache_id(MVMThreadContext *tc) {
+uint64_t MVM_6model_next_type_cache_id(struct MVMThreadContext *tc) {
     return (uint64_t)MVM_add(&tc->instance->cur_type_cache_id, MVM_TYPE_CACHE_ID_INCR) + MVM_TYPE_CACHE_ID_INCR;
 }
 
 /* For type objects, marks the type as never repossessable. For concrete object
  * instances, marks the individual ojbect as never repossessable. */
-void MVM_6model_never_repossess(MVMThreadContext *tc, MVMObject *obj) {
+void MVM_6model_never_repossess(struct MVMThreadContext *tc, MVMObject *obj) {
     if (IS_CONCRETE(obj))
         obj->header.flags1 |= MVM_CF_NEVER_REPOSSESS;
     else
@@ -75,7 +75,7 @@ void MVM_6model_never_repossess(MVMThreadContext *tc, MVMObject *obj) {
 }
 
 /* Set the debug name on a type. */
-void MVM_6model_set_debug_name(MVMThreadContext *tc, MVMObject *type, MVMString *name) {
+void MVM_6model_set_debug_name(struct MVMThreadContext *tc, MVMObject *type, MVMString *name) {
     char *orig_debug_name;
     uv_mutex_lock(&(tc->instance->mutex_free_at_safepoint));
     orig_debug_name = STABLE(type)->debug_name;

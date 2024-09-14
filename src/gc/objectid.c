@@ -2,7 +2,7 @@
 
 /* Gets a stable identifier for an object, which will not change even if the
  * GC moves the object. */
-uint64_t MVM_gc_object_id(MVMThreadContext *tc, MVMObject *obj) {
+uint64_t MVM_gc_object_id(struct MVMThreadContext *tc, MVMObject *obj) {
     uint64_t id;
 
     /* If it's already in the old generation, just use memory address, as
@@ -37,7 +37,7 @@ uint64_t MVM_gc_object_id(MVMThreadContext *tc, MVMObject *obj) {
 /* If an object with an entry here lives long enough to be promoted to gen2,
  * this removes the hash entry for it and returns the pre-allocated gen2
  * address. */
-void * MVM_gc_object_id_use_allocation(MVMThreadContext *tc, MVMCollectable *item) {
+void * MVM_gc_object_id_use_allocation(struct MVMThreadContext *tc, MVMCollectable *item) {
     uv_mutex_lock(&tc->instance->mutex_object_ids);
     void *addr = (void *) MVM_ptr_hash_fetch_and_delete(tc, &tc->instance->object_ids, item);
     item->flags1 ^= MVM_CF_HAS_OBJECT_ID;
@@ -47,7 +47,7 @@ void * MVM_gc_object_id_use_allocation(MVMThreadContext *tc, MVMCollectable *ite
 
 /* Clears hash entry for a persistent object ID when an object dies in the
  * nursery. */
-void MVM_gc_object_id_clear(MVMThreadContext *tc, MVMCollectable *item) {
+void MVM_gc_object_id_clear(struct MVMThreadContext *tc, MVMCollectable *item) {
     uv_mutex_lock(&tc->instance->mutex_object_ids);
     (void) MVM_ptr_hash_fetch_and_delete(tc, &tc->instance->object_ids, item);
     uv_mutex_unlock(&tc->instance->mutex_object_ids);

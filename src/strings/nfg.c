@@ -6,7 +6,7 @@
 
 /* Finds the index of a given codepoint within a trie node. Returns it if
  * there is one, or negative if there is not (note 0 is a valid index). */
-static int32_t find_child_node_idx(MVMThreadContext *tc, const MVMNFGTrieNode *node, MVMCodepoint cp) {
+static int32_t find_child_node_idx(struct MVMThreadContext *tc, const MVMNFGTrieNode *node, MVMCodepoint cp) {
     if (node) {
         /* TODO: update this to do a binary search later on. */
         int32_t i;
@@ -18,11 +18,11 @@ static int32_t find_child_node_idx(MVMThreadContext *tc, const MVMNFGTrieNode *n
 }
 
 /* Does a lookup in the trie for a synthetic for the specified codepoints. */
-static MVMNFGTrieNode * find_child_node(MVMThreadContext *tc, const MVMNFGTrieNode *node, MVMCodepoint cp) {
+static MVMNFGTrieNode * find_child_node(struct MVMThreadContext *tc, const MVMNFGTrieNode *node, MVMCodepoint cp) {
     int32_t idx = find_child_node_idx(tc, node, cp);
     return idx >= 0 ? node->next_codes[idx].node : NULL;
 }
-static MVMGrapheme32 lookup_synthetic(MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes) {
+static MVMGrapheme32 lookup_synthetic(struct MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes) {
     MVMNFGTrieNode *cur_node        = tc->instance->nfg->grapheme_lookup;
     MVMCodepoint   *cur_code        = codes;
     int32_t        codes_remaining = num_codes;
@@ -40,7 +40,7 @@ static MVMGrapheme32 lookup_synthetic(MVMThreadContext *tc, MVMCodepoint *codes,
  * of or creates a node for the synthetic. As we walk back up we create or
  * copy+tweak nodes until we have produced a new trie, re-using what we can of
  * the existing one. */
-static MVMNFGTrieNode * twiddle_trie_node(MVMThreadContext *tc, MVMNFGTrieNode *current, MVMCodepoint *cur_code, int32_t codes_remaining, MVMGrapheme32 synthetic) {
+static MVMNFGTrieNode * twiddle_trie_node(struct MVMThreadContext *tc, MVMNFGTrieNode *current, MVMCodepoint *cur_code, int32_t codes_remaining, MVMGrapheme32 synthetic) {
     /* Make a new empty node, which we'll maybe copy some things from the
      * current node into. */
     MVMNFGTrieNode *new_node = MVM_malloc(sizeof(MVMNFGTrieNode));
@@ -127,7 +127,7 @@ static MVMNFGTrieNode * twiddle_trie_node(MVMThreadContext *tc, MVMNFGTrieNode *
         MVM_free_at_safepoint(tc, current);
     return new_node;
 }
-static void add_synthetic_to_trie(MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes, MVMGrapheme32 synthetic) {
+static void add_synthetic_to_trie(struct MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes, MVMGrapheme32 synthetic) {
     MVMNFGState    *nfg      = tc->instance->nfg;
     MVMNFGTrieNode *new_trie = twiddle_trie_node(tc, nfg->grapheme_lookup, codes, num_codes, synthetic);
     MVM_barrier();
@@ -138,7 +138,7 @@ static void add_synthetic_to_trie(MVMThreadContext *tc, MVMCodepoint *codes, int
  * checked that the synthetic does not exist. Adds it to the lookup trie and
  * synthetics table, making sure to do enough copy/free-at-safe-point work to
  * not upset other threads possibly doing concurrent reads. */
-static MVMGrapheme32 add_synthetic(MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes, int32_t utf8_c8) {
+static MVMGrapheme32 add_synthetic(struct MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes, int32_t utf8_c8) {
     MVMNFGState     *nfg = tc->instance->nfg;
     MVMNFGSynthetic *synth;
     MVMGrapheme32    result;
@@ -218,7 +218,7 @@ static MVMGrapheme32 add_synthetic(MVMThreadContext *tc, MVMCodepoint *codes, in
 /* Does a lookup of a synthetic in the trie. If we find one, returns it. If
  * not, acquires the update lock, re-checks that we really are missing the
  * synthetic, and then adds it. */
-static MVMGrapheme32 lookup_or_add_synthetic(MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes, int32_t utf8_c8) {
+static MVMGrapheme32 lookup_or_add_synthetic(struct MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes, int32_t utf8_c8) {
     MVMGrapheme32 result = lookup_synthetic(tc, codes, num_codes);
     if (!result) {
         uv_mutex_lock(&tc->instance->nfg->update_mutex);
@@ -235,7 +235,7 @@ static MVMGrapheme32 lookup_or_add_synthetic(MVMThreadContext *tc, MVMCodepoint 
  * already existing one if we saw it before, or a new one if not.  Assumes
  * that the code points are already in NFC, and as such canonical ordering has
  * been applied. */
-MVMGrapheme32 MVM_nfg_codes_to_grapheme(MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes) {
+MVMGrapheme32 MVM_nfg_codes_to_grapheme(struct MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes) {
     if (num_codes == 1)
         return codes[0];
     else if (num_codes < MVM_GRAPHEME_MAX_CODEPOINTS)
@@ -246,7 +246,7 @@ MVMGrapheme32 MVM_nfg_codes_to_grapheme(MVMThreadContext *tc, MVMCodepoint *code
 
 /* Does the same as MVM_nfg_codes_to_grapheme, but flags the added grapheme as
  * being an UTF8-C8 synthetic. */
-MVMGrapheme32 MVM_nfg_codes_to_grapheme_utf8_c8(MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes) {
+MVMGrapheme32 MVM_nfg_codes_to_grapheme_utf8_c8(struct MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes) {
     if (num_codes == 1)
         return codes[0];
     else
@@ -254,7 +254,7 @@ MVMGrapheme32 MVM_nfg_codes_to_grapheme_utf8_c8(MVMThreadContext *tc, MVMCodepoi
 }
 
 /* Gets the \r\n synthetic. */
-MVMGrapheme32 MVM_nfg_crlf_grapheme(MVMThreadContext *tc) {
+MVMGrapheme32 MVM_nfg_crlf_grapheme(struct MVMThreadContext *tc) {
     return tc->instance->nfg->crlf_grapheme;
 }
 
@@ -262,7 +262,7 @@ MVMGrapheme32 MVM_nfg_crlf_grapheme(MVMThreadContext *tc) {
  * must be a synthetic codepoint (that is, negative). The memory returned is
  * not to be freed by the caller; it also is only valid until the next GC
  * safe point. */
-MVMNFGSynthetic * MVM_nfg_get_synthetic_info(MVMThreadContext *tc, MVMGrapheme32 synth) {
+MVMNFGSynthetic * MVM_nfg_get_synthetic_info(struct MVMThreadContext *tc, MVMGrapheme32 synth) {
     MVMNFGState *nfg       = tc->instance->nfg;
     uint32_t     synth_idx = -synth - 1;
     if (synth >= 0)
@@ -275,7 +275,7 @@ MVMNFGSynthetic * MVM_nfg_get_synthetic_info(MVMThreadContext *tc, MVMGrapheme32
 /* Gets the cached case change if we already computed it, or computes it if
  * this is the first time we're using it. */
 static MVMGrapheme32 CASE_UNCHANGED[1] = {0};
-static void compute_case_change(MVMThreadContext *tc, MVMGrapheme32 synth_g, MVMNFGSynthetic *synth_info, int32_t case_) {
+static void compute_case_change(struct MVMThreadContext *tc, MVMGrapheme32 synth_g, MVMNFGSynthetic *synth_info, int32_t case_) {
     int32_t num_result_graphs;
     MVMGrapheme32          *result = NULL;
     const MVMCodepoint *result_cps = NULL;
@@ -350,7 +350,7 @@ static void compute_case_change(MVMThreadContext *tc, MVMGrapheme32 synth_g, MVM
             MVM_panic(1, "NFG: invalid case change %d", case_);
     }
 }
-uint32_t MVM_nfg_get_case_change(MVMThreadContext *tc, MVMGrapheme32 synth, int32_t case_, MVMGrapheme32 **result) {
+uint32_t MVM_nfg_get_case_change(struct MVMThreadContext *tc, MVMGrapheme32 synth, int32_t case_, MVMGrapheme32 **result) {
     MVMNFGSynthetic *synth_info = MVM_nfg_get_synthetic_info(tc, synth);
     switch (case_) {
     case MVM_unicode_case_change_type_upper:
@@ -378,20 +378,20 @@ uint32_t MVM_nfg_get_case_change(MVMThreadContext *tc, MVMGrapheme32 synth, int3
     }
 }
 
-MVM_STATIC_INLINE int32_t passes_quickcheck_and_zero_ccc(MVMThreadContext *tc, MVMCodepoint cp) {
+static inline int32_t passes_quickcheck_and_zero_ccc(struct MVMThreadContext *tc, MVMCodepoint cp) {
     return MVM_unicode_codepoint_get_property_int(tc, cp, MVM_UNICODE_PROPERTY_NFG_QC)
     &&     MVM_unicode_codepoint_get_property_int(tc, cp,
                MVM_UNICODE_PROPERTY_CANONICAL_COMBINING_CLASS) <= MVM_UNICODE_PVALUE_CCC_0;
 }
 /* Returns true for cps with Grapheme_Cluster_Break = Control */
-MVM_STATIC_INLINE int32_t codepoint_GCB_Control (MVMThreadContext *tc, MVMCodepoint codepoint) {
+static inline int32_t codepoint_GCB_Control (struct MVMThreadContext *tc, MVMCodepoint codepoint) {
     return MVM_unicode_codepoint_get_property_int(tc, codepoint,
         MVM_UNICODE_PROPERTY_GRAPHEME_CLUSTER_BREAK)
     ==  MVM_UNICODE_PVALUE_GCB_CONTROL;
 }
 /* Returns non-zero if the result of concatenating the two strings will freely
  * leave us in NFG without any further effort. */
-int32_t MVM_nfg_is_concat_stable(MVMThreadContext *tc, MVMString *a, MVMString *b) {
+int32_t MVM_nfg_is_concat_stable(struct MVMThreadContext *tc, MVMString *a, MVMString *b) {
     MVMGrapheme32 last_a;
     MVMGrapheme32 first_b;
     MVMGrapheme32 crlf;
@@ -450,11 +450,11 @@ int32_t MVM_nfg_is_concat_stable(MVMThreadContext *tc, MVMString *a, MVMString *
 }
 
 /* Initialize NFG subsystem. */
-static void cache_crlf(MVMThreadContext *tc) {
+static void cache_crlf(struct MVMThreadContext *tc) {
     MVMCodepoint codes[2] = { '\r', '\n' };
     tc->instance->nfg->crlf_grapheme = lookup_or_add_synthetic(tc, codes, 2, 0);
 }
-void MVM_nfg_init(MVMThreadContext *tc) {
+void MVM_nfg_init(struct MVMThreadContext *tc) {
     int init_stat;
     tc->instance->nfg = MVM_calloc(1, sizeof(MVMNFGState));
     if ((init_stat = uv_mutex_init(&(tc->instance->nfg->update_mutex))) < 0) {
@@ -465,7 +465,7 @@ void MVM_nfg_init(MVMThreadContext *tc) {
     cache_crlf(tc);
 }
 
-static void nfg_trie_node_destroy(MVMThreadContext *tc, MVMNFGTrieNode *node) {
+static void nfg_trie_node_destroy(struct MVMThreadContext *tc, MVMNFGTrieNode *node) {
     int32_t i = 0;
     for(; i < node->num_entries; i++) {
         nfg_trie_node_destroy(tc, node->next_codes[i].node);
@@ -477,7 +477,7 @@ static void nfg_trie_node_destroy(MVMThreadContext *tc, MVMNFGTrieNode *node) {
 
 /* Free all memory allocated to hold synthetic graphemes. These are global
  * to a VM instance. */
-void MVM_nfg_destroy(MVMThreadContext *tc) {
+void MVM_nfg_destroy(struct MVMThreadContext *tc) {
     MVMNFGState *nfg = tc->instance->nfg;
     uint32_t i;
 

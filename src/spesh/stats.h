@@ -229,13 +229,13 @@ struct MVMSpeshSimCallType {
     MVMSpeshStatsType *arg_types;
 };
 
-void MVM_spesh_stats_update(MVMThreadContext *tc, MVMSpeshLog *sl, MVMObject *sf_newly_seen,
+void MVM_spesh_stats_update(struct MVMThreadContext *tc, MVMSpeshLog *sl, MVMObject *sf_newly_seen,
         MVMObject *sf_updated, uint64_t *newly_seen, uint64_t *updated);
-void MVM_spesh_stats_cleanup(MVMThreadContext *tc, MVMObject *check_frames);
-void MVM_spesh_stats_gc_mark(MVMThreadContext *tc, MVMSpeshStats *ss, MVMGCWorklist *worklist);
-void MVM_spesh_stats_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *snapshot, MVMSpeshStats *ss);
-void MVM_spesh_stats_destroy(MVMThreadContext *tc, MVMSpeshStats *ss);
-void MVM_spesh_sim_stack_gc_mark(MVMThreadContext *tc, MVMSpeshSimStack *sims,
+void MVM_spesh_stats_cleanup(struct MVMThreadContext *tc, MVMObject *check_frames);
+void MVM_spesh_stats_gc_mark(struct MVMThreadContext *tc, MVMSpeshStats *ss, MVMGCWorklist *worklist);
+void MVM_spesh_stats_gc_describe(struct MVMThreadContext *tc, MVMHeapSnapshotState *snapshot, MVMSpeshStats *ss);
+void MVM_spesh_stats_destroy(struct MVMThreadContext *tc, MVMSpeshStats *ss);
+void MVM_spesh_sim_stack_gc_mark(struct MVMThreadContext *tc, MVMSpeshSimStack *sims,
     MVMGCWorklist *worklist);
-void MVM_spesh_sim_stack_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSpeshSimStack *sims);
-void MVM_spesh_sim_stack_destroy(MVMThreadContext *tc, MVMSpeshSimStack *sims);
+void MVM_spesh_sim_stack_gc_describe(struct MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSpeshSimStack *sims);
+void MVM_spesh_sim_stack_destroy(struct MVMThreadContext *tc, MVMSpeshSimStack *sims);

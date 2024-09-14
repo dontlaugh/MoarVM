@@ -42,7 +42,7 @@ static void appendf(DumpStr *ds, const char *fmt, ...) {
 }
 
 /* Turns a MoarVM string into a C string and appends it. */
-static void append_str(MVMThreadContext *tc, DumpStr *ds, MVMString *s) {
+static void append_str(struct MVMThreadContext *tc, DumpStr *ds, MVMString *s) {
     char *cs = MVM_string_utf8_encode_C_string(tc, s);
     append(ds, cs);
     MVM_free(cs);
@@ -64,20 +64,20 @@ typedef struct {
     int32_t inline_idx[64];
 } InlineIndexStack;
 
-static void push_inline(MVMThreadContext *tc, InlineIndexStack *stack, int32_t idx) {
+static void push_inline(struct MVMThreadContext *tc, InlineIndexStack *stack, int32_t idx) {
     if (stack->cur_depth == 63)
         MVM_oops(tc, "Too many levels of inlining to dump");
     stack->cur_depth++;
     stack->inline_idx[stack->cur_depth] = idx;
 }
 
-static void pop_inline(MVMThreadContext *tc, InlineIndexStack *stack) {
+static void pop_inline(struct MVMThreadContext *tc, InlineIndexStack *stack) {
     stack->cur_depth--;
     if (stack->cur_depth < -1)
         MVM_oops(tc, "Too many levels of inlining popped");
 }
 
-static MVMCompUnit * get_current_cu(MVMThreadContext *tc, MVMSpeshGraph *g, InlineIndexStack *stack) {
+static MVMCompUnit * get_current_cu(struct MVMThreadContext *tc, MVMSpeshGraph *g, InlineIndexStack *stack) {
     if (stack->cur_depth < 0)
         return g->sf->body.cu;
     else
@@ -85,7 +85,7 @@ static MVMCompUnit * get_current_cu(MVMThreadContext *tc, MVMSpeshGraph *g, Inli
 }
 
 /* Dumps a basic block. */
-static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void dump_bb(struct MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpeshBB *bb,
                     SpeshGraphSizeStats *stats, InlineIndexStack *inline_stack) {
     MVMSpeshIns *cur_ins;
     int64_t     i;
@@ -461,7 +461,7 @@ static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpes
 }
 
 /* Dump deopt usages. */
-static void dump_deopt_usages(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpeshOperand operand) {
+static void dump_deopt_usages(struct MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpeshOperand operand) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, operand);
     MVMSpeshDeoptUseEntry *entry = facts->usage.deopt_users;
     if (entry) {
@@ -478,7 +478,7 @@ static void dump_deopt_usages(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *
     }
 }
 /* Dumps the facts table. */
-static void dump_facts(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g) {
+static void dump_facts(struct MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g) {
     uint16_t i, j, num_locals, num_facts;
     num_locals = g->num_locals;
     for (i = 0; i < num_locals; i++) {
@@ -561,7 +561,7 @@ static void dump_facts(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g) {
     }
 }
 
-static void dump_callsite(MVMThreadContext *tc, DumpStr *ds, MVMCallsite *cs) {
+static void dump_callsite(struct MVMThreadContext *tc, DumpStr *ds, MVMCallsite *cs) {
     uint16_t i;
     appendf(ds, "Callsite %p (%d args, %d pos)\n", cs, cs->flag_count, cs->num_pos);
     for (i = 0; i < cs->flag_count - cs->num_pos; i++) {
@@ -604,7 +604,7 @@ static void dump_callsite(MVMThreadContext *tc, DumpStr *ds, MVMCallsite *cs) {
     append(ds, "\n");
 }
 
-static void dump_fileinfo(MVMThreadContext *tc, DumpStr *ds, MVMStaticFrame *sf) {
+static void dump_fileinfo(struct MVMThreadContext *tc, DumpStr *ds, MVMStaticFrame *sf) {
     MVMBytecodeAnnotation *ann = MVM_bytecode_resolve_annotation(tc, &sf->body, 0);
     MVMCompUnit            *cu = sf->body.cu;
     uint32_t          str_idx = ann ? ann->filename_string_heap_index : 0;
@@ -622,7 +622,7 @@ static void dump_fileinfo(MVMThreadContext *tc, DumpStr *ds, MVMStaticFrame *sf)
     MVM_free(ann);
 }
 
-static void dump_deopt_pea(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g) {
+static void dump_deopt_pea(struct MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g) {
     uint32_t i, j;
     if (MVM_VECTOR_ELEMS(g->deopt_pea.materialize_info)) {
         append(ds, "\nMaterializations:\n");
@@ -646,7 +646,7 @@ static void dump_deopt_pea(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g) 
 }
 
 /* Dump a spesh graph into string form, for debugging purposes. */
-char * MVM_spesh_dump(MVMThreadContext *tc, MVMSpeshGraph *g) {
+char * MVM_spesh_dump(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB *cur_bb;
     SpeshGraphSizeStats stats;
     InlineIndexStack inline_stack;
@@ -742,7 +742,7 @@ char * MVM_spesh_dump(MVMThreadContext *tc, MVMSpeshGraph *g) {
 }
 
 /* Dumps a spesh stats type typle. */
-static void dump_stats_type_tuple(MVMThreadContext *tc, DumpStr *ds, MVMCallsite *cs,
+static void dump_stats_type_tuple(struct MVMThreadContext *tc, DumpStr *ds, MVMCallsite *cs,
                                   MVMSpeshStatsType *type_tuple, char *prefix) {
     uint32_t j;
     for (j = 0; j < cs->flag_count; j++) {
@@ -764,7 +764,7 @@ static void dump_stats_type_tuple(MVMThreadContext *tc, DumpStr *ds, MVMCallsite
 }
 
 /* Dumps the statistics associated with a particular callsite object. */
-static void dump_stats_by_callsite(MVMThreadContext *tc, DumpStr *ds, MVMSpeshStatsByCallsite *css) {
+static void dump_stats_by_callsite(struct MVMThreadContext *tc, DumpStr *ds, MVMSpeshStatsByCallsite *css) {
     uint32_t i, j, k;
 
     if (css->cs)
@@ -824,7 +824,7 @@ static void dump_stats_by_callsite(MVMThreadContext *tc, DumpStr *ds, MVMSpeshSt
 }
 
 /* Dumps the statistics associated with a static frame into a string. */
-char * MVM_spesh_dump_stats(MVMThreadContext *tc, MVMStaticFrame *sf) {
+char * MVM_spesh_dump_stats(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     MVMSpeshStats *ss = sf->body.spesh->body.spesh_stats;
 
     DumpStr ds;
@@ -863,7 +863,7 @@ char * MVM_spesh_dump_stats(MVMThreadContext *tc, MVMStaticFrame *sf) {
 }
 
 /* Dumps a planned specialization into a string. */
-char * MVM_spesh_dump_planned(MVMThreadContext *tc, MVMSpeshPlanned *p) {
+char * MVM_spesh_dump_planned(struct MVMThreadContext *tc, MVMSpeshPlanned *p) {
     DumpStr ds;
     ds.alloc  = 8192;
     ds.buffer = MVM_malloc(ds.alloc);
@@ -948,7 +948,7 @@ char * MVM_spesh_dump_planned(MVMThreadContext *tc, MVMSpeshPlanned *p) {
 }
 
 /* Dumps a static frame's guard set into a string. */
-char * MVM_spesh_dump_arg_guard(MVMThreadContext *tc, MVMStaticFrame *sf, MVMSpeshArgGuard *ag) {
+char * MVM_spesh_dump_arg_guard(struct MVMThreadContext *tc, MVMStaticFrame *sf, MVMSpeshArgGuard *ag) {
     DumpStr ds;
     ds.alloc  = 8192;
     ds.buffer = MVM_malloc(ds.alloc);

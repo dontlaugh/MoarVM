@@ -4,7 +4,7 @@
 
 /* Macros for getting things from the bytecode stream. */
 #if MVM_GC_DEBUG >= 2
-MVM_STATIC_INLINE uint16_t check_reg(MVMThreadContext *tc, MVMRegister *reg_base, uint16_t idx) {
+static inline uint16_t check_reg(struct MVMThreadContext *tc, MVMRegister *reg_base, uint16_t idx) {
     MVMFrame *f = tc->cur_frame;
     uint16_t kind = f->spesh_cand && f->spesh_cand->body.local_types
         ? f->spesh_cand->body.local_types[idx]
@@ -22,7 +22,7 @@ MVM_STATIC_INLINE uint16_t check_reg(MVMThreadContext *tc, MVMRegister *reg_base
 #define GET_REG(pc, idx)    reg_base[*((uint16_t *)(pc + idx))]
 #endif
 #if MVM_GC_DEBUG >= 2
-MVM_STATIC_INLINE uint16_t check_lex(MVMThreadContext *tc, MVMFrame *f, uint16_t idx) {
+static inline uint16_t check_lex(struct MVMThreadContext *tc, MVMFrame *f, uint16_t idx) {
     uint16_t kind = f->spesh_cand && f->spesh_cand->body.lexical_types
         ? f->spesh_cand->body.lexical_types[idx]
         : f->static_info->body.lexical_types[idx];
@@ -37,19 +37,19 @@ MVM_STATIC_INLINE uint16_t check_lex(MVMThreadContext *tc, MVMFrame *f, uint16_t
 #define GET_I16(pc, idx)    *((int16_t *)(pc + idx))
 #define GET_UI16(pc, idx)   *((uint16_t *)(pc + idx))
 
-MVM_STATIC_INLINE int32_t GET_I32(const uint8_t *pc, int32_t idx) {
+static inline int32_t GET_I32(const uint8_t *pc, int32_t idx) {
     int32_t retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
 }
 
-MVM_STATIC_INLINE uint32_t GET_UI32(const uint8_t *pc, int32_t idx) {
+static inline uint32_t GET_UI32(const uint8_t *pc, int32_t idx) {
     uint32_t retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
 }
 
-MVM_STATIC_INLINE uint64_t GET_UI64(const uint8_t *pc, int32_t idx) {
+static inline uint64_t GET_UI64(const uint8_t *pc, int32_t idx) {
     uint64_t retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
@@ -81,7 +81,7 @@ typedef union float_memory
 } float_memory;
 #define CAST_N32(u) (((float_memory)(u)).d)
 
-static void error_concreteness(MVMThreadContext *tc, MVMObject *object, uint16_t op) {
+static void error_concreteness(struct MVMThreadContext *tc, MVMObject *object, uint16_t op) {
     MVM_exception_throw_adhoc(tc, "%s requires a concrete object (got a %s type object instead)",
             MVM_op_get_op(op)->name, MVM_6model_get_debug_name(tc, object));
 }
@@ -91,7 +91,7 @@ static int tracing_enabled = 0;
 /* Various spesh ops incorporate a fastcreate, so they can decide to not do
  * the allocation and serve a result from a cache instead. This factors the
  * fastcreate logic out. */
-static MVMObject * fastcreate(MVMThreadContext *tc, uint8_t *cur_op) {
+static MVMObject * fastcreate(struct MVMThreadContext *tc, uint8_t *cur_op) {
     /* Assume we're in normal code, so doing a nursery allocation.
      * Also, that there is no initialize. */
     uint16_t size       = GET_UI16(cur_op, 2);
@@ -143,7 +143,7 @@ MVMDispInlineCacheEntry ** MVM_disp_inline_cache_get_spesh(MVMStaticFrame *sf, u
 }
 
 /* This is the interpreter run loop. We have one of these per thread. */
-void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContext *, void *), void *invoke_data, MVMRunloopState *outer_runloop) {
+void MVM_interp_run(struct MVMThreadContext *tc, void (*initial_invoke)(struct MVMThreadContext *, void *), void *invoke_data, MVMRunloopState *outer_runloop) {
 #if MVM_CGOTO
 #include "oplabels.h"
 #endif
@@ -7023,7 +7023,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
     MVM_barrier();
 }
 
-void MVM_interp_run_nested(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContext *, void *), void *invoke_data, MVMRegister *res) {
+void MVM_interp_run_nested(struct MVMThreadContext *tc, void (*initial_invoke)(struct MVMThreadContext *, void *), void *invoke_data, MVMRegister *res) {
     MVMFrame     *backup_cur_frame          = MVM_frame_force_to_heap(tc, tc->cur_frame);
     MVMFrame     *backup_thread_entry_frame = tc->thread_entry_frame;
     MVMReturnType backup_return_type        = tc->cur_frame->return_type;

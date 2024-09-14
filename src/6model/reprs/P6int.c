@@ -6,7 +6,7 @@
 /* This representation's function pointer table. */
 static const MVMREPROps P6int_this_repr;
 
-static void mk_storage_spec(MVMThreadContext *tc, uint16_t bits, uint16_t is_unsigned, MVMStorageSpec *spec) {
+static void mk_storage_spec(struct MVMThreadContext *tc, uint16_t bits, uint16_t is_unsigned, MVMStorageSpec *spec) {
     /* create storage spec */
     spec->inlineable      = MVM_STORAGE_SPEC_INLINED;
     spec->boxed_primitive = is_unsigned ? MVM_STORAGE_SPEC_BP_UINT64 : MVM_STORAGE_SPEC_BP_INT;
@@ -24,7 +24,7 @@ static void mk_storage_spec(MVMThreadContext *tc, uint16_t bits, uint16_t is_uns
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st  = MVM_gc_allocate_stable(tc, &P6int_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -44,7 +44,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Copies the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     MVMP6intBody *src_body  = (MVMP6intBody *)src;
     MVMP6intBody *dest_body = (MVMP6intBody *)dest;
@@ -56,7 +56,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
     }
 }
 
-static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t value) {
+static void set_uint(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t value) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     switch (repr_data->bits) {
         case 64: ((MVMP6intBody *)data)->value.u64 = value; break;
@@ -66,7 +66,7 @@ static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
     }
 }
 
-static uint64_t get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t get_uint(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     switch (repr_data->bits) {
         case 64: return ((MVMP6intBody *)data)->value.u64;
@@ -76,7 +76,7 @@ static uint64_t get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, v
     }
 }
 
-void MVMP6int_set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
+void MVMP6int_set_int(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     switch (repr_data->bits) {
         case 64: ((MVMP6intBody *)data)->value.i64 = value; break;
@@ -86,7 +86,7 @@ void MVMP6int_set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void
     }
 }
 
-int64_t MVMP6int_get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+int64_t MVMP6int_get_int(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     switch (repr_data->bits) {
         case 64: return ((MVMP6intBody *)data)->value.i64;
@@ -97,7 +97,7 @@ int64_t MVMP6int_get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, v
 }
 
 /* Marks the representation data in an STable.*/
-static void gc_free_repr_data(MVMThreadContext *tc, MVMSTable *st) {
+static void gc_free_repr_data(struct MVMThreadContext *tc, MVMSTable *st) {
     MVM_free(st->REPR_data);
 }
 
@@ -112,7 +112,7 @@ static const MVMStorageSpec default_storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     if (repr_data && repr_data->bits)
         return &repr_data->storage_spec;
@@ -120,7 +120,7 @@ static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *
 }
 
 /* Compose the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     MVMStringConsts  str_consts = tc->instance->str_consts;
 
@@ -163,19 +163,19 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
 }
 
 /* Set the size of the STable. */
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMP6int);
 }
 
 /* Serializes the REPR data. */
-static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
+static void serialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     MVM_serialization_write_int(tc, writer, repr_data->bits);
     MVM_serialization_write_int(tc, writer, repr_data->is_unsigned);
 }
 
 /* Deserializes representation data. */
-static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)MVM_malloc(sizeof(MVMP6intREPRData));
 
 
@@ -194,15 +194,15 @@ static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerial
     st->REPR_data = repr_data;
 }
 
-static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
+static void deserialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMP6int_set_int(tc, st, root, data, MVM_serialization_read_int(tc, reader));
 }
 
-static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
+static void serialize(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVM_serialization_write_int(tc, writer, MVMP6int_get_int(tc, st, NULL, data));
 }
 
-static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
+static void spesh(struct MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     switch (ins->info->opcode) {
         case MVM_OP_box_i: {
@@ -306,7 +306,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
     }
 }
 /* Initializes the representation. */
-const MVMREPROps * MVMP6int_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMP6int_initialize(struct MVMThreadContext *tc) {
     return &P6int_this_repr;
 }
 

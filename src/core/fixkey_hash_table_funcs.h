@@ -5,10 +5,10 @@
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
 #define MVM_FIXKEY_HASH_LOAD_FACTOR 0.75
-MVM_STATIC_INLINE uint32_t MVM_fixkey_hash_official_size(const struct MVMFixKeyHashTableControl *control) {
+static inline uint32_t MVM_fixkey_hash_official_size(const struct MVMFixKeyHashTableControl *control) {
     return 1 << (uint32_t)control->official_size_log2;
 }
-MVM_STATIC_INLINE uint32_t MVM_fixkey_hash_max_items(const struct MVMFixKeyHashTableControl *control) {
+static inline uint32_t MVM_fixkey_hash_max_items(const struct MVMFixKeyHashTableControl *control) {
     return MVM_fixkey_hash_official_size(control) * MVM_FIXKEY_HASH_LOAD_FACTOR;
 }
 /* -1 because...
@@ -18,22 +18,22 @@ MVM_STATIC_INLINE uint32_t MVM_fixkey_hash_max_items(const struct MVMFixKeyHashT
  * probe distance of 2 is the first extra bucket beyond the official allocation
  * probe distance of 255 is the 254th beyond the official allocation.
  */
-MVM_STATIC_INLINE uint32_t MVM_fixkey_hash_allocated_items(const struct MVMFixKeyHashTableControl *control) {
+static inline uint32_t MVM_fixkey_hash_allocated_items(const struct MVMFixKeyHashTableControl *control) {
     return MVM_fixkey_hash_official_size(control) + control->max_probe_distance_limit - 1;
 }
-MVM_STATIC_INLINE uint32_t MVM_fixkey_hash_kompromat(const struct MVMFixKeyHashTableControl *control) {
+static inline uint32_t MVM_fixkey_hash_kompromat(const struct MVMFixKeyHashTableControl *control) {
     return MVM_fixkey_hash_official_size(control) + control->max_probe_distance - 1;
 }
-MVM_STATIC_INLINE uint8_t *MVM_fixkey_hash_metadata(const struct MVMFixKeyHashTableControl *control) {
+static inline uint8_t *MVM_fixkey_hash_metadata(const struct MVMFixKeyHashTableControl *control) {
     return (uint8_t *) control + sizeof(struct MVMFixKeyHashTableControl);
 }
-MVM_STATIC_INLINE uint8_t *MVM_fixkey_hash_entries(const struct MVMFixKeyHashTableControl *control) {
+static inline uint8_t *MVM_fixkey_hash_entries(const struct MVMFixKeyHashTableControl *control) {
     return (uint8_t *) control - sizeof(MVMString ***);
 }
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
    which you allocated (heap, stack, inside another struct, wherever) */
-void MVM_fixkey_hash_demolish(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable);
+void MVM_fixkey_hash_demolish(struct MVMThreadContext *tc, MVMFixKeyHashTable *hashtable);
 /* and then free memory if you allocated it */
 
 /* Call this before you use the hashtable, to initialise it.
@@ -41,9 +41,9 @@ void MVM_fixkey_hash_demolish(MVMThreadContext *tc, MVMFixKeyHashTable *hashtabl
  * you wish.
  * entry_size == 0 is permitted as a special case (see fixkey_hash_table.h)
  */
-void MVM_fixkey_hash_build(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t entry_size);
+void MVM_fixkey_hash_build(struct MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t entry_size);
 
-MVM_STATIC_INLINE int MVM_fixkey_hash_is_empty(MVMThreadContext *tc,
+static inline int MVM_fixkey_hash_is_empty(struct MVMThreadContext *tc,
                                                MVMFixKeyHashTable *hashtable) {
     struct MVMFixKeyHashTableControl *control = hashtable->table;
     return !control || control->cur_items == 0;
@@ -58,13 +58,13 @@ MVM_STATIC_INLINE int MVM_fixkey_hash_is_empty(MVMThreadContext *tc,
  * pointer *within* the hash, which you should assign your static storage to.
  * (where your static storage must be a structure starting with the key.)
  */
-void *MVM_fixkey_hash_insert_nocheck(MVMThreadContext *tc,
+void *MVM_fixkey_hash_insert_nocheck(struct MVMThreadContext *tc,
                                      MVMFixKeyHashTable *hashtable,
                                      MVMString *key);
 
 
-MVM_STATIC_INLINE struct MVM_hash_loop_state
-MVM_fixkey_hash_create_loop_state(MVMThreadContext *tc,
+static inline struct MVM_hash_loop_state
+MVM_fixkey_hash_create_loop_state(struct MVMThreadContext *tc,
                                   struct MVMFixKeyHashTableControl *control,
                                   MVMString *key) {
     uint64_t hash_val = MVM_string_hash_code(tc, key);
@@ -89,7 +89,7 @@ MVM_fixkey_hash_create_loop_state(MVMThreadContext *tc,
     return retval;
 }
 
-MVM_STATIC_INLINE void *MVM_fixkey_hash_fetch_nocheck(MVMThreadContext *tc,
+static inline void *MVM_fixkey_hash_fetch_nocheck(struct MVMThreadContext *tc,
                                                       MVMFixKeyHashTable *hashtable,
                                                       MVMString *key) {
     if (MVM_fixkey_hash_is_empty(tc, hashtable)) {
@@ -148,7 +148,7 @@ MVM_STATIC_INLINE void *MVM_fixkey_hash_fetch_nocheck(MVMThreadContext *tc,
  * You probably *don't* want to call it for this case - use
  * MVM_fixkey_hash_insert instead.
  */
-void *MVM_fixkey_hash_lvalue_fetch_nocheck(MVMThreadContext *tc,
+void *MVM_fixkey_hash_lvalue_fetch_nocheck(struct MVMThreadContext *tc,
                                            MVMFixKeyHashTable *hashtable,
                                            MVMString *key);
 
@@ -156,8 +156,8 @@ void *MVM_fixkey_hash_lvalue_fetch_nocheck(MVMThreadContext *tc,
  * Passes the callback (tc, entry, arg)
  * By declaring this inline, the optimiser may be able to inline the callback,
  * and hence eliminate the indirect function call. */
-MVM_STATIC_INLINE void MVM_fixkey_hash_foreach(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable,
-                                               void (*callback)(MVMThreadContext *, void *, void *),
+static inline void MVM_fixkey_hash_foreach(struct MVMThreadContext *tc, MVMFixKeyHashTable *hashtable,
+                                               void (*callback)(struct MVMThreadContext *, void *, void *),
                                                void *arg) {
     struct MVMFixKeyHashTableControl *control = hashtable->table;
     if (!control)

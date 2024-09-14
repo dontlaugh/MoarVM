@@ -157,4 +157,4 @@ struct MVMCompUnit {
 #define MVM_STRING_FAST_TABLE_SPAN 16
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMCompUnit_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMCompUnit_initialize(struct MVMThreadContext *tc);

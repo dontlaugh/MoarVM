@@ -35,4 +35,4 @@ struct MVMContinuation {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMContinuation_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMContinuation_initialize(struct MVMThreadContext *tc);

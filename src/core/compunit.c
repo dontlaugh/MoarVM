@@ -7,7 +7,7 @@
 #endif
 
 /* Creates a compilation unit from a byte array. */
-MVMCompUnit * MVM_cu_from_bytes(MVMThreadContext *tc, uint8_t *bytes, uint32_t size) {
+MVMCompUnit * MVM_cu_from_bytes(struct MVMThreadContext *tc, uint8_t *bytes, uint32_t size) {
     /* Create compilation unit data structure. Allocate it in gen2 always, so
      * it will never move (the JIT relies on this). */
     MVMCompUnit *cu;
@@ -29,7 +29,7 @@ MVMCompUnit * MVM_cu_from_bytes(MVMThreadContext *tc, uint8_t *bytes, uint32_t s
 }
 
 /* Loads a compilation unit from a bytecode file, mapping it into memory. */
-MVMCompUnit * MVM_cu_map_from_file(MVMThreadContext *tc, const char *filename, int32_t free_filename) {
+MVMCompUnit * MVM_cu_map_from_file(struct MVMThreadContext *tc, const char *filename, int32_t free_filename) {
     MVMCompUnit *cu          = NULL;
     void        *block       = NULL;
     void        *handle      = NULL;
@@ -70,7 +70,7 @@ MVMCompUnit * MVM_cu_map_from_file(MVMThreadContext *tc, const char *filename, i
 }
 
 /* Loads a compilation unit from a bytecode file handle, mapping it into memory. */
-MVMCompUnit * MVM_cu_map_from_file_handle(MVMThreadContext *tc, uv_file fd, uint64_t pos) {
+MVMCompUnit * MVM_cu_map_from_file_handle(struct MVMThreadContext *tc, uv_file fd, uint64_t pos) {
     MVMCompUnit *cu          = NULL;
     void        *block       = NULL;
     void        *handle      = NULL;
@@ -99,7 +99,7 @@ MVMCompUnit * MVM_cu_map_from_file_handle(MVMThreadContext *tc, uv_file fd, uint
 }
 
 /* Adds an extra callsite, needed due to an inlining, and returns its index. */
-uint16_t MVM_cu_callsite_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMCallsite *cs) {
+uint16_t MVM_cu_callsite_add(struct MVMThreadContext *tc, MVMCompUnit *cu, MVMCallsite *cs) {
     uint16_t found = 0;
     uint32_t idx;
 
@@ -131,7 +131,7 @@ uint16_t MVM_cu_callsite_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMCallsite 
 }
 
 /* Adds an extra string, needed due to an inlining, and returns its index. */
-uint32_t MVM_cu_string_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMString *str) {
+uint32_t MVM_cu_string_add(struct MVMThreadContext *tc, MVMCompUnit *cu, MVMString *str) {
     uint32_t found = 0;
     uint32_t idx;
 
@@ -177,7 +177,7 @@ static uint32_t read_uint32(uint8_t *src) {
     return *((uint32_t *)src);
 #endif
 }
-static void compute_fast_table_upto(MVMThreadContext *tc, MVMCompUnit *cu, uint32_t end_bin) {
+static void compute_fast_table_upto(struct MVMThreadContext *tc, MVMCompUnit *cu, uint32_t end_bin) {
     uint32_t  cur_bin = cu->body.string_heap_fast_table_top;
     uint8_t  *cur_pos = cu->body.string_heap_start + cu->body.string_heap_fast_table[cur_bin];
     uint8_t  *limit   = cu->body.string_heap_read_limit;
@@ -200,7 +200,7 @@ static void compute_fast_table_upto(MVMThreadContext *tc, MVMCompUnit *cu, uint3
     MVM_barrier();
     cu->body.string_heap_fast_table_top = end_bin;
 }
-MVMString * MVM_cu_obtain_string(MVMThreadContext *tc, MVMCompUnit *cu, uint32_t idx) {
+MVMString * MVM_cu_obtain_string(struct MVMThreadContext *tc, MVMCompUnit *cu, uint32_t idx) {
     uint32_t  cur_idx;
     uint8_t  *cur_pos;
     uint8_t  *limit = cu->body.string_heap_read_limit;

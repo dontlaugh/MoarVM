@@ -101,34 +101,34 @@ struct MVMCallsiteInterns {
 };
 
 /* Functions relating to common callsites used within the VM. */
-void MVM_callsite_initialize_common(MVMThreadContext *tc);
-MVM_PUBLIC MVMCallsite * MVM_callsite_get_common(MVMThreadContext *tc, MVMCommonCallsiteID id);
+void MVM_callsite_initialize_common(struct MVMThreadContext *tc);
+ MVMCallsite * MVM_callsite_get_common(struct MVMThreadContext *tc, MVMCommonCallsiteID id);
 
 /* Other copying, interning, and cleanup. */
-MVMCallsite * MVM_callsite_copy(MVMThreadContext *tc, const MVMCallsite *cs);
-MVM_PUBLIC void MVM_callsite_intern(MVMThreadContext *tc, MVMCallsite **cs,
+MVMCallsite * MVM_callsite_copy(struct MVMThreadContext *tc, const MVMCallsite *cs);
+ void MVM_callsite_intern(struct MVMThreadContext *tc, MVMCallsite **cs,
         uint32_t force, uint32_t steal);
-void MVM_callsite_mark(MVMThreadContext *tc, MVMCallsite *cs, MVMGCWorklist *worklist,
+void MVM_callsite_mark(struct MVMThreadContext *tc, MVMCallsite *cs, MVMGCWorklist *worklist,
         MVMHeapSnapshotState *snapshot);
-void MVM_callsite_mark_interns(MVMThreadContext *tc, MVMGCWorklist *worklist,
+void MVM_callsite_mark_interns(struct MVMThreadContext *tc, MVMGCWorklist *worklist,
         MVMHeapSnapshotState *snapshot);
 void MVM_callsite_destroy(MVMCallsite *cs);
 void MVM_callsite_cleanup_interns(MVMInstance *instance);
 
 /* Callsite transformations. */
-MVMCallsite * MVM_callsite_drop_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx);
-MVMCallsite * MVM_callsite_drop_positionals(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx, uint32_t count);
-MVMCallsite * MVM_callsite_insert_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
+MVMCallsite * MVM_callsite_drop_positional(struct MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx);
+MVMCallsite * MVM_callsite_drop_positionals(struct MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx, uint32_t count);
+MVMCallsite * MVM_callsite_insert_positional(struct MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
         MVMCallsiteFlags flag);
-MVMCallsite * MVM_callsite_replace_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
+MVMCallsite * MVM_callsite_replace_positional(struct MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
         MVMCallsiteFlags flag);
 /* Check if the callsite has nameds. */
-MVM_STATIC_INLINE uint32_t MVM_callsite_has_nameds(MVMThreadContext *tc, const MVMCallsite *cs) {
+static inline uint32_t MVM_callsite_has_nameds(struct MVMThreadContext *tc, const MVMCallsite *cs) {
     return cs->num_pos != cs->flag_count;
 }
 
 /* Count the number of nameds (excluding flattening). */
-MVM_STATIC_INLINE uint16_t MVM_callsite_num_nameds(MVMThreadContext *tc, const MVMCallsite *cs) {
+static inline uint16_t MVM_callsite_num_nameds(struct MVMThreadContext *tc, const MVMCallsite *cs) {
     uint16_t i = cs->num_pos;
     uint16_t nameds = 0;
     while (i < cs->flag_count) {
@@ -140,7 +140,7 @@ MVM_STATIC_INLINE uint16_t MVM_callsite_num_nameds(MVMThreadContext *tc, const M
 }
 
 /* Describe the callsite flag type. */
-MVM_STATIC_INLINE const char * MVM_callsite_arg_type_name(MVMCallsiteFlags f) {
+static inline const char * MVM_callsite_arg_type_name(MVMCallsiteFlags f) {
     switch (f & MVM_CALLSITE_ARG_TYPE_MASK) {
         case MVM_CALLSITE_ARG_OBJ:
             return "obj";

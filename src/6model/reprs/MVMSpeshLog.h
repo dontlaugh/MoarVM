@@ -107,4 +107,4 @@ struct MVMSpeshLog {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMSpeshLog_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMSpeshLog_initialize(struct MVMThreadContext *tc);

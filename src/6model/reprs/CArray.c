@@ -5,7 +5,7 @@ static const MVMREPROps CArray_this_repr;
 
 /* Creates a new type object of this representation, and associates it with
  * the given HOW. */
-static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
+static MVMObject * type_object_for(struct MVMThreadContext *tc, MVMObject *HOW) {
     MVMSTable *st = MVM_gc_allocate_stable(tc, &CArray_this_repr, HOW);
 
     MVMROOT(tc, st) {
@@ -18,7 +18,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
 }
 
 /* Composes the representation. */
-static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
+static void compose(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
     MVMStringConsts str_consts = tc->instance->str_consts;
     MVMObject *info = MVM_repr_at_key_o(tc, info_hash, str_consts.array);
     if (!MVM_is_null(tc, info)) {
@@ -102,7 +102,7 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
 }
 
 /* Initialize a new instance. */
-static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static void initialize(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     /* If we're initialized, presumably we're going to be
      * managing the memory in this array ourself. */
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
@@ -125,7 +125,7 @@ static void initialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
 }
 
 /* Copies to the body of one object to another. */
-static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
+static void copy_to(struct MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *dest_root, void *dest) {
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
     MVMCArrayBody     *src_body  = (MVMCArrayBody *)src;
     MVMCArrayBody     *dest_body = (MVMCArrayBody *)dest;
@@ -145,7 +145,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 
 /* This is called to do any cleanup of resources when an object gets
  * embedded inside another one. Never called on a top-level object. */
-static void gc_cleanup(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static void gc_cleanup(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMCArrayBody     *body      = (MVMCArrayBody *)data;
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
     int32_t i;
@@ -162,11 +162,11 @@ static void gc_cleanup(MVMThreadContext *tc, MVMSTable *st, void *data) {
         MVM_free(body->child_objs);
 }
 
-static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
+static void gc_free(struct MVMThreadContext *tc, MVMObject *obj) {
     gc_cleanup(tc, STABLE(obj), OBJECT_BODY(obj));
 }
 
-static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
+static void gc_mark(struct MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMCArrayBody *body = (MVMCArrayBody *)data;
     const int32_t elems = body->elems;
     int32_t i;
@@ -180,14 +180,14 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 }
 
 /* Marks the representation data in an STable.*/
-static void gc_mark_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMGCWorklist *worklist) {
+static void gc_mark_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMGCWorklist *worklist) {
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
     if (repr_data)
         MVM_gc_worklist_add(tc, worklist, &repr_data->elem_type);
 }
 
 /* Free representation data. */
-static void gc_free_repr_data(MVMThreadContext *tc, MVMSTable *st) {
+static void gc_free_repr_data(struct MVMThreadContext *tc, MVMSTable *st) {
     MVM_free(st->REPR_data);
 }
 
@@ -202,19 +202,19 @@ static const MVMStorageSpec storage_spec = {
 
 
 /* Gets the storage specification for this representation. */
-static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
+static const MVMStorageSpec * get_storage_spec(struct MVMThreadContext *tc, MVMSTable *st) {
     return &storage_spec;
 }
 
 
-MVM_NO_RETURN static void die_pos_nyi(MVMThreadContext *tc) MVM_NO_RETURN_ATTRIBUTE;
-static void die_pos_nyi(MVMThreadContext *tc) {
+MVM_NO_RETURN static void die_pos_nyi(struct MVMThreadContext *tc) MVM_NO_RETURN_ATTRIBUTE;
+static void die_pos_nyi(struct MVMThreadContext *tc) {
     MVM_exception_throw_adhoc(tc,
         "CArray representation does not fully positional storage yet");
 }
 
 
-static void expand(MVMThreadContext *tc, MVMCArrayREPRData *repr_data, MVMCArrayBody *body, int32_t min_size) {
+static void expand(struct MVMThreadContext *tc, MVMCArrayREPRData *repr_data, MVMCArrayBody *body, int32_t min_size) {
     int8_t is_complex;
     int32_t next_size = body->allocated? 2 * body->allocated: 4;
 
@@ -246,7 +246,7 @@ static void expand(MVMThreadContext *tc, MVMCArrayREPRData *repr_data, MVMCArray
     body->allocated = next_size;
 }
 
-static MVMObject * make_wrapper(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static MVMObject * make_wrapper(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
     switch (repr_data->elem_kind) {
         case MVM_CARRAY_ELEM_KIND_STRING: {
@@ -264,7 +264,7 @@ static MVMObject * make_wrapper(MVMThreadContext *tc, MVMSTable *st, void *data)
             MVM_exception_throw_adhoc(tc, "Unknown element type in CArray");
     }
 }
-static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind) {
+static void at_pos(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind) {
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
     MVMCArrayBody     *body      = (MVMCArrayBody *)data;
     void              *ptr       = ((char *)body->storage) + index * repr_data->elem_size;
@@ -355,7 +355,7 @@ static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *d
     }
 }
 
-static void bind_wrapper_and_ptr(MVMThreadContext *tc, MVMObject *root, MVMCArrayBody *body,
+static void bind_wrapper_and_ptr(struct MVMThreadContext *tc, MVMObject *root, MVMCArrayBody *body,
         int64_t index, MVMObject *wrapper, void *cptr) {
     if (index >= body->allocated)
         expand(tc, STABLE(root)->REPR_data, body, index + 1);
@@ -364,7 +364,7 @@ static void bind_wrapper_and_ptr(MVMThreadContext *tc, MVMObject *root, MVMCArra
     MVM_ASSIGN_REF(tc, &(root->header), body->child_objs[index], wrapper);
     ((void **)body->storage)[index] = cptr;
 }
-static void bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister value, uint16_t kind) {
+static void bind_pos(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister value, uint16_t kind) {
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
     MVMCArrayBody     *body      = (MVMCArrayBody *)data;
     void *ptr;
@@ -432,27 +432,27 @@ static void bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
     }
 }
 
-static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
+static void push(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     die_pos_nyi(tc);
 }
 
-static void pop(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
+static void pop(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     die_pos_nyi(tc);
 }
 
-static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
+static void unshift(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     die_pos_nyi(tc);
 }
 
-static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
+static void shift(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     die_pos_nyi(tc);
 }
 
-static void aslice(MVMThreadContext *tc, MVMSTable *st, MVMObject *src, void *data, MVMObject *dest, int64_t start, int64_t end) {
+static void aslice(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *src, void *data, MVMObject *dest, int64_t start, int64_t end) {
     die_pos_nyi(tc);
 }
 
-static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t elems(struct MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMCArrayBody *body = (MVMCArrayBody *)data;
 
     if (body->managed)
@@ -462,7 +462,7 @@ static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void
         "Don't know how many elements a C array returned from a library");
 }
 
-static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(struct MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
     MVMCArrayBody     *body      = (MVMCArrayBody *)data;
     uint64_t result = 0;
@@ -477,12 +477,12 @@ static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) 
     return result;
 }
 
-static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_stable_size(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     st->size = sizeof(MVMCArray);
 }
 
 /* Serializes the REPR data. */
-static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
+static void serialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationWriter *writer) {
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
     MVM_serialization_write_int(tc, writer, repr_data->elem_size);
     MVM_serialization_write_ref(tc, writer, repr_data->elem_type);
@@ -490,7 +490,7 @@ static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializ
 }
 
 /* Deserializes the REPR data. */
-static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
+static void deserialize_repr_data(struct MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *) MVM_malloc(sizeof(MVMCArrayREPRData));
 
     repr_data->elem_size = MVM_serialization_read_int(tc, reader);
@@ -501,7 +501,7 @@ static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerial
 }
 
 /* Initializes the CArray representation. */
-const MVMREPROps * MVMCArray_initialize(MVMThreadContext *tc) {
+const MVMREPROps * MVMCArray_initialize(struct MVMThreadContext *tc) {
     return &CArray_this_repr;
 }
 

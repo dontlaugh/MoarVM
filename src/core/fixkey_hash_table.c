@@ -2,7 +2,7 @@
 
 #define FIXKEY_INITIAL_SIZE_LOG2 3
 
-static void hash_demolish_internal(MVMThreadContext *tc,
+static void hash_demolish_internal(struct MVMThreadContext *tc,
                                    struct MVMFixKeyHashTableControl *control) {
     size_t allocated_items = MVM_fixkey_hash_allocated_items(control);
     size_t entries_size = sizeof(MVMString ***) * allocated_items;
@@ -12,7 +12,7 @@ static void hash_demolish_internal(MVMThreadContext *tc,
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
    which you allocated (heap, stack, inside another struct, wherever) */
-void MVM_fixkey_hash_demolish(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable) {
+void MVM_fixkey_hash_demolish(struct MVMThreadContext *tc, MVMFixKeyHashTable *hashtable) {
     struct MVMFixKeyHashTableControl *control = hashtable->table;
     if (!control)
         return;
@@ -39,7 +39,7 @@ void MVM_fixkey_hash_demolish(MVMThreadContext *tc, MVMFixKeyHashTable *hashtabl
 /* and then free memory if you allocated it */
 
 
-MVM_STATIC_INLINE struct MVMFixKeyHashTableControl *hash_allocate_common(MVMThreadContext *tc,
+static inline struct MVMFixKeyHashTableControl *hash_allocate_common(struct MVMThreadContext *tc,
                                                                          uint16_t entry_size,
                                                                          uint8_t official_size_log2) {
     uint32_t official_size = 1 << (uint32_t)official_size_log2;
@@ -78,7 +78,7 @@ MVM_STATIC_INLINE struct MVMFixKeyHashTableControl *hash_allocate_common(MVMThre
     return control;
 }
 
-void MVM_fixkey_hash_build(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t entry_size) {
+void MVM_fixkey_hash_build(struct MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t entry_size) {
     if (MVM_UNLIKELY(entry_size > 1024 || entry_size & 3)) {
         MVM_oops(tc, "Hash table entry_size %" PRIu32 " is invalid", entry_size);
     }
@@ -87,7 +87,7 @@ void MVM_fixkey_hash_build(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, 
                                             FIXKEY_INITIAL_SIZE_LOG2);
 }
 
-MVM_STATIC_INLINE MVMString ***hash_insert_internal(MVMThreadContext *tc,
+static inline MVMString ***hash_insert_internal(struct MVMThreadContext *tc,
                                                     struct MVMFixKeyHashTableControl *control,
                                                     MVMString *key) {
     if (MVM_UNLIKELY(control->cur_items >= control->max_items)) {
@@ -196,9 +196,9 @@ MVM_STATIC_INLINE MVMString ***hash_insert_internal(MVMThreadContext *tc,
 }
 
 /* Oh, fsck, I needed to implement this: */
-uint64_t MVM_fixkey_hash_fsck(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t mode);
+uint64_t MVM_fixkey_hash_fsck(struct MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t mode);
 
-static struct MVMFixKeyHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
+static struct MVMFixKeyHashTableControl *maybe_grow_hash(struct MVMThreadContext *tc,
                                                          struct MVMFixKeyHashTableControl *control,
                                                          MVMString *key) {
     /* control->max_items may have been set to 0 to trigger a call into this
@@ -297,7 +297,7 @@ static struct MVMFixKeyHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
     return control;
 }
 
-void *MVM_fixkey_hash_lvalue_fetch_nocheck(MVMThreadContext *tc,
+void *MVM_fixkey_hash_lvalue_fetch_nocheck(struct MVMThreadContext *tc,
                                            MVMFixKeyHashTable *hashtable,
                                            MVMString *key) {
     struct MVMFixKeyHashTableControl *control = hashtable->table;
@@ -346,7 +346,7 @@ void *MVM_fixkey_hash_lvalue_fetch_nocheck(MVMThreadContext *tc,
  * Doesn't check if the key already exists. Use with care.
  * (well that's the official line. As you can see, the oops suggests we
  * currently don't exploit the documented freedom.) */
-void *MVM_fixkey_hash_insert_nocheck(MVMThreadContext *tc,
+void *MVM_fixkey_hash_insert_nocheck(struct MVMThreadContext *tc,
                                      MVMFixKeyHashTable *hashtable,
                                      MVMString *key) {
     MVMString **new_entry = MVM_fixkey_hash_lvalue_fetch_nocheck(tc, hashtable, key);
@@ -368,7 +368,7 @@ void *MVM_fixkey_hash_insert_nocheck(MVMThreadContext *tc,
 /* This is not part of the public API, and subject to change at any point.
    (possibly in ways that are actually incompatible but won't generate compiler
    warnings.) */
-uint64_t MVM_fixkey_hash_fsck(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t mode) {
+uint64_t MVM_fixkey_hash_fsck(struct MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t mode) {
     struct MVMFixKeyHashTableControl *control = hashtable->table;
     const char *prefix_hashes = mode & 1 ? "# " : "";
     uint32_t display = (mode >> 1) & 3;

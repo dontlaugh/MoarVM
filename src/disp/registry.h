@@ -38,10 +38,10 @@ struct MVMDispRegistryTable {
     uint32_t num_dispatchers;
 };
 
-void MVM_disp_registry_init(MVMThreadContext *tc);
-void MVM_disp_registry_register(MVMThreadContext *tc, MVMString *id, MVMObject *dispatch,
+void MVM_disp_registry_init(struct MVMThreadContext *tc);
+void MVM_disp_registry_register(struct MVMThreadContext *tc, MVMString *id, MVMObject *dispatch,
         MVMObject *resume);
-MVMDispDefinition * MVM_disp_registry_find(MVMThreadContext *tc, MVMString *id);
-void MVM_disp_registry_mark(MVMThreadContext *tc, MVMGCWorklist *worklist);
-void MVM_disp_registry_describe(MVMThreadContext *tc, MVMHeapSnapshotState *snapshot);
-void MVM_disp_registry_destroy(MVMThreadContext *tc);
+MVMDispDefinition * MVM_disp_registry_find(struct MVMThreadContext *tc, MVMString *id);
+void MVM_disp_registry_mark(struct MVMThreadContext *tc, MVMGCWorklist *worklist);
+void MVM_disp_registry_describe(struct MVMThreadContext *tc, MVMHeapSnapshotState *snapshot);
+void MVM_disp_registry_destroy(struct MVMThreadContext *tc);

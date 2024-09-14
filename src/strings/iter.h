@@ -31,7 +31,7 @@ struct MVMGraphemeIter {
 };
 
 /* Initializes a grapheme iterator. */
-MVM_STATIC_INLINE void MVM_string_gi_init(MVMThreadContext *tc, MVMGraphemeIter *gi, MVMString *s) {
+static inline void MVM_string_gi_init(struct MVMThreadContext *tc, MVMGraphemeIter *gi, MVMString *s) {
     if (s->body.storage_type == MVM_STRING_STRAND) {
         MVMStringStrand *strands = s->body.storage.strands;
         MVMString       *first   = strands[0].blob_string;
@@ -58,7 +58,7 @@ MVM_STATIC_INLINE void MVM_string_gi_init(MVMThreadContext *tc, MVMGraphemeIter 
 /* graphs left in strand + graphs left in repetitions of current strand */
 
 /* Moves to the next strand, or repetition if there is one. */
-static void MVM_string_gi_next_strand_rep(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+static void MVM_string_gi_next_strand_rep(struct MVMThreadContext *tc, MVMGraphemeIter *gi) {
     MVMStringStrand *next = NULL;
     if (gi->repetitions) {
         gi->pos = gi->start;
@@ -78,7 +78,7 @@ static void MVM_string_gi_next_strand_rep(MVMThreadContext *tc, MVMGraphemeIter 
 }
 /* Sets the position of the iterator. (Can be optimized in many ways in the
  * repetitions and strands branches.) */
-MVM_STATIC_INLINE void MVM_string_gi_move_to(MVMThreadContext *tc, MVMGraphemeIter *gi, uint32_t pos) {
+static inline void MVM_string_gi_move_to(struct MVMThreadContext *tc, MVMGraphemeIter *gi, uint32_t pos) {
     uint32_t remaining = pos;
     uint32_t strand_graphs;
     MVMStringStrand *next = NULL;
@@ -135,34 +135,34 @@ MVM_STATIC_INLINE void MVM_string_gi_move_to(MVMThreadContext *tc, MVMGraphemeIt
 }
 
 /* Checks if there is more to read from a grapheme iterator. */
-MVM_STATIC_INLINE int32_t MVM_string_gi_has_more(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+static inline int32_t MVM_string_gi_has_more(struct MVMThreadContext *tc, MVMGraphemeIter *gi) {
     return gi->pos < gi->end || gi->repetitions || gi->strands_remaining;
 }
 /* Returns number of graphs left in the strand, ignoring repetitions */
-MVM_STATIC_INLINE MVMStringIndex MVM_string_gi_graphs_left_in_strand(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+static inline MVMStringIndex MVM_string_gi_graphs_left_in_strand(struct MVMThreadContext *tc, MVMGraphemeIter *gi) {
     return gi->end - gi->pos;
 }
-MVM_STATIC_INLINE MVMGrapheme8 * MVM_string_gi_active_blob_8_pos(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+static inline MVMGrapheme8 * MVM_string_gi_active_blob_8_pos(struct MVMThreadContext *tc, MVMGraphemeIter *gi) {
     return gi->active_blob.blob_8 + gi->pos;
 }
-MVM_STATIC_INLINE MVMGrapheme8 * MVM_string_gi_active_in_situ_8_pos(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+static inline MVMGrapheme8 * MVM_string_gi_active_in_situ_8_pos(struct MVMThreadContext *tc, MVMGraphemeIter *gi) {
     return gi->active_blob.in_situ_8 + gi->pos;
 }
-MVM_STATIC_INLINE MVMGrapheme32 * MVM_string_gi_active_blob_32_pos(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+static inline MVMGrapheme32 * MVM_string_gi_active_blob_32_pos(struct MVMThreadContext *tc, MVMGraphemeIter *gi) {
     return gi->active_blob.blob_32 + gi->pos;
 }
-MVM_STATIC_INLINE MVMGrapheme32 * MVM_string_gi_active_in_situ_32_pos(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+static inline MVMGrapheme32 * MVM_string_gi_active_in_situ_32_pos(struct MVMThreadContext *tc, MVMGraphemeIter *gi) {
     return gi->active_blob.in_situ_32 + gi->pos;
 }
-MVM_STATIC_INLINE uint16_t MVM_string_gi_blob_type(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+static inline uint16_t MVM_string_gi_blob_type(struct MVMThreadContext *tc, MVMGraphemeIter *gi) {
     return gi->blob_type;
 }
 /* Returns if there are more strands left in the gi, including repetitions */
-MVM_STATIC_INLINE int MVM_string_gi_has_more_strands_rep(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+static inline int MVM_string_gi_has_more_strands_rep(struct MVMThreadContext *tc, MVMGraphemeIter *gi) {
     return !!(gi->strands_remaining || gi->repetitions);
 }
 /* Gets the next grapheme. */
-MVM_STATIC_INLINE MVMGrapheme32 MVM_string_gi_get_grapheme(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+static inline MVMGrapheme32 MVM_string_gi_get_grapheme(struct MVMThreadContext *tc, MVMGraphemeIter *gi) {
     while (1) {
         if (gi->pos < gi->end) {
             switch (gi->blob_type) {
@@ -201,7 +201,7 @@ MVM_STATIC_INLINE MVMGrapheme32 MVM_string_gi_get_grapheme(MVMThreadContext *tc,
 
 
 /* Returns the codepoint without doing checks, for internal VM use only. */
-MVM_STATIC_INLINE MVMGrapheme32 MVM_string_get_grapheme_at_nocheck(MVMThreadContext *tc, MVMString *a, int64_t index) {
+static inline MVMGrapheme32 MVM_string_get_grapheme_at_nocheck(struct MVMThreadContext *tc, MVMString *a, int64_t index) {
     switch (a->body.storage_type) {
         case MVM_STRING_GRAPHEME_32:
             return a->body.storage.blob_32[index];
@@ -247,7 +247,7 @@ struct MVMCodepointIter {
 };
 
 /* Initializes a code point iterator. */
-MVM_STATIC_INLINE void MVM_string_ci_init(MVMThreadContext *tc, MVMCodepointIter *ci, MVMString *s,
+static inline void MVM_string_ci_init(struct MVMThreadContext *tc, MVMCodepointIter *ci, MVMString *s,
         int32_t translate_newlines, int32_t pass_utfc8_synthetics) {
     /* Initialize our underlying grapheme iterator. */
     MVM_string_gi_init(tc, &(ci->gi), s);
@@ -261,7 +261,7 @@ MVM_STATIC_INLINE void MVM_string_ci_init(MVMThreadContext *tc, MVMCodepointIter
     ci->pass_utfc8_synthetics = pass_utfc8_synthetics;
 };
 /* Iterates on a grapheme. Returns the number of codepoints in the grapheme */
-MVM_STATIC_INLINE MVMGrapheme32 MVM_string_grapheme_ci_init(MVMThreadContext *tc, MVMCodepointIter *ci, MVMGrapheme32 g, int32_t pass_utfc8_synthetics) {
+static inline MVMGrapheme32 MVM_string_grapheme_ci_init(struct MVMThreadContext *tc, MVMCodepointIter *ci, MVMGrapheme32 g, int32_t pass_utfc8_synthetics) {
     MVMNFGSynthetic *synth = NULL;
     if (g < 0) {
         /* Get the synthetics info. */
@@ -288,7 +288,7 @@ MVM_STATIC_INLINE MVMGrapheme32 MVM_string_grapheme_ci_init(MVMThreadContext *tc
     return ci->total_synth_codes + 1;
 }
 /* Only for string_grapheme_ci ops */
-MVM_STATIC_INLINE MVMCodepoint MVM_string_grapheme_ci_get_codepoint(MVMThreadContext *tc, MVMCodepointIter *ci) {
+static inline MVMCodepoint MVM_string_grapheme_ci_get_codepoint(struct MVMThreadContext *tc, MVMCodepointIter *ci) {
     MVMCodepoint result = ci->visited_synth_codes < 0
         ? ci->first_code
         : ci->synth_codes[ci->visited_synth_codes];
@@ -299,16 +299,16 @@ MVM_STATIC_INLINE MVMCodepoint MVM_string_grapheme_ci_get_codepoint(MVMThreadCon
 /* Checks if there is more to read from a code point iterator; this is the
  * case if we're still walking through a synthetic or we have more things
  * available from the underlying grapheme iterator. */
-MVM_STATIC_INLINE int32_t MVM_string_ci_has_more(MVMThreadContext *tc, MVMCodepointIter *ci) {
+static inline int32_t MVM_string_ci_has_more(struct MVMThreadContext *tc, MVMCodepointIter *ci) {
     return ci->synth_codes || MVM_string_gi_has_more(tc, &(ci->gi));
 }
 /* Only for use with string_grapheme_ci ops */
-MVM_STATIC_INLINE int32_t MVM_string_grapheme_ci_has_more(MVMThreadContext *tc, MVMCodepointIter *ci) {
+static inline int32_t MVM_string_grapheme_ci_has_more(struct MVMThreadContext *tc, MVMCodepointIter *ci) {
     return ci->visited_synth_codes < ci->total_synth_codes;
 }
 
 /* Gets the next code point. */
-MVM_STATIC_INLINE MVMCodepoint MVM_string_ci_get_codepoint(MVMThreadContext *tc, MVMCodepointIter *ci) {
+static inline MVMCodepoint MVM_string_ci_get_codepoint(struct MVMThreadContext *tc, MVMCodepointIter *ci) {
     MVMCodepoint result;
 
     /* Do we have combiners from a synthetic to return? */
@@ -368,14 +368,14 @@ struct MVMGraphemeIter_cached {
     MVMString      *string;
 };
 typedef struct MVMGraphemeIter_cached MVMGraphemeIter_cached;
-MVM_STATIC_INLINE void MVM_string_gi_cached_init (MVMThreadContext *tc, MVMGraphemeIter_cached *gic, MVMString *s, int64_t index) {
+static inline void MVM_string_gi_cached_init (struct MVMThreadContext *tc, MVMGraphemeIter_cached *gic, MVMString *s, int64_t index) {
     MVM_string_gi_init(tc, &(gic->gi), s);
     if (index) MVM_string_gi_move_to(tc, &(gic->gi), index);
     gic->last_location = index;
     gic->last_g = MVM_string_gi_get_grapheme(tc, &(gic->gi));
     gic->string = s;
 }
-MVM_STATIC_INLINE MVMGrapheme32 MVM_string_gi_cached_get_grapheme(MVMThreadContext *tc, MVMGraphemeIter_cached *gic, int64_t index) {
+static inline MVMGrapheme32 MVM_string_gi_cached_get_grapheme(struct MVMThreadContext *tc, MVMGraphemeIter_cached *gic, int64_t index) {
     /* Most likely case is we are getting the next grapheme. When that happens
      * we will go directly to the end. */
     if (index == gic->last_location + 1) {

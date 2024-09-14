@@ -1,8 +1,8 @@
 #include "moar.h"
 #include "nativecall_libffi.h"
 
-//~ ffi_type * MVM_nativecall_get_ffi_type(MVMThreadContext *tc, uint64_t type_id, void **values, uint64_t offset) {
-ffi_type * MVM_nativecall_get_ffi_type(MVMThreadContext *tc, uint64_t type_id) {
+//~ ffi_type * MVM_nativecall_get_ffi_type(struct MVMThreadContext *tc, uint64_t type_id, void **values, uint64_t offset) {
+ffi_type * MVM_nativecall_get_ffi_type(struct MVMThreadContext *tc, uint64_t type_id) {
     if ((type_id & MVM_NATIVECALL_ARG_RW_MASK) == MVM_NATIVECALL_ARG_RW)
         return &ffi_type_pointer;
 
@@ -49,7 +49,7 @@ ffi_type * MVM_nativecall_get_ffi_type(MVMThreadContext *tc, uint64_t type_id) {
 
 
 /* Maps a calling convention name to an ID. */
-ffi_abi MVM_nativecall_get_calling_convention(MVMThreadContext *tc, MVMString *name) {
+ffi_abi MVM_nativecall_get_calling_convention(struct MVMThreadContext *tc, MVMString *name) {
     ffi_abi result = FFI_DEFAULT_ABI;
     //~ if (name && MVM_string_graphs(tc, name) > 0) {
         //~ char *cname = MVM_string_utf8_encode_C_string(tc, name);
@@ -72,7 +72,7 @@ ffi_abi MVM_nativecall_get_calling_convention(MVMThreadContext *tc, MVMString *n
 /* Sets up a callback, caching the information to avoid duplicate work. */
 //~ static char callback_handler(DCCallback *cb, DCArgs *args, DCValue *result, MVMNativeCallback *data);
 static void callback_handler(ffi_cif *cif, void *cb_result, void **cb_args, void *data);
-static void * unmarshal_callback(MVMThreadContext *tc, MVMCode *callback, MVMObject *sig_info) {
+static void * unmarshal_callback(struct MVMThreadContext *tc, MVMCode *callback, MVMObject *sig_info) {
     MVMNativeCallback **callback_data_handle;
     MVMString          *cuid;
 
@@ -198,7 +198,7 @@ typedef struct {
     MVMRegister *args;
     MVMCallsite *cs;
 } CallbackInvokeData;
-static void callback_invoke(MVMThreadContext *tc, void *data) {
+static void callback_invoke(struct MVMThreadContext *tc, void *data) {
     /* Invoke the coderef, to set up the nested interpreter. */
     CallbackInvokeData *cid = (CallbackInvokeData *)data;
     MVMArgs args = {
@@ -220,7 +220,7 @@ static void callback_handler(ffi_cif *cif, void *cb_result, void **cb_args, void
     unsigned int interval_id;
 
     /* Locate the MoarVM thread this callback is being run on. */
-    MVMThreadContext *tc = MVM_nativecall_find_thread_context(data->instance);
+    struct MVMThreadContext *tc = MVM_nativecall_find_thread_context(data->instance);
 
     /* Unblock GC if needed, so this thread can do work. */
     int32_t was_blocked = MVM_gc_is_thread_blocked(tc);
@@ -476,7 +476,7 @@ static void callback_handler(ffi_cif *cif, void *cb_result, void **cb_args, void
     } \
 } while (0)
 
-MVMObject * MVM_nativecall_invoke(MVMThreadContext *tc, MVMObject *res_type,
+MVMObject * MVM_nativecall_invoke(struct MVMThreadContext *tc, MVMObject *res_type,
         MVMObject *site, MVMObject *args) {
     MVMObject     *result = NULL;
     char      **free_strs = NULL;
@@ -789,7 +789,7 @@ MVMObject * MVM_nativecall_invoke(MVMThreadContext *tc, MVMObject *res_type,
     return result;
 }
 
-static void update_rws(MVMThreadContext *tc, void **values, int16_t num_args, int16_t *arg_types, MVMArgs args, unsigned int interval_id) {
+static void update_rws(struct MVMThreadContext *tc, void **values, int16_t num_args, int16_t *arg_types, MVMArgs args, unsigned int interval_id) {
     int16_t i;
     for (i = 0; i < num_args; i++) {
         if (args.callsite->arg_flags[i + 1] & MVM_CALLSITE_ARG_OBJ) {
@@ -849,7 +849,7 @@ static void update_rws(MVMThreadContext *tc, void **values, int16_t num_args, in
     }
 }
 
-void MVM_nativecall_dispatch(MVMThreadContext *tc, MVMObject *res_type,
+void MVM_nativecall_dispatch(struct MVMThreadContext *tc, MVMObject *res_type,
         MVMObject *site, MVMArgs args) {
     MVMObject     *result = NULL;
     char      **free_strs = NULL;

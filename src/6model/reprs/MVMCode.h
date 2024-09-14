@@ -15,8 +15,8 @@ struct MVMCode {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMCode_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMCode_initialize(struct MVMThreadContext *tc);
 
-MVM_PUBLIC MVMObject * MVM_code_location(MVMThreadContext *tc, MVMObject *code);
-void MVM_code_location_out(MVMThreadContext *tc, MVMObject *code,
+ MVMObject * MVM_code_location(struct MVMThreadContext *tc, MVMObject *code);
+void MVM_code_location_out(struct MVMThreadContext *tc, MVMObject *code,
                            MVMString **file_out, int32_t *line_out);

@@ -55,7 +55,7 @@ struct MVMArgInfo {
 };
 
 /* Initialize arguments processing context. */
-MVM_STATIC_INLINE void MVM_args_proc_setup(MVMThreadContext *tc, MVMArgProcContext *ctx,
+static inline void MVM_args_proc_setup(struct MVMThreadContext *tc, MVMArgProcContext *ctx,
         MVMArgs arg_info) {
     ctx->arg_info = arg_info;
     uint16_t num_nameds = arg_info.callsite->flag_count - arg_info.callsite->num_pos;
@@ -67,7 +67,7 @@ MVM_STATIC_INLINE void MVM_args_proc_setup(MVMThreadContext *tc, MVMArgProcConte
 }
 
 /* Clean up an arguments processing context. */
-MVM_STATIC_INLINE void MVM_args_proc_cleanup(MVMThreadContext *tc, MVMArgProcContext *ctx) {
+static inline void MVM_args_proc_cleanup(struct MVMThreadContext *tc, MVMArgProcContext *ctx) {
     if (ctx->named_used_size > 64) {
         MVM_free(ctx->named_used.byte_array);
         ctx->named_used_size = 0;
@@ -75,68 +75,68 @@ MVM_STATIC_INLINE void MVM_args_proc_cleanup(MVMThreadContext *tc, MVMArgProcCon
 }
 
 /* Argument processing context handling. */
-void MVM_args_setup_identity_map(MVMThreadContext *tc);
-void MVM_args_grow_identity_map(MVMThreadContext *tc, MVMCallsite *callsite);
-MVM_STATIC_INLINE uint16_t * MVM_args_identity_map(MVMThreadContext *tc,
+void MVM_args_setup_identity_map(struct MVMThreadContext *tc);
+void MVM_args_grow_identity_map(struct MVMThreadContext *tc, MVMCallsite *callsite);
+static inline uint16_t * MVM_args_identity_map(struct MVMThreadContext *tc,
         MVMCallsite *callsite) {
     if (callsite->flag_count > tc->instance->identity_arg_map_alloc)
         MVM_args_grow_identity_map(tc, callsite);
     return tc->instance->identity_arg_map;
 }
-void MVM_args_destroy_identity_map(MVMThreadContext *tc);
-MVMCallStackFlattening * MVM_args_perform_flattening(MVMThreadContext *tc, MVMCallsite *cs,
+void MVM_args_destroy_identity_map(struct MVMThreadContext *tc);
+MVMCallStackFlattening * MVM_args_perform_flattening(struct MVMThreadContext *tc, MVMCallsite *cs,
         MVMRegister *source, uint16_t *map);
 
 /* Arity checking and named handling. */
-void MVM_args_checkarity(MVMThreadContext *tc, MVMArgProcContext *ctx, uint16_t min, uint16_t max);
-void MVM_args_checkarity_for_jit(MVMThreadContext *tc, uint16_t min, uint16_t max);
-void MVM_args_marked_named_used(MVMThreadContext *tc, uint32_t idx);
-void MVM_args_throw_named_unused_error(MVMThreadContext *tc, MVMString *name);
+void MVM_args_checkarity(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint16_t min, uint16_t max);
+void MVM_args_checkarity_for_jit(struct MVMThreadContext *tc, uint16_t min, uint16_t max);
+void MVM_args_marked_named_used(struct MVMThreadContext *tc, uint32_t idx);
+void MVM_args_throw_named_unused_error(struct MVMThreadContext *tc, MVMString *name);
 
 /* Argument access by position. */
-MVMObject * MVM_args_get_required_pos_obj(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
-MVMArgInfo MVM_args_get_optional_pos_obj(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
-int64_t MVM_args_get_required_pos_int(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
-MVMArgInfo MVM_args_get_optional_pos_int(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
-double MVM_args_get_required_pos_num(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
-MVMArgInfo MVM_args_get_optional_pos_num(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
-MVMString * MVM_args_get_required_pos_str(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
-MVMArgInfo MVM_args_get_optional_pos_str(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
-uint64_t MVM_args_get_required_pos_uint(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
-MVMArgInfo MVM_args_get_optional_pos_uint(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
-MVMObject * MVM_args_slurpy_positional(MVMThreadContext *tc, MVMArgProcContext *ctx, uint16_t pos);
+MVMObject * MVM_args_get_required_pos_obj(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
+MVMArgInfo MVM_args_get_optional_pos_obj(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
+int64_t MVM_args_get_required_pos_int(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
+MVMArgInfo MVM_args_get_optional_pos_int(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
+double MVM_args_get_required_pos_num(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
+MVMArgInfo MVM_args_get_optional_pos_num(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
+MVMString * MVM_args_get_required_pos_str(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
+MVMArgInfo MVM_args_get_optional_pos_str(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
+uint64_t MVM_args_get_required_pos_uint(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
+MVMArgInfo MVM_args_get_optional_pos_uint(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos);
+MVMObject * MVM_args_slurpy_positional(struct MVMThreadContext *tc, MVMArgProcContext *ctx, uint16_t pos);
 
 /* Argument access by name. */
-MVMArgInfo MVM_args_get_named_obj(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required);
-MVMArgInfo MVM_args_get_named_int(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required);
-MVMArgInfo MVM_args_get_named_num(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required);
-MVMArgInfo MVM_args_get_named_str(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required);
-MVMArgInfo MVM_args_get_named_uint(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required);
-MVMObject * MVM_args_slurpy_named(MVMThreadContext *tc, MVMArgProcContext *ctx);
-int64_t MVM_args_has_named(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name);
-void MVM_args_assert_nameds_used(MVMThreadContext *tc, MVMArgProcContext *ctx);
+MVMArgInfo MVM_args_get_named_obj(struct MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required);
+MVMArgInfo MVM_args_get_named_int(struct MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required);
+MVMArgInfo MVM_args_get_named_num(struct MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required);
+MVMArgInfo MVM_args_get_named_str(struct MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required);
+MVMArgInfo MVM_args_get_named_uint(struct MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name, uint8_t required);
+MVMObject * MVM_args_slurpy_named(struct MVMThreadContext *tc, MVMArgProcContext *ctx);
+int64_t MVM_args_has_named(struct MVMThreadContext *tc, MVMArgProcContext *ctx, MVMString *name);
+void MVM_args_assert_nameds_used(struct MVMThreadContext *tc, MVMArgProcContext *ctx);
 
 /* Result setting. */
-void MVM_args_set_result_obj(MVMThreadContext *tc, MVMObject *result, int32_t frameless);
-void MVM_args_set_result_int(MVMThreadContext *tc, int64_t result, int32_t frameless);
-void MVM_args_set_result_uint(MVMThreadContext *tc, uint64_t result, int32_t frameless);
-void MVM_args_set_result_num(MVMThreadContext *tc, double result, int32_t frameless);
-void MVM_args_set_result_str(MVMThreadContext *tc, MVMString *result, int32_t frameless);
-void MVM_args_assert_void_return_ok(MVMThreadContext *tc, int32_t frameless);
-void MVM_args_set_dispatch_result_obj(MVMThreadContext *tc, MVMFrame *target, MVMObject *result);
-void MVM_args_set_dispatch_result_int(MVMThreadContext *tc, MVMFrame *target, int64_t result);
-void MVM_args_set_dispatch_result_uint(MVMThreadContext *tc, MVMFrame *target, uint64_t result);
-void MVM_args_set_dispatch_result_num(MVMThreadContext *tc, MVMFrame *target, double result);
-void MVM_args_set_dispatch_result_str(MVMThreadContext *tc, MVMFrame *target, MVMString *result);
+void MVM_args_set_result_obj(struct MVMThreadContext *tc, MVMObject *result, int32_t frameless);
+void MVM_args_set_result_int(struct MVMThreadContext *tc, int64_t result, int32_t frameless);
+void MVM_args_set_result_uint(struct MVMThreadContext *tc, uint64_t result, int32_t frameless);
+void MVM_args_set_result_num(struct MVMThreadContext *tc, double result, int32_t frameless);
+void MVM_args_set_result_str(struct MVMThreadContext *tc, MVMString *result, int32_t frameless);
+void MVM_args_assert_void_return_ok(struct MVMThreadContext *tc, int32_t frameless);
+void MVM_args_set_dispatch_result_obj(struct MVMThreadContext *tc, MVMFrame *target, MVMObject *result);
+void MVM_args_set_dispatch_result_int(struct MVMThreadContext *tc, MVMFrame *target, int64_t result);
+void MVM_args_set_dispatch_result_uint(struct MVMThreadContext *tc, MVMFrame *target, uint64_t result);
+void MVM_args_set_dispatch_result_num(struct MVMThreadContext *tc, MVMFrame *target, double result);
+void MVM_args_set_dispatch_result_str(struct MVMThreadContext *tc, MVMFrame *target, MVMString *result);
 
 /* Capture handling. */
-MVMCallsite * MVM_args_copy_callsite(MVMThreadContext *tc, MVMArgProcContext *ctx);
-MVM_PUBLIC MVMObject * MVM_args_use_capture(MVMThreadContext *tc, MVMFrame *f);
-MVM_PUBLIC MVMObject * MVM_args_save_capture(MVMThreadContext *tc, MVMFrame *f);
+MVMCallsite * MVM_args_copy_callsite(struct MVMThreadContext *tc, MVMArgProcContext *ctx);
+ MVMObject * MVM_args_use_capture(struct MVMThreadContext *tc, MVMFrame *f);
+ MVMObject * MVM_args_save_capture(struct MVMThreadContext *tc, MVMFrame *f);
 
 /* Custom bind failure/success handling. */
-void MVM_args_bind_failed(MVMThreadContext *tc, MVMDispInlineCacheEntry **ice_ptr);
-void MVM_args_bind_succeeded(MVMThreadContext *tc, MVMDispInlineCacheEntry **ice_ptr);
+void MVM_args_bind_failed(struct MVMThreadContext *tc, MVMDispInlineCacheEntry **ice_ptr);
+void MVM_args_bind_succeeded(struct MVMThreadContext *tc, MVMDispInlineCacheEntry **ice_ptr);
 
 /* Result setting frame constants. */
 #define MVM_RETURN_CALLER_FRAME     0

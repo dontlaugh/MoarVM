@@ -14,7 +14,7 @@
 #define DECODE_EOF      1
 
 /* Creates a new decoding stream. */
-MVMDecodeStream * MVM_string_decodestream_create(MVMThreadContext *tc, int32_t encoding,
+MVMDecodeStream * MVM_string_decodestream_create(struct MVMThreadContext *tc, int32_t encoding,
         int64_t abs_byte_pos, int32_t translate_newlines) {
     MVMDecodeStream *ds = MVM_calloc(1, sizeof(MVMDecodeStream));
     ds->encoding        = encoding;
@@ -27,7 +27,7 @@ MVMDecodeStream * MVM_string_decodestream_create(MVMThreadContext *tc, int32_t e
 }
 
 /* Adds another byte buffer into the decoding stream. */
-void MVM_string_decodestream_add_bytes(MVMThreadContext *tc, MVMDecodeStream *ds, uint8_t *bytes, int32_t length) {
+void MVM_string_decodestream_add_bytes(struct MVMThreadContext *tc, MVMDecodeStream *ds, uint8_t *bytes, int32_t length) {
     if (length > 0) {
         MVMDecodeStreamBytes *new_bytes = MVM_calloc(1, sizeof(MVMDecodeStreamBytes));
         new_bytes->bytes  = bytes;
@@ -45,7 +45,7 @@ void MVM_string_decodestream_add_bytes(MVMThreadContext *tc, MVMDecodeStream *ds
 }
 
 /* Adds another char result buffer into the decoding stream. */
-void MVM_string_decodestream_add_chars(MVMThreadContext *tc, MVMDecodeStream *ds, MVMGrapheme32 *chars, int32_t length) {
+void MVM_string_decodestream_add_chars(struct MVMThreadContext *tc, MVMDecodeStream *ds, MVMGrapheme32 *chars, int32_t length) {
     MVMDecodeStreamChars *new_chars;
     if (ds->chars_reuse) {
         new_chars = ds->chars_reuse;
@@ -66,7 +66,7 @@ void MVM_string_decodestream_add_chars(MVMThreadContext *tc, MVMDecodeStream *ds
 
 /* Internal function to free a chars result structure, putting it into the
  * re-use slot if it's empty. */
-static void free_chars(MVMThreadContext *tc, MVMDecodeStream *ds, MVMDecodeStreamChars *chars) {
+static void free_chars(struct MVMThreadContext *tc, MVMDecodeStream *ds, MVMDecodeStreamChars *chars) {
     if (ds->chars_reuse)
         MVM_free(chars);
     else
@@ -74,7 +74,7 @@ static void free_chars(MVMThreadContext *tc, MVMDecodeStream *ds, MVMDecodeStrea
 }
 
 /* Throws away byte buffers no longer needed. */
-void MVM_string_decodestream_discard_to(MVMThreadContext *tc, MVMDecodeStream *ds, const MVMDecodeStreamBytes *bytes, int32_t pos) {
+void MVM_string_decodestream_discard_to(struct MVMThreadContext *tc, MVMDecodeStream *ds, const MVMDecodeStreamBytes *bytes, int32_t pos) {
     while (ds->bytes_head != bytes) {
         MVMDecodeStreamBytes *discard = ds->bytes_head;
         ds->abs_byte_pos += discard->length - ds->bytes_head_pos;
@@ -113,7 +113,7 @@ void MVM_string_decodestream_discard_to(MVMThreadContext *tc, MVMDecodeStream *d
 #define RUN_DECODE_NOTHING_DECODED          0
 #define RUN_DECODE_STOPPER_NOT_REACHED      1
 #define RUN_DECODE_STOPPER_REACHED          2
-static uint32_t run_decode(MVMThreadContext *tc, MVMDecodeStream *ds, const uint32_t *stopper_chars, MVMDecodeStreamSeparators *sep_spec, int32_t eof) {
+static uint32_t run_decode(struct MVMThreadContext *tc, MVMDecodeStream *ds, const uint32_t *stopper_chars, MVMDecodeStreamSeparators *sep_spec, int32_t eof) {
     MVMDecodeStreamChars *prev_chars_tail = ds->chars_tail;
     uint32_t reached_stopper;
     switch (ds->encoding) {
@@ -170,7 +170,7 @@ static uint32_t run_decode(MVMThreadContext *tc, MVMDecodeStream *ds, const uint
 
 /* In situations where we have hit EOF, we need to decode what's left and flush
  * the normalization buffer also. */
-static void reached_eof(MVMThreadContext *tc, MVMDecodeStream *ds) {
+static void reached_eof(struct MVMThreadContext *tc, MVMDecodeStream *ds) {
     /* Decode all the things. */
     if (ds->bytes_head)
         run_decode(tc, ds, NULL, NULL, DECODE_EOF);
@@ -222,7 +222,7 @@ static void reached_eof(MVMThreadContext *tc, MVMDecodeStream *ds) {
  * exclude parameter specifies a number of chars that should be taken from the
  * input buffer, but not included in the result string (for chomping a line
  * separator). */
-static uint32_t missing_chars(MVMThreadContext *tc, const MVMDecodeStream *ds, int32_t wanted) {
+static uint32_t missing_chars(struct MVMThreadContext *tc, const MVMDecodeStream *ds, int32_t wanted) {
     int32_t got = 0;
     MVMDecodeStreamChars *cur_chars = ds->chars_head;
     while (cur_chars && got < wanted) {
@@ -234,7 +234,7 @@ static uint32_t missing_chars(MVMThreadContext *tc, const MVMDecodeStream *ds, i
     }
     return got >= wanted ? 0 : wanted - got;
 }
-static MVMString * take_chars(MVMThreadContext *tc, MVMDecodeStream *ds, int32_t chars, int32_t exclude) {
+static MVMString * take_chars(struct MVMThreadContext *tc, MVMDecodeStream *ds, int32_t chars, int32_t exclude) {
     MVMString *result;
     int32_t   found = 0;
     int32_t   result_found = 0;
@@ -305,7 +305,7 @@ static MVMString * take_chars(MVMThreadContext *tc, MVMDecodeStream *ds, int32_t
     }
     return result;
 }
-MVMString * MVM_string_decodestream_get_chars(MVMThreadContext *tc, MVMDecodeStream *ds,
+MVMString * MVM_string_decodestream_get_chars(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                               int32_t chars, int64_t eof) {
     uint32_t missing;
 
@@ -340,7 +340,7 @@ MVMString * MVM_string_decodestream_get_chars(MVMThreadContext *tc, MVMDecodeStr
  * or that we reached the end of the stream. Note that it assumes the separator
  * will exist near the end of the buffer, if it occurs at all, due to decode
  * streams looking for stoppers. */
-static int32_t have_separator(MVMThreadContext *tc, MVMDecodeStreamChars *start_chars, int32_t start_pos,
+static int32_t have_separator(struct MVMThreadContext *tc, MVMDecodeStreamChars *start_chars, int32_t start_pos,
                                MVMDecodeStreamSeparators *sep_spec, int32_t sep_idx, int32_t sep_graph_pos) {
     int32_t sep_pos = 1;
     int32_t sep_length = sep_spec->sep_lengths[sep_idx];
@@ -360,7 +360,7 @@ static int32_t have_separator(MVMThreadContext *tc, MVMDecodeStreamChars *start_
     }
     return 0;
 }
-static int32_t find_separator(MVMThreadContext *tc, const MVMDecodeStream *ds,
+static int32_t find_separator(struct MVMThreadContext *tc, const MVMDecodeStream *ds,
                                MVMDecodeStreamSeparators *sep_spec, int32_t *sep_length,
                                int eof) {
     int32_t sep_loc = 0;
@@ -420,7 +420,7 @@ static int32_t find_separator(MVMThreadContext *tc, const MVMDecodeStream *ds,
     }
     return 0;
 }
-MVMString * MVM_string_decodestream_get_until_sep(MVMThreadContext *tc, MVMDecodeStream *ds,
+MVMString * MVM_string_decodestream_get_until_sep(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                                   MVMDecodeStreamSeparators *sep_spec, int32_t chomp) {
     int32_t sep_loc, sep_length;
 
@@ -452,7 +452,7 @@ MVMString * MVM_string_decodestream_get_until_sep(MVMThreadContext *tc, MVMDecod
 /* Variant of MVM_string_decodestream_get_until_sep that is called when we
  * reach EOF. Trims the final separator if there is one, or returns the last
  * line without the EOF marker. */
-MVMString * MVM_string_decodestream_get_until_sep_eof(MVMThreadContext *tc, MVMDecodeStream *ds,
+MVMString * MVM_string_decodestream_get_until_sep_eof(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                                       MVMDecodeStreamSeparators *sep_spec, int32_t chomp) {
     int32_t sep_loc, sep_length;
 
@@ -471,7 +471,7 @@ MVMString * MVM_string_decodestream_get_until_sep_eof(MVMThreadContext *tc, MVMD
 
 /* Produces a string consisting of the characters available now in all decdoed
  * buffers. */
-static MVMString * get_all_in_buffer(MVMThreadContext *tc, MVMDecodeStream *ds) {
+static MVMString * get_all_in_buffer(struct MVMThreadContext *tc, MVMDecodeStream *ds) {
     MVMString *result = (MVMString *)MVM_repr_alloc_init(tc, tc->instance->VMString);
     result->body.storage_type = MVM_STRING_GRAPHEME_32;
 
@@ -538,7 +538,7 @@ static MVMString * get_all_in_buffer(MVMThreadContext *tc, MVMDecodeStream *ds) 
 
 /* Decodes all the buffers, signals EOF to flush any normalization buffers, and
  * returns a string of all decoded chars. */
-MVMString * MVM_string_decodestream_get_all(MVMThreadContext *tc, MVMDecodeStream *ds) {
+MVMString * MVM_string_decodestream_get_all(struct MVMThreadContext *tc, MVMDecodeStream *ds) {
     reached_eof(tc, ds);
     return get_all_in_buffer(tc, ds);
 }
@@ -546,7 +546,7 @@ MVMString * MVM_string_decodestream_get_all(MVMThreadContext *tc, MVMDecodeStrea
 /* Decodes all the buffers we have, and returns a string of all decoded chars.
  * There may still be more to read after this, due to incomplete multi-byte
  * or multi-codepoint sequences that are not yet completely processed. */
-MVMString * MVM_string_decodestream_get_available(MVMThreadContext *tc, MVMDecodeStream *ds) {
+MVMString * MVM_string_decodestream_get_available(struct MVMThreadContext *tc, MVMDecodeStream *ds) {
     if (ds->bytes_head) {
         ds->result_size_guess = ds->bytes_head->length;
         run_decode(tc, ds, NULL, NULL, DECODE_NOT_EOF);
@@ -555,7 +555,7 @@ MVMString * MVM_string_decodestream_get_available(MVMThreadContext *tc, MVMDecod
 }
 
 /* Checks if we have the number of bytes requested. */
-int64_t MVM_string_decodestream_have_bytes(MVMThreadContext *tc, const MVMDecodeStream *ds, int32_t bytes) {
+int64_t MVM_string_decodestream_have_bytes(struct MVMThreadContext *tc, const MVMDecodeStream *ds, int32_t bytes) {
     MVMDecodeStreamBytes *cur_bytes = ds->bytes_head;
     int32_t found = 0;
     while (cur_bytes) {
@@ -570,7 +570,7 @@ int64_t MVM_string_decodestream_have_bytes(MVMThreadContext *tc, const MVMDecode
 }
 
 /* Gets the number of bytes available. */
-int64_t MVM_string_decodestream_bytes_available(MVMThreadContext *tc, const MVMDecodeStream *ds) {
+int64_t MVM_string_decodestream_bytes_available(struct MVMThreadContext *tc, const MVMDecodeStream *ds) {
     MVMDecodeStreamBytes *cur_bytes = ds->bytes_head;
     int32_t available = 0;
     while (cur_bytes) {
@@ -585,7 +585,7 @@ int64_t MVM_string_decodestream_bytes_available(MVMThreadContext *tc, const MVMD
 /* Copies up to the requested number of bytes into the supplied buffer, and
  * returns the number of bytes we actually copied. Takes from from the start
  * of the stream. */
-int64_t MVM_string_decodestream_bytes_to_buf(MVMThreadContext *tc, MVMDecodeStream *ds, uint8_t **buf, int32_t bytes) {
+int64_t MVM_string_decodestream_bytes_to_buf(struct MVMThreadContext *tc, MVMDecodeStream *ds, uint8_t **buf, int32_t bytes) {
     int32_t taken = 0;
     *buf = NULL;
     while (taken < bytes && ds->bytes_head) {
@@ -621,18 +621,18 @@ int64_t MVM_string_decodestream_bytes_to_buf(MVMThreadContext *tc, MVMDecodeStre
 
 /* Gets the absolute byte offset (the amount we started with plus what we've
  * chewed and handed back in decoded characters). */
-int64_t MVM_string_decodestream_tell_bytes(MVMThreadContext *tc, const MVMDecodeStream *ds) {
+int64_t MVM_string_decodestream_tell_bytes(struct MVMThreadContext *tc, const MVMDecodeStream *ds) {
     return ds->abs_byte_pos;
 }
 
 /* Checks if the decode stream is empty. */
-int32_t MVM_string_decodestream_is_empty(MVMThreadContext *tc, MVMDecodeStream *ds) {
+int32_t MVM_string_decodestream_is_empty(struct MVMThreadContext *tc, MVMDecodeStream *ds) {
     return !ds->bytes_head && !ds->chars_head && MVM_unicode_normalizer_empty(tc, &(ds->norm));
 }
 
 /* Destroys a decoding stream, freeing all associated memory (including the
  * buffers). */
-void MVM_string_decodestream_destroy(MVMThreadContext *tc, MVMDecodeStream *ds) {
+void MVM_string_decodestream_destroy(struct MVMThreadContext *tc, MVMDecodeStream *ds) {
     MVMDecodeStreamBytes *cur_bytes = ds->bytes_head;
     MVMDecodeStreamChars *cur_chars = ds->chars_head;
     while (cur_bytes) {
@@ -655,7 +655,7 @@ void MVM_string_decodestream_destroy(MVMThreadContext *tc, MVMDecodeStream *ds) 
 
 /* Calculates and caches various bits of information about separators, for
  * faster line reading. */
-static void cache_sep_info(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec) {
+static void cache_sep_info(struct MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec) {
     MVMGrapheme32 *final_graphemes = MVM_malloc(sep_spec->num_seps * sizeof(MVMGrapheme32));
     int32_t max_final_grapheme = -1;
     int32_t max_sep_length = 1;
@@ -676,7 +676,7 @@ static void cache_sep_info(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_
 }
 
 /* Sets a decode stream separator to its default value. */
-void MVM_string_decode_stream_sep_default(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec) {
+void MVM_string_decode_stream_sep_default(struct MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec) {
     sep_spec->num_seps = 2;
     sep_spec->sep_lengths = MVM_malloc(sep_spec->num_seps * sizeof(int32_t));
     sep_spec->sep_graphemes = MVM_malloc(sep_spec->num_seps * sizeof(MVMGrapheme32));
@@ -691,7 +691,7 @@ void MVM_string_decode_stream_sep_default(MVMThreadContext *tc, MVMDecodeStreamS
 }
 
 /* Takes a string and sets it up as a decode stream separator. */
-void MVM_string_decode_stream_sep_from_strings(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec,
+void MVM_string_decode_stream_sep_from_strings(struct MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec,
                                                MVMString **seps, int32_t num_seps) {
     MVMGraphemeIter gi;
     int32_t i, graph_length, graph_pos, *sep_lengths;
@@ -729,7 +729,7 @@ void MVM_string_decode_stream_sep_from_strings(MVMThreadContext *tc, MVMDecodeSt
 }
 
 /* Cleans up memory associated with a stream separator set. */
-void MVM_string_decode_stream_sep_destroy(MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec) {
+void MVM_string_decode_stream_sep_destroy(struct MVMThreadContext *tc, MVMDecodeStreamSeparators *sep_spec) {
     MVM_free(sep_spec->sep_lengths);
     MVM_free(sep_spec->sep_graphemes);
     MVM_free(sep_spec->final_graphemes);

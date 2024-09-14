@@ -1,7 +1,7 @@
 #include "moar.h"
 
 /* Walk graph and insert write check instructions. */
-static void prepend_ctw_check(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static void prepend_ctw_check(struct MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                               MVMSpeshIns *before_ins, MVMSpeshOperand check_reg,
                               int16_t guilty) {
     MVMSpeshIns *ctw_ins = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
@@ -11,7 +11,7 @@ static void prepend_ctw_check(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB
     ctw_ins->operands[1].lit_i16 = guilty;
     MVM_spesh_manipulate_insert_ins(tc, bb, before_ins->prev, ctw_ins);
 }
-static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
+static void instrument_graph(struct MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB *bb = g->entry->linear_next;
     while (bb) {
         MVMSpeshIns *ins = bb->first_ins;
@@ -104,7 +104,7 @@ static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
 }
 
 /* Adds instrumented version of the unspecialized bytecode. */
-static void add_instrumentation(MVMThreadContext *tc, MVMStaticFrame *sf) {
+static void add_instrumentation(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     MVMSpeshCode  *sc;
     MVMStaticFrameInstrumentation *ins;
     MVMSpeshGraph *sg = MVM_spesh_graph_create(tc, sf, 1, 0);
@@ -123,7 +123,7 @@ static void add_instrumentation(MVMThreadContext *tc, MVMStaticFrame *sf) {
 }
 
 /* Instruments code with detection and reporting of cross-thread writes. */
-void MVM_cross_thread_write_instrument(MVMThreadContext *tc, MVMStaticFrame *sf) {
+void MVM_cross_thread_write_instrument(struct MVMThreadContext *tc, MVMStaticFrame *sf) {
     if (!sf->body.instrumentation || sf->body.bytecode != sf->body.instrumentation->instrumented_bytecode) {
         /* Handle main, non-specialized, bytecode. */
         if (!sf->body.instrumentation)
@@ -140,7 +140,7 @@ void MVM_cross_thread_write_instrument(MVMThreadContext *tc, MVMStaticFrame *sf)
 }
 
 /* Filter out some special cases to reduce noise. */
-static int64_t filtered_out(MVMThreadContext *tc, MVMObject *written) {
+static int64_t filtered_out(struct MVMThreadContext *tc, MVMObject *written) {
     /* If we're holding locks, exclude by default (unless we were asked to
      * also include these). */
     if (tc->num_locks && !tc->instance->cross_thread_write_logging_include_locked)
@@ -169,7 +169,7 @@ static int64_t filtered_out(MVMThreadContext *tc, MVMObject *written) {
 }
 
 /* Squeal if the target of the write wasn't allocated by us. */
-void MVM_cross_thread_write_check(MVMThreadContext *tc, MVMObject *written, int16_t guilty) {
+void MVM_cross_thread_write_check(struct MVMThreadContext *tc, MVMObject *written, int16_t guilty) {
     if (written->header.owner != tc->thread_id && !filtered_out(tc, written)) {
         char *guilty_desc = "did something to";
         switch (guilty) {

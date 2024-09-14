@@ -61,10 +61,10 @@ struct MVMNFA {
 };
 
 /* Function for REPR setup. */
-const MVMREPROps * MVMNFA_initialize(MVMThreadContext *tc);
+const MVMREPROps * MVMNFA_initialize(struct MVMThreadContext *tc);
 
 /* Other NFA related functions. */
-MVMObject * MVM_nfa_from_statelist(MVMThreadContext *tc, MVMObject *states, MVMObject *nfa_type);
-MVMObject * MVM_nfa_run_proto(MVMThreadContext *tc, MVMObject *nfa, MVMString *target, int64_t offset);
-void MVM_nfa_run_alt(MVMThreadContext *tc, MVMObject *nfa, MVMString *target,
+MVMObject * MVM_nfa_from_statelist(struct MVMThreadContext *tc, MVMObject *states, MVMObject *nfa_type);
+MVMObject * MVM_nfa_run_proto(struct MVMThreadContext *tc, MVMObject *nfa, MVMString *target, int64_t offset);
+void MVM_nfa_run_alt(struct MVMThreadContext *tc, MVMObject *nfa, MVMString *target,
     int64_t offset, MVMObject *bstack, MVMObject *cstack, MVMObject *labels);

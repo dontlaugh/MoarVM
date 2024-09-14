@@ -338,7 +338,7 @@ static uint8_t windows1251_cp_to_char(int32_t codepoint) {
 
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-uint32_t MVM_string_windows125X_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_windows125X_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                          const uint32_t *stopper_chars,
                                          MVMDecodeStreamSeparators *seps,
                                          const uint16_t *codetable) {
@@ -461,14 +461,14 @@ uint32_t MVM_string_windows125X_decodestream(MVMThreadContext *tc, MVMDecodeStre
 }
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-uint32_t MVM_string_windows1252_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_windows1252_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                          const uint32_t *stopper_chars,
                                          MVMDecodeStreamSeparators *seps) {
     return MVM_string_windows125X_decodestream(tc, ds, stopper_chars, seps, windows1252_codepoints);
 }
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-uint32_t MVM_string_windows1251_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+uint32_t MVM_string_windows1251_decodestream(struct MVMThreadContext *tc, MVMDecodeStream *ds,
                                          const uint32_t *stopper_chars,
                                          MVMDecodeStreamSeparators *seps) {
     return MVM_string_windows125X_decodestream(tc, ds, stopper_chars, seps, windows1251_codepoints);
@@ -477,7 +477,7 @@ uint32_t MVM_string_windows1251_decodestream(MVMThreadContext *tc, MVMDecodeStre
 /* Decodes the specified number of bytes of windows1252 into an NFG string,
  * creating a result of the specified type. The type must have the MVMString
  * REPR. */
-MVMString * MVM_string_windows125X_decode(MVMThreadContext *tc,
+MVMString * MVM_string_windows125X_decode(struct MVMThreadContext *tc,
         const MVMObject *result_type, char *windows125X_c, size_t bytes,
         MVMString *replacement, const uint16_t *codetable, int64_t config) {
     uint8_t *windows125X = (uint8_t *)windows125X_c;
@@ -542,19 +542,19 @@ MVMString * MVM_string_windows125X_decode(MVMThreadContext *tc,
 
     return result;
 }
-MVMString * MVM_string_windows1252_decode(MVMThreadContext *tc,
+MVMString * MVM_string_windows1252_decode(struct MVMThreadContext *tc,
         const MVMObject *result_type, char *windows125X_c, size_t bytes) {
     return MVM_string_windows125X_decode(tc, result_type, windows125X_c, bytes, NULL, windows1252_codepoints, MVM_ENCODING_PERMISSIVE);
 }
-MVMString * MVM_string_windows1251_decode(MVMThreadContext *tc,
+MVMString * MVM_string_windows1251_decode(struct MVMThreadContext *tc,
         const MVMObject *result_type, char *windows125X_c, size_t bytes) {
     return MVM_string_windows125X_decode(tc, result_type, windows125X_c, bytes, NULL, windows1251_codepoints, MVM_ENCODING_PERMISSIVE);
 }
-MVMString * MVM_string_windows1252_decode_config(MVMThreadContext *tc,
+MVMString * MVM_string_windows1252_decode_config(struct MVMThreadContext *tc,
         const MVMObject *result_type, char *windows125X_c, size_t bytes, MVMString *replacement, int64_t config) {
     return MVM_string_windows125X_decode(tc, result_type, windows125X_c, bytes, replacement, windows1252_codepoints, config);
 }
-MVMString * MVM_string_windows1251_decode_config(MVMThreadContext *tc,
+MVMString * MVM_string_windows1251_decode_config(struct MVMThreadContext *tc,
         const MVMObject *result_type, char *windows125X_c, size_t bytes, MVMString *replacement, int64_t config) {
     return MVM_string_windows125X_decode(tc, result_type, windows125X_c, bytes, replacement, windows1251_codepoints, config);
 }
@@ -563,7 +563,7 @@ MVMString * MVM_string_windows1251_decode_config(MVMThreadContext *tc,
  * encoding. Anything not in range will cause an exception unless a replacement
  * string is supplied. The result string is NULL terminated, but the specified
  * size is the non-null part. */
-char * MVM_string_windows125X_encode_substr(MVMThreadContext *tc, MVMString *str,
+char * MVM_string_windows125X_encode_substr(struct MVMThreadContext *tc, MVMString *str,
         uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement,
         int32_t translate_newlines, uint8_t(*cp_to_char)(int32_t), int64_t config) {
     /* Windows-1252 and Windows-1251 are single byte encodings, so each grapheme
@@ -651,22 +651,22 @@ char * MVM_string_windows125X_encode_substr(MVMThreadContext *tc, MVMString *str
     MVM_free(repl_bytes);
     return (char *)result;
 }
-char * MVM_string_windows1252_encode_substr(MVMThreadContext *tc, MVMString *str,
+char * MVM_string_windows1252_encode_substr(struct MVMThreadContext *tc, MVMString *str,
         uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement,
         int32_t translate_newlines) {
     return MVM_string_windows125X_encode_substr(tc, str, output_size, start, length, replacement, translate_newlines, windows1252_cp_to_char, MVM_ENCODING_PERMISSIVE);
 }
-char * MVM_string_windows1251_encode_substr(MVMThreadContext *tc, MVMString *str,
+char * MVM_string_windows1251_encode_substr(struct MVMThreadContext *tc, MVMString *str,
         uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement,
         int32_t translate_newlines) {
     return MVM_string_windows125X_encode_substr(tc, str, output_size, start, length, replacement, translate_newlines, windows1251_cp_to_char, MVM_ENCODING_PERMISSIVE);
 }
-char * MVM_string_windows1252_encode_substr_config(MVMThreadContext *tc, MVMString *str,
+char * MVM_string_windows1252_encode_substr_config(struct MVMThreadContext *tc, MVMString *str,
         uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement,
         int32_t translate_newlines, int64_t config) {
     return MVM_string_windows125X_encode_substr(tc, str, output_size, start, length, replacement, translate_newlines, windows1252_cp_to_char, config);
 }
-char * MVM_string_windows1251_encode_substr_config(MVMThreadContext *tc, MVMString *str,
+char * MVM_string_windows1251_encode_substr_config(struct MVMThreadContext *tc, MVMString *str,
         uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement,
         int32_t translate_newlines, int64_t config) {
     return MVM_string_windows125X_encode_substr(tc, str, output_size, start, length, replacement, translate_newlines, windows1251_cp_to_char, config);
