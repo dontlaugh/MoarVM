@@ -1,4 +1,4 @@
-project('MoarVM', 'c')
+project('MoarVM', 'c', default_options: ['c_std=c11'])
 
 # TODO: turn these back on after we get things compiling
 add_project_arguments('-Wno-missing-braces', language: 'c')
