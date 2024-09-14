@@ -46,9 +46,9 @@ typedef struct {
     /* Set of registers that this value can be assigned to */
     MVMBitmap reg_perm;
     /* Actual register allocated for this value */
-    MVMuint8 reg_num;
+    uint8_t reg_num;
     /* MVM value type */
-    MVMint8 reg_type;
+    int8_t reg_type;
 
     uint32_t spill_pos;
     uint32_t spill_idx;
@@ -332,7 +332,7 @@ MVM_STATIC_INLINE MVMJitTile * first_tile(MVMJitTileList *list, LiveRange *value
 /* TODO - this is an x86-ism, since x86 prefers to have the first operand an
  * input-output operand. So this might need revisiting when the register
  * allocator is ported. */
-static MVMint8 try_preferred_register(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTile *tile, MVMBitmap reg_perm) {
+static int8_t try_preferred_register(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTile *tile, MVMBitmap reg_perm) {
     /* Tile has at least one operand.
      * That operand is free.
      * It is also of the desired register class */
@@ -343,8 +343,8 @@ static MVMint8 try_preferred_register(MVMThreadContext *tc, RegisterAllocator *a
 }
 
 /* register assignment logic */
-static MVMint8 allocate_register(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list, LiveRange *value) {
-    MVMint8 reg_num = try_preferred_register(tc, alc, first_tile(list, value), value->reg_perm);
+static int8_t allocate_register(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list, LiveRange *value) {
+    int8_t reg_num = try_preferred_register(tc, alc, first_tile(list, value), value->reg_perm);
     if (reg_num < 0)
         reg_num = MVM_FFS(alc->reg_free & value->reg_perm) - 1;
     if (reg_num >= 0)
@@ -352,13 +352,13 @@ static MVMint8 allocate_register(MVMThreadContext *tc, RegisterAllocator *alc, M
     return reg_num;
 }
 
-static void free_register(MVMThreadContext *tc, RegisterAllocator *alc, MVMuint8 reg_num) {
+static void free_register(MVMThreadContext *tc, RegisterAllocator *alc, uint8_t reg_num) {
     assert(!MVM_bitmap_get_low(alc->reg_free, reg_num));
     MVM_bitmap_set_low(&alc->reg_free, reg_num);
 }
 
 static void assign_register(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
-                     int32_t lv, MVMuint8 reg_num) {
+                     int32_t lv, uint8_t reg_num) {
     /* What to do here:
      * - update tiles using this live range to refer to this register
      * - update allocator to mark this register as used by this live range */
@@ -549,7 +549,7 @@ static void determine_live_ranges(MVMThreadContext *tc, RegisterAllocator *alc, 
             /* create a live range if necessary */
             if (MVM_JIT_TILE_YIELDS_VALUE(tile)) {
                 int32_t idx           = live_range_init(alc);
-                MVMuint8 reg_spec     = tile->register_spec[0];
+                uint8_t reg_spec     = tile->register_spec[0];
                 alc->sets[node].key   = node;
                 alc->sets[node].idx   = idx;
                 _DEBUG("Create live range %d (tile=%d, node=%d)", idx,i, node);
@@ -563,7 +563,7 @@ static void determine_live_ranges(MVMThreadContext *tc, RegisterAllocator *alc, 
             }
             /* account for uses */
             for (j = 0; j < tile->num_refs; j++) {
-                MVMint8  register_spec = tile->register_spec[j+1];
+                int8_t  register_spec = tile->register_spec[j+1];
                 /* any 'use' register requirements are handled in the allocation step */
                 if (MVM_JIT_REGISTER_IS_USED(register_spec)) {
                     int32_t idx = value_set_find(alc->sets, tile->refs[j])->idx;
@@ -637,7 +637,7 @@ static void active_set_expire(MVMThreadContext *tc, RegisterAllocator *alc, uint
     uint32_t i;
     for (i = 0; i < alc->active_top; i++) {
         int32_t v = alc->active[i];
-        MVMint8 reg_num = alc->values[v].reg_num;
+        int8_t reg_num = alc->values[v].reg_num;
         if (alc->values[v].end > order_nr) {
             break;
         } else {
@@ -738,7 +738,7 @@ static uint32_t select_live_range_for_spill(MVMThreadContext *tc, RegisterAlloca
 static void live_range_spill(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list,
                              uint32_t to_spill, uint32_t spill_pos, uint32_t code_pos) {
 
-    MVMint8 reg_spilled = alc->values[to_spill].reg_num;
+    int8_t reg_spilled = alc->values[to_spill].reg_num;
     /* loop over all value refs */
     _DEBUG("Spilling live range value %d to memory position %d at %d", to_spill, spill_pos, code_pos);
 
@@ -801,25 +801,25 @@ static void prepare_arglist_and_call(MVMThreadContext *tc, RegisterAllocator *al
     MVMJitStorageRef storage_refs[16];
 
     struct {
-        MVMint8 in_reg; /* register number that is to be moved in */
-        MVMint8 num_out; /* how many values need to make room for me */
+        int8_t in_reg; /* register number that is to be moved in */
+        int8_t num_out; /* how many values need to make room for me */
     } topological_map[MVM_JIT_ARCH_NUM_REG]; /* reverse map for topological sort of moves */
 
     struct {
-        MVMint8 reg_num;
-        MVMint8 stack_pos;
+        int8_t reg_num;
+        int8_t stack_pos;
     } stack_transfer[16];
     uint32_t stack_transfer_top = 0;
 
-    MVMint8 transfer_queue[16];
+    int8_t transfer_queue[16];
     int32_t transfer_queue_idx, transfer_queue_top = 0, transfers_required = 0;
 
-    MVMint8 spilled_args[16];
+    int8_t spilled_args[16];
     uint32_t spilled_args_top = 0;
 
     MVMBitmap call_bitmap = 0, arg_bitmap = 0;
 
-    MVMuint8 spare_register = MVM_FFS(MVM_JIT_SPARE_REGISTERS) - 1;
+    uint8_t spare_register = MVM_FFS(MVM_JIT_SPARE_REGISTERS) - 1;
 
     uint32_t i, j, ins_pos = 2;
 
@@ -865,7 +865,7 @@ static void prepare_arglist_and_call(MVMThreadContext *tc, RegisterAllocator *al
             /* spilled prior to the ARGLIST/CALL */
             spilled_args[spilled_args_top++] = i;
         } else if (arg_cls == MVM_JIT_STORAGE_GPR || arg_cls == MVM_JIT_STORAGE_FPR) {
-            MVMint8 reg_num = storage_refs[i]._pos;
+            int8_t reg_num = storage_refs[i]._pos;
             if (reg_num != v->reg_num) {
                 _DEBUG("Transfer Rq(%d) -> Rq(%d)", reg_num, v->reg_num);
                 topological_map[reg_num].in_reg = v->reg_num;
@@ -887,7 +887,7 @@ static void prepare_arglist_and_call(MVMThreadContext *tc, RegisterAllocator *al
 
         /* set bitmap */
         if (arg_cls == MVM_JIT_STORAGE_GPR || arg_cls == MVM_JIT_STORAGE_FPR) {
-            MVMint8 reg_num = storage_refs[i]._pos;
+            int8_t reg_num = storage_refs[i]._pos;
             MVM_bitmap_set(&arg_bitmap, reg_num);
         }
     }
@@ -905,7 +905,7 @@ static void prepare_arglist_and_call(MVMThreadContext *tc, RegisterAllocator *al
     INSERT_NEXT_TILE(MAKE_TILE(memory_copy, 4, 2, MVM_JIT_STORAGE_STACK, _s, MVM_JIT_STORAGE_LOCAL, _l, 0, spare_register))
 
 #define ENQUEUE_TRANSFER(_r) do { \
-         MVMint8 _c = (_r); \
+         int8_t _c = (_r); \
          if (--(topological_map[(_c)].num_out) == 0 &&  \
                 topological_map[(_c)].in_reg   >= 0) { \
              transfer_queue[transfer_queue_top++] = _c; \
@@ -916,9 +916,9 @@ static void prepare_arglist_and_call(MVMThreadContext *tc, RegisterAllocator *al
     /* resolve conflicts for CALL; since we're spilling any surviving bits,
      * we can just move it to any free registers. */
     for (i = 0; i < call_tile->num_refs; i++) {
-        MVMint8 spec = call_tile->register_spec[i + 1];
+        int8_t spec = call_tile->register_spec[i + 1];
         if (MVM_JIT_REGISTER_IS_USED(spec)) {
-            MVMint8 reg = call_tile->values[i+1];
+            int8_t reg = call_tile->values[i+1];
             MVM_bitmap_set(&call_bitmap, reg);
         }
     }
@@ -927,8 +927,8 @@ static void prepare_arglist_and_call(MVMThreadContext *tc, RegisterAllocator *al
         /* we need the spare register for the cycle breaking */
         MVMBitmap free_reg = ~(call_bitmap | arg_bitmap | MVM_JIT_RESERVED_REGISTERS | MVM_JIT_SPARE_REGISTERS);
         /* FFS counts registers starting from 1 */
-        MVMuint8 src = MVM_FFS(call_bitmap & arg_bitmap) - 1;
-        MVMuint8 dst = MVM_FFS(free_reg) - 1;
+        uint8_t src = MVM_FFS(call_bitmap & arg_bitmap) - 1;
+        uint8_t dst = MVM_FFS(free_reg) - 1;
 
         _ASSERT(free_reg != 0, "JIT: need to move a register but nothing is free");
 
@@ -960,8 +960,8 @@ static void prepare_arglist_and_call(MVMThreadContext *tc, RegisterAllocator *al
     }
 
     for (i = 0; i < stack_transfer_top; i++) {
-        MVMint8 reg_num = stack_transfer[i].reg_num;
-        MVMint8 stk_pos = stack_transfer[i].stack_pos;
+        int8_t reg_num = stack_transfer[i].reg_num;
+        int8_t stk_pos = stack_transfer[i].stack_pos;
         INSERT_COPY_TO_STACK(stk_pos, reg_num);
         _DEBUG("Insert stack parameter: Rq(%d) -> [rsp+%d]", reg_num, stk_pos);
         ENQUEUE_TRANSFER(reg_num);
@@ -969,8 +969,8 @@ static void prepare_arglist_and_call(MVMThreadContext *tc, RegisterAllocator *al
 
 
     for (transfer_queue_idx = 0; transfer_queue_idx < transfer_queue_top; transfer_queue_idx++) {
-        MVMint8 dst = transfer_queue[transfer_queue_idx];
-        MVMint8 src = topological_map[dst].in_reg;
+        int8_t dst = transfer_queue[transfer_queue_idx];
+        int8_t src = topological_map[dst].in_reg;
         _ASSERT(src >= 0, "No inboud edge (sort)");
         _DEBUG("Insert move (toposort): Rq(%d) -> Rq(%d)", src, dst);
         INSERT_MOVE(dst, src);
@@ -988,11 +988,11 @@ static void prepare_arglist_and_call(MVMThreadContext *tc, RegisterAllocator *al
          */
         for (i = 0; i < MVM_ARRAY_SIZE(topological_map); i++) {
             if (topological_map[i].num_out > 0) {
-                MVMint8 src, dst;
+                int8_t src, dst;
                 INSERT_MOVE(spare_register, i);
                 _ASSERT(--(topological_map[i].num_out) == 0,
                         "More than one outbound edge in cycle");
-                for (dst = i, src = topological_map[i].in_reg; src != (MVMint8)i;
+                for (dst = i, src = topological_map[i].in_reg; src != (int8_t)i;
                      dst = src, src = topological_map[src].in_reg) {
                     _ASSERT(src >= 0, "No inbound edge (cycle breaking)");
                     INSERT_MOVE(dst, src);
@@ -1055,7 +1055,7 @@ MVM_STATIC_INLINE void process_tile(MVMThreadContext *tc, RegisterAllocator *alc
         uint32_t i;
         /* deal with 'use' registers */
         for  (i = 1; i < tile->num_refs; i++) {
-            MVMint8 spec = tile->register_spec[i];
+            int8_t spec = tile->register_spec[i];
             if (MVM_JIT_REGISTER_IS_USED(spec) && MVM_JIT_REGISTER_HAS_REQUIREMENT(spec)) {
                 /* we could use the register map here, but let's wait and see */
                 NYI(tile_use_requirements);
@@ -1065,7 +1065,7 @@ MVM_STATIC_INLINE void process_tile(MVMThreadContext *tc, RegisterAllocator *alc
 }
 
 static void process_live_range(MVMThreadContext *tc, RegisterAllocator *alc, MVMJitTileList *list, int32_t v) {
-    MVMint8 reg;
+    int8_t reg;
     uint32_t tile_order_nr = alc->values[v].start;
     MVMBitmap reg_perm = alc->values[v].reg_perm;
     if ((MVM_JIT_RESERVED_REGISTERS & reg_perm) != 0) {
@@ -1150,7 +1150,7 @@ static void enforce_operand_requirements(MVMThreadContext *tc, RegisterAllocator
                 } else {
                     /* Move to a temporary */
                     MVMJitStorageClass reg_cls = MVM_jit_arch_register_class(tile->values[0]);
-                    MVMint8 spare_register = MVM_FFS(MVM_JIT_SPARE_REGISTERS & MVM_JIT_REGISTER_CLASS[reg_cls]) - 1;
+                    int8_t spare_register = MVM_FFS(MVM_JIT_SPARE_REGISTERS & MVM_JIT_REGISTER_CLASS[reg_cls]) - 1;
                     MVMJitTile *before = MVM_jit_tile_make(tc, alc->compiler, MVM_jit_compile_move, 0, 2, spare_register, tile->values[1]);
                     MVMJitTile *after  = MVM_jit_tile_make(tc, alc->compiler, MVM_jit_compile_move, 0, 2, tile->values[0], spare_register);
                     before->debug_name = "#move tmp <- in";

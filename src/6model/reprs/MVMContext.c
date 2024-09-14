@@ -33,7 +33,7 @@ static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
     MVM_free(((MVMContext *)obj)->body.traversals);
 }
 
-static int32_t apply_traversals(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMuint8 *traversals,
+static int32_t apply_traversals(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, uint8_t *traversals,
                                  uint32_t num_traversals) {
     uint32_t i;
     uint32_t could_move = 1;
@@ -65,13 +65,13 @@ static uint32_t setup_frame_walker(MVMThreadContext *tc, MVMSpeshFrameWalker *fw
     return apply_traversals(tc, fw, data->traversals, data->num_traversals);
 }
 
-static void at_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key, MVMRegister *result, MVMuint16 kind) {
+static void at_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key, MVMRegister *result, uint16_t kind) {
     MVMString      *name  = (MVMString *)key;
     MVMContextBody *body  = (MVMContextBody *)data;
 
     MVMSpeshFrameWalker fw;
     MVMRegister *found;
-    MVMuint16 found_kind;
+    uint16_t found_kind;
     MVM_gc_root_temp_push(tc, (MVMCollectable**)&name);
     if (!setup_frame_walker(tc, &fw, body) || !MVM_spesh_frame_walker_get_lex(tc, &fw,
             name, &found, &found_kind, 1, NULL)) {
@@ -123,13 +123,13 @@ static void at_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *d
     *result = *found;
 }
 
-static void bind_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key, MVMRegister value, MVMuint16 kind) {
+static void bind_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key, MVMRegister value, uint16_t kind) {
     MVMString      *name  = (MVMString *)key;
     MVMContextBody *body  = (MVMContextBody *)data;
 
     MVMSpeshFrameWalker fw;
     MVMRegister *found;
-    MVMuint16 got_kind;
+    uint16_t got_kind;
     MVMFrame *found_frame;
     uint32_t needs_root = kind == MVM_reg_obj || kind == MVM_reg_str;
     uint32_t missing;
@@ -164,24 +164,24 @@ static void bind_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
     }
 }
 
-static MVMuint64 elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMContextBody *body  = (MVMContextBody *)data;
 
     MVMSpeshFrameWalker fw;
-    MVMuint64 result = setup_frame_walker(tc, &fw, body)
+    uint64_t result = setup_frame_walker(tc, &fw, body)
         ? MVM_spesh_frame_walker_get_lexical_count(tc, &fw)
         : 0;
     MVM_spesh_frame_walker_cleanup(tc, &fw);
     return result;
 }
 
-static MVMint64 exists_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key) {
+static int64_t exists_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key) {
     MVMContextBody *body = (MVMContextBody *)data;
 
     MVMSpeshFrameWalker fw;
     MVMRegister *found;
-    MVMuint16 found_kind;
-    MVMuint64 result = setup_frame_walker(tc, &fw, body) && MVM_spesh_frame_walker_get_lex(tc, &fw,
+    uint16_t found_kind;
+    uint64_t result = setup_frame_walker(tc, &fw, body) && MVM_spesh_frame_walker_get_lex(tc, &fw,
             (MVMString *)key, &found, &found_kind, 0, NULL);
     MVM_spesh_frame_walker_cleanup(tc, &fw);
 
@@ -319,7 +319,7 @@ MVMObject * MVM_context_from_frame_non_traversable(MVMThreadContext *tc, MVMFram
 }
 
 /* Checks if we can perform a traversal and reach an existing frame. */
-static int32_t traversal_exists(MVMThreadContext *tc, MVMFrame *base, MVMuint8 *traversals,
+static int32_t traversal_exists(MVMThreadContext *tc, MVMFrame *base, uint8_t *traversals,
                                  uint32_t num_traversals) {
     MVMSpeshFrameWalker fw;
     uint32_t could_move;
@@ -331,7 +331,7 @@ static int32_t traversal_exists(MVMThreadContext *tc, MVMFrame *base, MVMuint8 *
 
 /* Try to get a context with the specified traversal applied. Ensures that the
  * traversal would lead to a result, and returns a NULL context if not. */
-MVMObject * MVM_context_apply_traversal(MVMThreadContext *tc, MVMContext *ctx, MVMuint8 traversal) {
+MVMObject * MVM_context_apply_traversal(MVMThreadContext *tc, MVMContext *ctx, uint8_t traversal) {
     /* Ensure we've got a traversable context. */
     if (!ctx->body.traversable)
         MVM_exception_throw_adhoc(tc,
@@ -339,7 +339,7 @@ MVMObject * MVM_context_apply_traversal(MVMThreadContext *tc, MVMContext *ctx, M
 
     /* Create new traversals array with the latest one at the end. */
     uint32_t new_num_traversals = ctx->body.num_traversals + 1;
-    MVMuint8 *new_traversals = MVM_malloc(new_num_traversals);
+    uint8_t *new_traversals = MVM_malloc(new_num_traversals);
     if (ctx->body.num_traversals)
         memcpy(new_traversals, ctx->body.traversals, ctx->body.num_traversals);
     new_traversals[new_num_traversals - 1] = traversal;
@@ -406,9 +406,9 @@ MVMObject * MVM_context_lexicals_as_hash(MVMThreadContext *tc, MVMContext *ctx) 
 }
 
 /* Find the primitive lexical type of a lexical in the context. */
-MVMint64 MVM_context_lexical_primspec(MVMThreadContext *tc, MVMContext *ctx, MVMString *name) {
+int64_t MVM_context_lexical_primspec(MVMThreadContext *tc, MVMContext *ctx, MVMString *name) {
     MVMSpeshFrameWalker fw;
-    MVMint64 primspec = -1;
+    int64_t primspec = -1;
     MVM_spesh_frame_walker_init(tc, &fw, ctx->body.context, 0);
     if (apply_traversals(tc, &fw, ctx->body.traversals, ctx->body.num_traversals))
         primspec = MVM_spesh_frame_walker_get_lexical_primspec(tc, &fw, name);

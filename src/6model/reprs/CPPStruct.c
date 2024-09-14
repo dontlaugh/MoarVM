@@ -146,10 +146,10 @@ static void compute_allocation_strategy(MVMThreadContext *tc, MVMSTable *st,
             MVMObject *inlined_val = MVM_repr_at_key_o(tc, attr, tc->instance->str_consts.inlined);
             MVMObject *dimensions         = MVM_repr_at_key_o(tc, attr, tc->instance->str_consts.dimensions);
             MVMP6opaqueREPRData *dim_repr = (MVMP6opaqueREPRData *)STABLE(dimensions)->REPR_data;
-            MVMint64 num_dimensions       = dim_repr && dim_repr->pos_del_slot >= 0
+            int64_t num_dimensions       = dim_repr && dim_repr->pos_del_slot >= 0
                                           ? MVM_repr_elems(tc, dimensions)
                                           : 0;
-            MVMint64 inlined = !MVM_is_null(tc, inlined_val) && MVM_repr_get_int(tc, inlined_val);
+            int64_t inlined = !MVM_is_null(tc, inlined_val) && MVM_repr_get_int(tc, inlined_val);
             int32_t   bits  = sizeof(void *) * 8;
             int32_t   align = ALIGNOF(void *);
 
@@ -220,7 +220,7 @@ static void compute_allocation_strategy(MVMThreadContext *tc, MVMSTable *st,
                         repr_data->attribute_locations[i]  |= MVM_CSTRUCT_ATTR_INLINED;
 
                         if (num_dimensions > 0) {
-                            MVMint64 dim_one =  MVM_repr_at_pos_i(tc, dimensions, 0);
+                            int64_t dim_one =  MVM_repr_at_pos_i(tc, dimensions, 0);
 
                             // How do we distinguish between these members:
                             // a) struct  foo [32] alias;
@@ -444,11 +444,11 @@ static void die_no_attrs(MVMThreadContext *tc) {
 }
 
 static void get_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-        void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint,
-        MVMRegister *result_reg, MVMuint16 kind) {
+        void *data, MVMObject *class_handle, MVMString *name, int64_t hint,
+        MVMRegister *result_reg, uint16_t kind) {
     MVMCPPStructREPRData *repr_data = (MVMCPPStructREPRData *)st->REPR_data;
     MVMCPPStructBody *body = (MVMCPPStructBody *)data;
-    MVMint64 slot;
+    int64_t slot;
 
     if (!repr_data)
         MVM_exception_throw_adhoc(tc, "CPPStruct: must compose before using get_attribute");
@@ -563,11 +563,11 @@ static void get_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
 
 /* Binds the given value to the specified attribute. */
 static void bind_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-        void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint,
-        MVMRegister value_reg, MVMuint16 kind) {
+        void *data, MVMObject *class_handle, MVMString *name, int64_t hint,
+        MVMRegister value_reg, uint16_t kind) {
     MVMCPPStructREPRData *repr_data = (MVMCPPStructREPRData *)st->REPR_data;
     MVMCPPStructBody *body = (MVMCPPStructBody *)data;
-    MVMint64 slot;
+    int64_t slot;
 
     if (!repr_data)
         MVM_exception_throw_adhoc(tc, "CPPStruct: must compose before using bind_attribute");
@@ -680,12 +680,12 @@ static void bind_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
 
 
 /* Checks if an attribute has been initialized. */
-static MVMint64 is_attribute_initialized(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint) {
+static int64_t is_attribute_initialized(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, int64_t hint) {
     die_no_attrs(tc);
 }
 
 /* Gets the hint for the given attribute ID. */
-static MVMint64 hint_for(MVMThreadContext *tc, MVMSTable *st, MVMObject *class_handle, MVMString *name) {
+static int64_t hint_for(MVMThreadContext *tc, MVMSTable *st, MVMObject *class_handle, MVMString *name) {
     return MVM_NO_HINT;
 }
 

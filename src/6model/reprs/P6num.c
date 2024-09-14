@@ -3,16 +3,16 @@
 /* This representation's function pointer table. */
 static const MVMREPROps P6num_this_repr;
 
-static void mk_storage_spec(MVMThreadContext *tc, MVMuint16 bits, MVMStorageSpec *spec) {
+static void mk_storage_spec(MVMThreadContext *tc, uint16_t bits, MVMStorageSpec *spec) {
     spec->bits = bits;
     spec->inlineable      = MVM_STORAGE_SPEC_INLINED;
     spec->boxed_primitive = MVM_STORAGE_SPEC_BP_NUM;
     spec->can_box         = MVM_STORAGE_SPEC_CAN_BOX_NUM;
     spec->is_unsigned     = 0;
     switch (bits) {
-        case 64: spec->align = ALIGNOF(MVMnum64); break;
-        case 32: spec->align = ALIGNOF(MVMnum32); break;
-        default: spec->align = ALIGNOF(MVMnum64); break;
+        case 64: spec->align = ALIGNOF(double); break;
+        case 32: spec->align = ALIGNOF(float); break;
+        default: spec->align = ALIGNOF(double); break;
     }
 }
 
@@ -25,7 +25,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
         MVMObject *obj = MVM_gc_allocate_type_object(tc, st);
         MVMP6numREPRData *repr_data = (MVMP6numREPRData *)MVM_malloc(sizeof(MVMP6numREPRData));
 
-        repr_data->bits = sizeof(MVMnum64) * 8;
+        repr_data->bits = sizeof(double) * 8;
         mk_storage_spec(tc, repr_data->bits, &repr_data->storage_spec);
         MVM_ASSIGN_REF(tc, &(st->header), st->WHAT, obj);
         st->size = sizeof(MVMP6num);
@@ -46,15 +46,15 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
     }
 }
 
-static void set_num(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMnum64 value) {
+static void set_num(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, double value) {
     MVMP6numREPRData *repr_data = (MVMP6numREPRData *)st->REPR_data;
     switch (repr_data->bits) {
-        case 32: ((MVMP6numBody *)data)->value.n32 = (MVMnum32)value; break;
+        case 32: ((MVMP6numBody *)data)->value.n32 = (float)value; break;
         default: ((MVMP6numBody *)data)->value.n64 = value; break;
     }
 }
 
-static MVMnum64 get_num(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static double get_num(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMP6numREPRData *repr_data = (MVMP6numREPRData *)st->REPR_data;
     switch (repr_data->bits) {
         case 32: return ((MVMP6numBody *)data)->value.n32;
@@ -69,8 +69,8 @@ static void gc_free_repr_data(MVMThreadContext *tc, MVMSTable *st) {
 
 static const MVMStorageSpec default_storage_spec = {
     MVM_STORAGE_SPEC_INLINED,     /* inlineable */
-    sizeof(MVMnum64) * 8,         /* bits */
-    ALIGNOF(MVMnum64),            /* align */
+    sizeof(double) * 8,         /* bits */
+    ALIGNOF(double),            /* align */
     MVM_STORAGE_SPEC_BP_NUM,      /* boxed_primitive */
     MVM_STORAGE_SPEC_CAN_BOX_NUM, /* can_box */
     0,                            /* is_unsigned */
@@ -131,7 +131,7 @@ static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerial
 
     if (repr_data->bits !=  1 && repr_data->bits !=  2 && repr_data->bits !=  4 && repr_data->bits != 8
      && repr_data->bits != 16 && repr_data->bits != 32 && repr_data->bits != 64) {
-        MVMint16 bits = repr_data->bits;
+        int16_t bits = repr_data->bits;
         MVM_free(repr_data);
         MVM_exception_throw_adhoc(tc, "MVMP6num: Unsupported int size (%dbit)", bits);
     }
@@ -142,7 +142,7 @@ static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerial
 }
 
 static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
-    MVMnum64 value = MVM_serialization_read_num(tc, reader);
+    double value = MVM_serialization_read_num(tc, reader);
     set_num(tc, st, root, data, value);
 }
 

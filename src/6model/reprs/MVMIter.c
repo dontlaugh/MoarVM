@@ -46,7 +46,7 @@ static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *
     return &storage_spec;
 }
 
-static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, MVMuint16 kind) {
+static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     MVMIterBody *body = (MVMIterBody *)data;
     MVMObject *target = body->target;
     switch (body->mode) {
@@ -109,7 +109,7 @@ static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *da
             MVMStrHashTable *hashtable = &(((MVMHash *)target)->body.hashtable);
 #if HASH_DEBUG_ITER
             struct MVMStrHashTableControl *control = hashtable->table;
-            MVMuint64 ht_id = control ? control->ht_id : 0;
+            uint64_t ht_id = control ? control->ht_id : 0;
             if (body->hash_state.curr.owner != ht_id) {
                 MVM_oops(tc, "MVMIter shift called with an iterator from a different hash table: %016" PRIx64 " != %016" PRIx64,
                          body->hash_state.curr.owner, ht_id);
@@ -138,7 +138,7 @@ static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *da
 
 /* This whole splice optimization can be optimized for the case we have two
  * MVMIter representation objects. */
-static void isplice(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *from, MVMint64 offset, MVMuint64 count) {
+static void isplice(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *from, int64_t offset, uint64_t count) {
 }
 
 static MVMStorageSpec get_elem_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
@@ -257,7 +257,7 @@ MVMObject * MVM_iter(MVMThreadContext *tc, MVMObject *target) {
     return (MVMObject *)iterator;
 }
 
-MVMint64 MVM_iter_istrue(MVMThreadContext *tc, MVMIter *iter) {
+int64_t MVM_iter_istrue(MVMThreadContext *tc, MVMIter *iter) {
     switch (iter->body.mode) {
         case MVM_ITER_MODE_ARRAY:
         case MVM_ITER_MODE_ARRAY_INT:
@@ -282,7 +282,7 @@ MVMString * MVM_iterkey_s(MVMThreadContext *tc, MVMIter *iterator) {
 
 #if HASH_DEBUG_ITER
     struct MVMStrHashTableControl *control = hashtable->table;
-    MVMuint64 ht_id = control ? control->ht_id : 0;
+    uint64_t ht_id = control ? control->ht_id : 0;
     if (iterator->body.hash_state.next.owner != ht_id) {
         MVM_oops(tc, "MVM_itereky_s called with an iterator from a different hash table: %016" PRIx64 " != %016" PRIx64,
                  iterator->body.hash_state.next.owner, ht_id);
@@ -315,7 +315,7 @@ MVMObject * MVM_iterval(MVMThreadContext *tc, MVMIter *iterator) {
 
 #if HASH_DEBUG_ITER
         struct MVMStrHashTableControl *control = hashtable->table;
-        MVMuint64 ht_id = control ? control->ht_id : 0;
+        uint64_t ht_id = control ? control->ht_id : 0;
         if (iterator->body.hash_state.next.owner != ht_id) {
         MVM_oops(tc, "MVM_iterval called with an iterator from a different hash table: %016" PRIx64 " != %016" PRIx64,
                  iterator->body.hash_state.next.owner, ht_id);

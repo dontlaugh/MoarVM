@@ -1,5 +1,5 @@
 /* basic bitmap implementation */
-typedef MVMuint64 MVMBitmap;
+typedef uint64_t MVMBitmap;
 
 /* Efficient find-first-set; on x86, using `bsf` primitive operation; something
  * else on other architectures. */
@@ -36,11 +36,11 @@ MVM_STATIC_INLINE void MVM_bitmap_set_low(MVMBitmap *bits, int32_t idx) {
     *bits |= (UINT64_C(1) << (idx & 0x3f));
 }
 
-MVM_STATIC_INLINE MVMuint64 MVM_bitmap_get(MVMBitmap *bits, int32_t idx) {
+MVM_STATIC_INLINE uint64_t MVM_bitmap_get(MVMBitmap *bits, int32_t idx) {
     return bits[idx >> 6] & (UINT64_C(1) << (idx & 0x3f));
 }
 
-MVM_STATIC_INLINE MVMuint64 MVM_bitmap_get_low(MVMBitmap bits, int32_t idx ) {
+MVM_STATIC_INLINE uint64_t MVM_bitmap_get_low(MVMBitmap bits, int32_t idx ) {
     return bits & (UINT64_C(1) << (idx & 0x3f));
 }
 
@@ -69,10 +69,10 @@ MVM_STATIC_INLINE void MVM_bitmap_intersection(MVMBitmap *out, MVMBitmap *a, MVM
     }
 }
 
-MVM_STATIC_INLINE MVMBitmap MVM_bitmap_with_set(MVMBitmap bitmap, MVMuint8 bit) {
+MVM_STATIC_INLINE MVMBitmap MVM_bitmap_with_set(MVMBitmap bitmap, uint8_t bit) {
     return bitmap | (1 << bit);
 }
 
-MVM_STATIC_INLINE MVMBitmap MVM_bitmap_with_clear(MVMBitmap bitmap, MVMuint8 bit) {
+MVM_STATIC_INLINE MVMBitmap MVM_bitmap_with_clear(MVMBitmap bitmap, uint8_t bit) {
     return bitmap & ~(1 << bit);
 }

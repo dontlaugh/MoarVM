@@ -12,8 +12,8 @@ struct MVMSpeshFacts {
     /* Known value, if any. */
     union {
         MVMObject *o;
-        MVMint64 i;
-        MVMnum64 n;
+        int64_t i;
+        double n;
         MVMString *s;
     } value;
 
@@ -30,7 +30,7 @@ struct MVMSpeshFacts {
     uint32_t num_log_guards;
 
     /* Has the instruction that wrote this value been deleted? */
-    MVMuint16 dead_writer;
+    uint16_t dead_writer;
 
     /* Information associated with this value for the use of partial escape
      * analysis. */

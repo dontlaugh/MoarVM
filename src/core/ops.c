@@ -15573,9 +15573,9 @@ static const MVMOpInfo MVM_op_infos[] = {
 
 static const unsigned short MVM_op_counts = 973;
 
-static const MVMuint16 last_op_allowed = 837;
+static const uint16_t last_op_allowed = 837;
 
-static const MVMuint8 MVM_op_allowed_in_confprog[] = {
+static const uint8_t MVM_op_allowed_in_confprog[] = {
     0xD1, 0x1, 0x80, 0x3,
     0x3, 0x0, 0x0, 0xFF,
     0xFF, 0xF0, 0xCB, 0xFF,
@@ -15610,7 +15610,7 @@ MVM_PUBLIC const MVMOpInfo * MVM_op_get_op(unsigned short op) {
     return &MVM_op_infos[op];
 }
 
-MVM_PUBLIC MVMuint8 MVM_op_is_allowed_in_confprog(unsigned short op) {
+MVM_PUBLIC uint8_t MVM_op_is_allowed_in_confprog(unsigned short op) {
     if (op > last_op_allowed)
         return 0;
     return !!(MVM_op_allowed_in_confprog[op / 8] & (1 << (op % 8)));

@@ -8,7 +8,7 @@
 
 /* Maps outside-world normalization form codes to our internal set, validating
  * that we got something valid. */
-MVMNormalization MVM_unicode_normalizer_form(MVMThreadContext *tc, MVMint64 form_in) {
+MVMNormalization MVM_unicode_normalizer_form(MVMThreadContext *tc, int64_t form_in) {
     switch (form_in) {
     case 1: return MVM_NORMALIZE_NFC;
     case 2: return MVM_NORMALIZE_NFD;
@@ -22,13 +22,13 @@ MVMNormalization MVM_unicode_normalizer_form(MVMThreadContext *tc, MVMint64 form
  * 32-bit integers. Performs normalization to the specified form. */
 static void assert_codepoint_array(MVMThreadContext *tc, const MVMObject *arr, char *error) {
     if (IS_CONCRETE(arr) && REPR(arr)->ID == MVM_REPR_ID_VMArray) {
-        MVMuint8 slot_type = ((MVMArrayREPRData *)STABLE(arr)->REPR_data)->slot_type;
+        uint8_t slot_type = ((MVMArrayREPRData *)STABLE(arr)->REPR_data)->slot_type;
         if (slot_type == MVM_ARRAY_I32 || slot_type == MVM_ARRAY_U32)
             return;
     }
     MVM_exception_throw_adhoc(tc, "%s", error);
 }
-MVM_STATIC_INLINE void maybe_grow_result(MVMCodepoint **result, MVMint64 *result_alloc, MVMint64 needed) {
+MVM_STATIC_INLINE void maybe_grow_result(MVMCodepoint **result, int64_t *result_alloc, int64_t needed) {
     if (needed >= *result_alloc) {
         while (needed >= *result_alloc)
             *result_alloc += 32;
@@ -39,7 +39,7 @@ void MVM_unicode_normalize_codepoints(MVMThreadContext *tc, const MVMObject *in,
     MVMNormalizer  norm;
     MVMCodepoint  *input;
     MVMCodepoint  *result;
-    MVMint64       input_pos, input_codes, result_pos, result_alloc;
+    int64_t       input_pos, input_codes, result_pos, result_alloc;
     int32_t       ready;
 
     /* Validate input/output array. */
@@ -83,9 +83,9 @@ void MVM_unicode_normalize_codepoints(MVMThreadContext *tc, const MVMObject *in,
     ((MVMArray *)out)->body.start     = 0;
     ((MVMArray *)out)->body.elems     = result_pos;
 }
-MVMString * MVM_unicode_codepoints_c_array_to_nfg_string(MVMThreadContext *tc, MVMCodepoint * cp_v, MVMint64 cp_count) {
+MVMString * MVM_unicode_codepoints_c_array_to_nfg_string(MVMThreadContext *tc, MVMCodepoint * cp_v, int64_t cp_count) {
     MVMNormalizer  norm;
-    MVMint64       input_pos, result_pos, result_alloc;
+    int64_t       input_pos, result_pos, result_alloc;
     MVMGrapheme32 *result;
     int32_t       ready;
     MVMString     *str;
@@ -132,7 +132,7 @@ MVMString * MVM_unicode_codepoints_c_array_to_nfg_string(MVMThreadContext *tc, M
  * Grapheme level, and returns the resulting NFG string. */
 MVMString * MVM_unicode_codepoints_to_nfg_string(MVMThreadContext *tc, const MVMObject *codes) {
     MVMCodepoint  *input;
-    MVMint64       input_codes;
+    int64_t       input_codes;
 
     assert_codepoint_array(tc, codes, "Code points to string input must be native array of 32-bit integers");
 
@@ -146,7 +146,7 @@ MVMString * MVM_unicode_codepoints_to_nfg_string(MVMThreadContext *tc, const MVM
  * normalization form. */
 void MVM_unicode_string_to_codepoints(MVMThreadContext *tc, MVMString *s, MVMNormalization form, MVMObject *out) {
     MVMCodepoint     *result;
-    MVMint64          result_pos, result_alloc;
+    int64_t          result_pos, result_alloc;
     MVMCodepointIter  ci;
 
     /* Validate output array and set up result storage. */
@@ -294,8 +294,8 @@ static void decomp_codepoint_to_buffer(MVMThreadContext *tc, MVMNormalizer *n, M
     /* See if we actually need to decompose (can skip if the decomposition
      * type is None, or we're only doing Canonical decomposition and it is
      * anything except Canonical). */
-    MVMint16 cp_DT = MVM_unicode_codepoint_get_property_int(tc, cp, MVM_UNICODE_PROPERTY_DECOMPOSITION_TYPE);
-    MVMint64 decompose = 1;
+    int16_t cp_DT = MVM_unicode_codepoint_get_property_int(tc, cp, MVM_UNICODE_PROPERTY_DECOMPOSITION_TYPE);
+    int64_t decompose = 1;
     if (cp_DT == MVM_UNICODE_PVALUE_DT_NONE)
         decompose = 0;
     else if (!MVM_NORMALIZE_COMPAT_DECOMP(n->form) && cp_DT != MVM_UNICODE_PVALUE_DT_CANONICAL )
@@ -326,7 +326,7 @@ static void decomp_codepoint_to_buffer(MVMThreadContext *tc, MVMNormalizer *n, M
 }
 
 /* Checks if the specified character answers "yes" on the appropriate quick check. */
-static MVMint64 passes_quickcheck(MVMThreadContext *tc, const MVMNormalizer *n, MVMCodepoint cp) {
+static int64_t passes_quickcheck(MVMThreadContext *tc, const MVMNormalizer *n, MVMCodepoint cp) {
     const char *pval = MVM_unicode_codepoint_get_property_cstr(tc, cp, n->quick_check_property);
     return pval && pval[0] == 'Y';
 }
@@ -334,7 +334,7 @@ static MVMint64 passes_quickcheck(MVMThreadContext *tc, const MVMNormalizer *n, 
 /* Gets the CCC (actual value) but is slower as it looks up with string properties
  * Exact values are not needed for normalization.
  * Returns 0 for Not_Reordered codepoints *and* CCC 0 codepoints */
-static MVMint64 ccc_old(MVMThreadContext *tc, MVMCodepoint cp) {
+static int64_t ccc_old(MVMThreadContext *tc, MVMCodepoint cp) {
     if (cp < MVM_NORMALIZE_FIRST_NONZERO_CCC) {
         return 0;
     }
@@ -348,7 +348,7 @@ static MVMint64 ccc_old(MVMThreadContext *tc, MVMCodepoint cp) {
  * numerically it is ok to get the internal integer value as stored instead of
  * the string.
  * Returns 0 for Not_Reordered codepoints *and* CCC 0 codepoints */
-MVMint64 MVM_unicode_relative_ccc(MVMThreadContext *tc, MVMCodepoint cp) {
+int64_t MVM_unicode_relative_ccc(MVMThreadContext *tc, MVMCodepoint cp) {
     if (cp < MVM_NORMALIZE_FIRST_NONZERO_CCC) {
         return 0;
     }
@@ -402,8 +402,8 @@ static void canonical_sort(MVMThreadContext *tc, MVMNormalizer *n, int32_t from,
         int32_t i = from;
         reordered = 0;
         while (i < to - 1) {
-            MVMint64 cccA = MVM_unicode_relative_ccc(tc, n->buffer[i]);
-            MVMint64 cccB = MVM_unicode_relative_ccc(tc, n->buffer[i + 1]);
+            int64_t cccA = MVM_unicode_relative_ccc(tc, n->buffer[i]);
+            int64_t cccB = MVM_unicode_relative_ccc(tc, n->buffer[i + 1]);
             if (cccA > cccB && cccB > 0) {
                 MVMCodepoint tmp = n->buffer[i];
                 n->buffer[i] = n->buffer[i + 1];
@@ -647,7 +647,7 @@ static void grapheme_composition(MVMThreadContext *tc, MVMNormalizer *n, int32_t
  * may find the quick check itself is enough; if not, we have to do real work
  * compute the normalization. */
 int32_t MVM_unicode_normalizer_process_codepoint_full(MVMThreadContext *tc, MVMNormalizer *norm, MVMCodepoint in, MVMCodepoint *out) {
-    MVMint64 qc_in, ccc_in;
+    int64_t qc_in, ccc_in;
     int is_prepend = is_grapheme_prepend(tc, in);
 
     if (MVM_UNLIKELY(0 < norm->prepend_buffer))

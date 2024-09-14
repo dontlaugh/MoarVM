@@ -10,7 +10,7 @@ void MVM_profile_start(MVMThreadContext *tc, MVMObject *config) {
             MVM_repr_at_key_o(tc, config, tc->instance->str_consts.kind));
         if (MVM_string_equal(tc, kind, tc->instance->str_consts.instrumented)) {
             uint32_t i;
-            MVMuint64 s, e;
+            uint64_t s, e;
             MVM_profile_instrumented_start(tc, config);
 
             /* Call the profiling functions a bunch of times and record how long they took. */
@@ -25,7 +25,7 @@ void MVM_profile_start(MVMThreadContext *tc, MVMObject *config) {
             }
             MVM_profile_log_exit(tc);
             e = uv_hrtime();
-            tc->instance->profiling_overhead = (MVMuint64) ((e - s) / 1000) * 0.9;
+            tc->instance->profiling_overhead = (uint64_t) ((e - s) / 1000) * 0.9;
 
             /* Disable profiling and discard the data we just collected. */
             MVM_gc_mark_thread_blocked(tc);

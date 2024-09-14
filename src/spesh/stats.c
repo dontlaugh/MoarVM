@@ -134,7 +134,7 @@ static MVMSpeshStatsByOffset * by_offset(MVMThreadContext *tc, MVMSpeshStatsByTy
 
 /* Adds/increments the count of a certain type seen at the given offset. */
 static void add_type_at_offset(MVMThreadContext *tc, MVMSpeshStatsByOffset *oss,
-                               MVMStaticFrame *sf, MVMObject *type, MVMuint8 concrete) {
+                               MVMStaticFrame *sf, MVMObject *type, uint8_t concrete) {
     /* If we have it already, increment the count. */
     uint32_t found;
     uint32_t n = oss->num_types;
@@ -158,7 +158,7 @@ static void add_type_at_offset(MVMThreadContext *tc, MVMSpeshStatsByOffset *oss,
  * offset. */
 static void add_invoke_at_offset(MVMThreadContext *tc, MVMSpeshStatsByOffset *oss,
                                  MVMStaticFrame *sf, MVMStaticFrame *target_sf,
-                                 MVMint16 caller_is_outer) {
+                                 int16_t caller_is_outer) {
     /* If we have it already, increment the count. */
     uint32_t found;
     uint32_t n = oss->num_invokes;
@@ -436,7 +436,7 @@ static void sim_stack_teardown(MVMThreadContext *tc, MVMSpeshSimStack *sims, MVM
 /* Gets the parameter type slot from a simulation frame. */
 static MVMSpeshStatsType * param_type(MVMThreadContext *tc, MVMSpeshSimStackFrame *simf, MVMSpeshLogEntry *e) {
     if (simf->arg_types) {
-        MVMuint16 idx = e->param.arg_idx;
+        uint16_t idx = e->param.arg_idx;
         MVMCallsite *cs = simf->ss->by_callsite[simf->callsite_idx].cs;
         if (cs) {
             if (idx >= cs->flag_count)
@@ -499,13 +499,13 @@ static void save_or_free_sim_stack(MVMThreadContext *tc, MVMSpeshSimStack *sims,
 /* Receives a spesh log and updates static frame statistics. Each static frame
  * that is updated is pushed once into sf_updated. */
 void MVM_spesh_stats_update(MVMThreadContext *tc, MVMSpeshLog *sl,  MVMObject *sf_newly_seen,
-        MVMObject *sf_updated, MVMuint64 *in_newly_seen, MVMuint64 *in_updated) {
+        MVMObject *sf_updated, uint64_t *in_newly_seen, uint64_t *in_updated) {
     uint32_t i;
     uint32_t n = sl->body.used;
     MVMSpeshSimStack *sims;
     MVMThreadContext *log_from_tc = sl->body.thread->body.tc;
-    MVMuint64 newly_seen = 0;
-    MVMuint64 updated = 0;
+    uint64_t newly_seen = 0;
+    uint64_t updated = 0;
 #if MVM_GC_DEBUG
     tc->in_spesh = 1;
 #endif
@@ -633,12 +633,12 @@ void MVM_spesh_stats_update(MVMThreadContext *tc, MVMSpeshLog *sl,  MVMObject *s
 /* Takes an array of frames we recently updated the stats in. If they weren't
  * updated in a while, clears them out. */
 void MVM_spesh_stats_cleanup(MVMThreadContext *tc, MVMObject *check_frames) {
-    MVMint64 elems = MVM_repr_elems(tc, check_frames);
+    int64_t elems = MVM_repr_elems(tc, check_frames);
     MVMSTable *check_frames_st = STABLE(check_frames);
     void *check_frames_data = OBJECT_BODY(check_frames);
     MVMROOT(tc, check_frames) {
-        MVMint64 insert_pos = 0;
-        MVMint64 i;
+        int64_t insert_pos = 0;
+        int64_t i;
         for (i = 0; i < elems; i++) {
             MVMRegister sf_reg;
             MVM_VMArray_at_pos(tc, check_frames_st, check_frames, check_frames_data,
@@ -730,11 +730,11 @@ void MVM_spesh_stats_gc_mark(MVMThreadContext *tc, MVMSpeshStats *ss, MVMGCWorkl
 }
 
 void MVM_spesh_stats_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *snapshot, MVMSpeshStats *ss) {
-    MVMuint64 cache_1 = 0;
-    MVMuint64 cache_2 = 0;
-    MVMuint64 cache_3 = 0;
-    MVMuint64 cache_4 = 0;
-    MVMuint64 cache_5 = 0;
+    uint64_t cache_1 = 0;
+    uint64_t cache_2 = 0;
+    uint64_t cache_3 = 0;
+    uint64_t cache_4 = 0;
+    uint64_t cache_5 = 0;
     if (ss) {
         uint32_t i, j, k, l, m;
         for (i = 0; i < ss->num_by_callsite; i++) {
@@ -822,8 +822,8 @@ void MVM_spesh_sim_stack_gc_mark(MVMThreadContext *tc, MVMSpeshSimStack *sims,
 void MVM_spesh_sim_stack_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSpeshSimStack *sims) {
     uint32_t n = sims ? sims->used : 0;
     uint32_t i;
-    MVMuint64 cache_1 = 0;
-    MVMuint64 cache_2 = 0;
+    uint64_t cache_1 = 0;
+    uint64_t cache_2 = 0;
     for (i = 0; i < n; i++) {
         MVMSpeshSimStackFrame *simf = &(sims->frames[i]);
         MVM_profile_heap_add_collectable_rel_const_cstr_cached(tc, ss,

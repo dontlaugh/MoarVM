@@ -1,11 +1,11 @@
 struct MVMJitCode {
     void     (*func_ptr)(MVMThreadContext *tc, MVMCompUnit *cu, void * label);
     size_t     size;
-    MVMuint8  *bytecode;
+    uint8_t  *bytecode;
 
     MVMStaticFrame *sf;
 
-    MVMuint16 *local_types;
+    uint16_t *local_types;
     uint32_t  num_locals;
 
     /* The basic idea here is that /all/ label names are indexes into the single

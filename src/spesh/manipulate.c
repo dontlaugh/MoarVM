@@ -117,7 +117,7 @@ void MVM_spesh_manipulate_delete_ins(MVMThreadContext *tc, MVMSpeshGraph *g,
  * called by MVM_spesh_manipulate_delete_ins, but provided separately for when
  * an instruction goes away by virtue of a whole basic block dying. */ 
 void MVM_spesh_manipulate_cleanup_ins_deps(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
-    MVMint16 opcode = ins->info->opcode;
+    int16_t opcode = ins->info->opcode;
     if (opcode == MVM_SSA_PHI) {
         int32_t i;
         MVM_spesh_get_facts(tc, g, ins->operands[0])->dead_writer = 1;
@@ -126,7 +126,7 @@ void MVM_spesh_manipulate_cleanup_ins_deps(MVMThreadContext *tc, MVMSpeshGraph *
     }
     else {
         int32_t i;
-        MVMuint8 is_inc_dec = MVM_spesh_is_inc_dec_op(opcode);
+        uint8_t is_inc_dec = MVM_spesh_is_inc_dec_op(opcode);
         for (i = 0; i < ins->info->num_operands; i++) {
             int32_t rw = ins->info->operands[i] & MVM_operand_rw_mask;
             if (rw == MVM_operand_write_reg)
@@ -221,9 +221,9 @@ void MVM_spesh_manipulate_add_successor(MVMThreadContext *tc, MVMSpeshGraph *g,
 void MVM_spesh_manipulate_remove_successor(MVMThreadContext *tc, MVMSpeshBB *bb, MVMSpeshBB *succ) {
     MVMSpeshBB ** const   bb_succ = bb->succ;
     MVMSpeshBB ** const succ_pred = succ->pred;
-    const MVMuint16   bb_num_succ = --bb->num_succ;
-    const MVMuint16 succ_num_pred = --succ->num_pred;
-    MVMuint16 i, k;
+    const uint16_t   bb_num_succ = --bb->num_succ;
+    const uint16_t succ_num_pred = --succ->num_pred;
+    uint16_t i, k;
 
     for (i = 0; i <= bb_num_succ; i++) {
         if (bb_succ[i] == succ) {
@@ -286,7 +286,7 @@ static void ensure_more_temps(MVMThreadContext *tc, MVMSpeshGraph *g) {
  * Will only actually extend the frame if needed; if an existing temporary
  * was requested and then released, then it will just use a new version of
  * that. */
-static void grow_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 orig) {
+static void grow_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t orig) {
     MVMSpeshFacts *new_fact_row = MVM_spesh_alloc(tc, g,
         (g->fact_counts[orig] + 1) * sizeof(MVMSpeshFacts));
     memcpy(new_fact_row, g->facts[orig],
@@ -294,19 +294,19 @@ static void grow_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 orig) {
     g->facts[orig] = new_fact_row;
     g->fact_counts[orig]++;
 }
-static MVMSpeshOperand make_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 kind,
-        MVMuint16 reuse) {
+static MVMSpeshOperand make_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t kind,
+        uint16_t reuse) {
     MVMSpeshOperand   result;
     MVMSpeshFacts   **new_facts;
-    MVMuint16        *new_fact_counts;
-    MVMuint16         i;
+    uint16_t        *new_fact_counts;
+    uint16_t         i;
 
     /* First, see if we can find an existing free temporary; use it if so. */
     if (reuse) {
         for (i = 0; i < g->num_temps; i++) {
             if (g->temps[i].kind == kind && !g->temps[i].in_use) {
                 /* Add new facts slot. */
-                MVMuint16 orig = g->temps[i].orig;
+                uint16_t orig = g->temps[i].orig;
                 MVMSpeshFacts *new_fact_row = MVM_spesh_alloc(tc, g,
                     (g->fact_counts[orig] + 1) * sizeof(MVMSpeshFacts));
                 memcpy(new_fact_row, g->facts[orig],
@@ -346,18 +346,18 @@ static MVMSpeshOperand make_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVM
 
     /* Add locals table entry. */
     if (!g->local_types) {
-        int32_t local_types_size = g->num_locals * sizeof(MVMuint16);
+        int32_t local_types_size = g->num_locals * sizeof(uint16_t);
         g->local_types = MVM_malloc(local_types_size);
         memcpy(g->local_types, g->sf->body.local_types, local_types_size);
     }
-    g->local_types = MVM_realloc(g->local_types, (g->num_locals + 1) * sizeof(MVMuint16));
+    g->local_types = MVM_realloc(g->local_types, (g->num_locals + 1) * sizeof(uint16_t));
     g->local_types[g->num_locals] = kind;
 
     /* Add facts table entry. */
     new_facts       = MVM_spesh_alloc(tc, g, (g->num_locals + 1) * sizeof(MVMSpeshFacts *));
-    new_fact_counts = MVM_spesh_alloc(tc, g, (g->num_locals + 1) * sizeof(MVMuint16));
+    new_fact_counts = MVM_spesh_alloc(tc, g, (g->num_locals + 1) * sizeof(uint16_t));
     memcpy(new_facts, g->facts, g->num_locals * sizeof(MVMSpeshFacts *));
-    memcpy(new_fact_counts, g->fact_counts, g->num_locals * sizeof(MVMuint16));
+    memcpy(new_fact_counts, g->fact_counts, g->num_locals * sizeof(uint16_t));
     new_facts[g->num_locals]       = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshFacts));
     new_fact_counts[g->num_locals] = 1;
     g->facts                       = new_facts;
@@ -371,13 +371,13 @@ static MVMSpeshOperand make_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVM
 
 /* Gets a temporary register, adding it to the set of registers of the
  * frame. */
-MVMSpeshOperand MVM_spesh_manipulate_get_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 kind) {
+MVMSpeshOperand MVM_spesh_manipulate_get_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t kind) {
     return make_temp_reg(tc, g, kind, 1);
 }
 
 /* Releases a temporary register, so it can be used again later. */
 void MVM_spesh_manipulate_release_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand temp) {
-    MVMuint16 i;
+    uint16_t i;
     for (i = 0; i < g->num_temps; i++) {
         if (g->temps[i].orig == temp.reg.orig && g->temps[i].used_i == temp.reg.i) {
             if (g->temps[i].in_use)
@@ -393,7 +393,7 @@ void MVM_spesh_manipulate_release_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *
 /* Gets a new SSA version of a register, allocating facts for it. Returns an
  * MVMSpeshOperand representing the new version along with the local it's a
  * version of. */
-MVMSpeshOperand MVM_spesh_manipulate_new_version(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 orig) {
+MVMSpeshOperand MVM_spesh_manipulate_new_version(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t orig) {
     uint32_t i;
 
     /* Grow the facts table to hold the new version, bumping the versions
@@ -456,13 +456,13 @@ MVMSpeshOperand MVM_spesh_manipulate_split_version(MVMThreadContext *tc, MVMSpes
 /* Gets a frame-unique register, adding it to the set of registers of the
  * frame. This does not hand back a particular version, it just selects the
  * unversioned register. */
-MVMuint16 MVM_spesh_manipulate_get_unique_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 kind) {
+uint16_t MVM_spesh_manipulate_get_unique_reg(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t kind) {
     return make_temp_reg(tc, g, kind, 0).reg.orig;
 }
 
 /* Get the current version of an SSA temporary. */
-MVMuint16 MVM_spesh_manipulate_get_current_version(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMuint16 orig) {
+uint16_t MVM_spesh_manipulate_get_current_version(MVMThreadContext *tc, MVMSpeshGraph *g,
+        uint16_t orig) {
     uint32_t i;
     for (i = 0; i < g->num_temps; i++)
         if (g->temps[i].orig == orig)
@@ -510,10 +510,10 @@ MVMSpeshBB *MVM_spesh_manipulate_split_BB_at(MVMThreadContext *tc, MVMSpeshGraph
     new_bb->succ = bb->succ;
     new_bb->num_succ = bb->num_succ;
 
-    for (MVMuint16 i = 0; i < new_bb->num_succ; i++) {
+    for (uint16_t i = 0; i < new_bb->num_succ; i++) {
         MVMSpeshBB *succ = new_bb->succ[i];
         if (succ)
-            for (MVMuint16 j = 0; j < succ->num_pred; j++)
+            for (uint16_t j = 0; j < succ->num_pred; j++)
                 if (succ->pred[j] == bb)
                     succ->pred[j] = new_bb;
     }

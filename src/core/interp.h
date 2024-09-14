@@ -15,16 +15,16 @@
 union MVMRegister {
     MVMObject         *o;
     MVMString *s;
-    MVMint8            i8;
-    MVMuint8           u8;
-    MVMint16           i16;
-    MVMuint16          u16;
+    int8_t            i8;
+    uint8_t           u8;
+    int16_t           i16;
+    uint16_t          u16;
     int32_t           i32;
     uint32_t          u32;
-    MVMint64           i64;
-    MVMuint64          u64;
-    MVMnum32           n32;
-    MVMnum64           n64;
+    int64_t           i64;
+    uint64_t          u64;
+    float           n32;
+    double           n64;
 };
 
 /* Most operands an operation will have. */
@@ -38,20 +38,20 @@ union MVMRegister {
 
 /* Information about an opcode. */
 struct MVMOpInfo {
-    MVMuint16   opcode;
+    uint16_t   opcode;
     const char *name;
-    MVMuint16   num_operands;
-    MVMuint8    pure : 1;
-    MVMuint8    deopt_point : 4;
-    MVMuint8    may_cause_deopt : 1;
-    MVMuint8    logged : 1;
-    MVMuint8    post_logged : 1;
-    MVMuint8    no_inline : 1;
-    MVMuint8    jittivity : 2;
-    MVMuint8    uses_hll : 1;
-    MVMuint8    specializable : 1;
-    MVMuint8    uses_cache : 1;
-    MVMuint8    operands[MVM_MAX_OPERANDS];
+    uint16_t   num_operands;
+    uint8_t    pure : 1;
+    uint8_t    deopt_point : 4;
+    uint8_t    may_cause_deopt : 1;
+    uint8_t    logged : 1;
+    uint8_t    post_logged : 1;
+    uint8_t    no_inline : 1;
+    uint8_t    jittivity : 2;
+    uint8_t    uses_hll : 1;
+    uint8_t    specializable : 1;
+    uint8_t    uses_cache : 1;
+    uint8_t    operands[MVM_MAX_OPERANDS];
 };
 
 /* Operand read/write/literal flags. */
@@ -103,8 +103,8 @@ struct MVMOpInfo {
 #endif
 
 struct MVMRunloopState {
-    MVMuint8 **interp_cur_op;
-    MVMuint8 **interp_bytecode_start;
+    uint8_t **interp_cur_op;
+    uint8_t **interp_bytecode_start;
     MVMRegister **interp_reg_base;
     MVMCompUnit **interp_cu;
 };
@@ -114,29 +114,29 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
 void MVM_interp_run_nested(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContext *, void *), void *invoke_data, MVMRegister *res);
 MVM_PUBLIC void MVM_interp_enable_tracing(void);
 
-MVM_STATIC_INLINE MVMint64 MVM_BC_get_I64(const MVMuint8 *cur_op, int offset) {
-    const MVMuint8 *const where = cur_op + offset;
+MVM_STATIC_INLINE int64_t MVM_BC_get_I64(const uint8_t *cur_op, int offset) {
+    const uint8_t *const where = cur_op + offset;
 #ifdef MVM_CAN_UNALIGNED_INT64
-    return *(MVMint64 *)where;
+    return *(int64_t *)where;
 #else
-    MVMint64 temp;
-    memmove(&temp, where, sizeof(MVMint64));
+    int64_t temp;
+    memmove(&temp, where, sizeof(int64_t));
     return temp;
 #endif
 }
 
-MVM_STATIC_INLINE MVMnum64 MVM_BC_get_N64(const MVMuint8 *cur_op, int offset) {
+MVM_STATIC_INLINE double MVM_BC_get_N64(const uint8_t *cur_op, int offset) {
 #ifdef MVM_CAN_UNALIGNED_NUM64
-    const MVMuint8 *const where = cur_op + offset;
-    return *(MVMnum64 *)where;
+    const uint8_t *const where = cur_op + offset;
+    return *(double *)where;
 #else
-    MVMnum64 temp;
-    memmove(&temp, cur_op + offset, sizeof(MVMnum64));
+    double temp;
+    memmove(&temp, cur_op + offset, sizeof(double));
     return temp;
 #endif
 }
 /* For MVM_reg_* types */
-static char * MVM_reg_get_debug_name(MVMThreadContext *tc, MVMuint16 type) {
+static char * MVM_reg_get_debug_name(MVMThreadContext *tc, uint16_t type) {
     switch (type) {
         case MVM_reg_int8:
             return "int8";

@@ -18,11 +18,11 @@ typedef struct {
      * depend on this type. */
     MVMObject *type;
     /* Whether it's concrete or a type object. */
-    MVMuint8 concrete;
+    uint8_t concrete;
     /* Whether this is a check on a container type. */
-    MVMuint8 is_container;
+    uint8_t is_container;
     /* Only for containers, if it's rw. */
-    MVMuint8 rw;
+    uint8_t rw;
     /* Indices of candidates matching this type. */
     MVM_VECTOR_DECL(uint32_t, cand_idxs);
 } TypeCandidates;
@@ -61,7 +61,7 @@ static MVMSpeshArgGuard * allocate_tree(MVMThreadContext *tc, uint32_t total_nod
  * Finds the next argument index that is an object type and returns it.
  * Returns -1 if there are no further object arguments. */
 static int32_t next_type_index(MVMCallsite *cs, int32_t cur_obj_arg_idx) {
-    MVMuint16 i;
+    uint16_t i;
     for (i = 0; i < cs->flag_count; i++)
         if ((cs->arg_flags[i] & MVM_CALLSITE_ARG_OBJ) && i > cur_obj_arg_idx)
             return i;
@@ -90,7 +90,7 @@ static uint32_t add_load_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
 
 /* Add a new type check node and return its index. */
 static uint32_t add_type_check_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
-        MVMObject *type, MVMuint8 concrete) {
+        MVMObject *type, uint8_t concrete) {
     tree->nodes[tree->used_nodes].op = concrete
         ? MVM_SPESH_GUARD_OP_STABLE_CONC
         : MVM_SPESH_GUARD_OP_STABLE_TYPE;
@@ -125,7 +125,7 @@ static uint32_t add_nodes_for_typed_argument(MVMThreadContext *tc,
         MVMSpeshArgGuard *tree, MVMSpeshCandidate **candidates,
         MVMCallsite *cs, uint32_t *valid_candidates,
         uint32_t num_valid_candidates, int32_t type_index,
-        MVMint8 consider_decont_type, uint32_t certain_fallback) {
+        int8_t consider_decont_type, uint32_t certain_fallback) {
     uint32_t first_added = 0;
 
     /* If we've no next type index, then we reached the end of the
@@ -153,13 +153,13 @@ static uint32_t add_nodes_for_typed_argument(MVMThreadContext *tc,
             MVMObject *search_type = consider_decont_type
                 ? type_info.decont_type
                 : type_info.type;
-            MVMuint8 search_concrete = consider_decont_type
+            uint8_t search_concrete = consider_decont_type
                 ? type_info.decont_type_concrete
                 : type_info.type_concrete;
-            MVMuint8 search_rw = consider_decont_type
+            uint8_t search_rw = consider_decont_type
                 ? 0
                 : type_info.rw_cont;
-            MVMuint8 search_is_container = consider_decont_type
+            uint8_t search_is_container = consider_decont_type
                 ? 0
                 : type_info.decont_type != NULL;
             for (j = 0; j < MVM_VECTOR_ELEMS(by_type); j++) {
@@ -521,7 +521,7 @@ int32_t MVM_spesh_arg_guard_run_callinfo(MVMThreadContext *tc, MVMSpeshArgGuard 
                                           MVMSpeshCallInfo *arg_info) {
     uint32_t current_node = 0;
     MVMSpeshFacts *facts = NULL;
-    MVMuint8 use_decont_facts = 0;
+    uint8_t use_decont_facts = 0;
     if (!ag)
         return -1;
     do {

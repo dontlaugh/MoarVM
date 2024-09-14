@@ -88,7 +88,7 @@ static MVMCompUnit * get_current_cu(MVMThreadContext *tc, MVMSpeshGraph *g, Inli
 static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpeshBB *bb,
                     SpeshGraphSizeStats *stats, InlineIndexStack *inline_stack) {
     MVMSpeshIns *cur_ins;
-    MVMint64     i;
+    int64_t     i;
     int32_t     size = 0;
 
     /* Heading. */
@@ -214,7 +214,7 @@ static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpes
                 case MVM_SPESH_ANN_DELAYED_TEMPS:
                     appendf(ds, "      [Delayed temps to release: ");
                     MVMSpeshOperand *ptr = ann->data.temps_to_release;
-                    MVMuint16 insert_comma = 0;
+                    uint16_t insert_comma = 0;
                     while (ptr->lit_i64 != -1) {
                         if (insert_comma++) {
                             append(ds, ", ");
@@ -245,8 +245,8 @@ static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpes
         appendf(ds, "      %-15s ", cur_ins->info->name);
         if (cur_ins->info->opcode == MVM_SSA_PHI) {
             for (i = 0; i < cur_ins->info->num_operands; i++) {
-                MVMint16 orig = cur_ins->operands[i].reg.orig;
-                MVMint16 regi = cur_ins->operands[i].reg.i;
+                int16_t orig = cur_ins->operands[i].reg.orig;
+                int16_t regi = cur_ins->operands[i].reg.i;
                 if (i)
                     append(ds, ", ");
                 if (orig < 10) append(ds, " ");
@@ -263,8 +263,8 @@ static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpes
                 switch (cur_ins->info->operands[i] & MVM_operand_rw_mask) {
                     case MVM_operand_read_reg:
                     case MVM_operand_write_reg: {
-                        MVMint16 orig = cur_ins->operands[i].reg.orig;
-                        MVMint16 regi = cur_ins->operands[i].reg.i;
+                        int16_t orig = cur_ins->operands[i].reg.orig;
+                        int16_t regi = cur_ins->operands[i].reg.i;
                         if (orig < 10) append(ds, " ");
                         if (regi < 10) append(ds, " ");
                         appendf(ds, "r%d(%d)", orig, regi);
@@ -395,8 +395,8 @@ static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpes
             }
             if (cur_ins->info->opcode == MVM_OP_wval || cur_ins->info->opcode == MVM_OP_wval_wide) {
                 /* We can try to find out what the debug_name of this thing is. */
-                MVMint16 dep = cur_ins->operands[1].lit_i16;
-                MVMint64 idx;
+                int16_t dep = cur_ins->operands[1].lit_i16;
+                int64_t idx;
                 MVMCollectable *result = NULL;
                 MVMSerializationContext *sc;
                 char *debug_name = NULL;
@@ -479,7 +479,7 @@ static void dump_deopt_usages(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *
 }
 /* Dumps the facts table. */
 static void dump_facts(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g) {
-    MVMuint16 i, j, num_locals, num_facts;
+    uint16_t i, j, num_locals, num_facts;
     num_locals = g->num_locals;
     for (i = 0; i < num_locals; i++) {
         num_facts = g->fact_counts[i];
@@ -562,7 +562,7 @@ static void dump_facts(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g) {
 }
 
 static void dump_callsite(MVMThreadContext *tc, DumpStr *ds, MVMCallsite *cs) {
-    MVMuint16 i;
+    uint16_t i;
     appendf(ds, "Callsite %p (%d args, %d pos)\n", cs, cs->flag_count, cs->num_pos);
     for (i = 0; i < cs->flag_count - cs->num_pos; i++) {
         char * argname_utf8 = MVM_string_utf8_encode_C_string(tc, cs->arg_names[i]);

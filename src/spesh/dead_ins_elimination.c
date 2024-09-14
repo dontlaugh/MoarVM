@@ -3,7 +3,7 @@
 /* Eliminates any unused instructions. */
 void MVM_spesh_eliminate_dead_ins(MVMThreadContext *tc, MVMSpeshGraph *g) {
     /* Keep eliminating to a fixed point. */
-    MVMint8 death = 1;
+    int8_t death = 1;
     while (death) {
         MVMSpeshBB *bb = g->entry;
         death = 0;

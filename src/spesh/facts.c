@@ -5,8 +5,8 @@
  * can. */
 
 /* Copies facts from one var to another. */
-static void copy_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 to_orig,
-                       MVMuint16 to_i, MVMuint16 from_orig, MVMuint16 from_i) {
+static void copy_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t to_orig,
+                       uint16_t to_i, uint16_t from_orig, uint16_t from_i) {
     MVMSpeshFacts *tfacts = &g->facts[to_orig][to_i];
     MVMSpeshFacts *ffacts = &g->facts[from_orig][from_i];
     tfacts->flags         = ffacts->flags;
@@ -26,8 +26,8 @@ void MVM_spesh_facts_depend(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* Handles object-creating instructions. */
-static void create_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 obj_orig,
-                         MVMuint16 obj_i, MVMuint16 type_orig, MVMuint16 type_i) {
+static void create_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t obj_orig,
+                         uint16_t obj_i, uint16_t type_orig, uint16_t type_i) {
     MVMSpeshFacts *type_facts = &(g->facts[type_orig][type_i]);
     MVMSpeshFacts *obj_facts  = &(g->facts[obj_orig][obj_i]);
 
@@ -43,7 +43,7 @@ static void create_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 obj_o
 }
 
 static void create_facts_with_type(MVMThreadContext *tc, MVMSpeshGraph *g,
-                                   MVMuint16 obj_orig, MVMuint16 obj_i,
+                                   uint16_t obj_orig, uint16_t obj_i,
                                    MVMObject *type) {
     MVMSpeshFacts *obj_facts  = &(g->facts[obj_orig][obj_i]);
 
@@ -56,8 +56,8 @@ static void create_facts_with_type(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* Adds facts from knowing the exact value being put into an object local. */
-static void object_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 tgt_orig,
-                         MVMuint16 tgt_i, MVMObject *obj) {
+static void object_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_orig,
+                         uint16_t tgt_i, MVMObject *obj) {
     /* Ensure it's non-null. */
     if (!obj)
         return;
@@ -83,8 +83,8 @@ void MVM_spesh_facts_object_facts(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 /* Propagates information relating to decontainerization. */
 static void decont_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
-                         MVMuint16 out_orig, MVMuint16 out_i, MVMuint16 in_orig,
-                         MVMuint16 in_i) {
+                         uint16_t out_orig, uint16_t out_i, uint16_t in_orig,
+                         uint16_t in_i) {
     MVMSpeshFacts *out_facts = &(g->facts[out_orig][out_i]);
     MVMSpeshFacts *in_facts  = &(g->facts[in_orig][in_i]);
 
@@ -115,8 +115,8 @@ static void decont_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *in
 }
 
 /* Looks up a wval and adds information based on it. */
-static void wval_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 tgt_orig,
-                       MVMuint16 tgt_i, MVMuint16 dep, MVMint64 idx) {
+static void wval_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_orig,
+                       uint16_t tgt_i, uint16_t dep, int64_t idx) {
     MVMCompUnit *cu = g->sf->body.cu;
     if (dep < cu->body.num_scs) {
         MVMSerializationContext *sc = MVM_sc_get_sc(tc, cu, dep);
@@ -124,8 +124,8 @@ static void wval_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 tgt_ori
             object_facts(tc, g, tgt_orig, tgt_i, MVM_sc_try_get_object(tc, sc, idx));
     }
 }
-static void wvalfrom_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 tgt_orig,
-                           MVMuint16 tgt_i, MVMuint16 sslot, MVMint64 idx) {
+static void wvalfrom_facts(MVMThreadContext *tc, MVMSpeshGraph *g, uint16_t tgt_orig,
+                           uint16_t tgt_i, uint16_t sslot, int64_t idx) {
     MVMSerializationContext *sc = (MVMSerializationContext *)g->spesh_slots[sslot];
     if (MVM_sc_is_object_immediately_available(tc, sc, idx)) {
         MVM_sc_get_object(tc, sc, idx);
@@ -135,8 +135,8 @@ static void wvalfrom_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 tgt
 
 /* Let's figure out what exact type of iter we'll get from an iter op */
 static void iter_facts(MVMThreadContext *tc, MVMSpeshGraph *g,
-                       MVMuint16 out_orig, MVMuint16 out_i,
-                       MVMuint16 in_orig, MVMuint16 in_i) {
+                       uint16_t out_orig, uint16_t out_i,
+                       uint16_t in_orig, uint16_t in_i) {
     MVMSpeshFacts *out_facts = &(g->facts[out_orig][out_i]);
     MVMSpeshFacts *in_facts  = &(g->facts[in_orig][in_i]);
 
@@ -208,7 +208,7 @@ static void trunc_i16_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
     MVMSpeshFacts *src_facts = &g->facts[ins->operands[1].reg.orig][ins->operands[1].reg.i];
     if (src_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
         MVMSpeshFacts *tgt_facts = &g->facts[ins->operands[0].reg.orig][ins->operands[0].reg.i];
-        tgt_facts->value.i = (MVMint16)src_facts->value.i;
+        tgt_facts->value.i = (int16_t)src_facts->value.i;
         tgt_facts->flags |= MVM_SPESH_FACT_KNOWN_VALUE;
     }
 }
@@ -216,7 +216,7 @@ static void coerce_iu_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
     MVMSpeshFacts *src_facts = &g->facts[ins->operands[1].reg.orig][ins->operands[1].reg.i];
     if (src_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
         MVMSpeshFacts *tgt_facts = &g->facts[ins->operands[0].reg.orig][ins->operands[0].reg.i];
-        tgt_facts->value.i = (MVMint16)src_facts->value.i;
+        tgt_facts->value.i = (int16_t)src_facts->value.i;
         tgt_facts->flags |= MVM_SPESH_FACT_KNOWN_VALUE;
     }
 }
@@ -224,8 +224,8 @@ static void coerce_iu_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
 /* Discover facts from extops. */
 static void discover_extop(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMExtOpRecord *extops     = g->sf->body.cu->body.extops;
-    MVMuint16       num_extops = g->sf->body.cu->body.num_extops;
-    MVMuint16       i;
+    uint16_t       num_extops = g->sf->body.cu->body.num_extops;
+    uint16_t       i;
     for (i = 0; i < num_extops; i++) {
         if (extops[i].info == ins->info) {
             /* Found op; call its discovery function, if any. */
@@ -238,11 +238,11 @@ static void discover_extop(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *
 
 void MVM_spesh_facts_guard_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         MVMSpeshIns *ins) {
-    MVMuint16 opcode = ins->info->opcode;
+    uint16_t opcode = ins->info->opcode;
 
     /* The sslot is always the second-to-last parameter, except for
      * justconc and justtype, which don't have a spesh slot. */
-    MVMuint16 sslot = ins->operands[ins->info->num_operands - 2].lit_i16;
+    uint16_t sslot = ins->operands[ins->info->num_operands - 2].lit_i16;
 
     MVMSpeshFacts *facts    = &g->facts[ins->operands[0].reg.orig][ins->operands[0].reg.i];
 
@@ -331,7 +331,7 @@ static void log_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
     if (agg_type) {
         MVMSpeshIns *guard;
         MVMSpeshAnn *ann;
-        MVMuint16 guard_op;
+        uint16_t guard_op;
 
         /* Generate a new version. We'll use this version for the original,
          * unguarded, value, which we know is the instruction right before
@@ -748,7 +748,7 @@ static void add_bb_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
             MVM_spesh_facts_guard_facts(tc, g, bb, ins);
             break;
         default:
-            if (ins->info->opcode == (MVMuint16)-1)
+            if (ins->info->opcode == (uint16_t)-1)
                 discover_extop(tc, g, ins);
         }
         ins = ins->next;

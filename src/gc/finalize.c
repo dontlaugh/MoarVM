@@ -1,9 +1,9 @@
 #include "moar.h"
 
 /* Turns finalization on or off for a type. */
-void MVM_gc_finalize_set(MVMThreadContext *tc, MVMObject *type, MVMint64 finalize) {
+void MVM_gc_finalize_set(MVMThreadContext *tc, MVMObject *type, int64_t finalize) {
     MVMSTable *st        = STABLE(type);
-    MVMint64   new_flags = st->mode_flags & (~MVM_FINALIZE_TYPE);
+    int64_t   new_flags = st->mode_flags & (~MVM_FINALIZE_TYPE);
     if (finalize)
         new_flags |= MVM_FINALIZE_TYPE;
     st->mode_flags = new_flags;
@@ -41,7 +41,7 @@ static void add_to_finalizing(MVMThreadContext *tc, MVMObject *obj) {
     tc->finalizing[tc->num_finalizing] = obj;
     tc->num_finalizing++;
 }
-static void walk_thread_finalize_queue(MVMThreadContext *tc, MVMuint8 gen) {
+static void walk_thread_finalize_queue(MVMThreadContext *tc, uint8_t gen) {
     uint32_t collapse_pos = 0;
     uint32_t i;
     for (i = 0; i < tc->num_finalize; i++) {
@@ -70,7 +70,7 @@ static void walk_thread_finalize_queue(MVMThreadContext *tc, MVMuint8 gen) {
     }
     tc->num_finalize = collapse_pos;
 }
-void MVM_finalize_walk_queues(MVMThreadContext *tc, MVMuint8 gen) {
+void MVM_finalize_walk_queues(MVMThreadContext *tc, uint8_t gen) {
     MVMThread *cur_thread = (MVMThread *)MVM_load(&tc->instance->threads);
     while (cur_thread) {
         if (cur_thread->body.tc) {

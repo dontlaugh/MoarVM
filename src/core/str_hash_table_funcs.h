@@ -34,13 +34,13 @@ MVM_STATIC_INLINE uint32_t MVM_str_hash_kompromat(const struct MVMStrHashTableCo
         return 0;
     return MVM_str_hash_official_size(control) + control->max_probe_distance - 1;
 }
-MVM_STATIC_INLINE MVMuint8 *MVM_str_hash_metadata(const struct MVMStrHashTableControl *control) {
+MVM_STATIC_INLINE uint8_t *MVM_str_hash_metadata(const struct MVMStrHashTableControl *control) {
     assert(!(control->cur_items == 0 && control->max_items == 0));
-    return (MVMuint8 *) control + sizeof(struct MVMStrHashTableControl);
+    return (uint8_t *) control + sizeof(struct MVMStrHashTableControl);
 }
-MVM_STATIC_INLINE MVMuint8 *MVM_str_hash_entries(const struct MVMStrHashTableControl *control) {
+MVM_STATIC_INLINE uint8_t *MVM_str_hash_entries(const struct MVMStrHashTableControl *control) {
     assert(!(control->cur_items == 0 && control->max_items == 0));
-    return (MVMuint8 *) control - control->entry_size;
+    return (uint8_t *) control - control->entry_size;
 }
 
 /* round up to a multiple of sizeof(long). My assumption is that this is won't
@@ -122,8 +122,8 @@ MVM_STATIC_INLINE void MVM_str_hash_shallow_copy(MVMThreadContext *tc,
     }
 }
 
-MVM_STATIC_INLINE MVMuint64 MVM_str_hash_code(MVMThreadContext *tc,
-                                              MVMuint64 salt,
+MVM_STATIC_INLINE uint64_t MVM_str_hash_code(MVMThreadContext *tc,
+                                              uint64_t salt,
                                               MVMString *key) {
     return (MVM_string_hash_code(tc, key) ^ salt) * UINT64_C(11400714819323198485);
 }
@@ -135,14 +135,14 @@ void *MVM_str_hash_insert_nocheck(MVMThreadContext *tc,
                                   MVMString *key);
 
 struct MVM_hash_loop_state {
-    MVMuint8 *entry_raw;
-    MVMuint8 *metadata;
+    uint8_t *entry_raw;
+    uint8_t *metadata;
     unsigned int metadata_increment;
     unsigned int metadata_hash_mask;
     unsigned int probe_distance_shift;
     unsigned int max_probe_distance;
     unsigned int probe_distance;
-    MVMuint16 entry_size;
+    uint16_t entry_size;
 };
 
 /* This function turns out to be quite hot. We initialise looping on a *lot* of
@@ -159,7 +159,7 @@ MVM_STATIC_INLINE struct MVM_hash_loop_state
 MVM_str_hash_create_loop_state(MVMThreadContext *tc,
                                struct MVMStrHashTableControl *control,
                                MVMString *key) {
-    MVMuint64 hash_val = MVM_str_hash_code(tc, control->salt, key);
+    uint64_t hash_val = MVM_str_hash_code(tc, control->salt, key);
     struct MVM_hash_loop_state retval;
     retval.entry_size = control->entry_size;
     retval.metadata_increment = 1 << control->metadata_hash_bits;
@@ -401,7 +401,7 @@ enum {
     MVM_HASH_FSCK_CHECK_FROMSPACE   = 0x10  /* O(n) test. */
 };
 
-MVMuint64 MVM_str_hash_fsck(MVMThreadContext *tc, MVMStrHashTable *hashtable, uint32_t mode);
+uint64_t MVM_str_hash_fsck(MVMThreadContext *tc, MVMStrHashTable *hashtable, uint32_t mode);
 
 /* iterators are stored as unsigned values, metadata index plus one.
  * This is clearly an internal implementation detail. Don't cheat.

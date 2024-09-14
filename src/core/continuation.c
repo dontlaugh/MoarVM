@@ -39,7 +39,7 @@ void MVM_continuation_reset(MVMThreadContext *tc, MVMObject *tag,
     MVM_CHECK_CALLER_CHAIN(tc, tc->cur_frame);
 }
 
-void MVM_continuation_control(MVMThreadContext *tc, MVMint64 protect,
+void MVM_continuation_control(MVMThreadContext *tc, int64_t protect,
                               MVMObject *tag, MVMObject *code,
                               MVMRegister *res_reg) {
     if (!MVM_code_iscode(tc, code))

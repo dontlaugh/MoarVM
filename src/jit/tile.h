@@ -7,7 +7,7 @@ struct MVMJitTileTemplate {
 
     uint32_t  num_refs;
     uint32_t value_bitmap;
-    MVMuint8 register_spec[4];
+    uint8_t register_spec[4];
 };
 
 struct MVMJitTile {
@@ -18,10 +18,10 @@ struct MVMJitTile {
     uint32_t  num_refs;
     int32_t   refs[4];
     int32_t   args[6];
-    MVMuint8 values[4];
+    uint8_t values[4];
 
-    MVMuint8 register_spec[4];
-    MVMint8   size;
+    uint8_t register_spec[4];
+    int8_t   size;
 
     const char *debug_name;
 };

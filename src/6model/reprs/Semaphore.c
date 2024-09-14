@@ -23,7 +23,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 }
 
 /* Set up the Semaphore with its initial value. */
-static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 value) {
+static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
     MVMSemaphoreBody *body = (MVMSemaphoreBody *)data;
     int r;
     body->sem = MVM_malloc(sizeof(uv_sem_t));
@@ -113,7 +113,7 @@ static const MVMREPROps Semaphore_this_repr = {
     NULL, /* describe_refs */
 };
 
-MVMint64 MVM_semaphore_tryacquire(MVMThreadContext *tc, MVMSemaphore *sem) {
+int64_t MVM_semaphore_tryacquire(MVMThreadContext *tc, MVMSemaphore *sem) {
     int r;
     MVM_telemetry_timestamp(tc, "Semaphore.tryAcquire");
     r = uv_sem_trywait(sem->body.sem);

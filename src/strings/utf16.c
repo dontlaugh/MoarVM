@@ -1,14 +1,14 @@
 #include "moar.h"
 
-static MVMuint8 BOM_UTF16LE[2] = { 0xFF, 0xFE };
-static MVMuint8 BOM_UTF16BE[2] = { 0xFE, 0xFF };
+static uint8_t BOM_UTF16LE[2] = { 0xFF, 0xFE };
+static uint8_t BOM_UTF16BE[2] = { 0xFE, 0xFF };
 #define UTF16_DECODE_BIG_ENDIAN 1
 #define UTF16_DECODE_LITTLE_ENDIAN 2
 #define UTF16_DECODE_AUTO_ENDIAN 4
-MVM_STATIC_INLINE int has_little_endian_bom (MVMuint8 *buf8) {
+MVM_STATIC_INLINE int has_little_endian_bom (uint8_t *buf8) {
     return buf8[0] == BOM_UTF16LE[0] && buf8[1] == BOM_UTF16LE[1];
 }
-MVM_STATIC_INLINE int has_big_endian_bom (MVMuint8 *buf8) {
+MVM_STATIC_INLINE int has_big_endian_bom (uint8_t *buf8) {
     return buf8[0] == BOM_UTF16BE[0] && buf8[1] == BOM_UTF16BE[1];
 }
 MVM_STATIC_INLINE void init_utf16_decoder_state(MVMDecodeStream *ds, int setting) {
@@ -93,7 +93,7 @@ uint32_t MVM_string_utf16_decodestream_main(MVMThreadContext *tc, MVMDecodeStrea
     while (cur_bytes) {
         /* Process this buffer. */
         int32_t  pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
-        MVMuint8 *bytes = cur_bytes->bytes;
+        uint8_t *bytes = cur_bytes->bytes;
         if (ds->abs_byte_pos == 0 && pos + 1 < cur_bytes->length) {
             if (has_little_endian_bom(bytes + pos)) {
                 /* Only change the setting if we are using standard 'utf16' decode
@@ -181,18 +181,18 @@ uint32_t MVM_string_utf16_decodestream_main(MVMThreadContext *tc, MVMDecodeStrea
     return reached_stopper;
 }
 static MVMString * MVM_string_utf16_decode_main(MVMThreadContext *tc,
-        const MVMObject *result_type, MVMuint8 *utf16_chars, size_t bytes, int endianess);
+        const MVMObject *result_type, uint8_t *utf16_chars, size_t bytes, int endianess);
 MVMString * MVM_string_utf16be_decode(MVMThreadContext *tc,
         const MVMObject *result_type, char *utf16_chars, size_t bytes) {
-    return MVM_string_utf16_decode_main(tc, result_type, (MVMuint8*)utf16_chars, bytes, UTF16_DECODE_BIG_ENDIAN);
+    return MVM_string_utf16_decode_main(tc, result_type, (uint8_t*)utf16_chars, bytes, UTF16_DECODE_BIG_ENDIAN);
 }
 MVMString * MVM_string_utf16le_decode(MVMThreadContext *tc,
             const MVMObject *result_type, char *utf16_chars, size_t bytes) {
-    return MVM_string_utf16_decode_main(tc, result_type, (MVMuint8*)utf16_chars, bytes, UTF16_DECODE_LITTLE_ENDIAN);
+    return MVM_string_utf16_decode_main(tc, result_type, (uint8_t*)utf16_chars, bytes, UTF16_DECODE_LITTLE_ENDIAN);
 }
 MVMString * MVM_string_utf16_decode(MVMThreadContext *tc,
             const MVMObject *result_type, char *utf16_chars_in, size_t bytes) {
-    MVMuint8 *utf16_chars = (MVMuint8*)utf16_chars_in;
+    uint8_t *utf16_chars = (uint8_t*)utf16_chars_in;
 #ifdef MVM_BIGENDIAN
     int mode = UTF16_DECODE_BIG_ENDIAN;
 #else
@@ -211,17 +211,17 @@ MVMString * MVM_string_utf16_decode(MVMThreadContext *tc,
             bytes -= 2;
         }
     }
-    return MVM_string_utf16_decode_main(tc, result_type, (MVMuint8*)utf16_chars, bytes, mode);
+    return MVM_string_utf16_decode_main(tc, result_type, (uint8_t*)utf16_chars, bytes, mode);
 }
 /* Decodes the specified number of bytes of utf16 into an NFG string, creating
  * a result of the specified type. The type must have the MVMString REPR. */
 static MVMString * MVM_string_utf16_decode_main(MVMThreadContext *tc,
-        const MVMObject *result_type, MVMuint8 *utf16_chars, size_t bytes, int endianess) {
+        const MVMObject *result_type, uint8_t *utf16_chars, size_t bytes, int endianess) {
     MVMString *result;
     MVMGrapheme32 *buffer;
     size_t str_pos = 0;
-    MVMuint8 *utf16 = (MVMuint8 *)utf16_chars;
-    MVMuint8 *utf16_end = NULL;
+    uint8_t *utf16 = (uint8_t *)utf16_chars;
+    uint8_t *utf16_end = NULL;
     int low, high;
     MVMNormalizer norm;
     int32_t ready;
@@ -239,7 +239,7 @@ static MVMString * MVM_string_utf16_decode_main(MVMThreadContext *tc,
     }
 
     if (bytes % 2) {
-        MVM_exception_throw_adhoc(tc, "Malformed UTF-16; odd number of bytes (%"PRIu64")", (MVMuint64)bytes);
+        MVM_exception_throw_adhoc(tc, "Malformed UTF-16; odd number of bytes (%"PRIu64")", (uint64_t)bytes);
     }
 
     utf16_end = utf16 + bytes;
@@ -300,35 +300,35 @@ static MVMString * MVM_string_utf16_decode_main(MVMThreadContext *tc,
 
     return result;
 }
-MVM_STATIC_INLINE MVMuint16 swap_bytes(MVMuint16 uint16, int enable_byte_swap) {
+MVM_STATIC_INLINE uint16_t swap_bytes(uint16_t uint16, int enable_byte_swap) {
     return enable_byte_swap
         ? (uint16 << 8) | (uint16 >> 8)
         : uint16;
 }
-char * MVM_string_utf16_encode_substr_main(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement, int32_t translate_newlines, int endianess);
+char * MVM_string_utf16_encode_substr_main(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines, int endianess);
 /* Encodes the specified substring to utf16. The result string is NULL terminated, but
  * the specified size is the non-null part. (This being UTF-16, there are 2 null bytes
  * on the end.) */
-char * MVM_string_utf16be_encode_substr(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement, int32_t translate_newlines) {
+char * MVM_string_utf16be_encode_substr(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
     return MVM_string_utf16_encode_substr_main(tc, str, output_size, start, length, replacement, translate_newlines, UTF16_DECODE_BIG_ENDIAN);
 }
-char * MVM_string_utf16le_encode_substr(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement, int32_t translate_newlines) {
+char * MVM_string_utf16le_encode_substr(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
     return MVM_string_utf16_encode_substr_main(tc, str, output_size, start, length, replacement, translate_newlines, UTF16_DECODE_LITTLE_ENDIAN);
 }
-char * MVM_string_utf16_encode_substr(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement, int32_t translate_newlines) {
+char * MVM_string_utf16_encode_substr(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
     return MVM_string_utf16_encode_substr_main(tc, str, output_size, start, length, replacement, translate_newlines, UTF16_DECODE_AUTO_ENDIAN);
 }
 
-char * MVM_string_utf16_encode_substr_main(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement, int32_t translate_newlines, int endianess) {
+char * MVM_string_utf16_encode_substr_main(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines, int endianess) {
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
     uint32_t lengthu = (uint32_t)(length == -1 ? strgraphs - start : length);
-    MVMuint16 *result;
-    MVMuint16 *result_pos;
+    uint16_t *result;
+    uint16_t *result_pos;
     MVMCodepointIter ci;
-    MVMuint8 *repl_bytes = NULL;
-    MVMuint64 repl_length = 0;
+    uint8_t *repl_bytes = NULL;
+    uint64_t repl_length = 0;
     int32_t alloc_size;
-    MVMuint64 scratch_space = 0;
+    uint64_t scratch_space = 0;
     int enable_byte_swap = 0;
 #ifdef MVM_BIGENDIAN
     if (endianess == UTF16_DECODE_LITTLE_ENDIAN)
@@ -344,7 +344,7 @@ char * MVM_string_utf16_encode_substr_main(MVMThreadContext *tc, MVMString *str,
         MVM_exception_throw_adhoc(tc, "length (%"PRId64") out of range (0..%"PRIu32")", length, strgraphs);
 
     if (replacement)
-        repl_bytes = (MVMuint8 *) MVM_string_utf16_encode_substr(tc,
+        repl_bytes = (uint8_t *) MVM_string_utf16_encode_substr(tc,
             replacement, &repl_length, 0, -1, NULL, translate_newlines);
 
     alloc_size = lengthu * 2;
@@ -366,7 +366,7 @@ char * MVM_string_utf16_encode_substr_main(MVMThreadContext *tc, MVMString *str,
         }
 
         while ((alloc_size - 2 * (result_pos - result)) < bytes_needed) {
-            MVMuint16 *new_result;
+            uint16_t *new_result;
 
             alloc_size *= 2;
             new_result  = MVM_realloc(result, alloc_size + 2);

@@ -13,7 +13,7 @@ struct MVMIOOps {
     MVMObject * (*get_async_task_handle) (MVMThreadContext *tc, MVMOSHandle *h);
     const MVMIOLockable        *lockable;
     const MVMIOIntrospection   *introspection;
-    void (*set_buffer_size) (MVMThreadContext *tc, MVMOSHandle *h, MVMint64 size);
+    void (*set_buffer_size) (MVMThreadContext *tc, MVMOSHandle *h, int64_t size);
 
     /* How to mark the handle's data, if needed. */
     void (*gc_mark) (MVMThreadContext *tc, void *data, MVMGCWorklist *worklist);
@@ -24,20 +24,20 @@ struct MVMIOOps {
 
 /* I/O operations on handles that can be closed. */
 struct MVMIOClosable {
-    MVMint64 (*close) (MVMThreadContext *tc, MVMOSHandle *h);
+    int64_t (*close) (MVMThreadContext *tc, MVMOSHandle *h);
 };
 
 /* I/O operations on handles that can do synchronous reading. */
 struct MVMIOSyncReadable {
-    MVMint64 (*read_bytes) (MVMThreadContext *tc, MVMOSHandle *h, char **buf, MVMuint64 bytes);
-    MVMint64 (*eof) (MVMThreadContext *tc, MVMOSHandle *h);
+    int64_t (*read_bytes) (MVMThreadContext *tc, MVMOSHandle *h, char **buf, uint64_t bytes);
+    int64_t (*eof) (MVMThreadContext *tc, MVMOSHandle *h);
 };
 
 /* I/O operations on handles that can do synchronous writing. */
 struct MVMIOSyncWritable {
-    MVMint64 (*write_bytes) (MVMThreadContext *tc, MVMOSHandle *h, char *buf, MVMuint64 bytes);
+    int64_t (*write_bytes) (MVMThreadContext *tc, MVMOSHandle *h, char *buf, uint64_t bytes);
     void (*flush) (MVMThreadContext *tc, MVMOSHandle *h, int32_t sync);
-    void (*truncate) (MVMThreadContext *tc, MVMOSHandle *h, MVMint64 bytes);
+    void (*truncate) (MVMThreadContext *tc, MVMOSHandle *h, int64_t bytes);
 };
 
 /* I/O operations on handles that can do asynchronous reading. */
@@ -56,61 +56,61 @@ struct MVMIOAsyncWritable {
  * network destination. */
 struct MVMIOAsyncWritableTo {
     MVMAsyncTask * (*write_bytes_to) (MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
-        MVMObject *schedulee, MVMObject *buffer, MVMObject *async_type, MVMString *host, MVMint64 port);
+        MVMObject *schedulee, MVMObject *buffer, MVMObject *async_type, MVMString *host, int64_t port);
 };
 
 /* I/O operations on handles that can seek/tell. */
 struct MVMIOSeekable {
-    void (*seek) (MVMThreadContext *tc, MVMOSHandle *h, MVMint64 offset, MVMint64 whence);
-    MVMint64 (*tell) (MVMThreadContext *tc, MVMOSHandle *h);
+    void (*seek) (MVMThreadContext *tc, MVMOSHandle *h, int64_t offset, int64_t whence);
+    int64_t (*tell) (MVMThreadContext *tc, MVMOSHandle *h);
 };
 
 /* I/O operations on handles that do socket-y things (connect, bind, accept). */
 struct MVMIOSockety {
-    void (*connect) (MVMThreadContext *tc, MVMOSHandle *h, MVMString *host, MVMint64 port, MVMuint16 family);
-    void (*bind) (MVMThreadContext *tc, MVMOSHandle *h, MVMString *host, MVMint64 port, MVMuint16 family, int32_t backlog);
+    void (*connect) (MVMThreadContext *tc, MVMOSHandle *h, MVMString *host, int64_t port, uint16_t family);
+    void (*bind) (MVMThreadContext *tc, MVMOSHandle *h, MVMString *host, int64_t port, uint16_t family, int32_t backlog);
     MVMObject * (*accept) (MVMThreadContext *tc, MVMOSHandle *h);
-    MVMint64 (*getport) (MVMThreadContext *tc, MVMOSHandle *h);
+    int64_t (*getport) (MVMThreadContext *tc, MVMOSHandle *h);
 };
 
 /* I/O operations on handles that can lock/unlock. */
 struct MVMIOLockable {
-    MVMint64 (*lock) (MVMThreadContext *tc, MVMOSHandle *h, MVMint64 flag);
+    int64_t (*lock) (MVMThreadContext *tc, MVMOSHandle *h, int64_t flag);
     void (*unlock) (MVMThreadContext *tc, MVMOSHandle *h);
 };
 
 /* Various bits of introspection we can perform on a handle. */
 struct MVMIOIntrospection {
-    MVMint64 (*is_tty) (MVMThreadContext *tc, MVMOSHandle *h);
-    MVMint64 (*native_descriptor) (MVMThreadContext *tc, MVMOSHandle *h);
-    MVMint64 (*mvm_open_mode) (MVMThreadContext *tc, MVMOSHandle *h);
+    int64_t (*is_tty) (MVMThreadContext *tc, MVMOSHandle *h);
+    int64_t (*native_descriptor) (MVMThreadContext *tc, MVMOSHandle *h);
+    int64_t (*mvm_open_mode) (MVMThreadContext *tc, MVMOSHandle *h);
 };
 
-MVMint64 MVM_io_close(MVMThreadContext *tc, MVMObject *oshandle);
-MVMint64 MVM_io_is_tty(MVMThreadContext *tc, MVMObject *oshandle);
-MVMint64 MVM_io_fileno(MVMThreadContext *tc, MVMObject *oshandle);
-void MVM_io_seek(MVMThreadContext *tc, MVMObject *oshandle, MVMint64 offset, MVMint64 flag);
-MVMint64 MVM_io_tell(MVMThreadContext *tc, MVMObject *oshandle);
-void MVM_io_read_bytes(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *result, MVMint64 length);
+int64_t MVM_io_close(MVMThreadContext *tc, MVMObject *oshandle);
+int64_t MVM_io_is_tty(MVMThreadContext *tc, MVMObject *oshandle);
+int64_t MVM_io_fileno(MVMThreadContext *tc, MVMObject *oshandle);
+void MVM_io_seek(MVMThreadContext *tc, MVMObject *oshandle, int64_t offset, int64_t flag);
+int64_t MVM_io_tell(MVMThreadContext *tc, MVMObject *oshandle);
+void MVM_io_read_bytes(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *result, int64_t length);
 void MVM_io_write_bytes(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *buffer);
 void MVM_io_write_bytes_c(MVMThreadContext *tc, MVMObject *oshandle, char *output,
-    MVMuint64 output_size);
+    uint64_t output_size);
 MVMObject * MVM_io_read_bytes_async(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *queue,
     MVMObject *schedulee, MVMObject *buf_type, MVMObject *async_type);
 MVMObject * MVM_io_write_bytes_async(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *queue,
         MVMObject *schedulee, MVMObject *buffer, MVMObject *async_type);
 MVMObject * MVM_io_write_bytes_to_async(MVMThreadContext *tc, MVMObject *oshandle, MVMObject *queue,
-        MVMObject *schedulee, MVMObject *buffer, MVMObject *async_type, MVMString *host, MVMint64 port);
-MVMint64 MVM_io_eof(MVMThreadContext *tc, MVMObject *oshandle);
-MVMint64 MVM_io_lock(MVMThreadContext *tc, MVMObject *oshandle, MVMint64 flag);
+        MVMObject *schedulee, MVMObject *buffer, MVMObject *async_type, MVMString *host, int64_t port);
+int64_t MVM_io_eof(MVMThreadContext *tc, MVMObject *oshandle);
+int64_t MVM_io_lock(MVMThreadContext *tc, MVMObject *oshandle, int64_t flag);
 void MVM_io_unlock(MVMThreadContext *tc, MVMObject *oshandle);
 void MVM_io_flush(MVMThreadContext *tc, MVMObject *oshandle, int32_t sync);
-void MVM_io_truncate(MVMThreadContext *tc, MVMObject *oshandle, MVMint64 offset);
-void MVM_io_connect(MVMThreadContext *tc, MVMObject *oshandle, MVMString *host, MVMint64 port, MVMuint16 family);
-void MVM_io_bind(MVMThreadContext *tc, MVMObject *oshandle, MVMString *host, MVMint64 port, MVMuint16 family, int32_t backlog);
+void MVM_io_truncate(MVMThreadContext *tc, MVMObject *oshandle, int64_t offset);
+void MVM_io_connect(MVMThreadContext *tc, MVMObject *oshandle, MVMString *host, int64_t port, uint16_t family);
+void MVM_io_bind(MVMThreadContext *tc, MVMObject *oshandle, MVMString *host, int64_t port, uint16_t family, int32_t backlog);
 MVMObject * MVM_io_accept(MVMThreadContext *tc, MVMObject *oshandle);
-MVMint64 MVM_io_getport(MVMThreadContext *tc, MVMObject *oshandle);
-void MVM_io_set_buffer_size(MVMThreadContext *tc, MVMObject *oshandle, MVMint64 size);
+int64_t MVM_io_getport(MVMThreadContext *tc, MVMObject *oshandle);
+void MVM_io_set_buffer_size(MVMThreadContext *tc, MVMObject *oshandle, int64_t size);
 MVMObject * MVM_io_get_async_task_handle(MVMThreadContext *tc, MVMObject *oshandle);
 void MVM_io_flush_standard_handles(MVMThreadContext *tc);
 

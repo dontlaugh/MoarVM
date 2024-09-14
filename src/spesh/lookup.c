@@ -14,11 +14,11 @@ MVMObject * MVM_spesh_try_get_how(MVMThreadContext *tc, MVMObject *obj) {
     return STABLE(obj)->HOW;
 }
 
-MVMint8 MVM_spesh_get_reg_type(MVMThreadContext *tc, MVMSpeshGraph *sg, MVMuint16 reg) {
+int8_t MVM_spesh_get_reg_type(MVMThreadContext *tc, MVMSpeshGraph *sg, uint16_t reg) {
     return sg->local_types ? sg->local_types[reg] : sg->sf->body.local_types[reg];
 }
 
-MVMint8 MVM_spesh_get_lex_type(MVMThreadContext *tc, MVMSpeshGraph *sg, MVMuint16 outers, MVMuint16 idx) {
+int8_t MVM_spesh_get_lex_type(MVMThreadContext *tc, MVMSpeshGraph *sg, uint16_t outers, uint16_t idx) {
     if (outers == 0) {
         return sg->lexical_types ? sg->lexical_types[idx] : sg->sf->body.lexical_types[idx];
     } else {
@@ -28,10 +28,10 @@ MVMint8 MVM_spesh_get_lex_type(MVMThreadContext *tc, MVMSpeshGraph *sg, MVMuint1
     }
 }
 
-MVMuint8 MVM_spesh_get_opr_type(MVMThreadContext *tc, MVMSpeshGraph *sg, MVMSpeshIns *ins, int32_t i) {
+uint8_t MVM_spesh_get_opr_type(MVMThreadContext *tc, MVMSpeshGraph *sg, MVMSpeshIns *ins, int32_t i) {
     MVMSpeshOperand opr = ins->operands[i];
-    MVMuint8 opr_kind = ins->info->operands[i];
-    MVMuint8 opr_type = opr_kind & MVM_operand_type_mask;
+    uint8_t opr_kind = ins->info->operands[i];
+    uint8_t opr_type = opr_kind & MVM_operand_type_mask;
     if (opr_type == MVM_operand_type_var) {
         switch (opr_kind & MVM_operand_rw_mask) {
         case MVM_operand_read_reg:

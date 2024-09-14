@@ -42,11 +42,11 @@ void MVM_spesh_log_entry(MVMThreadContext *tc, int32_t cid, MVMStaticFrame *sf,
         MVMArgs args);
 void MVM_spesh_log_osr(MVMThreadContext *tc);
 void MVM_spesh_log_type(MVMThreadContext *tc, MVMObject *value);
-void MVM_spesh_log_type_at(MVMThreadContext *tc, MVMObject *value, MVMuint8 *prev_op);
-void MVM_spesh_log_decont(MVMThreadContext *tc, MVMuint8 *prev_op, MVMObject *value);
+void MVM_spesh_log_type_at(MVMThreadContext *tc, MVMObject *value, uint8_t *prev_op);
+void MVM_spesh_log_decont(MVMThreadContext *tc, uint8_t *prev_op, MVMObject *value);
 void MVM_spesh_log_bytecode_target(MVMThreadContext *tc, int32_t cid,
         uint32_t bytecode_offset, MVMCode *target);
 void MVM_spesh_log_return_type(MVMThreadContext *tc, MVMObject *value);
 void MVM_spesh_log_return_to_unlogged(MVMThreadContext *tc);
 void MVM_spesh_log_dispatch_resolution_for_correlation_id(MVMThreadContext *tc,
-        int32_t cid, uint32_t bytecode_offset, MVMuint16 result_index);
+        int32_t cid, uint32_t bytecode_offset, uint16_t result_index);

@@ -171,7 +171,7 @@ MVM_STATIC_INLINE MVMGrapheme32 MVM_unicode_normalizer_get_grapheme(MVMThreadCon
 }
 
 /* Setup and teardown of the MVMNormalizer struct. */
-MVMNormalization MVM_unicode_normalizer_form(MVMThreadContext *tc, MVMint64 form_in);
+MVMNormalization MVM_unicode_normalizer_form(MVMThreadContext *tc, int64_t form_in);
 void MVM_unicode_normalizer_init(MVMThreadContext *tc, MVMNormalizer *n, MVMNormalization norm);
 void MVM_unicode_normalizer_translate_newlines(MVMThreadContext *tc, MVMNormalizer *n);
 void MVM_unicode_normalizer_cleanup(MVMThreadContext *tc, MVMNormalizer *n);
@@ -183,7 +183,7 @@ void MVM_unicode_normalize_codepoints(MVMThreadContext *tc, const MVMObject *in,
 /* High-level function to produces an NFG string from an input array of
  * codepoints. */
 MVMString * MVM_unicode_codepoints_to_nfg_string(MVMThreadContext *tc,const MVMObject *codes);
-MVMString * MVM_unicode_codepoints_c_array_to_nfg_string(MVMThreadContext *tc, MVMCodepoint * cp_v, MVMint64 cp_count);
+MVMString * MVM_unicode_codepoints_c_array_to_nfg_string(MVMThreadContext *tc, MVMCodepoint * cp_v, int64_t cp_count);
 
 /* High-level function to produce an array of codepoints from a string. */
 void MVM_unicode_string_to_codepoints(MVMThreadContext *tc, MVMString *s, MVMNormalization form, MVMObject *out);
@@ -196,9 +196,9 @@ MVM_STATIC_INLINE int32_t fast_atoi( const char * dec_str ) {
     }
     return value;
 }
-MVMint64 MVM_unicode_relative_ccc(MVMThreadContext *tc, MVMCodepoint cp);
+int64_t MVM_unicode_relative_ccc(MVMThreadContext *tc, MVMCodepoint cp);
 int32_t MVM_unicode_normalize_should_break(MVMThreadContext *tc, MVMCodepoint a, MVMCodepoint b, MVMNormalizer *norm);
-MVMint64 MVM_unicode_relative_ccc(MVMThreadContext *tc, MVMCodepoint cp);
+int64_t MVM_unicode_relative_ccc(MVMThreadContext *tc, MVMCodepoint cp);
 int32_t MVM_string_is_control_full(MVMThreadContext *tc, MVMCodepoint in);
 /* Function for choosing the appropriate line-ending grapheme depending on if
  * newline translation is enabled. */

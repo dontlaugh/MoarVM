@@ -2,7 +2,7 @@
 #include "gb2312_codeindex.h"
 
 MVMString * MVM_string_gb2312_decode(MVMThreadContext *tc, const MVMObject *result_type, const char *gb2312_char, size_t bytes) {
-    MVMuint8 *gb2312 = (MVMuint8*)gb2312_char;
+    uint8_t *gb2312 = (uint8_t*)gb2312_char;
     size_t i, result_graphs;
 
     MVMString *result;
@@ -23,9 +23,9 @@ MVMString * MVM_string_gb2312_decode(MVMThreadContext *tc, const MVMObject *resu
         }
         else {
             if (i + 1 < bytes && 127 < gb2312[i + 1]) {
-                MVMuint8 byte1 = gb2312[i];
-                MVMuint8 byte2 = gb2312[i + 1];
-                MVMuint16 codepoint = (MVMuint16)byte1 * 256 + byte2;
+                uint8_t byte1 = gb2312[i];
+                uint8_t byte2 = gb2312[i + 1];
+                uint16_t codepoint = (uint16_t)byte1 * 256 + byte2;
                 MVMGrapheme32 index = gb2312_index_to_cp(codepoint);
                 if (index != GB2312_NULL) {
                     buffer[result_graphs++] = index;
@@ -40,7 +40,7 @@ MVMString * MVM_string_gb2312_decode(MVMThreadContext *tc, const MVMObject *resu
                 MVM_free(buffer);
                 MVM_exception_throw_adhoc(tc, 
                     "Error decoding gb2312 string: invalid gb2312 format (two bytes for a gb2312 character). Last byte seen was 0x%hhX\n", 
-                    (MVMuint8)gb2312[i]);
+                    (uint8_t)gb2312[i]);
             }
         }
     }
@@ -60,7 +60,7 @@ MVMString * MVM_string_gb2312_decode(MVMThreadContext *tc, const MVMObject *resu
 #define GB2312_DECODE_CHINESE_CODEPOINT -5
 
 static int gb2312_decode_handler(MVMThreadContext *tc, int32_t last_was_first_byte,
-                                 MVMuint16 codepoint, MVMuint16 last_codepoint, MVMGrapheme32 *out) {
+                                 uint16_t codepoint, uint16_t last_codepoint, MVMGrapheme32 *out) {
     MVMGrapheme32 graph;
     if (codepoint <= 127) {
         if (last_was_first_byte) {
@@ -72,7 +72,7 @@ static int gb2312_decode_handler(MVMThreadContext *tc, int32_t last_was_first_by
     }
     else {
         if (last_was_first_byte) {
-            MVMuint16 combined_codepoint = last_codepoint * 256 + codepoint;
+            uint16_t combined_codepoint = last_codepoint * 256 + codepoint;
             graph = gb2312_index_to_cp(combined_codepoint);
             *out = graph;
             if (graph == GB2312_NULL) {
@@ -97,7 +97,7 @@ uint32_t MVM_string_gb2312_decodestream(MVMThreadContext *tc, MVMDecodeStream *d
     uint32_t reached_stopper;
 
     int32_t last_was_first_byte;
-    MVMuint16 last_codepoint;
+    uint16_t last_codepoint;
     
     /* If there's no buffers, we're done. */ 
     if (!ds->bytes_head)
@@ -122,11 +122,11 @@ uint32_t MVM_string_gb2312_decodestream(MVMThreadContext *tc, MVMDecodeStream *d
     while (cur_bytes) {
         /* Process this buffer. */
         int32_t pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
-        MVMuint8 *bytes = (MVMuint8 *)cur_bytes->bytes;
+        uint8_t *bytes = (uint8_t *)cur_bytes->bytes;
 
         while (pos < cur_bytes->length) {
             MVMGrapheme32 graph;
-            MVMuint16 codepoint = (MVMuint16) bytes[pos++];
+            uint16_t codepoint = (uint16_t) bytes[pos++];
 
             int handler_rtrn = gb2312_decode_handler(tc, last_was_first_byte, codepoint, last_codepoint, &graph);
 
@@ -203,16 +203,16 @@ done:
 }
 
 char * MVM_string_gb2312_encode_substr(MVMThreadContext *tc, MVMString *str,
-                                       MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement,
+                                       uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement,
                                        int32_t translate_newlines) {
 
     uint32_t startu = (uint32_t)start;
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
     uint32_t lengthu = (uint32_t)(length == -1 ? strgraphs - startu : length);
-    MVMuint8 *result = NULL;
+    uint8_t *result = NULL;
     size_t result_alloc;
-    MVMuint8 *repl_bytes = NULL;
-    MVMuint64 repl_length;
+    uint8_t *repl_bytes = NULL;
+    uint64_t repl_length;
 
     if (start < 0 || start > strgraphs)
         MVM_exception_throw_adhoc(tc, "start out of range");
@@ -220,7 +220,7 @@ char * MVM_string_gb2312_encode_substr(MVMThreadContext *tc, MVMString *str,
         MVM_exception_throw_adhoc(tc, "length out of range");
 
     if (replacement)
-        repl_bytes = (MVMuint8 *) MVM_string_gb2312_encode_substr(tc,
+        repl_bytes = (uint8_t *) MVM_string_gb2312_encode_substr(tc,
                      replacement, &repl_length, 0, -1, NULL, translate_newlines);
 
     result_alloc = lengthu;

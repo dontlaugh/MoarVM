@@ -56,9 +56,9 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
     }
 }
 
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMConcBlockingQueueBody *cbq = *(MVMConcBlockingQueueBody **)data;
-    MVMuint64 total = MVM_load(&cbq->elems) * sizeof(MVMConcBlockingQueueNode);
+    uint64_t total = MVM_load(&cbq->elems) * sizeof(MVMConcBlockingQueueNode);
     return total;
 }
 
@@ -104,7 +104,7 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
-static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister *value, MVMuint16 kind) {
+static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind) {
     MVMConcBlockingQueueBody *body = *(MVMConcBlockingQueueBody **)data;
 
     if (index != 0)
@@ -133,12 +133,12 @@ static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *d
     }
 }
 
-static MVMuint64 elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMConcBlockingQueueBody *cbq = *(MVMConcBlockingQueueBody **)data;
     return MVM_load(&(cbq->elems));
 }
 
-static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, MVMuint16 kind) {
+static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     MVMConcBlockingQueueBody *body = *(MVMConcBlockingQueueBody**)data;
     MVMConcBlockingQueueNode *add;
     AO_t orig_elems;
@@ -181,7 +181,7 @@ static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *dat
 
 /* Push to front of the queue - this should be an exceptional case, it has less
  * concurrency than the pair of push/shift */
-static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, MVMuint16 kind) {
+static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     MVMConcBlockingQueueBody *cbq = *(MVMConcBlockingQueueBody **)data;
     MVMConcBlockingQueueNode *add;
     MVMObject *to_add = value.o;
@@ -226,7 +226,7 @@ static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
 }
 
 
-static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, MVMuint16 kind) {
+static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     MVMConcBlockingQueueBody *body = *(MVMConcBlockingQueueBody**)data;
     MVMConcBlockingQueueNode *taken;
     unsigned int interval_id;

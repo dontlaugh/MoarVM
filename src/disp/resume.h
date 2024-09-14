@@ -47,7 +47,7 @@ struct MVMDispResumptionData {
 
             /* Mapping table of resumption init arguments to registers
              * indices. */
-            MVMuint16 *map;
+            uint16_t *map;
         } tran;
     };
 };

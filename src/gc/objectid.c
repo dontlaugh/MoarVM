@@ -2,8 +2,8 @@
 
 /* Gets a stable identifier for an object, which will not change even if the
  * GC moves the object. */
-MVMuint64 MVM_gc_object_id(MVMThreadContext *tc, MVMObject *obj) {
-    MVMuint64 id;
+uint64_t MVM_gc_object_id(MVMThreadContext *tc, MVMObject *obj) {
+    uint64_t id;
 
     /* If it's already in the old generation, just use memory address, as
      * gen2 objects never move. */

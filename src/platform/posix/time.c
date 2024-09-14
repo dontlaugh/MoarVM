@@ -12,7 +12,7 @@
 #define E9 1000000000
 #define E9F 1000000000.0f
 
-MVMuint64 MVM_platform_now(void)
+uint64_t MVM_platform_now(void)
 {
 #if defined(__APPLE__) && defined(__MACH__) // OS X does not have clock_gettime, use clock_get_time
     clock_serv_t    cclock;
@@ -20,25 +20,25 @@ MVMuint64 MVM_platform_now(void)
     host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
     clock_get_time(cclock, &ts);
     mach_port_deallocate(mach_task_self(), cclock);
-    return (MVMuint64)ts.tv_sec * E9 + ts.tv_nsec;
+    return (uint64_t)ts.tv_sec * E9 + ts.tv_nsec;
 #else
 #  ifdef CLOCK_REALTIME
     struct timespec ts;
     if (clock_gettime(CLOCK_REALTIME, &ts) != 0)
         return 0;
 
-    return (MVMuint64)ts.tv_sec * E9 + ts.tv_nsec;
+    return (uint64_t)ts.tv_sec * E9 + ts.tv_nsec;
 #  else
     struct timeval tv;
     if (gettimeofday(&tv, NULL) != 0)
         return 0;
 
-    return (MVMuint64)tv.tv_sec * E9 + tv.tv_usec * 1000;
+    return (uint64_t)tv.tv_sec * E9 + tv.tv_usec * 1000;
 #  endif
 #endif
 }
 
-void MVM_platform_sleep(MVMnum64 second)
+void MVM_platform_sleep(double second)
 {
     struct timespec timeout;
     timeout.tv_sec = (time_t)second;
@@ -46,7 +46,7 @@ void MVM_platform_sleep(MVMnum64 second)
     while (nanosleep(&timeout, &timeout) && errno == EINTR);
 }
 
-void MVM_platform_nanosleep(MVMuint64 nanos)
+void MVM_platform_nanosleep(uint64_t nanos)
 {
     struct timespec timeout;
     timeout.tv_sec = nanos / E9;
@@ -54,7 +54,7 @@ void MVM_platform_nanosleep(MVMuint64 nanos)
     while (nanosleep(&timeout, &timeout) && errno == EINTR);
 }
 
-void MVM_platform_decodelocaltime(MVMThreadContext *tc, MVMint64 time, MVMint64 decoded[]) {
+void MVM_platform_decodelocaltime(MVMThreadContext *tc, int64_t time, int64_t decoded[]) {
     const time_t t = (time_t)time;
     struct tm tm;
     if (localtime_r(&t, &tm) == NULL)

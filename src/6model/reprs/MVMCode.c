@@ -37,10 +37,10 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
     MVM_gc_worklist_add(tc, worklist, &body->sf);
     MVM_gc_worklist_add(tc, worklist, &body->name);
     if (body->state_vars) {
-        MVMuint8 *flags  = body->sf->body.static_env_flags;
-        MVMuint16 *types = body->sf->body.lexical_types;
-        MVMint64 numlex  = body->sf->body.num_lexicals;
-        MVMint64 i;
+        uint8_t *flags  = body->sf->body.static_env_flags;
+        uint16_t *types = body->sf->body.lexical_types;
+        int64_t numlex  = body->sf->body.num_lexicals;
+        int64_t i;
         for (i = 0; i < numlex; i++) {
             if (flags[i] == 2) {
                 if (types[i] == MVM_reg_obj)

@@ -22,7 +22,7 @@ extern char **environ;
 #endif
 
 #ifdef _WIN32
-static wchar_t * ANSIToUnicode(MVMuint16 acp, const char *str)
+static wchar_t * ANSIToUnicode(uint16_t acp, const char *str)
 {
      const int          len = MultiByteToWideChar(acp, 0, str, -1, NULL, 0);
      wchar_t * const result = (wchar_t *)MVM_malloc(len * sizeof(wchar_t));
@@ -42,7 +42,7 @@ static char * UnicodeToUTF8(const wchar_t *str)
      return result;
 }
 
-static char * ANSIToUTF8(MVMuint16 acp, const char * str)
+static char * ANSIToUTF8(uint16_t acp, const char * str)
 {
     wchar_t * const wstr = ANSIToUnicode(acp, str);
     char  * const result = UnicodeToUTF8(wstr);
@@ -160,7 +160,7 @@ typedef struct {
     MVMObject *async_task;
 
     /* The exit signal to send, if any. */
-    MVMint64 signal;
+    int64_t signal;
 } MVMIOAsyncProcessData;
 
 typedef enum {
@@ -185,9 +185,9 @@ typedef struct {
     uint32_t          seq_stdout;
     uint32_t          seq_stderr;
     uint32_t          seq_merge;
-    MVMint64           permit_stdout;
-    MVMint64           permit_stderr;
-    MVMint64           permit_merge;
+    int64_t           permit_stdout;
+    int64_t           permit_stderr;
+    int64_t           permit_merge;
     uv_pipe_t         *pipe_stdout;
     uv_pipe_t         *pipe_stderr;
     int                reading_stdout;
@@ -391,7 +391,7 @@ static const MVMAsyncTaskOps deferred_close_op_table = {
     NULL
 };
 
-static MVMint64 close_stdin(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t close_stdin(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncProcessData *handle_data = (MVMIOAsyncProcessData *)h->body.data;
     MVMAsyncTask          *spawn_task  = (MVMAsyncTask *)handle_data->async_task;
     SpawnInfo             *si          = spawn_task ? (SpawnInfo *)spawn_task->body.data : NULL;
@@ -469,7 +469,7 @@ static void spawn_async_close(uv_handle_t *handle) {
     MVM_free(handle);
 }
 
-static void async_spawn_on_exit(uv_process_t *req, MVMint64 exit_status, int term_signal) {
+static void async_spawn_on_exit(uv_process_t *req, int64_t exit_status, int term_signal) {
     /* Check we've got a callback to fire. */
     SpawnInfo        *si  = (SpawnInfo *)req->data;
     MVMThreadContext *tc  = si->tc;
@@ -480,7 +480,7 @@ static void async_spawn_on_exit(uv_process_t *req, MVMint64 exit_status, int ter
     if (!MVM_is_null(tc, done_cb)) {
         MVMROOT(tc, done_cb) {
             /* Get status. */
-            MVMint64 status = (exit_status << 8) | term_signal;
+            int64_t status = (exit_status << 8) | term_signal;
 
             /* Get what we'll need to build and convey the result. */
             MVMObject        *arr = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
@@ -555,7 +555,7 @@ static void on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) 
 
 /* Read functions for stdout/stderr/merged. */
 static void async_read(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf, SpawnInfo *si,
-                       MVMObject *callback, uint32_t seq_number, MVMint64 *permit) {
+                       MVMObject *callback, uint32_t seq_number, int64_t *permit) {
     MVMThreadContext *tc  = si->tc;
     MVMObject *arr;
     MVMAsyncTask *t;
@@ -576,7 +576,7 @@ static void async_read(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf, 
                 MVMObject *buf_type    = MVM_repr_at_key_o(tc, si->callbacks,
                                             tc->instance->str_consts.buf_type);
                 MVMArray  *res_buf     = (MVMArray *)MVM_repr_alloc_init(tc, buf_type);
-                res_buf->body.slots.i8 = (MVMint8 *)buf->base;
+                res_buf->body.slots.i8 = (int8_t *)buf->base;
                 res_buf->body.start    = 0;
                 res_buf->body.ssize    = buf->len;
                 res_buf->body.elems    = nread;
@@ -656,15 +656,15 @@ static void async_spawn_merge_bytes_read(uv_stream_t *handle, ssize_t nread, con
 }
 
 /* Actually spawns an async task. This runs in the event loop thread. */
-static MVMint64 get_pipe_fd(MVMThreadContext *tc, uv_pipe_t *pipe) {
+static int64_t get_pipe_fd(MVMThreadContext *tc, uv_pipe_t *pipe) {
     uv_os_fd_t fd;
     if (uv_fileno((uv_handle_t *)pipe, &fd) == 0)
-        return (MVMint64)fd;
+        return (int64_t)fd;
     else
         return 0;
 }
 static void spawn_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data) {
-    MVMint64 spawn_result;
+    int64_t spawn_result;
 
     /* Process info setup. */
     uv_process_t *process = MVM_calloc(1, sizeof(uv_process_t));
@@ -859,7 +859,7 @@ static void spawn_setup(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_
 
 /* Permits provide the back-pressure mechanism for the readers. */
 static void spawn_permit(MVMThreadContext *tc, uv_loop_t *loop, MVMObject *async_task, void *data,
-                         MVMint64 channel, MVMint64 permits) {
+                         int64_t channel, int64_t permits) {
     SpawnInfo *si = (SpawnInfo *)data;
     if (si->work_idx < 0)
         return;
@@ -997,7 +997,7 @@ MVMObject * MVM_proc_spawn_async(MVMThreadContext *tc, MVMObject *queue, MVMStri
     MVMOSHandle   *handle;
     SpawnInfo     *si;
     char          *_prog, *_cwd, **_env, **args;
-    MVMuint64      size, arg_size, i;
+    uint64_t      size, arg_size, i;
     MVMIter       *iter;
     MVMRegister    reg;
 
@@ -1066,7 +1066,7 @@ MVMObject * MVM_proc_spawn_async(MVMThreadContext *tc, MVMObject *queue, MVMStri
 }
 
 /* Kills an asynchronously spawned process. */
-void MVM_proc_kill_async(MVMThreadContext *tc, MVMObject *handle_obj, MVMint64 signal) {
+void MVM_proc_kill_async(MVMThreadContext *tc, MVMObject *handle_obj, int64_t signal) {
     /* Ensure it's a handle for a process. */
     if (REPR(handle_obj)->ID == MVM_REPR_ID_MVMOSHandle) {
         MVMOSHandle *handle = (MVMOSHandle *)handle_obj;
@@ -1082,7 +1082,7 @@ void MVM_proc_kill_async(MVMThreadContext *tc, MVMObject *handle_obj, MVMint64 s
 }
 
 /* Get the current process ID. */
-MVMint64 MVM_proc_getpid(MVMThreadContext *tc) {
+int64_t MVM_proc_getpid(MVMThreadContext *tc) {
 #ifdef _WIN32
     return _getpid();
 #else
@@ -1091,31 +1091,31 @@ MVMint64 MVM_proc_getpid(MVMThreadContext *tc) {
 }
 
 /* Get the process ID of the parent process */
-MVMint64 MVM_proc_getppid(MVMThreadContext *tc) {
+int64_t MVM_proc_getppid(MVMThreadContext *tc) {
     return uv_os_getppid();
 }
 
 /* generates a random int64 */
-MVMint64 MVM_proc_rand_i(MVMThreadContext *tc) {
-    return (MVMint64)jfs64_generate_uint64(tc->rand_state);
+int64_t MVM_proc_rand_i(MVMThreadContext *tc) {
+    return (int64_t)jfs64_generate_uint64(tc->rand_state);
 }
 
 /* generates a number between 0 and 1 */
-MVMnum64 MVM_proc_rand_n(MVMThreadContext *tc) {
+double MVM_proc_rand_n(MVMThreadContext *tc) {
     return ((jfs64_generate_uint64(tc->rand_state) >> 11) * (1.0 / 9007199254740992.0));
 }
 
-MVMnum64 MVM_proc_randscale_n(MVMThreadContext *tc, MVMnum64 scale) {
+double MVM_proc_randscale_n(MVMThreadContext *tc, double scale) {
     return ((jfs64_generate_uint64(tc->rand_state) >> 11) * (1.0 / 9007199254740992.0)) * scale;
 }
 
 /* seed random number generator */
-void MVM_proc_seed(MVMThreadContext *tc, MVMint64 seed) {
-    jfs64_init(tc->rand_state, (MVMuint64)seed);
+void MVM_proc_seed(MVMThreadContext *tc, int64_t seed) {
+    jfs64_init(tc->rand_state, (uint64_t)seed);
 }
 
 /* gets the system time since the epoch in nanoseconds */
-MVMuint64 MVM_proc_time(MVMThreadContext *tc) {
+uint64_t MVM_proc_time(MVMThreadContext *tc) {
     return MVM_platform_now();
 }
 
@@ -1135,8 +1135,8 @@ MVMObject * MVM_proc_clargs(MVMThreadContext *tc) {
     if (!clargs) {
         clargs = MVM_repr_alloc_init(tc, MVM_hll_current(tc)->slurpy_array_type);
         MVMROOT(tc, clargs) {
-            const MVMint64 num_clargs = instance->num_clargs;
-            MVMint64 count;
+            const int64_t num_clargs = instance->num_clargs;
+            int64_t count;
 
             MVMString *prog_string = MVM_string_utf8_c8_decode(tc,
                 instance->VMString,
@@ -1229,10 +1229,10 @@ The simplest way of doing this that I can see is:
 
 */
 
-MVMint64 MVM_proc_fork(MVMThreadContext *tc) {
+int64_t MVM_proc_fork(MVMThreadContext *tc) {
     MVMInstance *instance = tc->instance;
     const char *error = NULL;
-    MVMint64 pid = -1;
+    int64_t pid = -1;
 
     if (!MVM_platform_supports_fork(tc))
         MVM_exception_throw_adhoc(tc, "This platform does not support fork()");

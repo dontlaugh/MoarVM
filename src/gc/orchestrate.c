@@ -103,7 +103,7 @@ static uint32_t signal_all(MVMThreadContext *tc, MVMThread *threads) {
 
 /* Does work in a thread's in-tray, if any. Returns a non-zero value if work
  * was found and done, and zero otherwise. */
-static int process_in_tray(MVMThreadContext *tc, MVMuint8 gen) {
+static int process_in_tray(MVMThreadContext *tc, uint8_t gen) {
     GCDEBUG_LOG(tc, MVM_GC_DEBUG_ORCHESTRATE, "Thread %d run %d : Considering extra work\n");
     if (MVM_load(&tc->gc_in_tray)) {
         GCDEBUG_LOG(tc, MVM_GC_DEBUG_ORCHESTRATE,
@@ -116,7 +116,7 @@ static int process_in_tray(MVMThreadContext *tc, MVMuint8 gen) {
 
 /* Called by a thread when it thinks it is done with GC. It may get some more
  * work yet, though. */
-static void clear_intrays(MVMThreadContext *tc, MVMuint8 gen) {
+static void clear_intrays(MVMThreadContext *tc, uint8_t gen) {
     uint32_t did_work = 1;
     while (did_work) {
         MVMThread *cur_thread;
@@ -129,7 +129,7 @@ static void clear_intrays(MVMThreadContext *tc, MVMuint8 gen) {
         }
     }
 }
-static void finish_gc(MVMThreadContext *tc, MVMuint8 gen, MVMuint8 is_coordinator) {
+static void finish_gc(MVMThreadContext *tc, uint8_t gen, uint8_t is_coordinator) {
     uint32_t i, did_work;
 
     /* Do any extra work that we have been passed. */
@@ -379,11 +379,11 @@ int32_t MVM_gc_is_thread_blocked(MVMThreadContext *tc) {
 }
 
 static int32_t is_full_collection(MVMThreadContext *tc) {
-    MVMuint64 percent_growth, promoted;
+    uint64_t percent_growth, promoted;
     size_t rss;
 
     /* If it's below the absolute minimum, quickly return. */
-    promoted = (MVMuint64)MVM_load(&tc->instance->gc_promoted_bytes_since_last_full);
+    promoted = (uint64_t)MVM_load(&tc->instance->gc_promoted_bytes_since_last_full);
     if (promoted < MVM_GC_GEN2_THRESHOLD_MINIMUM)
         return 0;
 
@@ -395,18 +395,18 @@ static int32_t is_full_collection(MVMThreadContext *tc) {
     /* Otherwise, consider percentage of resident set size. */
     if (uv_resident_set_memory(&rss) < 0 || rss == 0)
         rss = 50 * 1024 * 1024;
-    percent_growth = (100 * promoted) / (MVMuint64)rss;
+    percent_growth = (100 * promoted) / (uint64_t)rss;
 
     return percent_growth >= MVM_GC_GEN2_THRESHOLD_PERCENT;
 }
 
-static void run_gc(MVMThreadContext *tc, MVMuint8 what_to_do) {
-    MVMuint8   gen;
+static void run_gc(MVMThreadContext *tc, uint8_t what_to_do) {
+    uint8_t   gen;
     uint32_t  i, n;
 
-    MVMuint8 is_coordinator;
+    uint8_t is_coordinator;
 
-    MVMuint64 start_time = 0;
+    uint64_t start_time = 0;
 
     unsigned int interval_id;
 
@@ -452,12 +452,12 @@ static void run_gc(MVMThreadContext *tc, MVMuint8 what_to_do) {
     subscription_queue = tc->instance->subscriptions.subscription_queue;
 
     if (is_coordinator && subscription_queue && tc->instance->subscriptions.GCEvent) {
-        MVMuint64 end_time = uv_hrtime();
+        uint64_t end_time = uv_hrtime();
         MVMObject *instance = MVM_repr_alloc(tc, tc->instance->subscriptions.GCEvent);
         MVMThread *cur_thread;
 
         MVMArray *arrobj = (MVMArray *)instance;
-        MVMuint64 *data;
+        uint64_t *data;
 
         MVM_repr_pos_set_elems(tc, instance, 9);
 

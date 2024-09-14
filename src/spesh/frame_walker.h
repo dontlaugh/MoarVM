@@ -15,33 +15,33 @@ struct MVMSpeshFrameWalker {
     MVMFrame *cur_outer_frame;
 
     /* Should we walk the outer chain hanging off each dynamic frame? */
-    MVMuint8 visit_outers;
+    uint8_t visit_outers;
 
     /* Should we visit the callers beyond the start frame (maybe after some
      * traversals before we start to iterate)? */
-    MVMuint8 visit_callers;
+    uint8_t visit_callers;
 
     /* Did we start iterating yet? */
-    MVMuint8 started;
+    uint8_t started;
 
     /* Did we just do a manual traversal, and so are on the frame we want to
      * start off with? */
-    MVMuint8 traversed;
+    uint8_t traversed;
 
     /* Are we currently visiting the outer chain? */
-    MVMuint8 visiting_outers;
+    uint8_t visiting_outers;
 };
 
 /* Sentinel value to indicate there's no inline to explore. */
 #define MVM_SPESH_FRAME_WALKER_NO_INLINE -2
 
 void MVM_spesh_frame_walker_init(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame *start,
-        MVMuint8 visit_outers);
+        uint8_t visit_outers);
 void MVM_spesh_frame_walker_init_for_outers(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
     MVMFrame *start);
 uint32_t MVM_spesh_frame_walker_next(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
 uint32_t MVM_spesh_frame_walker_get_lex(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
-        MVMString *name, MVMRegister **found_out, MVMuint16 *found_kind_out,
+        MVMString *name, MVMRegister **found_out, uint16_t *found_kind_out,
         uint32_t vivify, MVMFrame **found_frame);
 uint32_t MVM_spesh_frame_walker_move_outer(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
 uint32_t MVM_spesh_frame_walker_move_caller(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
@@ -51,10 +51,10 @@ uint32_t MVM_spesh_frame_walker_move_caller_skip_thunks(MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw);
 MVMFrame * MVM_spesh_frame_walker_get_frame(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
 MVMObject * MVM_spesh_frame_walker_get_lexicals_hash(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
-MVMint64 MVM_spesh_frame_walker_get_lexical_primspec(MVMThreadContext *tc,
+int64_t MVM_spesh_frame_walker_get_lexical_primspec(MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw, MVMString *name);
 MVMObject * MVM_spesh_frame_walker_get_code(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
-MVMuint64 MVM_spesh_frame_walker_get_lexical_count(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
+uint64_t MVM_spesh_frame_walker_get_lexical_count(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
 
 /* Gets the current frame we're walking. If we're in an inline, then it's the
  * frame holding the inline. */

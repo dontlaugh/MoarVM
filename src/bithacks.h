@@ -1,4 +1,4 @@
-static uint32_t MVM_bithacks_count_bits(MVMuint64 value) {
+static uint32_t MVM_bithacks_count_bits(uint64_t value) {
     uint32_t count;
 
     for (count = 0; value; count++)
@@ -7,12 +7,12 @@ static uint32_t MVM_bithacks_count_bits(MVMuint64 value) {
     return count;
 }
 
-static int MVM_bithacks_is_pow2z(MVMuint64 value)
+static int MVM_bithacks_is_pow2z(uint64_t value)
 {
     return (value & (value - 1)) == 0;
 }
 
-static MVMuint64 MVM_bithacks_next_greater_pow2(MVMuint64 value)
+static uint64_t MVM_bithacks_next_greater_pow2(uint64_t value)
 {
     value |= value >> 1;
     value |= value >> 2;

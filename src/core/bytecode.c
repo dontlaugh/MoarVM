@@ -30,39 +30,39 @@ typedef struct {
     uint32_t version;
 
     /* The string heap. */
-    MVMuint8  *string_seg;
+    uint8_t  *string_seg;
     uint32_t  expected_strings;
 
     /* The SC dependencies segment. */
     uint32_t  expected_scs;
-    MVMuint8  *sc_seg;
+    uint8_t  *sc_seg;
 
     /* The extension ops segment. */
-    MVMuint8 *extop_seg;
+    uint8_t *extop_seg;
     uint32_t expected_extops;
 
     /* The frame segment. */
     uint32_t  expected_frames;
-    MVMuint8  *frame_seg;
-    MVMuint16 *frame_outer_fixups;
+    uint8_t  *frame_seg;
+    uint16_t *frame_outer_fixups;
 
     /* The callsites segment. */
-    MVMuint8  *callsite_seg;
+    uint8_t  *callsite_seg;
     uint32_t  expected_callsites;
 
     /* The bytecode segment. */
     uint32_t  bytecode_size;
-    MVMuint8  *bytecode_seg;
+    uint8_t  *bytecode_seg;
 
     /* The annotations segment */
-    MVMuint8  *annotation_seg;
+    uint8_t  *annotation_seg;
     uint32_t  annotation_size;
 
     /* HLL name string index */
     uint32_t  hll_str_idx;
 
     /* The limit we can not read beyond. */
-    MVMuint8 *read_limit;
+    uint8_t *read_limit;
 
     /* Array of frames. */
     MVMStaticFrame **frames;
@@ -76,10 +76,10 @@ typedef struct {
 } ReaderState;
 
 /* copies memory dependent on endianness */
-static void memcpy_endian(void *dest, MVMuint8 *src, size_t size) {
+static void memcpy_endian(void *dest, uint8_t *src, size_t size) {
 #ifdef MVM_BIGENDIAN
     size_t i;
-    MVMuint8 *destbytes = (MVMuint8 *)dest;
+    uint8_t *destbytes = (uint8_t *)dest;
     for (i = 0; i < size; i++)
         destbytes[size - i - 1] = src[i];
 #else
@@ -88,21 +88,21 @@ static void memcpy_endian(void *dest, MVMuint8 *src, size_t size) {
 }
 
 /* Reads a uint32 from a buffer. */
-static uint32_t read_int32(MVMuint8 *buffer, size_t offset) {
+static uint32_t read_int32(uint8_t *buffer, size_t offset) {
     uint32_t value;
     memcpy_endian(&value, buffer + offset, 4);
     return value;
 }
 
 /* Reads an uint16 from a buffer. */
-static MVMuint16 read_int16(MVMuint8 *buffer, size_t offset) {
-    MVMuint16 value;
+static uint16_t read_int16(uint8_t *buffer, size_t offset) {
+    uint16_t value;
     memcpy_endian(&value, buffer + offset, 2);
     return value;
 }
 
 /* Reads an uint8 from a buffer. */
-static MVMuint8 read_int8(MVMuint8 *buffer, size_t offset) {
+static uint8_t read_int8(uint8_t *buffer, size_t offset) {
     return buffer[offset];
 }
 
@@ -115,7 +115,7 @@ static void cleanup_all(ReaderState *rs) {
 
 /* Ensures we can read a certain amount of bytes without overrunning the end
  * of the stream. */
-MVM_STATIC_INLINE void ensure_can_read(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs, MVMuint8 *pos, uint32_t size) {
+MVM_STATIC_INLINE void ensure_can_read(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs, uint8_t *pos, uint32_t size) {
     if (pos + size > rs->read_limit) {
         cleanup_all(rs);
         MVM_exception_throw_adhoc(tc, "Read past end of bytecode stream");
@@ -124,7 +124,7 @@ MVM_STATIC_INLINE void ensure_can_read(MVMThreadContext *tc, MVMCompUnit *cu, Re
 
 /* Reads a string index, looks up the string and returns it. Bounds
  * checks the string heap index too. */
-static MVMString * get_heap_string(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs, MVMuint8 *buffer, size_t offset) {
+static MVMString * get_heap_string(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs, uint8_t *buffer, size_t offset) {
     uint32_t heap_index = read_int32(buffer, offset);
     if (heap_index >= cu->body.num_strings) {
         if (rs)
@@ -260,7 +260,7 @@ static ReaderState * dissect_bytecode(MVMThreadContext *tc, MVMCompUnit *cu) {
 static void deserialize_sc_deps(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs) {
     MVMCompUnitBody *cu_body = &cu->body;
     uint32_t i, sh_idx;
-    MVMuint8  *pos;
+    uint8_t  *pos;
 
     /* Allocate SC lists in compilation unit. */
     cu_body->scs = MVM_malloc(rs->expected_scs * sizeof(MVMSerializationContext *));
@@ -325,7 +325,7 @@ static void deserialize_sc_deps(MVMThreadContext *tc, MVMCompUnit *cu, ReaderSta
 static MVMExtOpRecord * deserialize_extop_records(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs) {
     MVMExtOpRecord *extops;
     uint32_t num = rs->expected_extops;
-    MVMuint8 *pos;
+    uint8_t *pos;
     uint32_t i;
 
     if (num == 0)
@@ -336,8 +336,8 @@ static MVMExtOpRecord * deserialize_extop_records(MVMThreadContext *tc, MVMCompU
     pos = rs->extop_seg;
     for (i = 0; i < num; i++) {
         uint32_t name_idx;
-        MVMuint16 operand_bytes = 0;
-        MVMuint8 *operand_descriptor = extops[i].operand_descriptor;
+        uint16_t operand_bytes = 0;
+        uint8_t *operand_descriptor = extops[i].operand_descriptor;
 
         /* Read name string index. */
         ensure_can_read(tc, cu, rs, pos, 4);
@@ -361,10 +361,10 @@ static MVMExtOpRecord * deserialize_extop_records(MVMThreadContext *tc, MVMCompU
         /* Validate operand descriptor.
          * TODO: Unify with validation in MVM_ext_register_extop? */
         {
-            MVMuint8 j = 0;
+            uint8_t j = 0;
 
             for(; j < 8; j++) {
-                MVMuint8 flags = operand_descriptor[j];
+                uint8_t flags = operand_descriptor[j];
 
                 if (!flags)
                     break;
@@ -465,7 +465,7 @@ static MVMExtOpRecord * deserialize_extop_records(MVMThreadContext *tc, MVMCompU
  * lexicals, etc.) and returns a list of them. */
 static MVMStaticFrame ** deserialize_frames(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs) {
     MVMStaticFrame **frames;
-    MVMuint8        *pos;
+    uint8_t        *pos;
     uint32_t        bytecode_pos, bytecode_size, i, j;
 
     /* Allocate frames array. */
@@ -476,7 +476,7 @@ static MVMStaticFrame ** deserialize_frames(MVMThreadContext *tc, MVMCompUnit *c
     frames = MVM_malloc(sizeof(MVMStaticFrame *) * rs->expected_frames);
 
     /* Allocate outer fixup list for frames. */
-    rs->frame_outer_fixups = MVM_malloc(sizeof(MVMuint16) * rs->expected_frames);
+    rs->frame_outer_fixups = MVM_malloc(sizeof(uint16_t) * rs->expected_frames);
 
     /* Load frames. */
     pos = rs->frame_seg;
@@ -536,7 +536,7 @@ static MVMStaticFrame ** deserialize_frames(MVMThreadContext *tc, MVMCompUnit *c
         static_frame_body->num_handlers = read_int32(pos, 34);
 
         /* Read exit handler flag (version 2 and higher). */
-        MVMint16 flags = read_int16(pos, 38);
+        int16_t flags = read_int16(pos, 38);
         static_frame_body->has_exit_handler = flags & FRAME_FLAG_EXIT_HANDLER;
         static_frame_body->is_thunk         = flags & FRAME_FLAG_IS_THUNK;
         static_frame_body->no_inline        = flags & FRAME_FLAG_NO_INLINE;
@@ -555,7 +555,7 @@ static MVMStaticFrame ** deserialize_frames(MVMThreadContext *tc, MVMCompUnit *c
         {
             uint32_t skip = 2 * static_frame_body->num_locals +
                              6 * static_frame_body->num_lexicals;
-            MVMuint16 slvs = read_int16(pos, 40);
+            uint16_t slvs = read_int16(pos, 40);
             uint32_t num_local_debug_names = read_int32(pos, 50);
             pos += FRAME_HEADER_SIZE;
             ensure_can_read(tc, cu, rs, pos, skip);
@@ -599,8 +599,8 @@ static MVMStaticFrame ** deserialize_frames(MVMThreadContext *tc, MVMCompUnit *c
 void MVM_bytecode_finish_frame(MVMThreadContext *tc, MVMCompUnit *cu,
                                MVMStaticFrame *sf, int32_t dump_only) {
     uint32_t j, num_debug_locals;
-    MVMuint8 *pos;
-    MVMuint16 slvs;
+    uint8_t *pos;
+    uint16_t slvs;
 
     /* Ensure we've not already done this. */
     if (sf->body.fully_deserialized)
@@ -630,7 +630,7 @@ void MVM_bytecode_finish_frame(MVMThreadContext *tc, MVMCompUnit *cu,
 
     /* Read the local types. */
     if (sf->body.num_locals) {
-        sf->body.local_types = MVM_malloc(sizeof(MVMuint16) * sf->body.num_locals);
+        sf->body.local_types = MVM_malloc(sizeof(uint16_t) * sf->body.num_locals);
         for (j = 0; j < sf->body.num_locals; j++)
             sf->body.local_types[j] = read_int16(pos, 2 * j);
         pos += 2 * sf->body.num_locals;
@@ -639,7 +639,7 @@ void MVM_bytecode_finish_frame(MVMThreadContext *tc, MVMCompUnit *cu,
     /* Read the lexical types. */
     if (sf->body.num_lexicals) {
         /* Allocate names hash and types list. */
-        sf->body.lexical_types = MVM_malloc(sizeof(MVMuint16) * sf->body.num_lexicals);
+        sf->body.lexical_types = MVM_malloc(sizeof(uint16_t) * sf->body.num_lexicals);
         MVMString **lexical_names_list = MVM_malloc(sizeof(MVMString *) * sf->body.num_lexicals);
         sf->body.lexical_names_list = lexical_names_list;
 
@@ -710,8 +710,8 @@ void MVM_bytecode_finish_frame(MVMThreadContext *tc, MVMCompUnit *cu,
 
     /* Read in static lexical flags. */
     for (j = 0; j < slvs; j++) {
-        MVMuint16 lex_idx = read_int16(pos, 0);
-        MVMuint16 flags   = read_int16(pos, 2);
+        uint16_t lex_idx = read_int16(pos, 0);
+        uint16_t flags   = read_int16(pos, 2);
 
         if (lex_idx >= sf->body.num_lexicals) {
             MVM_reentrantmutex_unlock(tc, (MVMReentrantMutex *)cu->body.deserialize_frame_mutex);
@@ -770,7 +770,7 @@ void MVM_bytecode_finish_frame(MVMThreadContext *tc, MVMCompUnit *cu,
                                num_debug_locals);
         }
         for (j = 0; j < num_debug_locals; j++) {
-            MVMuint16 idx = read_int16(pos, 0);
+            uint16_t idx = read_int16(pos, 0);
             MVMString *name = get_heap_string(tc, cu, NULL, pos, 2);
             MVMStaticFrameDebugLocal *entry = MVM_str_hash_insert_nocheck(tc, &ins->debug_locals, name);
             entry->local_idx = idx;
@@ -789,10 +789,10 @@ void MVM_bytecode_finish_frame(MVMThreadContext *tc, MVMCompUnit *cu,
 
 /* Gets the SC reference for a given static lexical var for
  * vivification purposes */
-MVMuint8 MVM_bytecode_find_static_lexical_scref(MVMThreadContext *tc, MVMCompUnit *cu, MVMStaticFrame *sf, MVMuint16 index, uint32_t *sc, uint32_t *id) {
-    MVMuint16 slvs, i;
+uint8_t MVM_bytecode_find_static_lexical_scref(MVMThreadContext *tc, MVMCompUnit *cu, MVMStaticFrame *sf, uint16_t index, uint32_t *sc, uint32_t *id) {
+    uint16_t slvs, i;
 
-    MVMuint8 *pos = sf->body.frame_static_lex_pos;
+    uint8_t *pos = sf->body.frame_static_lex_pos;
     if (!pos)
         return 0;
 
@@ -826,7 +826,7 @@ MVM_NO_RETURN static void report_deserialize_callsites_violation(MVMThreadContex
 /* Loads the callsites. */
 static MVMCallsite ** deserialize_callsites(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs) {
     MVMCallsite **callsites;
-    MVMuint8     *pos;
+    uint8_t     *pos;
     uint32_t     i, j, elems;
 
     /* Allocate space for callsites. */
@@ -837,7 +837,7 @@ static MVMCallsite ** deserialize_callsites(MVMThreadContext *tc, MVMCompUnit *c
     /* Load callsites. */
     pos = rs->callsite_seg;
     for (i = 0; i < rs->expected_callsites; i++) {
-        MVMuint8 has_flattening = 0;
+        uint8_t has_flattening = 0;
         uint32_t positionals = 0;
         uint32_t nameds_slots = 0;
         uint32_t nameds_non_flattening = 0;
@@ -1019,7 +1019,7 @@ MVMBytecodeAnnotation * MVM_bytecode_resolve_annotation(MVMThreadContext *tc, MV
     uint32_t i;
 
     if (sfb->num_annotations && offset < sfb->bytecode_size) {
-        MVMuint8 *cur_anno = sfb->annotations_data;
+        uint8_t *cur_anno = sfb->annotations_data;
         for (i = 0; i < sfb->num_annotations; i++) {
             uint32_t ann_offset = read_int32(cur_anno, 0);
             if (ann_offset > offset)
@@ -1042,7 +1042,7 @@ MVMBytecodeAnnotation * MVM_bytecode_resolve_annotation(MVMThreadContext *tc, MV
 void MVM_bytecode_advance_annotation(MVMThreadContext *tc, MVMStaticFrameBody *sfb, MVMBytecodeAnnotation *ba) {
     uint32_t i = ba->ann_index + 1;
 
-    MVMuint8 *cur_anno = sfb->annotations_data + ba->ann_offset;
+    uint8_t *cur_anno = sfb->annotations_data + ba->ann_offset;
     cur_anno += 12;
     if (i >= sfb->num_annotations) {
         ba->bytecode_offset = -1;

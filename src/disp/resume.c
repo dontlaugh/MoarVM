@@ -181,7 +181,7 @@ static uint32_t find_internal(MVMThreadContext *tc, MVMDispResumptionData *data,
                                 /* Does it have any resume inits? If so, are
                                  * any applicable? */
                                 if (cand->body.inlines[i].first_spesh_resume_init != -1) {
-                                    MVMint16 j = cand->body.inlines[i].first_spesh_resume_init;
+                                    int16_t j = cand->body.inlines[i].first_spesh_resume_init;
                                     while (j <= cand->body.inlines[i].last_spesh_resume_init) {
                                         if (exhausted == 0) {
                                             MVMSpeshResumeInit *ri = &(cand->body.resume_inits[j]);

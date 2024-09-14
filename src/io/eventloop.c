@@ -40,8 +40,8 @@ static void permit_work(MVMThreadContext *tc) {
             MVMAsyncTask *task = (MVMAsyncTask *)task_obj;
             MVM_ASSERT_NOT_FROMSPACE(tc, task);
             if (task->body.ops->permit) {
-                MVMint64 channel = MVM_repr_get_int(tc, MVM_repr_at_pos_o(tc, task_arr, 1));
-                MVMint64 permit = MVM_repr_get_int(tc, MVM_repr_at_pos_o(tc, task_arr, 2));
+                int64_t channel = MVM_repr_get_int(tc, MVM_repr_at_pos_o(tc, task_arr, 1));
+                int64_t permit = MVM_repr_get_int(tc, MVM_repr_at_pos_o(tc, task_arr, 2));
                 task->body.ops->permit(tc, tc->instance->event_loop, task_obj, task->body.data, channel, permit);
             }
         }
@@ -166,7 +166,7 @@ void MVM_io_eventloop_queue_work(MVMThreadContext *tc, MVMObject *work) {
 /* Permits an asynchronous task to emit more events. This is used to provide a
  * back-pressure mechanism. */
 void MVM_io_eventloop_permit(MVMThreadContext *tc, MVMObject *task_obj,
-                              MVMint64 channel, MVMint64 permits) {
+                              int64_t channel, int64_t permits) {
     if (REPR(task_obj)->ID == MVM_REPR_ID_MVMOSHandle)
         task_obj = MVM_io_get_async_task_handle(tc, task_obj);
     if (REPR(task_obj)->ID == MVM_REPR_ID_MVMAsyncTask) {
@@ -224,8 +224,8 @@ void MVM_io_eventloop_send_cancellation_notification(MVMThreadContext *tc, MVMAs
 
 /* Adds a work item to the active async task set. */
 int MVM_io_eventloop_add_active_work(MVMThreadContext *tc, MVMObject *async_task) {
-    MVMuint64 work_idx = MVM_repr_elems(tc, tc->instance->event_loop_free_indices) > 0
-        ? (MVMuint64)MVM_repr_pop_i(tc, tc->instance->event_loop_free_indices)
+    uint64_t work_idx = MVM_repr_elems(tc, tc->instance->event_loop_free_indices) > 0
+        ? (uint64_t)MVM_repr_pop_i(tc, tc->instance->event_loop_free_indices)
         : MVM_repr_elems(tc, tc->instance->event_loop_active);
     MVM_ASSERT_NOT_FROMSPACE(tc, async_task);
     MVM_repr_bind_pos_o(tc, tc->instance->event_loop_active, work_idx, async_task);

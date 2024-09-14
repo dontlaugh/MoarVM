@@ -4,7 +4,7 @@
 static void demand_extop(MVMThreadContext *tc, MVMCompUnit *target_cu,
         MVMCompUnit *source_cu, const MVMOpInfo *info) {
     MVMExtOpRecord *extops;
-    MVMuint16 i, num_extops;
+    uint16_t i, num_extops;
 
     uv_mutex_lock(target_cu->body.inline_tweak_mutex);
 
@@ -175,7 +175,7 @@ static int is_graph_inlineable(MVMThreadContext *tc, MVMSpeshGraph *inliner,
             }
 
             /* Ext-ops need special care in inter-comp-unit inlines. */
-            if (opcode == (MVMuint16)-1) {
+            if (opcode == (uint16_t)-1) {
                 MVMCompUnit *target_cu = inliner->sf->body.cu;
                 MVMCompUnit *source_cu = target_sf->body.cu;
                 if (source_cu != target_cu)
@@ -289,7 +289,7 @@ MVMSpeshGraph * MVM_spesh_inline_try_get_graph(MVMThreadContext *tc,
             /* We can't be very precise about this, because we don't know the
              * SSA version in effect. So bump usages of all version of the
              * register as a conservative solution. */
-            MVMuint16 reg = ig->inlines[i].code_ref_reg;
+            uint16_t reg = ig->inlines[i].code_ref_reg;
             uint32_t j;
             for (j = 0; j < ig->fact_counts[reg]; j++)
                 MVM_spesh_usages_add_unconditional_deopt_usage(tc, ig, &(ig->facts[reg][j]));
@@ -370,7 +370,7 @@ static void fix_coderef(MVMThreadContext *tc, MVMSpeshGraph *inliner,
 static void fix_const_str(MVMThreadContext *tc, MVMSpeshGraph *inliner,
                     MVMSpeshGraph *inlinee, MVMSpeshIns *to_fix) {
     MVMCompUnit *cu = inlinee->sf->body.cu;
-    MVMuint16 sslot;
+    uint16_t sslot;
     MVMSpeshOperand dest = to_fix->operands[0];
     uint32_t str_idx = to_fix->operands[1].lit_str_idx;
 
@@ -406,11 +406,11 @@ static void fix_wval(MVMThreadContext *tc, MVMSpeshGraph *inliner,
      */
     MVMCompUnit *targetcu = inliner->sf->body.cu;
     MVMCompUnit *sourcecu = inlinee->sf->body.cu;
-    MVMint16     dep      = to_fix->operands[1].lit_i16;
-    MVMint64     idx      = to_fix->info->opcode == MVM_OP_wval
+    int16_t     dep      = to_fix->operands[1].lit_i16;
+    int64_t     idx      = to_fix->info->opcode == MVM_OP_wval
         ? to_fix->operands[2].lit_i16
         : to_fix->operands[2].lit_i64;
-    if (dep >= 0 && (MVMuint16)dep < sourcecu->body.num_scs) {
+    if (dep >= 0 && (uint16_t)dep < sourcecu->body.num_scs) {
         MVMSerializationContext *sc = MVM_sc_get_sc(tc, sourcecu, dep);
         if (sc) {
             uint32_t otherdep;
@@ -422,12 +422,12 @@ static void fix_wval(MVMThreadContext *tc, MVMSpeshGraph *inliner,
                 }
             }
             if (MVM_sc_is_object_immediately_available(tc, sc, idx)) {
-                MVMint16 ss  = MVM_spesh_add_spesh_slot_try_reuse(tc, inliner, (MVMCollectable *)MVM_sc_get_object(tc, sc, idx));
+                int16_t ss  = MVM_spesh_add_spesh_slot_try_reuse(tc, inliner, (MVMCollectable *)MVM_sc_get_object(tc, sc, idx));
                 to_fix->info = MVM_op_get_op(MVM_OP_sp_getspeshslot);
                 to_fix->operands[1].lit_i16 = ss;
             }
             else {
-                MVMint16 ss  = MVM_spesh_add_spesh_slot_try_reuse(tc, inliner, (MVMCollectable *)sc);
+                int16_t ss  = MVM_spesh_add_spesh_slot_try_reuse(tc, inliner, (MVMCollectable *)sc);
                 to_fix->info = MVM_op_get_op(MVM_OP_sp_getwvalfrom);
                 to_fix->operands[1].lit_i16 = ss;
                 to_fix->operands[2].lit_i64 = idx;
@@ -465,7 +465,7 @@ static void resize_handlers_table(MVMThreadContext *tc, MVMSpeshGraph *inliner,
 /* Make a curcode instruction refer to the code ref register from the
  * inlining frame. */
 static void rewrite_curcode(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshIns *ins, MVMuint16 num_locals, MVMSpeshOperand code_ref_reg) {
+        MVMSpeshIns *ins, uint16_t num_locals, MVMSpeshOperand code_ref_reg) {
     MVMSpeshOperand *new_operands = MVM_spesh_alloc(tc, g, 2 * sizeof(MVMSpeshOperand));
     new_operands[0] = ins->operands[0];
     new_operands[0].reg.orig += num_locals;
@@ -478,7 +478,7 @@ static void rewrite_curcode(MVMThreadContext *tc, MVMSpeshGraph *g,
 /* Make a callercode instruction turn into curcode so it refers to
  * the inliner's code object */
 static void rewrite_callercode(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshIns *ins, MVMuint16 num_locals) {
+        MVMSpeshIns *ins, uint16_t num_locals) {
     ins->operands[0].reg.orig += num_locals;
     ins->info = MVM_op_get_op(MVM_OP_curcode);
 }
@@ -486,7 +486,7 @@ static void rewrite_callercode(MVMThreadContext *tc, MVMSpeshGraph *g,
 /* Rewrites a lexical lookup to an outer to be done via. a register holding
  * the outer coderef. */
 static void rewrite_outer_lookup(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshIns *ins, MVMuint16 num_locals, MVMuint16 op,
+        MVMSpeshIns *ins, uint16_t num_locals, uint16_t op,
         MVMSpeshOperand code_ref_reg) {
     MVMSpeshOperand *new_operands = MVM_spesh_alloc(tc, g, 4 * sizeof(MVMSpeshOperand));
     new_operands[0] = ins->operands[0];
@@ -502,7 +502,7 @@ static void rewrite_outer_lookup(MVMThreadContext *tc, MVMSpeshGraph *g,
 /* Rewrites a lexical bind to an outer to be done via. a register holding
  * the outer coderef. */
 static void rewrite_outer_bind(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshIns *ins, MVMuint16 num_locals, MVMuint16 op,
+        MVMSpeshIns *ins, uint16_t num_locals, uint16_t op,
         MVMSpeshOperand code_ref_reg) {
     MVMSpeshOperand *new_operands = MVM_spesh_alloc(tc, g, 4 * sizeof(MVMSpeshOperand));
     new_operands[0].lit_ui16 = ins->operands[0].lex.idx;
@@ -519,7 +519,7 @@ static void rewrite_hlltype(MVMThreadContext *tc, MVMSpeshGraph *inlinee, MVMSpe
     MVMObject *selected_type;
     MVMHLLConfig *hll = inlinee->sf->body.cu->body.hll_config;
     MVMSpeshOperand *old_ops = ins->operands;
-    MVMuint16 sslot;
+    uint16_t sslot;
 
     switch (ins->info->opcode) {
         case MVM_OP_hllboxtype_i: selected_type = hll->int_box_type; break;
@@ -566,15 +566,15 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
         MVMSpeshGraph *inlinee, MVMStaticFrame *inlinee_sf,
         MVMSpeshBB *runbytecode_bb, MVMSpeshIns *runbytecode_ins,
         MVMSpeshOperand code_ref_reg, MVMSpeshIns *resume_init,
-        uint32_t *inline_boundary_handler, MVMuint16 bytecode_size,
+        uint32_t *inline_boundary_handler, uint16_t bytecode_size,
         MVMCallsite *cs) {
     MVMSpeshFacts **merged_facts;
-    MVMuint16      *merged_fact_counts;
+    uint16_t      *merged_fact_counts;
     uint32_t        i, j, orig_inlines, total_inlines, orig_deopt_addrs,
                     orig_deopt_pea_mat_infos, impl_deopt_idx;
     uint32_t       total_handlers = inliner->num_handlers + inlinee->num_handlers + 1;
     MVMSpeshBB     *inlinee_first_bb = NULL, *inlinee_last_bb = NULL;
-    MVMuint8        may_cause_deopt = 0;
+    uint8_t        may_cause_deopt = 0;
     MVMSpeshBB *bb;
     MVM_VECTOR_DECL(MVMSpeshOperand, regs_for_deopt);
 
@@ -591,7 +591,7 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
     impl_deopt_idx = return_deopt_idx(tc, runbytecode_ins);
     MVM_VECTOR_INIT(regs_for_deopt, 0);
     for (i = 0; i < inliner->sf->body.num_locals; i++) {
-        MVMuint16 vers = inliner->fact_counts[i];
+        uint16_t vers = inliner->fact_counts[i];
         for (j = 0; j < vers; j++) {
             MVMSpeshDeoptUseEntry *due = inliner->facts[i][j].usage.deopt_users;
             while (due) {
@@ -617,7 +617,7 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
     while (bb) {
         MVMSpeshIns *ins = bb->first_ins;
         while (ins) {
-            MVMuint16    opcode = ins->info->opcode;
+            uint16_t    opcode = ins->info->opcode;
             MVMSpeshAnn *ann    = ins->annotations;
             int32_t has_deopt = 0;
             while (ann) {
@@ -682,7 +682,7 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
                 sp_bindcomplete_delete_ins = ins;
             }
             else if (opcode == MVM_OP_getlex && ins->operands[1].lex.outers > 0) {
-                MVMuint16 outers = ins->operands[1].lex.outers;
+                uint16_t outers = ins->operands[1].lex.outers;
                 MVMStaticFrame *outer = inlinee_sf;
                 while (outers--)
                     outer = outer->body.outer;
@@ -698,7 +698,7 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
                  * register and source registers. */
                 ins->operands[0].reg.orig += inliner->num_locals;
                 ins->operands[1].lit_ui16 += MVM_VECTOR_ELEMS(inliner->resume_inits);
-                MVMuint16 j;
+                uint16_t j;
                 for (j = 0; j < ins->operands[2].lit_ui16; j++)
                     ins->operands[3 + j].reg.orig += inliner->num_locals;
             }
@@ -718,7 +718,7 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
                 }
 
                 for (i = 0; i < ins->info->num_operands; i++) {
-                    MVMuint8 flags = ins->info->operands[i];
+                    uint8_t flags = ins->info->operands[i];
                     switch (flags & MVM_operand_rw_mask) {
                     case MVM_operand_read_reg:
                     case MVM_operand_write_reg:
@@ -793,7 +793,7 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
         mi_new.stable_sslot = mi_orig.stable_sslot + inliner->num_spesh_slots;
         mi_new.num_attr_regs = mi_orig.num_attr_regs;
         if (mi_new.num_attr_regs) {
-            mi_new.attr_regs = MVM_malloc(mi_new.num_attr_regs * sizeof(MVMuint16));
+            mi_new.attr_regs = MVM_malloc(mi_new.num_attr_regs * sizeof(uint16_t));
             for (j = 0; j < mi_new.num_attr_regs; j++)
                 mi_new.attr_regs[j] = mi_orig.attr_regs[j] + inliner->num_locals;
         }
@@ -829,11 +829,11 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
         inlinee->num_locals * sizeof(MVMSpeshFacts *));
     inliner->facts = merged_facts;
     merged_fact_counts = MVM_spesh_alloc(tc, inliner,
-        (inliner->num_locals + inlinee->num_locals) * sizeof(MVMuint16));
+        (inliner->num_locals + inlinee->num_locals) * sizeof(uint16_t));
     memcpy(merged_fact_counts, inliner->fact_counts,
-        inliner->num_locals * sizeof(MVMuint16));
+        inliner->num_locals * sizeof(uint16_t));
     memcpy(merged_fact_counts + inliner->num_locals, inlinee->fact_counts,
-        inlinee->num_locals * sizeof(MVMuint16));
+        inlinee->num_locals * sizeof(uint16_t));
     inliner->fact_counts = merged_fact_counts;
 
     /* Copy over spesh slots. */
@@ -850,7 +850,7 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
         while (1) {
             MVMSpeshIns *ins = bb->first_ins;
             while (ins) {
-                MVMuint16 opcode = ins->info->opcode;
+                uint16_t opcode = ins->info->opcode;
                 if (opcode == MVM_OP_wval || opcode == MVM_OP_wval_wide)
                     fix_wval(tc, inliner, inlinee, ins);
                 ins = ins->next;
@@ -975,31 +975,31 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
 
     /* Create/update per-specialization local and lexical type maps. */
     if (!inliner->local_types && inliner->num_locals) {
-        int32_t local_types_size = inliner->num_locals * sizeof(MVMuint16);
+        int32_t local_types_size = inliner->num_locals * sizeof(uint16_t);
         inliner->local_types = MVM_malloc(local_types_size);
         memcpy(inliner->local_types, inliner->sf->body.local_types, local_types_size);
     }
     inliner->local_types = MVM_realloc(inliner->local_types,
-        (inliner->num_locals + inlinee->num_locals) * sizeof(MVMuint16));
+        (inliner->num_locals + inlinee->num_locals) * sizeof(uint16_t));
     if (inlinee->num_locals)
         memcpy(inliner->local_types + inliner->num_locals,
             inlinee->local_types ? inlinee->local_types : inlinee->sf->body.local_types,
-            inlinee->num_locals * sizeof(MVMuint16));
+            inlinee->num_locals * sizeof(uint16_t));
     if (!inliner->lexical_types && inliner->num_lexicals) {
-        int32_t lexical_types_size = inliner->num_lexicals * sizeof(MVMuint16);
+        int32_t lexical_types_size = inliner->num_lexicals * sizeof(uint16_t);
         inliner->lexical_types = MVM_malloc(lexical_types_size);
         memcpy(inliner->lexical_types, inliner->sf->body.lexical_types, lexical_types_size);
     }
     inliner->lexical_types = MVM_realloc(inliner->lexical_types,
-        (inliner->num_lexicals + inlinee->num_lexicals) * sizeof(MVMuint16));
+        (inliner->num_lexicals + inlinee->num_lexicals) * sizeof(uint16_t));
     if (inlinee->num_lexicals)
         memcpy(inliner->lexical_types + inliner->num_lexicals,
             inlinee->lexical_types ? inlinee->lexical_types : inlinee->sf->body.lexical_types,
-            inlinee->num_lexicals * sizeof(MVMuint16));
+            inlinee->num_lexicals * sizeof(uint16_t));
 
     /* Merge unreachable handlers array if needed. */
     if (inliner->unreachable_handlers || inlinee->unreachable_handlers) {
-        MVMint8 *new_uh = MVM_spesh_alloc(tc, inliner, total_handlers);
+        int8_t *new_uh = MVM_spesh_alloc(tc, inliner, total_handlers);
         if (inlinee->unreachable_handlers)
             memcpy(new_uh, inlinee->unreachable_handlers,
                 inlinee->num_handlers);
@@ -1108,7 +1108,7 @@ static void tweak_succ(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
 /* Finds return instructions and re-writes them, doing any needed boxing
  * or unboxing. */
 static void return_to_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *return_ins,
-        MVMSpeshOperand target, MVMuint16 op) {
+        MVMSpeshOperand target, uint16_t op) {
     MVMSpeshOperand ver_target = MVM_spesh_manipulate_new_version(tc, g, target.reg.orig);
     MVMSpeshOperand *operands = MVM_spesh_alloc(tc, g, 2 * sizeof(MVMSpeshOperand));
     operands[0]               = ver_target;
@@ -1121,8 +1121,8 @@ static void return_to_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *re
 }
 
 static void return_to_box(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *return_bb,
-        MVMSpeshIns *return_ins, MVMSpeshOperand target, MVMuint16 box_type_op,
-        MVMuint16 box_op) {
+        MVMSpeshIns *return_ins, MVMSpeshOperand target, uint16_t box_type_op,
+        uint16_t box_op) {
     MVMSpeshOperand type_temp     = MVM_spesh_manipulate_get_temp_reg(tc, g, MVM_reg_obj);
     MVMSpeshFacts *target_facts;
 
@@ -1277,7 +1277,7 @@ static void rewrite_returns(MVMThreadContext *tc, MVMSpeshGraph *inliner,
     while (bb) {
         MVMSpeshIns *ins = bb->first_ins;
         while (ins) {
-            MVMuint16 opcode = ins->info->opcode;
+            uint16_t opcode = ins->info->opcode;
             switch (opcode) {
             case MVM_OP_return:
                 if (runbytecode_ins->info->opcode == MVM_OP_sp_runbytecode_v) {
@@ -1371,7 +1371,7 @@ static void rewrite_args(MVMThreadContext *tc, MVMSpeshGraph *inliner,
     while (bb) {
         MVMSpeshIns *ins = bb->first_ins;
         while (ins) {
-            MVMuint16    opcode = ins->info->opcode;
+            uint16_t    opcode = ins->info->opcode;
             MVMSpeshIns *next   = ins->next;
             switch (opcode) {
                 case MVM_OP_sp_getarg_o:
@@ -1379,7 +1379,7 @@ static void rewrite_args(MVMThreadContext *tc, MVMSpeshGraph *inliner,
                 case MVM_OP_sp_getarg_u:
                 case MVM_OP_sp_getarg_n:
                 case MVM_OP_sp_getarg_s: {
-                    MVMuint16 idx = ins->operands[1].lit_i16;
+                    uint16_t idx = ins->operands[1].lit_i16;
                     ins->info = MVM_op_get_op(MVM_OP_set);
                     ins->operands[1] = args[idx];
                     MVM_spesh_usages_add_by_reg(tc, inliner, args[idx], ins);
@@ -1464,7 +1464,7 @@ void MVM_spesh_inline(MVMThreadContext *tc, MVMSpeshGraph *inliner,
         MVMCallsite *cs, MVMSpeshOperand *args, MVMSpeshBB *runbytecode_bb,
         MVMSpeshIns *runbytecode_ins, MVMSpeshGraph *inlinee,
         MVMStaticFrame *inlinee_sf, MVMSpeshOperand code_ref_reg,
-        MVMSpeshIns *resume_init, MVMuint16 bytecode_size) {
+        MVMSpeshIns *resume_init, uint16_t bytecode_size) {
     MVMSpeshIns *first_ins;
 
     /* Merge inlinee's graph into the inliner. */
@@ -1507,7 +1507,7 @@ void MVM_spesh_inline(MVMThreadContext *tc, MVMSpeshGraph *inliner,
     MVM_spesh_usages_delete_by_reg(tc, inliner,
         runbytecode_ins->operands[runbytecode_ins->info->opcode == MVM_OP_sp_runbytecode_v ? 0 : 1],
         runbytecode_ins);
-    MVMuint16 i;
+    uint16_t i;
     for (i = 0; i < cs->flag_count; i++)
         MVM_spesh_usages_delete_by_reg(tc, inliner, args[i], runbytecode_ins);
     runbytecode_ins->info = MVM_op_get_op(MVM_OP_goto);

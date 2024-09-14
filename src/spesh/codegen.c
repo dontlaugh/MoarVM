@@ -11,7 +11,7 @@ typedef struct {
 /* Writer state. */
 typedef struct {
     /* Bytecode output buffer. */
-    MVMuint8  *bytecode;
+    uint8_t  *bytecode;
     uint32_t  bytecode_pos;
     uint32_t  bytecode_alloc;
 
@@ -44,12 +44,12 @@ static void ensure_space(SpeshWriterState *ws, int bytes) {
         ws->bytecode = MVM_realloc(ws->bytecode, ws->bytecode_alloc);
     }
 }
-static void write_int64(SpeshWriterState *ws, MVMuint64 value) {
+static void write_int64(SpeshWriterState *ws, uint64_t value) {
     ensure_space(ws, 8);
     memcpy(ws->bytecode + ws->bytecode_pos, &value, 8);
     ws->bytecode_pos += 8;
 }
-static void write_uint64(SpeshWriterState *ws, MVMuint64 value) {
+static void write_uint64(SpeshWriterState *ws, uint64_t value) {
     ensure_space(ws, 8);
     memcpy(ws->bytecode + ws->bytecode_pos, &value, 8);
     ws->bytecode_pos += 8;
@@ -59,22 +59,22 @@ static void write_int32(SpeshWriterState *ws, uint32_t value) {
     memcpy(ws->bytecode + ws->bytecode_pos, &value, 4);
     ws->bytecode_pos += 4;
 }
-static void write_int16(SpeshWriterState *ws, MVMuint16 value) {
+static void write_int16(SpeshWriterState *ws, uint16_t value) {
     ensure_space(ws, 2);
     memcpy(ws->bytecode + ws->bytecode_pos, &value, 2);
     ws->bytecode_pos += 2;
 }
-static void write_int8(SpeshWriterState *ws, MVMuint8 value) {
+static void write_int8(SpeshWriterState *ws, uint8_t value) {
     ensure_space(ws, 1);
     memcpy(ws->bytecode + ws->bytecode_pos, &value, 1);
     ws->bytecode_pos++;
 }
-static void write_num32(SpeshWriterState *ws, MVMnum32 value) {
+static void write_num32(SpeshWriterState *ws, float value) {
     ensure_space(ws, 4);
     memcpy(ws->bytecode + ws->bytecode_pos, &value, 4);
     ws->bytecode_pos += 4;
 }
-static void write_num64(SpeshWriterState *ws, MVMnum64 value) {
+static void write_num64(SpeshWriterState *ws, double value) {
     ensure_space(ws, 8);
     memcpy(ws->bytecode + ws->bytecode_pos, &value, 8);
     ws->bytecode_pos += 8;
@@ -175,10 +175,10 @@ static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWrit
             }
 
             /* Emit opcode. */
-            if (ins->info->opcode == (MVMuint16)-1) {
+            if (ins->info->opcode == (uint16_t)-1) {
                 /* Ext op; resolve. */
                 MVMExtOpRecord *extops     = g->sf->body.cu->body.extops;
-                MVMuint16       num_extops = g->sf->body.cu->body.num_extops;
+                uint16_t       num_extops = g->sf->body.cu->body.num_extops;
                 int32_t        found      = 0;
                 for (i = 0; i < num_extops; i++) {
                     if (extops[i].info == ins->info) {
@@ -206,11 +206,11 @@ static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWrit
                      * a table that has those register numbers in the correct
                      * place. */
                     MVMDispProgramResumption *dpr = &(ri->dp->resumptions[ri->res_idx]);
-                    MVMuint16 map_size = dpr->init_callsite->flag_count;
-                    ri->init_registers = MVM_malloc(map_size * sizeof(MVMuint16));
-                    MVMuint16 num_init_registers = ins->operands[2].lit_ui16;
+                    uint16_t map_size = dpr->init_callsite->flag_count;
+                    ri->init_registers = MVM_malloc(map_size * sizeof(uint16_t));
+                    uint16_t num_init_registers = ins->operands[2].lit_ui16;
                     if (dpr->init_values) {
-                        MVMuint16 cur_reg = 0;
+                        uint16_t cur_reg = 0;
                         for (i = 0; i < map_size; i++) {
                             switch (dpr->init_values[i].source) {
                                 case MVM_DISP_RESUME_INIT_ARG:
@@ -236,8 +236,8 @@ static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWrit
 
             /* Write out operands. */
             for (i = 0; i < ins->info->num_operands; i++) {
-                MVMuint8 flags = ins->info->operands[i];
-                MVMuint8 rw    = flags & MVM_operand_rw_mask;
+                uint8_t flags = ins->info->operands[i];
+                uint8_t rw    = flags & MVM_operand_rw_mask;
                 switch (rw) {
                 case MVM_operand_read_reg:
                 case MVM_operand_write_reg:
@@ -249,7 +249,7 @@ static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWrit
                     write_int16(ws, ins->operands[i].lex.outers);
                     break;
                 case MVM_operand_literal: {
-                    MVMuint8 type = flags & MVM_operand_type_mask;
+                    uint8_t type = flags & MVM_operand_type_mask;
                     switch (type) {
                     case MVM_operand_int8:
                         write_int8(ws, ins->operands[i].lit_i8);

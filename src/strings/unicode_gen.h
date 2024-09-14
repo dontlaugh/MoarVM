@@ -8,7 +8,7 @@ struct MVMUnicodeNamedValue {
 
 #define MVM_NUM_UNICODE_EXTENTS 106
 
-int32_t MVM_unicode_is_in_block(MVMThreadContext *tc, MVMString *str, MVMint64 pos, MVMString *block_name);
+int32_t MVM_unicode_is_in_block(MVMThreadContext *tc, MVMString *str, int64_t pos, MVMString *block_name);
 
 #define MVM_CODEPOINT_NAMES_COUNT 57855
 #define MVM_NUM_PROPERTY_CODES 107
@@ -18,7 +18,7 @@ int32_t MVM_unicode_is_in_block(MVMThreadContext *tc, MVMString *str, MVMint64 p
 struct MVMUnicodeNamedAlias {
     char *name;
     MVMGrapheme32 codepoint;
-    MVMint16 strlen;
+    int16_t strlen;
 };
 typedef struct MVMUnicodeNamedAlias MVMUnicodeNamedAlias;
 

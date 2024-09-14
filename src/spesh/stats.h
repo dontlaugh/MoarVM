@@ -75,11 +75,11 @@ struct MVMSpeshStatsType {
     MVMObject *decont_type;
 
     /* Whether the type and decont type were concrete. */
-    MVMuint8 type_concrete;
-    MVMuint8 decont_type_concrete;
+    uint8_t type_concrete;
+    uint8_t decont_type_concrete;
 
     /* If there is a container type, whether it must be rw. */
-    MVMuint8 rw_cont;
+    uint8_t rw_cont;
 };
 
 /* Statistics by bytecode offset. */
@@ -110,7 +110,7 @@ struct MVMSpeshStatsByOffset {
 struct MVMSpeshStatsTypeCount {
     /* The type and its concreteness. */
     MVMObject *type;
-    MVMuint8 type_concrete;
+    uint8_t type_concrete;
 
     /* The number of times we've seen it. */
     uint32_t count;
@@ -230,7 +230,7 @@ struct MVMSpeshSimCallType {
 };
 
 void MVM_spesh_stats_update(MVMThreadContext *tc, MVMSpeshLog *sl, MVMObject *sf_newly_seen,
-        MVMObject *sf_updated, MVMuint64 *newly_seen, MVMuint64 *updated);
+        MVMObject *sf_updated, uint64_t *newly_seen, uint64_t *updated);
 void MVM_spesh_stats_cleanup(MVMThreadContext *tc, MVMObject *check_frames);
 void MVM_spesh_stats_gc_mark(MVMThreadContext *tc, MVMSpeshStats *ss, MVMGCWorklist *worklist);
 void MVM_spesh_stats_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *snapshot, MVMSpeshStats *ss);

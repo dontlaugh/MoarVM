@@ -15,7 +15,7 @@
 
 /* Creates a new decoding stream. */
 MVMDecodeStream * MVM_string_decodestream_create(MVMThreadContext *tc, int32_t encoding,
-        MVMint64 abs_byte_pos, int32_t translate_newlines) {
+        int64_t abs_byte_pos, int32_t translate_newlines) {
     MVMDecodeStream *ds = MVM_calloc(1, sizeof(MVMDecodeStream));
     ds->encoding        = encoding;
     ds->abs_byte_pos    = abs_byte_pos;
@@ -27,7 +27,7 @@ MVMDecodeStream * MVM_string_decodestream_create(MVMThreadContext *tc, int32_t e
 }
 
 /* Adds another byte buffer into the decoding stream. */
-void MVM_string_decodestream_add_bytes(MVMThreadContext *tc, MVMDecodeStream *ds, MVMuint8 *bytes, int32_t length) {
+void MVM_string_decodestream_add_bytes(MVMThreadContext *tc, MVMDecodeStream *ds, uint8_t *bytes, int32_t length) {
     if (length > 0) {
         MVMDecodeStreamBytes *new_bytes = MVM_calloc(1, sizeof(MVMDecodeStreamBytes));
         new_bytes->bytes  = bytes;
@@ -306,7 +306,7 @@ static MVMString * take_chars(MVMThreadContext *tc, MVMDecodeStream *ds, int32_t
     return result;
 }
 MVMString * MVM_string_decodestream_get_chars(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                              int32_t chars, MVMint64 eof) {
+                                              int32_t chars, int64_t eof) {
     uint32_t missing;
 
     /* If we request nothing, give empty string. */
@@ -555,7 +555,7 @@ MVMString * MVM_string_decodestream_get_available(MVMThreadContext *tc, MVMDecod
 }
 
 /* Checks if we have the number of bytes requested. */
-MVMint64 MVM_string_decodestream_have_bytes(MVMThreadContext *tc, const MVMDecodeStream *ds, int32_t bytes) {
+int64_t MVM_string_decodestream_have_bytes(MVMThreadContext *tc, const MVMDecodeStream *ds, int32_t bytes) {
     MVMDecodeStreamBytes *cur_bytes = ds->bytes_head;
     int32_t found = 0;
     while (cur_bytes) {
@@ -570,7 +570,7 @@ MVMint64 MVM_string_decodestream_have_bytes(MVMThreadContext *tc, const MVMDecod
 }
 
 /* Gets the number of bytes available. */
-MVMint64 MVM_string_decodestream_bytes_available(MVMThreadContext *tc, const MVMDecodeStream *ds) {
+int64_t MVM_string_decodestream_bytes_available(MVMThreadContext *tc, const MVMDecodeStream *ds) {
     MVMDecodeStreamBytes *cur_bytes = ds->bytes_head;
     int32_t available = 0;
     while (cur_bytes) {
@@ -585,7 +585,7 @@ MVMint64 MVM_string_decodestream_bytes_available(MVMThreadContext *tc, const MVM
 /* Copies up to the requested number of bytes into the supplied buffer, and
  * returns the number of bytes we actually copied. Takes from from the start
  * of the stream. */
-MVMint64 MVM_string_decodestream_bytes_to_buf(MVMThreadContext *tc, MVMDecodeStream *ds, MVMuint8 **buf, int32_t bytes) {
+int64_t MVM_string_decodestream_bytes_to_buf(MVMThreadContext *tc, MVMDecodeStream *ds, uint8_t **buf, int32_t bytes) {
     int32_t taken = 0;
     *buf = NULL;
     while (taken < bytes && ds->bytes_head) {
@@ -621,7 +621,7 @@ MVMint64 MVM_string_decodestream_bytes_to_buf(MVMThreadContext *tc, MVMDecodeStr
 
 /* Gets the absolute byte offset (the amount we started with plus what we've
  * chewed and handed back in decoded characters). */
-MVMint64 MVM_string_decodestream_tell_bytes(MVMThreadContext *tc, const MVMDecodeStream *ds) {
+int64_t MVM_string_decodestream_tell_bytes(MVMThreadContext *tc, const MVMDecodeStream *ds) {
     return ds->abs_byte_pos;
 }
 

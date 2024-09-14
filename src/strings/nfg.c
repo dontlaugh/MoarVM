@@ -162,9 +162,9 @@ static MVMGrapheme32 add_synthetic(MVMThreadContext *tc, MVMCodepoint *codes, in
      * there are Prepend codepoints */
     if (!utf8_c8 && MVM_unicode_codepoint_get_property_int(tc, codes[0], MVM_UNICODE_PROPERTY_GRAPHEME_CLUSTER_BREAK)
         == MVM_UNICODE_PVALUE_GCB_PREPEND) {
-        MVMint64 i = 0;
+        int64_t i = 0;
         MVMCodepoint cached = codes[i++];
-        MVMint64 cached_GCB = MVM_UNICODE_PVALUE_GCB_PREPEND;
+        int64_t cached_GCB = MVM_UNICODE_PVALUE_GCB_PREPEND;
         while (i < num_codes) {
             /* If it's the same codepoint as before, don't need to request
              * the property value again */

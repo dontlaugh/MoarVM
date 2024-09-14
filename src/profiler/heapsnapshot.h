@@ -1,20 +1,20 @@
 struct MVMHeapDumpIndexSnapshotEntry {
-    MVMuint64 collectables_size;
-    MVMuint64 full_refs_size;
-    MVMuint64 refs_middlepoint;
-    MVMuint64 incremental_data;
+    uint64_t collectables_size;
+    uint64_t full_refs_size;
+    uint64_t refs_middlepoint;
+    uint64_t incremental_data;
 };
 
 /* Used in version 2 of the heap snapshot format */
 struct MVMHeapDumpIndex {
-    MVMuint64 stringheap_size;
-    MVMuint64 types_size;
-    MVMuint64 staticframes_size;
+    uint64_t stringheap_size;
+    uint64_t types_size;
+    uint64_t staticframes_size;
 
-    MVMuint64 snapshot_size_entries;
+    uint64_t snapshot_size_entries;
     MVMHeapDumpIndexSnapshotEntry *snapshot_sizes;
 
-    MVMuint64 snapshot_sizes_alloced;
+    uint64_t snapshot_sizes_alloced;
 };
 
 /* Used in version 3 of the heap snapshot format.
@@ -27,19 +27,19 @@ struct MVMHeapDumpTableOfContents {
     uint32_t toc_entry_used;
 
     char **toc_words;
-    MVMuint64 *toc_positions;
+    uint64_t *toc_positions;
 };
 
 struct MVMHeapSnapshotStats {
-    MVMuint64 type_stats_alloc;
+    uint64_t type_stats_alloc;
 
     uint32_t *type_counts;
-    MVMuint64 *type_size_sum;
+    uint64_t *type_size_sum;
 
-    MVMuint64 sf_stats_alloc;
+    uint64_t sf_stats_alloc;
 
     uint32_t *sf_counts;
-    MVMuint64 *sf_size_sum;
+    uint64_t *sf_size_sum;
 };
 
 /* A collection of heap snapshots, with common type and static frame names.
@@ -49,31 +49,31 @@ struct MVMHeapSnapshotStats {
 struct MVMHeapSnapshotCollection {
     /* Snapshot we are currently taking and its index */
     MVMHeapSnapshot *snapshot;
-    MVMuint64 snapshot_idx;
+    uint64_t snapshot_idx;
 
     /* Known types/REPRs. Just a list for now, but we might like to look at a
      * hash or trie if this ends up making taking a snapshot wicked slow. */
     MVMHeapSnapshotType *types;
-    MVMuint64 num_types;
-    MVMuint64 alloc_types;
+    uint64_t num_types;
+    uint64_t alloc_types;
 
     /* Known static frames. Same applies to searching this as to the above. */
     MVMHeapSnapshotStaticFrame *static_frames;
-    MVMuint64 num_static_frames;
-    MVMuint64 alloc_static_frames;
+    uint64_t num_static_frames;
+    uint64_t alloc_static_frames;
 
     /* Strings, referenced by index from various places. Also a "should we
      * free it" flag for each one. */
     char **strings;
-    MVMuint64 num_strings;
-    MVMuint64 alloc_strings;
+    uint64_t num_strings;
+    uint64_t alloc_strings;
     char *strings_free;
-    MVMuint64 num_strings_free;
-    MVMuint64 alloc_strings_free;
+    uint64_t num_strings_free;
+    uint64_t alloc_strings_free;
 
-    MVMuint64 types_written;
-    MVMuint64 static_frames_written;
-    MVMuint64 strings_written;
+    uint64_t types_written;
+    uint64_t static_frames_written;
+    uint64_t strings_written;
 
     /* For heap snapshot format 2, an index */
     MVMHeapDumpIndex *index;
@@ -83,14 +83,14 @@ struct MVMHeapSnapshotCollection {
     MVMHeapDumpTableOfContents *second_level_toc;
 
     /* When the heap snapshot recording was started */
-    MVMuint64 start_time;
+    uint64_t start_time;
 
     /* Counts for the current recording to make an overview */
-    MVMuint64 total_heap_size;
-    MVMuint64 total_objects;
-    MVMuint64 total_typeobjects;
-    MVMuint64 total_stables;
-    MVMuint64 total_frames;
+    uint64_t total_heap_size;
+    uint64_t total_objects;
+    uint64_t total_typeobjects;
+    uint64_t total_stables;
+    uint64_t total_frames;
 
     /* The file handle we are outputting to */
     FILE *fh;
@@ -100,18 +100,18 @@ struct MVMHeapSnapshotCollection {
 struct MVMHeapSnapshot {
     /* Array of data about collectables on the heap. */
     MVMHeapSnapshotCollectable *collectables;
-    MVMuint64 num_collectables;
-    MVMuint64 alloc_collectables;
+    uint64_t num_collectables;
+    uint64_t alloc_collectables;
 
     /* References.  */
     MVMHeapSnapshotReference *references;
-    MVMuint64 num_references;
-    MVMuint64 alloc_references;
+    uint64_t num_references;
+    uint64_t alloc_references;
 
     MVMHeapSnapshotStats *stats;
 
     /* When the snapshot was recorded */
-    MVMuint64 record_time;
+    uint64_t record_time;
 };
 
 /* An object/type object/STable type in the snapshot. */
@@ -158,10 +158,10 @@ struct MVMHeapSnapshotStaticFrame {
  * holes. */
 struct MVMHeapSnapshotCollectable {
     /* What kind of collectable is it? */
-    MVMuint16 kind;
+    uint16_t kind;
 
     /* Self-size (from the collectable header). */
-    MVMuint16 collectable_size;
+    uint16_t collectable_size;
 
     /* Index into the snapshot collection type name or frame info array,
      * depending on kind. */
@@ -171,10 +171,10 @@ struct MVMHeapSnapshotCollectable {
     uint32_t num_refs;
 
     /* Index into the references info list. */
-    MVMuint64 refs_start;
+    uint64_t refs_start;
 
     /* Unmanaged size (memory held but not under the GC's contorl). */
-    MVMuint64 unmanaged_size;
+    uint64_t unmanaged_size;
 };
 
 /* Reference identifier kinds. */
@@ -192,10 +192,10 @@ struct MVMHeapSnapshotReference {
      * array indexes) or an index into the string heap (for lexicals in frames
      * and attributes in objects). If kind is MVM_SNAPSHOT_REF_KIND_UNKNOWN the
      * rest of the bits will be zero; we know nothing of the relationship. */
-    MVMuint64 description;
+    uint64_t description;
 
     /* The index of the collectable referenced. */
-    MVMuint64 collectable_index;
+    uint64_t collectable_index;
 };
 
 /* Current state object whlie taking a heap snapshot. */
@@ -206,11 +206,11 @@ struct MVMHeapSnapshotState {
 
     /* Our current collectable worklist. */
     MVMHeapSnapshotWorkItem *workitems;
-    MVMuint64 num_workitems;
-    MVMuint64 alloc_workitems;
+    uint64_t num_workitems;
+    uint64_t alloc_workitems;
 
     /* The collectable we're currently adding references for. */
-    MVMuint64 ref_from;
+    uint64_t ref_from;
 
     /* The seen hash of collectables (including frames). */
     MVMPtrHashTable seen;
@@ -223,24 +223,24 @@ struct MVMHeapSnapshotState {
     /* Many reprs have only one type (BOOTCode) or two
      * types (P6int, BOOTInt), so caching string index
      * per repr id is worth a lot. */
-    MVMuint64 repr_str_idx_cache[MVM_REPR_MAX_COUNT];
-    MVMuint64 type_str_idx_cache[MVM_REPR_MAX_COUNT];
-    MVMuint64 anon_repr_type_str_idx_cache[MVM_REPR_MAX_COUNT];
+    uint64_t repr_str_idx_cache[MVM_REPR_MAX_COUNT];
+    uint64_t type_str_idx_cache[MVM_REPR_MAX_COUNT];
+    uint64_t anon_repr_type_str_idx_cache[MVM_REPR_MAX_COUNT];
 
     uint32_t type_of_type_idx_cache[8];
     uint32_t repr_of_type_idx_cache[8];
     uint32_t type_idx_cache[8];
 
-    MVMuint8 type_idx_rotating_insert_slot;
+    uint8_t type_idx_rotating_insert_slot;
 };
 
 /* Work item used while taking a heap snapshot. */
 struct MVMHeapSnapshotWorkItem {
     /* The kind of collectable. */
-    MVMuint16 kind;
+    uint16_t kind;
 
     /* Index in the collectables (assigned upon adding to the worklist). */
-    MVMuint64 col_idx;
+    uint64_t col_idx;
 
     /* Target collectable, if any. */
     void *target;
@@ -256,8 +256,8 @@ MVMObject * MVM_profile_heap_end(MVMThreadContext *tc);
 MVM_PUBLIC void MVM_profile_heap_add_collectable_rel_const_cstr(MVMThreadContext *tc,
     MVMHeapSnapshotState *ss, MVMCollectable *collectable, const char *desc);
 MVM_PUBLIC void MVM_profile_heap_add_collectable_rel_const_cstr_cached(MVMThreadContext *tc,
-    MVMHeapSnapshotState *ss, MVMCollectable *collectable, const char *desc, MVMuint64 *cache);
+    MVMHeapSnapshotState *ss, MVMCollectable *collectable, const char *desc, uint64_t *cache);
 MVM_PUBLIC void MVM_profile_heap_add_collectable_rel_vm_str(MVMThreadContext *tc,
     MVMHeapSnapshotState *ss, MVMCollectable *collectable, MVMString *desc);
 MVM_PUBLIC void MVM_profile_heap_add_collectable_rel_idx(MVMThreadContext *tc,
-    MVMHeapSnapshotState *ss, MVMCollectable *collectable, MVMuint64 idx);
+    MVMHeapSnapshotState *ss, MVMCollectable *collectable, uint64_t idx);

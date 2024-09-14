@@ -37,7 +37,7 @@ typedef enum {
 } MVMDebugServerRequestStatus;
 
 struct MVMDebugServerHandleTableEntry {
-    MVMuint64 id;
+    uint64_t id;
     MVMObject *target;
 };
 
@@ -45,17 +45,17 @@ struct MVMDebugServerHandleTable {
     uint32_t allocated;
     uint32_t used;
 
-    MVMuint64 next_id;
+    uint64_t next_id;
 
     MVMDebugServerHandleTableEntry *entries;
 };
 
 struct MVMDebugServerBreakpointInfo {
-    MVMuint64 breakpoint_id;
+    uint64_t breakpoint_id;
     uint32_t line_no;
 
-    MVMuint8 shall_suspend;
-    MVMuint8 send_backtrace;
+    uint8_t shall_suspend;
+    uint8_t send_backtrace;
 };
 
 struct MVMDebugServerBreakpointFileTable {
@@ -63,7 +63,7 @@ struct MVMDebugServerBreakpointFileTable {
     uint32_t filename_length;
     uint32_t lines_active_alloc;
 
-    MVMuint8 *lines_active;
+    uint8_t *lines_active;
 
     MVMDebugServerBreakpointInfo *breakpoints;
     uint32_t breakpoints_alloc;
@@ -86,7 +86,7 @@ struct MVMDebugServerRequestData {
 
     /* The ID of the request taken from the network packet,
      * to be used for responses to the client. */
-    MVMuint64 request_id;
+    uint64_t request_id;
 
     MVMThreadContext *target_tc;
 
@@ -128,7 +128,7 @@ struct MVMDebugServerData {
     uint32_t port;
     uint32_t thread_id;
 
-    MVMuint64 event_id;
+    uint64_t event_id;
 
     MVMDebugServerHandleTable *handle_table;
 
@@ -140,8 +140,8 @@ struct MVMDebugServerData {
 
     void *messagepack_data;
 
-    MVMuint8 debugspam_network;
-    MVMuint8 debugspam_protocol;
+    uint8_t debugspam_network;
+    uint8_t debugspam_protocol;
 };
 
 MVM_PUBLIC void MVM_debugserver_init(MVMThreadContext *tc, uint32_t port);

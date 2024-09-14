@@ -11,14 +11,14 @@
 struct MVMP6intBody {
     /* Integer storage slot. */
     union {
-        MVMint64  i64;
+        int64_t  i64;
         int32_t  i32;
-        MVMint16  i16;
-        MVMint8   i8;
-        MVMuint64 u64;
+        int16_t  i16;
+        int8_t   i8;
+        uint64_t u64;
         uint32_t u32;
-        MVMuint16 u16;
-        MVMuint8  u8;
+        uint16_t u16;
+        uint8_t  u8;
     } value;
 };
 struct MVMP6int {
@@ -28,13 +28,13 @@ struct MVMP6int {
 
 /* The bit width requirement is shared for all instances of the same type. */
 struct MVMP6intREPRData {
-    MVMint16       bits;
-    MVMint16       is_unsigned;
+    int16_t       bits;
+    int16_t       is_unsigned;
     MVMStorageSpec storage_spec;
 };
 
 /* Function for REPR setup. */
 const MVMREPROps * MVMP6int_initialize(MVMThreadContext *tc);
 
-void MVMP6int_set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 value);
-MVMint64 MVMP6int_get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data);
+void MVMP6int_set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value);
+int64_t MVMP6int_get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data);

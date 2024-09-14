@@ -27,9 +27,9 @@ static MVMSpeshBB * linear_prev_with_ins(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 static void cleanup_dead_bb_instructions(MVMThreadContext *tc, MVMSpeshGraph *g,
                                          MVMSpeshBB *dead_bb, int32_t cleanup_facts,
-                                         MVMuint8 *deleted_inline) {
+                                         uint8_t *deleted_inline) {
     MVMSpeshIns *ins = dead_bb->first_ins;
-    MVMint8 *frame_handlers_started = MVM_calloc(g->num_handlers, 1);
+    int8_t *frame_handlers_started = MVM_calloc(g->num_handlers, 1);
     while (ins) {
         /* Look over any annotations on the instruction. */
         MVMSpeshAnn *ann = ins->annotations;
@@ -106,9 +106,9 @@ static void cleanup_dead_bb_instructions(MVMThreadContext *tc, MVMSpeshGraph *g,
     MVM_free(frame_handlers_started);
 }
 
-static void mark_bb_seen(MVMThreadContext *tc, MVMSpeshBB *bb, MVMint8 *seen) {
+static void mark_bb_seen(MVMThreadContext *tc, MVMSpeshBB *bb, int8_t *seen) {
     if (!seen[bb->idx]) {
-        MVMuint16 i;
+        uint16_t i;
         seen[bb->idx] = 1;
         for (i = 0; i < bb->num_succ; i++)
             mark_bb_seen(tc, bb->succ[i], seen);
@@ -120,12 +120,12 @@ static void mark_bb_seen(MVMThreadContext *tc, MVMSpeshBB *bb, MVMint8 *seen) {
  * exist). */
 void MVM_spesh_eliminate_dead_bbs(MVMThreadContext *tc, MVMSpeshGraph *g, int32_t update_facts) {
     MVMSpeshBB *cur_bb;
-    MVMuint8 deleted_inline = 0;
+    uint8_t deleted_inline = 0;
 
     /* First pass: mark every basic block that is reachable from the
      * entrypoint. */
     uint32_t orig_bbs = g->num_bbs;
-    MVMint8  *seen = MVM_calloc(1, g->num_bbs);
+    int8_t  *seen = MVM_calloc(1, g->num_bbs);
     mark_bb_seen(tc, g->entry, seen);
 
     /* Second pass: remove dead BBs from the graph. */

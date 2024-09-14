@@ -12,10 +12,10 @@ struct MVMJitGraph {
     int32_t       obj_label_ofs;
 
     /* Sequence number for expr trees */
-    MVMuint16      expr_seq_nr;
+    uint16_t      expr_seq_nr;
 
     /* resultant JIT code is supports 'invokish' etc? */
-    MVMuint8       no_trampoline;
+    uint8_t       no_trampoline;
 
     /* All labeled things */
     MVM_VECTOR_DECL(void*, obj_labels);
@@ -134,10 +134,10 @@ typedef enum {
 struct MVMJitCallArg {
     MVMJitArgType type;
     union {
-        MVMint64      lit_i64;
-        MVMnum64      lit_n64;
+        int64_t      lit_i64;
+        double      lit_n64;
         MVMJitInterpVar  ivar;
-        MVMint16          reg;
+        int16_t          reg;
         void             *ptr;
     } v;
 };
@@ -174,21 +174,21 @@ typedef enum {
 struct MVMJitCallC {
     void       *func_ptr;
     MVMJitCallArg  *args;
-    MVMuint16   num_args;
+    uint16_t   num_args;
     MVMJitRVMode rv_mode;
-    MVMint16      rv_type;
-    MVMint16      rv_idx;
+    int16_t      rv_type;
+    int16_t      rv_idx;
 };
 
 struct MVMJitInvoke {
-    MVMint16      callsite_idx;
-    MVMint16      arg_count;
+    int16_t      callsite_idx;
+    int16_t      arg_count;
     MVMSpeshIns **arg_ins;
     MVMReturnType return_type;
-    MVMint16      return_register;
+    int16_t      return_register;
     uint32_t     code_register_or_name;
-    MVMint16      spesh_cand_or_sf_slot;
-    MVMint8       is_fast;
+    int16_t      spesh_cand_or_sf_slot;
+    int8_t       is_fast;
     uint32_t     resolve_offset;           /* Only for spesh resolve */
     int32_t      reentry_label;
 };
@@ -196,9 +196,9 @@ struct MVMJitInvoke {
 struct MVMJitRunByteCode {
     MVMCallsite  *callsite;
     MVMReturnType return_type;
-    MVMint16      return_register;
-    MVMint16      code_register;
-    MVMint16      spesh_cand;
+    int16_t      return_register;
+    int16_t      code_register;
+    int16_t      spesh_cand;
     MVMSpeshOperand *map;
     int32_t      reentry_label;
 };
@@ -206,8 +206,8 @@ struct MVMJitRunByteCode {
 struct MVMJitRunCCode {
     MVMCallsite  *callsite;
     MVMReturnType return_type;
-    MVMint16      return_register;
-    MVMint16      code_register;
+    int16_t      return_register;
+    int16_t      code_register;
     MVMSpeshOperand *map;
     int32_t      reentry_label;
 };
@@ -215,10 +215,10 @@ struct MVMJitRunCCode {
 struct MVMJitRunNativeCall {
     void            *entry_point;
     MVMJitCallArg   *args;
-    MVMuint16        num_args;
+    uint16_t        num_args;
     MVMReturnType    return_type;
-    MVMint16         return_register;
-    MVMint16         rv_type;
+    int16_t         return_register;
+    int16_t         rv_type;
     MVMSpeshOperand *map;
     int32_t         reentry_label;
 };
@@ -226,26 +226,26 @@ struct MVMJitRunNativeCall {
 struct MVMJitDispatch {
     int32_t      id;
     MVMCallsite  *callsite;
-    MVMuint16     sf_slot;
+    uint16_t     sf_slot;
     uint32_t     ice_slot;
     MVMReturnType return_type;
-    MVMint16      return_register;
+    int16_t      return_register;
     MVMSpeshOperand *map;
     int32_t      reentry_label;
 };
 
 struct MVMJitIsType {
-    MVMint16      return_register;
-    MVMint16      obj_register;
-    MVMint16      type_register;
-    MVMuint16     sf_slot;
+    int16_t      return_register;
+    int16_t      obj_register;
+    int16_t      type_register;
+    uint16_t     sf_slot;
     uint32_t     ice_slot;
     int32_t      reentry_label;
 };
 
 struct MVMJitJumpList {
-    MVMint64 num_labels;
-    MVMint16 reg;
+    int64_t num_labels;
+    int16_t reg;
     /* labels of the goto's / jump instructions themselves */
     int32_t *in_labels;
     /* labels the goto's jump to */
@@ -259,7 +259,7 @@ struct MVMJitData {
 };
 
 struct MVMJitStackSlot {
-    MVMint16 slot;
+    int16_t slot;
 };
 
 /* Node types */

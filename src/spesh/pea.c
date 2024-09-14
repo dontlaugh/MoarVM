@@ -27,13 +27,13 @@ typedef struct {
     MVMSpeshPEAAllocation *allocation;
 
     /* What kind of transform do we need to do? */
-    MVMuint16 transform;
+    uint16_t transform;
 
     /* Data per kind of transformation. */
     union {
         struct {
             MVMSpeshIns *ins;
-            MVMuint16 hypothetical_reg_idx;
+            uint16_t hypothetical_reg_idx;
         } attr;
         struct {
             MVMSpeshIns *ins;
@@ -47,11 +47,11 @@ typedef struct {
         } guard;
         struct {
             int32_t deopt_point_idx;
-            MVMuint16 target_reg;
+            uint16_t target_reg;
         } dp;
         struct {
             int32_t deopt_point_idx;
-            MVMuint16 hypothetical_reg_idx;
+            uint16_t hypothetical_reg_idx;
         } du;
         struct {
             MVMSpeshIns *ins;
@@ -71,10 +71,10 @@ typedef struct {
  * by a concrete register ID (the former used for registers that we will only
  * create if we really do scalar replacement). */
 typedef struct {
-    MVMuint16 is_hypothetical;
-    MVMuint16 hypothetical_reg_idx;
-    MVMuint16 concrete_orig;
-    MVMuint16 concrete_i;
+    uint16_t is_hypothetical;
+    uint16_t hypothetical_reg_idx;
+    uint16_t concrete_orig;
+    uint16_t concrete_i;
     MVMSpeshFacts facts;
 } ShadowFact;
 
@@ -92,11 +92,11 @@ typedef struct {
 typedef struct {
     /* The latest temporary register index. We use these indices before we
      * really allocate temporary registers. */
-    MVMuint16 latest_hypothetical_reg_idx;
+    uint16_t latest_hypothetical_reg_idx;
 
     /* The actual temporary registers allocated, matching the hypotheticals
      * above. */
-    MVMuint16 *attr_regs;
+    uint16_t *attr_regs;
 
     /* State held per basic block. */
     BBState *bb_states;
@@ -135,7 +135,7 @@ static int32_t flattened_type_to_register_kind(MVMThreadContext *tc, MVMSTable *
 
 /* Gets, allocating if needed, the deopt materialization info index of a
  * particular tracked object. */
-static MVMuint16 get_deopt_materialization_info(MVMThreadContext *tc, MVMSpeshGraph *g,
+static uint16_t get_deopt_materialization_info(MVMThreadContext *tc, MVMSpeshGraph *g,
                                                 GraphState *gs, MVMSpeshPEAAllocation *alloc) {
     if (alloc->has_deopt_materialization_idx) {
         return alloc->deopt_materialization_idx;
@@ -146,10 +146,10 @@ static MVMuint16 get_deopt_materialization_info(MVMThreadContext *tc, MVMSpeshGr
         /* Build up information about registers containing attribute data. */
         MVMP6opaqueREPRData *repr_data = (MVMP6opaqueREPRData *)alloc->type->st->REPR_data;
         uint32_t num_attrs = repr_data->num_attributes;
-        MVMuint16 *attr_regs;
+        uint16_t *attr_regs;
         if (num_attrs > 0) {
             uint32_t i;
-            attr_regs = MVM_malloc(num_attrs * sizeof(MVMuint16));
+            attr_regs = MVM_malloc(num_attrs * sizeof(uint16_t));
             for (i = 0; i < num_attrs; i++)
                 attr_regs[i] = gs->attr_regs[alloc->hypothetical_attr_reg_idxs[i]];
         }
@@ -311,7 +311,7 @@ static MVMSpeshPEAAllocation * try_track_allocation(MVMThreadContext *tc, MVMSpe
         alloc->allocator = alloc_ins;
         alloc->type = st->WHAT;
         alloc->hypothetical_attr_reg_idxs = MVM_spesh_alloc(tc, g,
-                repr_data->num_attributes * sizeof(MVMuint16));
+                repr_data->num_attributes * sizeof(uint16_t));
         for (i = 0; i < repr_data->num_attributes; i++) {
             /* Make sure it's an attribute type we know how to handle. */
             if (flattened_type_to_register_kind(tc, repr_data->flattened_stables[i]) < 0)
@@ -336,7 +336,7 @@ static void add_transform_for_bb(MVMThreadContext *tc, GraphState *gs, MVMSpeshB
 /* Gets the shadow facts for a register, or returns NULL if there aren't
  * any. The _h form takes a hypothetical register ID, the _c form a
  * concrete register.*/
-static MVMSpeshFacts * get_shadow_facts_h(MVMThreadContext *tc, GraphState *gs, MVMuint16 idx) {
+static MVMSpeshFacts * get_shadow_facts_h(MVMThreadContext *tc, GraphState *gs, uint16_t idx) {
     uint32_t i;
     for (i = 0; i < gs->shadow_facts_num; i++) {
         ShadowFact *sf = &(gs->shadow_facts[i]);
@@ -362,7 +362,7 @@ static MVMSpeshFacts * get_shadow_facts_c(MVMThreadContext *tc, GraphState *gs, 
  * may be invalidated due to reallocation. This will get recreate new
  * shadow facts if they already exist. The _h form takes a hypothetical
  * register ID, the _c form a concrete register. */
-static MVMSpeshFacts * create_shadow_facts_h(MVMThreadContext *tc, GraphState *gs, MVMuint16 idx) {
+static MVMSpeshFacts * create_shadow_facts_h(MVMThreadContext *tc, GraphState *gs, uint16_t idx) {
     MVMSpeshFacts *facts = get_shadow_facts_h(tc, gs, idx);
     if (!facts) {
         ShadowFact sf;
@@ -389,8 +389,8 @@ static MVMSpeshFacts * create_shadow_facts_c(MVMThreadContext *tc, GraphState *g
 }
 
 /* Map an object offset to the register with its scalar replacement. */
-static MVMuint16 attribute_offset_to_reg(MVMThreadContext *tc, MVMSpeshPEAAllocation *alloc,
-        MVMint16 offset) {
+static uint16_t attribute_offset_to_reg(MVMThreadContext *tc, MVMSpeshPEAAllocation *alloc,
+        int16_t offset) {
     uint32_t idx = MVM_p6opaque_offset_to_attr_idx(tc, alloc->type, offset);
     return alloc->hypothetical_attr_reg_idxs[idx];
 }
@@ -494,7 +494,7 @@ static void add_deopt_materializations_ins(MVMThreadContext *tc, MVMSpeshGraph *
  * and, perhaps, some guard eliminations. */
 static uint32_t analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs) {
     MVMSpeshBB **rpo = MVM_spesh_graph_reverse_postorder(tc, g);
-    MVMuint8 *seen = MVM_calloc(g->num_bbs, 1);
+    uint8_t *seen = MVM_calloc(g->num_bbs, 1);
     uint32_t found_replaceable = 0;
     uint32_t i;
     for (i = 0; i < g->num_bbs; i++) {
@@ -513,7 +513,7 @@ static uint32_t analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs) 
         }
 
         while (ins) {
-            MVMuint16 opcode = ins->info->opcode;
+            uint16_t opcode = ins->info->opcode;
 
             /* See if this is an instruction where a deopt might take place.
              * If yes, then we first consider whether it's a guard that the
@@ -603,10 +603,10 @@ static uint32_t analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs) 
                             opcode == MVM_OP_sp_p6obind_n ||
                             opcode == MVM_OP_sp_p6obind_s ||
                             opcode == MVM_OP_sp_p6obind_o;
-                        MVMuint16 hypothetical_reg = attribute_offset_to_reg(tc, alloc,
+                        uint16_t hypothetical_reg = attribute_offset_to_reg(tc, alloc,
                                 is_p6o_op
                                     ? ins->operands[1].lit_i16
-                                    : ins->operands[1].lit_i16 - (MVMint16)sizeof(MVMObject));
+                                    : ins->operands[1].lit_i16 - (int16_t)sizeof(MVMObject));
                         Transformation *tran = MVM_spesh_alloc(tc, g, sizeof(Transformation));
                         tran->allocation = alloc;
                         tran->transform = TRANSFORM_BINDATTR_TO_SET;
@@ -639,7 +639,7 @@ static uint32_t analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs) 
                     MVMSpeshFacts *target = MVM_spesh_get_facts(tc, g, ins->operands[1]);
                     MVMSpeshPEAAllocation *alloc = target->pea.allocation;
                     if (allocation_tracked(alloc)) {
-                        MVMuint16 hypothetical_reg = attribute_offset_to_reg(tc, alloc,
+                        uint16_t hypothetical_reg = attribute_offset_to_reg(tc, alloc,
                                 ins->operands[2].lit_i16);
                         Transformation *tran = MVM_spesh_alloc(tc, g, sizeof(Transformation));
                         tran->allocation = alloc;
@@ -676,7 +676,7 @@ static uint32_t analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs) 
                 case MVM_SSA_PHI: {
                     /* If a PHI doesn't really merge anything, and its input is
                      * a tracked object, we just alias the output. */
-                    MVMuint16 num_operands = ins->info->num_operands;
+                    uint16_t num_operands = ins->info->num_operands;
                     if (num_operands == 2) {
                         MVMSpeshFacts *source = MVM_spesh_get_facts(tc, g, ins->operands[1]);
                         MVMSpeshPEAAllocation *alloc = source->pea.allocation;
@@ -733,7 +733,7 @@ void MVM_spesh_pea(MVMThreadContext *tc, MVMSpeshGraph *g) {
 
     if (analyze(tc, g, &gs)) {
         MVMSpeshBB *bb = g->entry;
-        gs.attr_regs = MVM_spesh_alloc(tc, g, gs.latest_hypothetical_reg_idx * sizeof(MVMuint16));
+        gs.attr_regs = MVM_spesh_alloc(tc, g, gs.latest_hypothetical_reg_idx * sizeof(uint16_t));
         while (bb) {
             for (i = 0; i < MVM_VECTOR_ELEMS(gs.bb_states[bb->idx].transformations); i++)
                 apply_transform(tc, g, &gs, bb, gs.bb_states[bb->idx].transformations[i]);

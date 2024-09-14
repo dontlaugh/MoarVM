@@ -6,7 +6,7 @@
 
 /* Enters the work loop. */
 static void worker(MVMThreadContext *tc, MVMArgs arg_info) {
-    MVMuint64 work_sequence_number = 0;
+    uint64_t work_sequence_number = 0;
     MVMObject *updated_static_frames = MVM_repr_alloc_init(tc,
         tc->instance->boot_types.BOOTArray);
     MVMObject *newly_seen_static_frames;
@@ -30,9 +30,9 @@ static void worker(MVMThreadContext *tc, MVMArgs arg_info) {
         size_t log_tell_before = 0;
         while (1) {
             MVMObject *log_obj;
-            MVMuint64 start_time;
+            uint64_t start_time;
             unsigned int interval_id;
-            MVMint64 *overview_data = NULL;
+            int64_t *overview_data = NULL;
 
             MVMObject *overview_subscription_packet = NULL;
 
@@ -51,7 +51,7 @@ static void worker(MVMThreadContext *tc, MVMArgs arg_info) {
             if (tc->instance->subscriptions.subscription_queue) {
                 spesh_overview_event = tc->instance->subscriptions.SpeshOverviewEvent;
                 if (spesh_overview_event) {
-                    MVMuint64 now_time = uv_hrtime();
+                    uint64_t now_time = uv_hrtime();
 
                     MVMROOT(tc, log_obj) {
                         overview_subscription_packet = MVM_repr_alloc(tc, spesh_overview_event);
@@ -89,12 +89,12 @@ static void worker(MVMThreadContext *tc, MVMArgs arg_info) {
                     MVMThreadContext *stc;
                     uint32_t i;
                     uint32_t n;
-                    MVMuint64 newly_seen;
-                    MVMuint64 updated;
+                    uint64_t newly_seen;
+                    uint64_t updated;
 
-                    MVMuint64 certain_spesh;
-                    MVMuint64 observed_spesh;
-                    MVMuint64 osr_spesh;
+                    uint64_t certain_spesh;
+                    uint64_t observed_spesh;
+                    uint64_t osr_spesh;
 
                     /* Update stats, and if we're logging dump each of them. */
                     tc->instance->spesh_stats_version++;

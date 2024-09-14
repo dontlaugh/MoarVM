@@ -8,15 +8,15 @@ struct MVMSpeshPEAAllocation {
 
     /* The set of indexes for registers we will hypothetically allocate for
      * the attributes of this type. */
-    MVMuint16 *hypothetical_attr_reg_idxs;
+    uint16_t *hypothetical_attr_reg_idxs;
 
     /* Have we seen something that invalidates our ability to scalar replace
      * this? */
-    MVMuint8 irreplaceable;
+    uint8_t irreplaceable;
 
     /* The deopt materialization index, and whether we have allocated one yet. */
-    MVMuint8 has_deopt_materialization_idx;
-    MVMuint16 deopt_materialization_idx;
+    uint8_t has_deopt_materialization_idx;
+    uint16_t deopt_materialization_idx;
 };
 
 /* Information held per SSA value. */
@@ -46,15 +46,15 @@ struct MVMSpeshPEADeopt {
  * (that is, to recreate it on the heap). */
 struct MVMSpeshPEAMaterializeInfo {
     /* The spesh slot containing the STable of the object to materialize. */
-    MVMuint16 stable_sslot;
+    uint16_t stable_sslot;
 
     /* The number of attribute registers (can be discovered, but this makes it
      * easier to process, and we've empty space in the struct anyway). */
-    MVMuint16 num_attr_regs;
+    uint16_t num_attr_regs;
 
     /* A list of the registers holding the attributes to put into the
      * materialized object. */
-    MVMuint16 *attr_regs;
+    uint16_t *attr_regs;
 };
 
 /* Information about that needs to be materialized at a particular deopt
@@ -65,10 +65,10 @@ struct MVMSpeshPEADeoptPoint {
 
     /* The index into the materialize_info specifying how to materialize
      * this object. */
-    MVMuint16 materialize_info_idx;
+    uint16_t materialize_info_idx;
 
     /* The register to put the materialized object into. */
-    MVMuint16 target_reg;
+    uint16_t target_reg;
 };
 
 void MVM_spesh_pea(MVMThreadContext *tc, MVMSpeshGraph *g);

@@ -36,7 +36,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
            GC'd before we do, and so they free memory we point to. */
         /* If this gets to be a resource hog, then implement something more
            sophisticated. The easiest thing would be to bump the allocated size
-           and value stored in bytecode by sizeof(MVMuint64), and use the extra
+           and value stored in bytecode by sizeof(uint64_t), and use the extra
            space to store a reference count. */
         dest_body->bytecode = MVM_malloc(src_body->bytecode_size);
         memcpy(dest_body->bytecode, src_body->bytecode, src_body->bytecode_size);
@@ -49,8 +49,8 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 
     dest_body->num_locals = src_body->num_locals;
     if (dest_body->num_locals) {
-        MVMuint16 *local_types = MVM_malloc(sizeof(MVMuint16) * src_body->num_locals);
-        memcpy(local_types, src_body->local_types, sizeof(MVMuint16) * src_body->num_locals);
+        uint16_t *local_types = MVM_malloc(sizeof(uint16_t) * src_body->num_locals);
+        memcpy(local_types, src_body->local_types, sizeof(uint16_t) * src_body->num_locals);
         dest_body->local_types = local_types;
     }
     else {
@@ -60,9 +60,9 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
     uint32_t num_lexicals = src_body->num_lexicals;
     dest_body->num_lexicals = num_lexicals;
     if (num_lexicals) {
-        MVMuint16 *lexical_types = MVM_malloc(sizeof(MVMuint16) * src_body->num_lexicals);
+        uint16_t *lexical_types = MVM_malloc(sizeof(uint16_t) * src_body->num_lexicals);
         memcpy(lexical_types, src_body->lexical_types,
-               sizeof(MVMuint16) * src_body->num_lexicals);
+               sizeof(uint16_t) * src_body->num_lexicals);
 
         MVMString **lexical_names_list = MVM_malloc(sizeof(MVMString *) * src_body->num_lexicals);
         for (uint32_t j = 0; j < num_lexicals; j++) {
@@ -82,9 +82,9 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 
     /* Static environment needs to be copied, and any objects WB'd. */
     if (src_body->env_size) {
-        MVMuint16 *type_map = src_body->lexical_types;
-        MVMuint16  count    = src_body->num_lexicals;
-        MVMuint16  i;
+        uint16_t *type_map = src_body->lexical_types;
+        uint16_t  count    = src_body->num_lexicals;
+        uint16_t  i;
 
         dest_body->static_env = MVM_malloc(src_body->env_size);
         memcpy(dest_body->static_env, src_body->static_env, src_body->env_size);
@@ -146,9 +146,9 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 
     /* static env */
     if (body->static_env) {
-        MVMuint16 *type_map = body->lexical_types;
-        MVMuint16  count    = body->num_lexicals;
-        MVMuint16  i;
+        uint16_t *type_map = body->lexical_types;
+        uint16_t  count    = body->num_lexicals;
+        uint16_t  i;
         for (i = 0; i < count; i++)
             if (type_map[i] == MVM_reg_str || type_map[i] == MVM_reg_obj)
                 MVM_gc_worklist_add(tc, worklist, &body->static_env[i].o);
@@ -217,13 +217,13 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMStaticFrameBody *body = (MVMStaticFrameBody *)data;
-    MVMuint64 size = 0;
+    uint64_t size = 0;
 
     if (body->fully_deserialized) {
-        size += sizeof(MVMuint16) * body->num_locals;
-        size += sizeof(MVMuint16) * body->num_lexicals;
+        size += sizeof(uint16_t) * body->num_locals;
+        size += sizeof(uint16_t) * body->num_lexicals;
 
         if (body->bytecode != body->orig_bytecode)
             size += body->bytecode_size;
@@ -237,7 +237,7 @@ static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data)
         /* XXX i *think* the annotations are just a pointer into the serialized
          * blob, so don't actually count it towards the unmanaged size. */
         /*
-        size += sizeof(MVMuint8) * body->num_annotations
+        size += sizeof(uint8_t) * body->num_annotations
         */
         size += body->env_size; /* static_env */
         size += body->num_lexicals; /* static_env_flags */
@@ -258,14 +258,14 @@ static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data)
 static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
     MVMStaticFrameBody *body = (MVMStaticFrameBody *)data;
 
-    static MVMuint64 cache_1 = 0;
-    static MVMuint64 cache_2 = 0;
-    static MVMuint64 cache_3 = 0;
-    static MVMuint64 cache_4 = 0;
-    static MVMuint64 cache_5 = 0;
-    static MVMuint64 cache_6 = 0;
+    static uint64_t cache_1 = 0;
+    static uint64_t cache_2 = 0;
+    static uint64_t cache_3 = 0;
+    static uint64_t cache_4 = 0;
+    static uint64_t cache_5 = 0;
+    static uint64_t cache_6 = 0;
 
-    MVMuint64 nonstatic_cache_1 = 0;
+    uint64_t nonstatic_cache_1 = 0;
 
     MVM_profile_heap_add_collectable_rel_const_cstr_cached(tc, ss,
         (MVMCollectable *)body->cu, "Compilation Unit", &cache_1);
@@ -293,9 +293,9 @@ static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTa
 
     /* static env */
     if (body->static_env) {
-        MVMuint16 *type_map = body->lexical_types;
-        MVMuint16  count    = body->num_lexicals;
-        MVMuint16  i;
+        uint16_t *type_map = body->lexical_types;
+        uint16_t  count    = body->num_lexicals;
+        uint16_t  i;
         for (i = 0; i < count; i++)
             if (type_map[i] == MVM_reg_str || type_map[i] == MVM_reg_obj)
                 MVM_profile_heap_add_collectable_rel_const_cstr_cached(tc, ss,

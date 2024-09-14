@@ -28,7 +28,7 @@ static void append_string(char **out, uint32_t *size,
     *length = *length + len - 1; /* exclude \0 so we append before it */
 }
 
-static const char * get_typename(MVMuint16 type) {
+static const char * get_typename(uint16_t type) {
     switch(type) {
         case MVM_reg_int8 : return "int8";
         case MVM_reg_int16: return "int16";
@@ -50,13 +50,13 @@ static const char * get_typename(MVMuint16 type) {
 #define a(...) append_string(&o,&s,&l, __VA_ARGS__)
 /* Macros for getting things from the bytecode stream. */
 /* GET_REG is defined differently here from interp.c */
-#define GET_I8(pc, idx)     *((MVMint8 *)((pc) + (idx)))
-#define GET_REG(pc, idx)    *((MVMuint16 *)((pc) + (idx)))
-#define GET_I16(pc, idx)    *((MVMint16 *)((pc) + (idx)))
-#define GET_UI16(pc, idx)   *((MVMuint16 *)((pc) + (idx)))
+#define GET_I8(pc, idx)     *((int8_t *)((pc) + (idx)))
+#define GET_REG(pc, idx)    *((uint16_t *)((pc) + (idx)))
+#define GET_I16(pc, idx)    *((int16_t *)((pc) + (idx)))
+#define GET_UI16(pc, idx)   *((uint16_t *)((pc) + (idx)))
 #define GET_I32(pc, idx)    *((int32_t *)((pc) + (idx)))
 #define GET_UI32(pc, idx)   *((uint32_t *)((pc) + (idx)))
-#define GET_N32(pc, idx)    *((MVMnum32 *)((pc) + (idx)))
+#define GET_N32(pc, idx)    *((float *)((pc) + (idx)))
 
 enum {
     MVM_val_branch_target = 1,
@@ -67,7 +67,7 @@ static MVMStaticFrame * get_frame(MVMThreadContext *tc, MVMCompUnit *cu, int idx
     return ((MVMCode *)cu->body.coderefs[idx])->body.sf;
 }
 
-static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *frame, MVMSpeshCandidate *maybe_candidate, MVMuint8 *frame_cur_op, char ***frame_lexicals, char **oo, uint32_t *os, uint32_t *ol) {
+static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *frame, MVMSpeshCandidate *maybe_candidate, uint8_t *frame_cur_op, char ***frame_lexicals, char **oo, uint32_t *os, uint32_t *ol) {
     /* since "references" are not a thing in C, keep a local copy of these
      * and update the passed-in pointers at the end of the function */
     char *o = *oo;
@@ -79,18 +79,18 @@ static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *f
     /* mostly stolen from validation.c */
     MVMStaticFrame *static_frame = frame;
     uint32_t bytecode_size = maybe_candidate ? maybe_candidate->body.bytecode_size : static_frame->body.bytecode_size;
-    MVMuint8 *bytecode_start = maybe_candidate ? maybe_candidate->body.bytecode : static_frame->body.bytecode;
-    MVMuint8 *bytecode_end = bytecode_start + bytecode_size;
+    uint8_t *bytecode_start = maybe_candidate ? maybe_candidate->body.bytecode : static_frame->body.bytecode;
+    uint8_t *bytecode_end = bytecode_start + bytecode_size;
     /* current position in the bytestream */
-    MVMuint8 *cur_op = bytecode_start;
+    uint8_t *cur_op = bytecode_start;
     /* positions in the bytestream that are starts of ops and goto targets */
-    MVMuint8 *labels = MVM_calloc(1, bytecode_size);
+    uint8_t *labels = MVM_calloc(1, bytecode_size);
     uint32_t *jumps = MVM_calloc(1, sizeof(uint32_t) * bytecode_size);
     char **lines = MVM_malloc(sizeof(char *) * bytecode_size);
     uint32_t *linelocs = MVM_malloc(sizeof(uint32_t) * bytecode_size);
     uint32_t lineno = 0;
     uint32_t lineloc;
-    MVMuint16 op_num;
+    uint16_t op_num;
     const MVMOpInfo *op_info;
     uint32_t operand_size = 0;
     unsigned char op_rw;
@@ -135,7 +135,7 @@ static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *f
             a("   ");
         }
 
-        op_num = *((MVMint16 *)cur_op);
+        op_num = *((int16_t *)cur_op);
         cur_op += 2;
         if (op_num < MVM_OP_EXT_BASE) {
             op_info = MVM_op_get_op(op_num);
@@ -145,10 +145,10 @@ static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *f
                 a("invalid OP        ");
         }
         else {
-            MVMint16 ext_op_num = op_num - MVM_OP_EXT_BASE;
+            int16_t ext_op_num = op_num - MVM_OP_EXT_BASE;
             if (0 <= ext_op_num && ext_op_num < cu->body.num_extops) {
                 MVMExtOpRecord r = cu->body.extops[ext_op_num];
-                MVMuint8 j;
+                uint8_t j;
                 memset(&tmp_extop_info, 0, sizeof(MVMOpInfo));
                 tmp_extop_info.name = MVM_string_utf8_encode_C_string(tc, r.name);
                 memcpy(tmp_extop_info.operands, r.operand_descriptor, 8);
@@ -290,15 +290,15 @@ static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *f
             }
             else if (op_rw == MVM_operand_read_reg || op_rw == MVM_operand_write_reg) {
                 /* register operand */
-                MVMuint8 frame_has_inlines = maybe_candidate && maybe_candidate->body.num_inlines ? 1 : 0;
-                MVMuint16 *local_types = frame_has_inlines ? maybe_candidate->body.local_types : frame->body.local_types;
+                uint8_t frame_has_inlines = maybe_candidate && maybe_candidate->body.num_inlines ? 1 : 0;
+                uint16_t *local_types = frame_has_inlines ? maybe_candidate->body.local_types : frame->body.local_types;
                 operand_size = 2;
                 a("loc_%u_%s", GET_REG(cur_op, 0),
                     local_types ? get_typename(local_types[GET_REG(cur_op, 0)]) : "unknown");
             }
             else if (op_rw == MVM_operand_read_lex || op_rw == MVM_operand_write_lex) {
                 /* lexical operand */
-                MVMuint16 idx, frames;
+                uint16_t idx, frames;
                 uint32_t m;
                 MVMStaticFrame *applicable_frame = static_frame;
 
@@ -368,7 +368,7 @@ static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *f
 
         for (j = 0; j < lineno; j++) {
             if (annotations[j]) {
-                MVMuint16 shi = GET_UI16(frame->body.annotations_data + 4, (annotations[j] - 1)*12);
+                uint16_t shi = GET_UI16(frame->body.annotations_data + 4, (annotations[j] - 1)*12);
                 tmpstr = MVM_string_utf8_encode_C_string(
                     tc, MVM_cu_string(tc, cu, shi < cu->body.num_strings ? shi : 0));
                 a("     annotation: %s:%u\n", tmpstr, GET_UI32(frame->body.annotations_data, (annotations[j] - 1)*12 + 8));
@@ -421,8 +421,8 @@ char * MVM_bytecode_dump(MVMThreadContext *tc, MVMCompUnit *cu) {
 
     for (k = 0; k < cu->body.num_callsites; k++) {
         MVMCallsite *callsite  = cu->body.callsites[k];
-        MVMuint16 arg_count    = callsite->arg_count;
-        MVMuint16 nameds_count = 0;
+        uint16_t arg_count    = callsite->arg_count;
+        uint16_t nameds_count = 0;
 
         a("  Callsite_%u :\n", k);
         a("    num_pos: %d\n", callsite->num_pos);
@@ -534,7 +534,7 @@ void MVM_dump_bytecode_of(MVMThreadContext *tc, MVMFrame *frame, MVMSpeshCandida
     uint32_t s = 1024;
     uint32_t l = 0;
     char *o = MVM_malloc(s * sizeof(char));
-    MVMuint8 *addr;
+    uint8_t *addr;
 
     if (!frame) {
         frame = tc->cur_frame;
@@ -568,13 +568,13 @@ void MVM_dump_bytecode_staticframe(MVMThreadContext *tc, MVMStaticFrame *frame) 
 void MVM_dump_bytecode(MVMThreadContext *tc) {
     if (tc->cur_frame != NULL) {
         MVMStaticFrame *sf = tc->cur_frame->static_info;
-        MVMuint8 *effective_bytecode = MVM_frame_effective_bytecode(tc->cur_frame);
+        uint8_t *effective_bytecode = MVM_frame_effective_bytecode(tc->cur_frame);
         if (effective_bytecode == sf->body.bytecode) {
             MVM_dump_bytecode_of(tc, tc->cur_frame, NULL);
         } else {
             MVM_dump_bytecode_of(tc, tc->cur_frame, tc->cur_frame->spesh_cand);
             /*int32_t spesh_cand_idx;*/
-            /*MVMuint8 found = 0;*/
+            /*uint8_t found = 0;*/
             /*for (spesh_cand_idx = 0; spesh_cand_idx < sf->body.num_spesh_candidates; spesh_cand_idx++) {*/
             /*MVMSpeshCandidate *cand = sf->body.spesh_candidates[spesh_cand_idx];*/
             /*if (cand->body.bytecode == effective_bytecode) {*/
@@ -594,7 +594,7 @@ void MVM_dump_bytecode(MVMThreadContext *tc) {
 
 void MVM_dump_bytecode_stackframe(MVMThreadContext *tc, int32_t depth) {
     MVMStaticFrame *sf;
-    MVMuint8 *effective_bytecode;
+    uint8_t *effective_bytecode;
     MVMFrame *frame = tc->cur_frame;
     for (;depth > 0; depth--) {
         frame = frame->caller;

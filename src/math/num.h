@@ -7,29 +7,29 @@
 #include <math.h>
 
 #if defined(INFINITY) && !defined(_AIX)
-static const MVMnum64 MVM_NUM_POSINF =  INFINITY;
-static const MVMnum64 MVM_NUM_NEGINF = -INFINITY;
+static const double MVM_NUM_POSINF =  INFINITY;
+static const double MVM_NUM_NEGINF = -INFINITY;
 #else
 #  ifdef _MSC_VER
 #define MVM_NUM_POSINF  (DBL_MAX+DBL_MAX)
 #define MVM_NUM_NEGINF -(DBL_MAX+DBL_MAX)
 #  else
-static const MVMnum64 MVM_NUM_POSINF =  1.0 / 0.0;
-static const MVMnum64 MVM_NUM_NEGINF = -1.0 / 0.0;
+static const double MVM_NUM_POSINF =  1.0 / 0.0;
+static const double MVM_NUM_NEGINF = -1.0 / 0.0;
 #  endif
 #endif
 
 #if defined(NAN) && !defined(_AIX)
-static const MVMnum64 MVM_NUM_NAN = NAN;
+static const double MVM_NUM_NAN = NAN;
 #else
 #  ifdef _MSC_VER
 #define MVM_NUM_NAN (MVM_NUM_POSINF-MVM_NUM_POSINF)
 #  else
-static const MVMnum64 MVM_NUM_NAN = 0.0 / 0.0;
+static const double MVM_NUM_NAN = 0.0 / 0.0;
 #  endif
 #endif
 
-MVM_STATIC_INLINE int MVM_num_isnanorinf(MVMThreadContext *tc, MVMnum64 n) {
+MVM_STATIC_INLINE int MVM_num_isnanorinf(MVMThreadContext *tc, double n) {
 #if defined(MVM_HAS_ISINF) && defined(MVM_HAS_ISNAN)
     return isinf(n) || isnan(n);
 #else
@@ -37,19 +37,19 @@ MVM_STATIC_INLINE int MVM_num_isnanorinf(MVMThreadContext *tc, MVMnum64 n) {
 #endif
 }
 
-MVM_STATIC_INLINE MVMnum64 MVM_num_posinf(MVMThreadContext *tc) {
+MVM_STATIC_INLINE double MVM_num_posinf(MVMThreadContext *tc) {
     return MVM_NUM_POSINF;
 }
 
-MVM_STATIC_INLINE MVMnum64 MVM_num_neginf(MVMThreadContext *tc) {
+MVM_STATIC_INLINE double MVM_num_neginf(MVMThreadContext *tc) {
     return MVM_NUM_NEGINF;
 }
 
-MVM_STATIC_INLINE MVMnum64 MVM_num_nan(MVMThreadContext *tc) {
+MVM_STATIC_INLINE double MVM_num_nan(MVMThreadContext *tc) {
     return MVM_NUM_NAN;
 }
 
-MVM_STATIC_INLINE int MVM_num_isnegzero(MVMThreadContext *tc, MVMnum64 n) {
+MVM_STATIC_INLINE int MVM_num_isnegzero(MVMThreadContext *tc, double n) {
 #ifdef MVM_HAS_SIGNBIT
     return n == 0 && signbit(n);
 #else

@@ -145,8 +145,8 @@ static char const * const SIG_WANTED[NUM_SIG_WANTED] = {
     PROCESS_SIGS(GEN_STRING)
 };
 
-static void populate_sig_values(MVMint8 *sig_vals) {
-    MVMint8 i;
+static void populate_sig_values(int8_t *sig_vals) {
+    int8_t i;
     for (i = 0; i < NUM_SIG_WANTED; i++) { sig_vals[i] = 0; }
 
 #ifdef SIGHUP
@@ -258,9 +258,9 @@ static void populate_sig_values(MVMint8 *sig_vals) {
 
 #define SIG_SHIFT(s) (1 << ((s) - 1))
 
-static void populate_instance_valid_sigs(MVMThreadContext *tc, MVMint8 *sig_vals) {
-    MVMuint64 valid_sigs = 0;
-    MVMint8 i;
+static void populate_instance_valid_sigs(MVMThreadContext *tc, int8_t *sig_vals) {
+    uint64_t valid_sigs = 0;
+    int8_t i;
 
     if ( tc->instance->valid_sigs ) return;
 
@@ -277,7 +277,7 @@ MVMObject * MVM_io_get_signals(MVMThreadContext *tc) {
     MVMHLLConfig *       hll      = MVM_hll_current(tc);
     MVMObject    *       sig_arr;
 
-    MVMint8 sig_wanted_vals[NUM_SIG_WANTED];
+    int8_t sig_wanted_vals[NUM_SIG_WANTED];
     populate_sig_values(sig_wanted_vals);
 
     if (instance->sig_arr) {
@@ -286,7 +286,7 @@ MVMObject * MVM_io_get_signals(MVMThreadContext *tc) {
 
     sig_arr = MVM_repr_alloc_init(tc, hll->slurpy_array_type);
     MVMROOT(tc, sig_arr) {
-        MVMint8 i;
+        int8_t i;
         for (i = 0; i < NUM_SIG_WANTED; i++) {
             MVMObject *key      = NULL;
             MVMString *full_key = NULL;
@@ -319,7 +319,7 @@ MVMObject * MVM_io_signal_handle(
     MVMThreadContext *tc,
     MVMObject *setup_notify_queue, MVMObject *setup_notify_schedulee,
     MVMObject *queue, MVMObject *schedulee,
-    MVMint64 signal,
+    int64_t signal,
     MVMObject *async_type
 ) {
     MVMAsyncTask *task;
@@ -327,7 +327,7 @@ MVMObject * MVM_io_signal_handle(
     MVMInstance  * const instance = tc->instance;
 
     if ( !instance->valid_sigs ) {
-        MVMint8 sig_wanted_vals[NUM_SIG_WANTED];
+        int8_t sig_wanted_vals[NUM_SIG_WANTED];
         populate_sig_values(sig_wanted_vals);
         populate_instance_valid_sigs(tc, sig_wanted_vals);
     }

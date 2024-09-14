@@ -7,15 +7,15 @@ struct MVMGraphemeIter {
         MVMGrapheme8     *blob_8;
         MVMGrapheme8     in_situ_8[8];
         MVMGrapheme32    in_situ_32[2];
-        MVMuint64        any;
+        uint64_t        any;
         void             *any_ptr;
     } active_blob;
 
     /* The type of blob we have. */
-    MVMuint16 blob_type;
+    uint16_t blob_type;
 
     /* The number of strands remaining, if any. */
-    MVMuint16 strands_remaining;
+    uint16_t strands_remaining;
 
     /* The current position, and the end position. */
     MVMStringIndex pos;
@@ -154,7 +154,7 @@ MVM_STATIC_INLINE MVMGrapheme32 * MVM_string_gi_active_blob_32_pos(MVMThreadCont
 MVM_STATIC_INLINE MVMGrapheme32 * MVM_string_gi_active_in_situ_32_pos(MVMThreadContext *tc, MVMGraphemeIter *gi) {
     return gi->active_blob.in_situ_32 + gi->pos;
 }
-MVM_STATIC_INLINE MVMuint16 MVM_string_gi_blob_type(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+MVM_STATIC_INLINE uint16_t MVM_string_gi_blob_type(MVMThreadContext *tc, MVMGraphemeIter *gi) {
     return gi->blob_type;
 }
 /* Returns if there are more strands left in the gi, including repetitions */
@@ -201,7 +201,7 @@ MVM_STATIC_INLINE MVMGrapheme32 MVM_string_gi_get_grapheme(MVMThreadContext *tc,
 
 
 /* Returns the codepoint without doing checks, for internal VM use only. */
-MVM_STATIC_INLINE MVMGrapheme32 MVM_string_get_grapheme_at_nocheck(MVMThreadContext *tc, MVMString *a, MVMint64 index) {
+MVM_STATIC_INLINE MVMGrapheme32 MVM_string_get_grapheme_at_nocheck(MVMThreadContext *tc, MVMString *a, int64_t index) {
     switch (a->body.storage_type) {
         case MVM_STRING_GRAPHEME_32:
             return a->body.storage.blob_32[index];
@@ -368,14 +368,14 @@ struct MVMGraphemeIter_cached {
     MVMString      *string;
 };
 typedef struct MVMGraphemeIter_cached MVMGraphemeIter_cached;
-MVM_STATIC_INLINE void MVM_string_gi_cached_init (MVMThreadContext *tc, MVMGraphemeIter_cached *gic, MVMString *s, MVMint64 index) {
+MVM_STATIC_INLINE void MVM_string_gi_cached_init (MVMThreadContext *tc, MVMGraphemeIter_cached *gic, MVMString *s, int64_t index) {
     MVM_string_gi_init(tc, &(gic->gi), s);
     if (index) MVM_string_gi_move_to(tc, &(gic->gi), index);
     gic->last_location = index;
     gic->last_g = MVM_string_gi_get_grapheme(tc, &(gic->gi));
     gic->string = s;
 }
-MVM_STATIC_INLINE MVMGrapheme32 MVM_string_gi_cached_get_grapheme(MVMThreadContext *tc, MVMGraphemeIter_cached *gic, MVMint64 index) {
+MVM_STATIC_INLINE MVMGrapheme32 MVM_string_gi_cached_get_grapheme(MVMThreadContext *tc, MVMGraphemeIter_cached *gic, int64_t index) {
     /* Most likely case is we are getting the next grapheme. When that happens
      * we will go directly to the end. */
     if (index == gic->last_location + 1) {

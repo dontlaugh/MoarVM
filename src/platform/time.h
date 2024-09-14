@@ -1,12 +1,12 @@
 /* Gets time since the epoch in nanoseconds.
  * In principle, may return 0 on error.
  */
-MVMuint64 MVM_platform_now(void);
+uint64_t MVM_platform_now(void);
 
 /* Tries to sleep for at least the requested number
  * of nanoseconds.
  */
-void MVM_platform_sleep(MVMnum64 second);
-void MVM_platform_nanosleep(MVMuint64 nanos);
+void MVM_platform_sleep(double second);
+void MVM_platform_nanosleep(uint64_t nanos);
 
-void MVM_platform_decodelocaltime(MVMThreadContext *tc, MVMint64 time, MVMint64 decoded[]);
+void MVM_platform_decodelocaltime(MVMThreadContext *tc, int64_t time, int64_t decoded[]);

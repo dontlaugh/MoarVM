@@ -240,7 +240,7 @@ MVM_PUBLIC void MVM_callsite_intern(MVMThreadContext *tc, MVMCallsite **cs_ptr,
 
     /* First do a lookup without holding the lock; we only need it for any
      * mutation. */
-    MVMuint64 orig_num_callsite_interns = (MVMuint64)MVM_load(
+    uint64_t orig_num_callsite_interns = (uint64_t)MVM_load(
             &(tc->instance->num_callsite_interns));
     if (find_interned_callsite(tc, cs_ptr, steal))
         return;
@@ -250,7 +250,7 @@ MVM_PUBLIC void MVM_callsite_intern(MVMThreadContext *tc, MVMCallsite **cs_ptr,
 
     /* If the total number of callsite interns changed, we should search for
      * a match again, now we have the lock, to avoid any duplicates. */
-    MVMuint64 cur_num_callsite_interns = (MVMuint64)MVM_load(
+    uint64_t cur_num_callsite_interns = (uint64_t)MVM_load(
             &(tc->instance->num_callsite_interns));
     uint32_t found = orig_num_callsite_interns != cur_num_callsite_interns &&
         find_interned_callsite(tc, cs_ptr, steal);

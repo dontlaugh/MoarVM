@@ -76,7 +76,7 @@ uint32_t MVM_string_ascii_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds
     while (cur_bytes) {
         /* Process this buffer. */
         int32_t  pos   = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
-        MVMuint8 *bytes = (MVMuint8*)cur_bytes->bytes;
+        uint8_t *bytes = (uint8_t*)cur_bytes->bytes;
         while (pos < cur_bytes->length) {
             MVMCodepoint codepoint = bytes[pos++];
             MVMGrapheme32 graph;
@@ -143,15 +143,15 @@ uint32_t MVM_string_ascii_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds
  * will become replaced with the supplied replacement, or an exception will be
  * thrown if there isn't one. The result string is NULL terminated, but the
  * specified size is the non-null part. */
-char * MVM_string_ascii_encode_substr(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement, int32_t translate_newlines) {
+char * MVM_string_ascii_encode_substr(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement, int32_t translate_newlines) {
     /* ASCII is a single byte encoding, but \r\n is a 2-byte grapheme, so we
      * may have to resize as we go. */
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
     uint32_t      lengthu   = (uint32_t)(length == -1 ? strgraphs - (uint32_t)start : length);
-    MVMuint8      *result;
+    uint8_t      *result;
     size_t         result_alloc;
-    MVMuint8      *repl_bytes = NULL;
-    MVMuint64      repl_length;
+    uint8_t      *repl_bytes = NULL;
+    uint64_t      repl_length;
 
     /* must check start first since it's used in the length check */
     if (start < 0 || start > strgraphs)
@@ -160,7 +160,7 @@ char * MVM_string_ascii_encode_substr(MVMThreadContext *tc, MVMString *str, MVMu
         MVM_exception_throw_adhoc(tc, "length (%"PRId64") out of range (-1..%"PRIu32")", length, strgraphs);
 
     if (replacement)
-        repl_bytes = (MVMuint8 *) MVM_string_ascii_encode_substr(tc, replacement,
+        repl_bytes = (uint8_t *) MVM_string_ascii_encode_substr(tc, replacement,
             &repl_length, 0, -1, NULL, translate_newlines);
 
     result_alloc = lengthu;
@@ -183,7 +183,7 @@ char * MVM_string_ascii_encode_substr(MVMThreadContext *tc, MVMString *str, MVMu
                 result = MVM_realloc(result, result_alloc + 1);
             }
             if (0 <= ord && ord <= 127) {
-                result[i++] = (MVMuint8)ord;
+                result[i++] = (uint8_t)ord;
             }
             else if (replacement) {
                 if (repl_length >= result_alloc || i >= result_alloc - repl_length) {
@@ -211,7 +211,7 @@ char * MVM_string_ascii_encode_substr(MVMThreadContext *tc, MVMString *str, MVMu
 }
 
 /* Encodes the specified string to ASCII.  */
-char * MVM_string_ascii_encode(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size, int32_t translate_newlines) {
+char * MVM_string_ascii_encode(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int32_t translate_newlines) {
     return MVM_string_ascii_encode_substr(tc, str, output_size, 0, -1, NULL, translate_newlines);
 }
 
@@ -227,7 +227,7 @@ char * MVM_string_ascii_encode_malloc(MVMThreadContext *tc, MVMString *str) {
     uint32_t      lengthu   = MVM_string_graphs(tc, str);
 
     size_t         result_alloc = lengthu;
-    MVMuint8      *result = malloc(result_alloc + 1);
+    uint8_t      *result = malloc(result_alloc + 1);
     if (str->body.storage_type == MVM_STRING_GRAPHEME_ASCII) {
         /* No encoding needed; directly copy. */
         memcpy(result, str->body.storage.blob_ascii, lengthu);
@@ -244,7 +244,7 @@ char * MVM_string_ascii_encode_malloc(MVMThreadContext *tc, MVMString *str) {
                 result = realloc(result, result_alloc + 1);
             }
             if (0 <= ord && ord <= 127) {
-                result[i++] = (MVMuint8)ord;
+                result[i++] = (uint8_t)ord;
             }
             else {
                 free(result);

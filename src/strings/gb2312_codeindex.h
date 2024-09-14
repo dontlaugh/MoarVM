@@ -1778,7 +1778,7 @@ static int32_t gb2312_cp_to_index_record[24380]=
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,41449,41450,0,41982,
 0,41892,0};
 
-static MVMGrapheme32 gb2312_index_to_cp(MVMuint16 codepoint) {
+static MVMGrapheme32 gb2312_index_to_cp(uint16_t codepoint) {
     int zone = codepoint / 256 - 161;
     int point = codepoint % 256 - 161;
     if (0 <= zone && zone < 87 && 0 <= point && point < 94) {

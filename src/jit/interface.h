@@ -1,5 +1,5 @@
 /* Function for getting effective (JIT/specialized/original) bytecode. */
-MVM_STATIC_INLINE MVMuint8 * MVM_frame_effective_bytecode(MVMFrame *f) {
+MVM_STATIC_INLINE uint8_t * MVM_frame_effective_bytecode(MVMFrame *f) {
     MVMSpeshCandidate *spesh_cand = f->spesh_cand;
     if (spesh_cand)
         return spesh_cand->body.jitcode ? spesh_cand->body.jitcode->bytecode : spesh_cand->body.bytecode;

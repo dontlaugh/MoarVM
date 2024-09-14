@@ -48,7 +48,7 @@ struct MVMSpeshLogEntry {
         struct {
             MVMObject *type;
             int32_t flags;
-            MVMuint16 arg_idx;
+            uint16_t arg_idx;
         } param;
 
         /* Observed type (TYPE, RETURN). */
@@ -61,7 +61,7 @@ struct MVMSpeshLogEntry {
         /* Observed invocation (INVOKE). */
         struct {
             MVMStaticFrame *sf;
-            MVMint16 caller_is_outer;
+            int16_t caller_is_outer;
             uint32_t bytecode_offset;
         } invoke;
 
@@ -73,7 +73,7 @@ struct MVMSpeshLogEntry {
         /* Dispatch resolution (DISPATCH_RESOLUTION). */
         struct {
             uint32_t bytecode_offset;
-            MVMuint16 result_index;
+            uint16_t result_index;
         } dispatch;
     };
 };
@@ -93,7 +93,7 @@ struct MVMSpeshLogBody {
     /* If this was created due to a new compilation unit (heuristic to do
      * better at outer-loop OSR); we go over-quota for those, and this is
      * to help us restore it again. */
-    MVMuint8 was_compunit_bumped;
+    uint8_t was_compunit_bumped;
 
     /* When in debug mode, mutex and condition variable used to block the
      * thread sending a log until the spesh worker has processed it. */

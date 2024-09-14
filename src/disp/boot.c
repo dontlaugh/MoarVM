@@ -453,7 +453,7 @@ static void lang_find_meth(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMROOT(tc, capture) {
         MVMObject *tracked_invocant = MVM_disp_program_record_track_arg(tc, capture, 0);
         MVM_disp_program_record_guard_type(tc, tracked_invocant);
-        for (MVMuint8 i = 1; i <= 2; i++) {
+        for (uint8_t i = 1; i <= 2; i++) {
             MVMObject *tracked_arg = MVM_disp_program_record_track_arg(tc, capture, i);
             MVM_disp_program_record_guard_literal(tc, tracked_arg);
         }
@@ -462,7 +462,7 @@ static void lang_find_meth(MVMThreadContext *tc, MVMArgs arg_info) {
 
     /* Otherwise if it's a KnowHOW, then look in its method table (this is how
      * method dispatch bottoms out in the VM). */
-    MVMint64 exceptional = MVM_capture_arg_pos_i(tc, capture, 2);
+    int64_t exceptional = MVM_capture_arg_pos_i(tc, capture, 2);
     MVMObject *HOW;
     MVMROOT2(tc, capture, invocant) {
         HOW = MVM_6model_get_how(tc, STABLE(invocant));

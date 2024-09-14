@@ -34,11 +34,11 @@
 
 /* State entry. */
 struct MVMNFAStateInfo {
-    MVMint64 act;
-    MVMint64 to;
+    int64_t act;
+    int64_t to;
     union {
         MVMGrapheme32  g;
-        MVMint64       i;
+        int64_t       i;
         MVMString     *s;
         struct {
             MVMGrapheme32 uc;
@@ -50,8 +50,8 @@ struct MVMNFAStateInfo {
 /* Body of an NFA. */
 struct MVMNFABody {
     MVMObject        *fates;
-    MVMint64          num_states;
-    MVMint64         *num_state_edges;
+    int64_t          num_states;
+    int64_t         *num_state_edges;
     MVMNFAStateInfo **states;
 };
 
@@ -65,6 +65,6 @@ const MVMREPROps * MVMNFA_initialize(MVMThreadContext *tc);
 
 /* Other NFA related functions. */
 MVMObject * MVM_nfa_from_statelist(MVMThreadContext *tc, MVMObject *states, MVMObject *nfa_type);
-MVMObject * MVM_nfa_run_proto(MVMThreadContext *tc, MVMObject *nfa, MVMString *target, MVMint64 offset);
+MVMObject * MVM_nfa_run_proto(MVMThreadContext *tc, MVMObject *nfa, MVMString *target, int64_t offset);
 void MVM_nfa_run_alt(MVMThreadContext *tc, MVMObject *nfa, MVMString *target,
-    MVMint64 offset, MVMObject *bstack, MVMObject *cstack, MVMObject *labels);
+    int64_t offset, MVMObject *bstack, MVMObject *cstack, MVMObject *labels);

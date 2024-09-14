@@ -45,7 +45,7 @@ static void on_read(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf) {
 
             /* Produce a buffer and push it. */
             res_buf      = (MVMArray *)MVM_repr_alloc_init(tc, ri->buf_type);
-            res_buf->body.slots.i8 = (MVMint8 *)buf->base;
+            res_buf->body.slots.i8 = (int8_t *)buf->base;
             res_buf->body.start    = 0;
             res_buf->body.ssize    = buf->len;
             res_buf->body.elems    = nread;
@@ -420,7 +420,7 @@ static const MVMAsyncTaskOps close_op_table = {
     close_gc_free
 };
 
-static MVMint64 close_socket(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t close_socket(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMAsyncTask *task;
     CloseInfo *ci;
 
@@ -437,13 +437,13 @@ static MVMint64 close_socket(MVMThreadContext *tc, MVMOSHandle *h) {
     return 0;
 }
 
-static MVMint64 socket_is_tty(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_is_tty(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncSocketData *data   = (MVMIOAsyncSocketData *)h->body.data;
     uv_handle_t          *handle = (uv_handle_t *)data->handle;
-    return (MVMint64)(handle->type == UV_TTY);
+    return (int64_t)(handle->type == UV_TTY);
 }
 
-static MVMint64 socket_handle(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_handle(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncSocketData *data   = (MVMIOAsyncSocketData *)h->body.data;
     uv_handle_t          *handle = (uv_handle_t *)data->handle;
     int        fd;
@@ -451,7 +451,7 @@ static MVMint64 socket_handle(MVMThreadContext *tc, MVMOSHandle *h) {
 
     uv_fileno(handle, &fh);
     fd = uv_open_osfhandle(fh);
-    return (MVMint64)fd;
+    return (int64_t)fd;
 }
 
 /* IO ops table, populated with functions. */
@@ -482,7 +482,7 @@ static void push_name_and_port(MVMThreadContext *tc, struct sockaddr_storage *na
     /* XXX windows support kludge. 64 bit is much too big, but we'll
      * get the proper data from the struct anyway, however windows
      * decides to declare it. */
-    MVMuint64 port;
+    uint64_t port;
     MVMObject *host_o;
     MVMObject *port_o;
     switch (name->ss_family) {
@@ -636,7 +636,7 @@ static const MVMAsyncTaskOps connect_op_table = {
 /* Sets off an asynchronous socket connection. */
 MVMObject * MVM_io_socket_connect_async(MVMThreadContext *tc, MVMObject *queue,
                                         MVMObject *schedulee, MVMString *host,
-                                        MVMint64 port, MVMObject *async_type) {
+                                        int64_t port, MVMObject *async_type) {
     MVMAsyncTask *task;
     ConnectInfo  *ci;
     struct sockaddr *dest;
@@ -1022,7 +1022,7 @@ static const MVMAsyncTaskOps listen_op_table = {
 /* Initiates an async socket listener. */
 MVMObject * MVM_io_socket_listen_async(MVMThreadContext *tc, MVMObject *queue,
                                        MVMObject *schedulee, MVMString *host,
-                                       MVMint64 port, int32_t backlog, MVMObject *async_type) {
+                                       int64_t port, int32_t backlog, MVMObject *async_type) {
     MVMAsyncTask *task;
     ListenInfo   *li;
     struct sockaddr *dest;

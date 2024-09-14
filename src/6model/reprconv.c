@@ -43,24 +43,24 @@ void MVM_repr_compose(MVMThreadContext *tc, MVMObject *type, MVMObject *obj) {
     REPR(type)->compose(tc, STABLE(type), obj);
 }
 
-MVM_PUBLIC void MVM_repr_pos_set_elems(MVMThreadContext *tc, MVMObject *obj, MVMint64 elems) {
+MVM_PUBLIC void MVM_repr_pos_set_elems(MVMThreadContext *tc, MVMObject *obj, int64_t elems) {
     REPR(obj)->pos_funcs.set_elems(tc, STABLE(obj), obj,
         OBJECT_BODY(obj), elems);
 }
 
-void MVM_repr_populate_indices_array(MVMThreadContext *tc, MVMObject *arr, MVMint64 *elems) {
-    MVMint64 i;
+void MVM_repr_populate_indices_array(MVMThreadContext *tc, MVMObject *arr, int64_t *elems) {
+    int64_t i;
     *elems = MVM_repr_elems(tc, arr);
     if (*elems > tc->num_multi_dim_indices)
         tc->multi_dim_indices = MVM_realloc(tc->multi_dim_indices,
-            *elems * sizeof(MVMint64));
+            *elems * sizeof(int64_t));
     for (i = 0; i < *elems; i++)
         tc->multi_dim_indices[i] = MVM_repr_at_pos_i(tc, arr, i);
 }
 
 void MVM_repr_set_dimensions(MVMThreadContext *tc, MVMObject *obj, MVMObject *dims) {
     if (IS_CONCRETE(obj)) {
-        MVMint64 num_dims;
+        int64_t num_dims;
         MVM_repr_populate_indices_array(tc, dims, &num_dims);
         REPR(obj)->pos_funcs.set_dimensions(tc, STABLE(obj), obj,
             OBJECT_BODY(obj), num_dims, tc->multi_dim_indices);
@@ -70,7 +70,7 @@ void MVM_repr_set_dimensions(MVMThreadContext *tc, MVMObject *obj, MVMObject *di
     }
 }
 
-MVM_PUBLIC MVMObject * MVM_repr_pos_slice(MVMThreadContext *tc, MVMObject *src, MVMint64 start, MVMint64 end) {
+MVM_PUBLIC MVMObject * MVM_repr_pos_slice(MVMThreadContext *tc, MVMObject *src, int64_t start, int64_t end) {
     MVMObject *dest = NULL;
     MVMROOT(tc, src) {
         dest = MVM_repr_alloc_init(tc, src);
@@ -79,20 +79,20 @@ MVM_PUBLIC MVMObject * MVM_repr_pos_slice(MVMThreadContext *tc, MVMObject *src, 
     return dest;
 }
 
-MVM_PUBLIC void MVM_repr_pos_splice(MVMThreadContext *tc, MVMObject *obj, MVMObject *replacement, MVMint64 offset, MVMint64 count) {
+MVM_PUBLIC void MVM_repr_pos_splice(MVMThreadContext *tc, MVMObject *obj, MVMObject *replacement, int64_t offset, int64_t count) {
     REPR(obj)->pos_funcs.splice(tc, STABLE(obj), obj,
         OBJECT_BODY(obj), replacement,
         offset, count);
 }
 
-MVM_PUBLIC MVMint64 MVM_repr_exists_pos(MVMThreadContext *tc, MVMObject *obj, MVMint64 index) {
-    MVMint64 elems = REPR(obj)->elems(tc, STABLE(obj), obj, OBJECT_BODY(obj));
+MVM_PUBLIC int64_t MVM_repr_exists_pos(MVMThreadContext *tc, MVMObject *obj, int64_t index) {
+    int64_t elems = REPR(obj)->elems(tc, STABLE(obj), obj, OBJECT_BODY(obj));
     if (index < 0)
         index += elems;
     return index >= 0 && index < elems && !MVM_is_null(tc, MVM_repr_at_pos_o(tc, obj, index));
 }
 
-MVMint64 MVM_repr_at_pos_i(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx) {
+int64_t MVM_repr_at_pos_i(MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
     MVMRegister value;
     if (REPR(obj)->ID == MVM_REPR_ID_VMArray) {
         MVM_VMArray_at_pos(tc, STABLE(obj), obj, OBJECT_BODY(obj),
@@ -105,7 +105,7 @@ MVMint64 MVM_repr_at_pos_i(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx) {
     return value.i64;
 }
 
-MVMuint64 MVM_repr_at_pos_u(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx) {
+uint64_t MVM_repr_at_pos_u(MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
     MVMRegister value;
     if (REPR(obj)->ID == MVM_REPR_ID_VMArray) {
         MVM_VMArray_at_pos(tc, STABLE(obj), obj, OBJECT_BODY(obj),
@@ -118,7 +118,7 @@ MVMuint64 MVM_repr_at_pos_u(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx) 
     return value.u64;
 }
 
-MVMnum64 MVM_repr_at_pos_n(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx) {
+double MVM_repr_at_pos_n(MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
     MVMRegister value;
     if (REPR(obj)->ID == MVM_REPR_ID_VMArray) {
         MVM_VMArray_at_pos(tc, STABLE(obj), obj, OBJECT_BODY(obj),
@@ -131,7 +131,7 @@ MVMnum64 MVM_repr_at_pos_n(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx) {
     return value.n64;
 }
 
-MVMString * MVM_repr_at_pos_s(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx) {
+MVMString * MVM_repr_at_pos_s(MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
     MVMRegister value;
     if (REPR(obj)->ID == MVM_REPR_ID_VMArray) {
         MVM_VMArray_at_pos(tc, STABLE(obj), obj, OBJECT_BODY(obj),
@@ -144,7 +144,7 @@ MVMString * MVM_repr_at_pos_s(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx
     return value.s;
 }
 
-MVMObject * MVM_repr_at_pos_o(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx) {
+MVMObject * MVM_repr_at_pos_o(MVMThreadContext *tc, MVMObject *obj, int64_t idx) {
     if (MVM_LIKELY(IS_CONCRETE(obj))) {
         MVMRegister value;
         if (REPR(obj)->ID == MVM_REPR_ID_VMArray) {
@@ -164,26 +164,26 @@ MVMObject * MVM_repr_at_pos_o(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx
     return tc->instance->VMNull;
 }
 
-static void at_pos_multidim(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices, MVMRegister *value, MVMuint16 kind) {
-    MVMint64 num_indices;
+static void at_pos_multidim(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices, MVMRegister *value, uint16_t kind) {
+    int64_t num_indices;
     MVM_repr_populate_indices_array(tc, indices, &num_indices);
     REPR(obj)->pos_funcs.at_pos_multidim(tc, STABLE(obj), obj,
         OBJECT_BODY(obj), num_indices, tc->multi_dim_indices, value, kind);
 }
 
-MVMint64 MVM_repr_at_pos_multidim_i(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
+int64_t MVM_repr_at_pos_multidim_i(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
     MVMRegister r;
     at_pos_multidim(tc, obj, indices, &r, MVM_reg_int64);
     return r.i64;
 }
 
-MVMuint64 MVM_repr_at_pos_multidim_u(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
+uint64_t MVM_repr_at_pos_multidim_u(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
     MVMRegister r;
     at_pos_multidim(tc, obj, indices, &r, MVM_reg_uint64);
     return r.u64;
 }
 
-MVMnum64 MVM_repr_at_pos_multidim_n(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
+double MVM_repr_at_pos_multidim_n(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices) {
     MVMRegister r;
     at_pos_multidim(tc, obj, indices, &r, MVM_reg_num64);
     return r.n64;
@@ -201,139 +201,139 @@ MVMObject * MVM_repr_at_pos_multidim_o(MVMThreadContext *tc, MVMObject *obj, MVM
     return r.o;
 }
 
-static void at_pos_2d(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMRegister *value, MVMuint16 kind) {
-    MVMint64 c_indices[2] = { idx1, idx2 };
+static void at_pos_2d(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, MVMRegister *value, uint16_t kind) {
+    int64_t c_indices[2] = { idx1, idx2 };
     REPR(obj)->pos_funcs.at_pos_multidim(tc, STABLE(obj), obj,
         OBJECT_BODY(obj), 2, c_indices, value, kind);
 }
 
-MVMint64 MVM_repr_at_pos_2d_i(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2) {
+int64_t MVM_repr_at_pos_2d_i(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2) {
     MVMRegister r;
     at_pos_2d(tc, obj, idx1, idx2, &r, MVM_reg_int64);
     return r.i64;
 }
 
-MVMuint64 MVM_repr_at_pos_2d_u(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2) {
+uint64_t MVM_repr_at_pos_2d_u(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2) {
     MVMRegister r;
     at_pos_2d(tc, obj, idx1, idx2, &r, MVM_reg_uint64);
     return r.u64;
 }
 
-MVMnum64 MVM_repr_at_pos_2d_n(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2) {
+double MVM_repr_at_pos_2d_n(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2) {
     MVMRegister r;
     at_pos_2d(tc, obj, idx1, idx2, &r, MVM_reg_num64);
     return r.n64;
 }
 
-MVMString * MVM_repr_at_pos_2d_s(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2) {
+MVMString * MVM_repr_at_pos_2d_s(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2) {
     MVMRegister r;
     at_pos_2d(tc, obj, idx1, idx2, &r, MVM_reg_str);
     return r.s;
 }
 
-MVMObject * MVM_repr_at_pos_2d_o(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2) {
+MVMObject * MVM_repr_at_pos_2d_o(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2) {
     MVMRegister r;
     at_pos_2d(tc, obj, idx1, idx2, &r, MVM_reg_obj);
     return r.o;
 }
 
-static void at_pos_3d(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3, MVMRegister *value, MVMuint16 kind) {
-    MVMint64 c_indices[3] = { idx1, idx2, idx3 };
+static void at_pos_3d(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3, MVMRegister *value, uint16_t kind) {
+    int64_t c_indices[3] = { idx1, idx2, idx3 };
     REPR(obj)->pos_funcs.at_pos_multidim(tc, STABLE(obj), obj,
         OBJECT_BODY(obj), 3, c_indices, value, kind);
 }
 
-MVMint64 MVM_repr_at_pos_3d_i(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3) {
+int64_t MVM_repr_at_pos_3d_i(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3) {
     MVMRegister r;
     at_pos_3d(tc, obj, idx1, idx2, idx3, &r, MVM_reg_int64);
     return r.i64;
 }
 
-MVMuint64 MVM_repr_at_pos_3d_u(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3) {
+uint64_t MVM_repr_at_pos_3d_u(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3) {
     MVMRegister r;
     at_pos_3d(tc, obj, idx1, idx2, idx3, &r, MVM_reg_uint64);
     return r.u64;
 }
 
-MVMnum64 MVM_repr_at_pos_3d_n(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3) {
+double MVM_repr_at_pos_3d_n(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3) {
     MVMRegister r;
     at_pos_3d(tc, obj, idx1, idx2, idx3, &r, MVM_reg_num64);
     return r.n64;
 }
 
-MVMString * MVM_repr_at_pos_3d_s(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3) {
+MVMString * MVM_repr_at_pos_3d_s(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3) {
     MVMRegister r;
     at_pos_3d(tc, obj, idx1, idx2, idx3, &r, MVM_reg_str);
     return r.s;
 }
 
-MVMObject * MVM_repr_at_pos_3d_o(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3) {
+MVMObject * MVM_repr_at_pos_3d_o(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3) {
     MVMRegister r;
     at_pos_3d(tc, obj, idx1, idx2, idx3, &r, MVM_reg_obj);
     return r.o;
 }
 
-void MVM_repr_bind_pos_i(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx, MVMint64 value) {
+void MVM_repr_bind_pos_i(MVMThreadContext *tc, MVMObject *obj, int64_t idx, int64_t value) {
     MVMRegister val;
     val.i64 = value;
     REPR(obj)->pos_funcs.bind_pos(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         idx, val, MVM_reg_int64);
 }
 
-void MVM_repr_bind_pos_u(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx, MVMuint64 value) {
+void MVM_repr_bind_pos_u(MVMThreadContext *tc, MVMObject *obj, int64_t idx, uint64_t value) {
     MVMRegister val;
     val.u64 = value;
     REPR(obj)->pos_funcs.bind_pos(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         idx, val, MVM_reg_uint64);
 }
 
-void MVM_repr_bind_pos_n(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx, MVMnum64 value) {
+void MVM_repr_bind_pos_n(MVMThreadContext *tc, MVMObject *obj, int64_t idx, double value) {
     MVMRegister val;
     val.n64 = value;
     REPR(obj)->pos_funcs.bind_pos(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         idx, val, MVM_reg_num64);
 }
 
-void MVM_repr_bind_pos_s(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx, MVMString *value) {
+void MVM_repr_bind_pos_s(MVMThreadContext *tc, MVMObject *obj, int64_t idx, MVMString *value) {
     MVMRegister val;
     val.s = value;
     REPR(obj)->pos_funcs.bind_pos(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         idx, val, MVM_reg_str);
 }
 
-void MVM_repr_bind_pos_o(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx, MVMObject *value) {
+void MVM_repr_bind_pos_o(MVMThreadContext *tc, MVMObject *obj, int64_t idx, MVMObject *value) {
     MVMRegister val;
     val.o = value;
     REPR(obj)->pos_funcs.bind_pos(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         idx, val, MVM_reg_obj);
 }
 
-void MVM_repr_write_buf(MVMThreadContext *tc, MVMObject *obj, char *value, MVMint64 offset, MVMint64 size) {
+void MVM_repr_write_buf(MVMThreadContext *tc, MVMObject *obj, char *value, int64_t offset, int64_t size) {
     REPR(obj)->pos_funcs.write_buf(tc, STABLE(obj), obj, OBJECT_BODY(obj), value, offset, size);
 }
 
-MVMint64 MVM_repr_read_buf(MVMThreadContext *tc, MVMObject *obj, MVMint64 offset, MVMint64 size) {
+int64_t MVM_repr_read_buf(MVMThreadContext *tc, MVMObject *obj, int64_t offset, int64_t size) {
     return REPR(obj)->pos_funcs.read_buf(tc, STABLE(obj), obj, OBJECT_BODY(obj), offset, size);
 }
 
-static void bind_pos_multidim(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices, MVMRegister value, MVMuint16 kind) {
-    MVMint64 num_indices;
+static void bind_pos_multidim(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices, MVMRegister value, uint16_t kind) {
+    int64_t num_indices;
     MVM_repr_populate_indices_array(tc, indices, &num_indices);
     REPR(obj)->pos_funcs.bind_pos_multidim(tc, STABLE(obj), obj,
         OBJECT_BODY(obj), num_indices, tc->multi_dim_indices, value, kind);
 }
 
-void MVM_repr_bind_pos_multidim_i(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices, MVMint64 value) {
+void MVM_repr_bind_pos_multidim_i(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices, int64_t value) {
     MVMRegister r;
     r.i64 = value;
     bind_pos_multidim(tc, obj, indices, r, MVM_reg_int64);
 }
-void MVM_repr_bind_pos_multidim_u(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices, MVMuint64 value) {
+void MVM_repr_bind_pos_multidim_u(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices, uint64_t value) {
     MVMRegister r;
     r.u64 = value;
     bind_pos_multidim(tc, obj, indices, r, MVM_reg_uint64);
 }
-void MVM_repr_bind_pos_multidim_n(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices, MVMnum64 value) {
+void MVM_repr_bind_pos_multidim_n(MVMThreadContext *tc, MVMObject *obj, MVMObject *indices, double value) {
     MVMRegister r;
     r.n64 = value;
     bind_pos_multidim(tc, obj, indices, r, MVM_reg_num64);
@@ -349,78 +349,78 @@ void MVM_repr_bind_pos_multidim_o(MVMThreadContext *tc, MVMObject *obj, MVMObjec
     bind_pos_multidim(tc, obj, indices, r, MVM_reg_obj);
 }
 
-static void bind_pos_2d(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMRegister value, MVMuint16 kind) {
-    MVMint64 c_indices[2] = { idx1, idx2 };
+static void bind_pos_2d(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, MVMRegister value, uint16_t kind) {
+    int64_t c_indices[2] = { idx1, idx2 };
     REPR(obj)->pos_funcs.bind_pos_multidim(tc, STABLE(obj), obj,
         OBJECT_BODY(obj), 2, c_indices, value, kind);
 }
 
-void MVM_repr_bind_pos_2d_i(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 value) {
+void MVM_repr_bind_pos_2d_i(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t value) {
     MVMRegister r;
     r.i64 = value;
     bind_pos_2d(tc, obj, idx1, idx2, r, MVM_reg_int64);
 }
-void MVM_repr_bind_pos_2d_u(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMuint64 value) {
+void MVM_repr_bind_pos_2d_u(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, uint64_t value) {
     MVMRegister r;
     r.u64 = value;
     bind_pos_2d(tc, obj, idx1, idx2, r, MVM_reg_uint64);
 }
-void MVM_repr_bind_pos_2d_n(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMnum64 value) {
+void MVM_repr_bind_pos_2d_n(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, double value) {
     MVMRegister r;
     r.n64 = value;
     bind_pos_2d(tc, obj, idx1, idx2, r, MVM_reg_num64);
 }
-void MVM_repr_bind_pos_2d_s(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMString *value) {
+void MVM_repr_bind_pos_2d_s(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, MVMString *value) {
     MVMRegister r;
     r.s = value;
     bind_pos_2d(tc, obj, idx1, idx2, r, MVM_reg_str);
 }
-void MVM_repr_bind_pos_2d_o(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMObject *value) {
+void MVM_repr_bind_pos_2d_o(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, MVMObject *value) {
     MVMRegister r;
     r.o = value;
     bind_pos_2d(tc, obj, idx1, idx2, r, MVM_reg_obj);
 }
 
-static void bind_pos_3d(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3, MVMRegister value, MVMuint16 kind) {
-    MVMint64 c_indices[3] = { idx1, idx2, idx3 };
+static void bind_pos_3d(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3, MVMRegister value, uint16_t kind) {
+    int64_t c_indices[3] = { idx1, idx2, idx3 };
     REPR(obj)->pos_funcs.bind_pos_multidim(tc, STABLE(obj), obj,
         OBJECT_BODY(obj), 3, c_indices, value, kind);
 }
 
-void MVM_repr_bind_pos_3d_i(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3, MVMint64 value) {
+void MVM_repr_bind_pos_3d_i(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3, int64_t value) {
     MVMRegister r;
     r.i64 = value;
     bind_pos_3d(tc, obj, idx1, idx2, idx3, r, MVM_reg_int64);
 }
-void MVM_repr_bind_pos_3d_u(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3, MVMuint64 value) {
+void MVM_repr_bind_pos_3d_u(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3, uint64_t value) {
     MVMRegister r;
     r.u64 = value;
     bind_pos_3d(tc, obj, idx1, idx2, idx3, r, MVM_reg_uint64);
 }
-void MVM_repr_bind_pos_3d_n(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3, MVMnum64 value) {
+void MVM_repr_bind_pos_3d_n(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3, double value) {
     MVMRegister r;
     r.n64 = value;
     bind_pos_3d(tc, obj, idx1, idx2, idx3, r, MVM_reg_num64);
 }
-void MVM_repr_bind_pos_3d_s(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3, MVMString *value) {
+void MVM_repr_bind_pos_3d_s(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3, MVMString *value) {
     MVMRegister r;
     r.s = value;
     bind_pos_3d(tc, obj, idx1, idx2, idx3, r, MVM_reg_str);
 }
-void MVM_repr_bind_pos_3d_o(MVMThreadContext *tc, MVMObject *obj, MVMint64 idx1, MVMint64 idx2, MVMint64 idx3, MVMObject *value) {
+void MVM_repr_bind_pos_3d_o(MVMThreadContext *tc, MVMObject *obj, int64_t idx1, int64_t idx2, int64_t idx3, MVMObject *value) {
     MVMRegister r;
     r.o = value;
     bind_pos_3d(tc, obj, idx1, idx2, idx3, r, MVM_reg_obj);
 }
 
-void MVM_repr_push_i(MVMThreadContext *tc, MVMObject *obj, MVMint64 pushee) {
+void MVM_repr_push_i(MVMThreadContext *tc, MVMObject *obj, int64_t pushee) {
     MVMRegister value;
     value.i64 = pushee;
     REPR(obj)->pos_funcs.push(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         value, MVM_reg_int64);
 }
 
-void MVM_repr_push_n(MVMThreadContext *tc, MVMObject *obj, MVMnum64 pushee) {
+void MVM_repr_push_n(MVMThreadContext *tc, MVMObject *obj, double pushee) {
     MVMRegister value;
     value.n64 = pushee;
     REPR(obj)->pos_funcs.push(tc, STABLE(obj), obj, OBJECT_BODY(obj),
@@ -441,14 +441,14 @@ void MVM_repr_push_o(MVMThreadContext *tc, MVMObject *obj, MVMObject *pushee) {
         value, MVM_reg_obj);
 }
 
-void MVM_repr_unshift_i(MVMThreadContext *tc, MVMObject *obj, MVMint64 unshiftee) {
+void MVM_repr_unshift_i(MVMThreadContext *tc, MVMObject *obj, int64_t unshiftee) {
     MVMRegister value;
     value.i64 = unshiftee;
     REPR(obj)->pos_funcs.unshift(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         value, MVM_reg_int64);
 }
 
-void MVM_repr_unshift_n(MVMThreadContext *tc, MVMObject *obj, MVMnum64 unshiftee) {
+void MVM_repr_unshift_n(MVMThreadContext *tc, MVMObject *obj, double unshiftee) {
     MVMRegister value;
     value.n64 = unshiftee;
     REPR(obj)->pos_funcs.unshift(tc, STABLE(obj), obj, OBJECT_BODY(obj),
@@ -469,14 +469,14 @@ void MVM_repr_unshift_o(MVMThreadContext *tc, MVMObject *obj, MVMObject *unshift
         value, MVM_reg_obj);
 }
 
-MVMint64 MVM_repr_pop_i(MVMThreadContext *tc, MVMObject *obj) {
+int64_t MVM_repr_pop_i(MVMThreadContext *tc, MVMObject *obj) {
     MVMRegister value;
     REPR(obj)->pos_funcs.pop(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         &value, MVM_reg_int64);
     return value.i64;
 }
 
-MVMnum64 MVM_repr_pop_n(MVMThreadContext *tc, MVMObject *obj) {
+double MVM_repr_pop_n(MVMThreadContext *tc, MVMObject *obj) {
     MVMRegister value;
     REPR(obj)->pos_funcs.pop(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         &value, MVM_reg_num64);
@@ -497,14 +497,14 @@ MVMObject * MVM_repr_pop_o(MVMThreadContext *tc, MVMObject *obj) {
     return value.o;
 }
 
-MVMint64 MVM_repr_shift_i(MVMThreadContext *tc, MVMObject *obj) {
+int64_t MVM_repr_shift_i(MVMThreadContext *tc, MVMObject *obj) {
     MVMRegister value;
     REPR(obj)->pos_funcs.shift(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         &value, MVM_reg_int64);
     return value.i64;
 }
 
-MVMnum64 MVM_repr_shift_n(MVMThreadContext *tc, MVMObject *obj) {
+double MVM_repr_shift_n(MVMThreadContext *tc, MVMObject *obj) {
     MVMRegister value;
     REPR(obj)->pos_funcs.shift(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         &value, MVM_reg_num64);
@@ -525,7 +525,7 @@ MVMObject * MVM_repr_shift_o(MVMThreadContext *tc, MVMObject *obj) {
     return value.o;
 }
 
-MVMint64 MVM_repr_at_key_i(MVMThreadContext *tc, MVMObject *obj, MVMString *key) {
+int64_t MVM_repr_at_key_i(MVMThreadContext *tc, MVMObject *obj, MVMString *key) {
     MVMRegister value;
     if (REPR(obj)->ID == MVM_REPR_ID_MVMHash) {
         MVMHash_at_key(tc, STABLE(obj), obj, OBJECT_BODY(obj),
@@ -538,7 +538,7 @@ MVMint64 MVM_repr_at_key_i(MVMThreadContext *tc, MVMObject *obj, MVMString *key)
     return value.i64;
 }
 
-MVMuint64 MVM_repr_at_key_u(MVMThreadContext *tc, MVMObject *obj, MVMString *key) {
+uint64_t MVM_repr_at_key_u(MVMThreadContext *tc, MVMObject *obj, MVMString *key) {
     MVMRegister value;
     if (REPR(obj)->ID == MVM_REPR_ID_MVMHash) {
         MVMHash_at_key(tc, STABLE(obj), obj, OBJECT_BODY(obj),
@@ -551,7 +551,7 @@ MVMuint64 MVM_repr_at_key_u(MVMThreadContext *tc, MVMObject *obj, MVMString *key
     return value.u64;
 }
 
-MVMnum64 MVM_repr_at_key_n(MVMThreadContext *tc, MVMObject *obj, MVMString *key) {
+double MVM_repr_at_key_n(MVMThreadContext *tc, MVMObject *obj, MVMString *key) {
     MVMRegister value;
     if (REPR(obj)->ID == MVM_REPR_ID_MVMHash) {
         MVMHash_at_key(tc, STABLE(obj), obj, OBJECT_BODY(obj),
@@ -593,14 +593,14 @@ MVMObject * MVM_repr_at_key_o(MVMThreadContext *tc, MVMObject *obj, MVMString *k
     return tc->instance->VMNull;
 }
 
-void MVM_repr_bind_key_i(MVMThreadContext *tc, MVMObject *obj, MVMString *key, MVMint64 val) {
+void MVM_repr_bind_key_i(MVMThreadContext *tc, MVMObject *obj, MVMString *key, int64_t val) {
     MVMRegister value;
     value.i64 = val;
     REPR(obj)->ass_funcs.bind_key(tc, STABLE(obj), obj, OBJECT_BODY(obj),
         (MVMObject *)key, value, MVM_reg_int64);
 }
 
-void MVM_repr_bind_key_n(MVMThreadContext *tc, MVMObject *obj, MVMString *key, MVMnum64 val) {
+void MVM_repr_bind_key_n(MVMThreadContext *tc, MVMObject *obj, MVMString *key, double val) {
     MVMRegister value;
     value.n64 = val;
     REPR(obj)->ass_funcs.bind_key(tc, STABLE(obj), obj, OBJECT_BODY(obj),
@@ -633,7 +633,7 @@ void MVM_repr_bind_key_o(MVMThreadContext *tc, MVMObject *obj, MVMString *key, M
     }
 }
 
-MVMint64 MVM_repr_exists_key(MVMThreadContext *tc, MVMObject *obj, MVMString *key) {
+int64_t MVM_repr_exists_key(MVMThreadContext *tc, MVMObject *obj, MVMString *key) {
     return REPR(obj)->ass_funcs.exists_key(tc, STABLE(obj), obj,
         OBJECT_BODY(obj), (MVMObject *)key);
 }
@@ -643,14 +643,14 @@ void MVM_repr_delete_key(MVMThreadContext *tc, MVMObject *obj, MVMString *key) {
         OBJECT_BODY(obj), (MVMObject *)key);
 }
 
-MVMuint64 MVM_repr_elems(MVMThreadContext *tc, MVMObject *obj) {
+uint64_t MVM_repr_elems(MVMThreadContext *tc, MVMObject *obj) {
     return REPR(obj)->elems(tc, STABLE(obj), obj, OBJECT_BODY(obj));
 }
 
 MVMObject * MVM_repr_dimensions(MVMThreadContext *tc, MVMObject *obj) {
     if (IS_CONCRETE(obj)) {
-        MVMint64 num_dims, i;
-        MVMint64 *dims;
+        int64_t num_dims, i;
+        int64_t *dims;
         MVMObject *result;
         REPR(obj)->pos_funcs.dimensions(tc, STABLE(obj), obj, OBJECT_BODY(obj),
             &num_dims, &dims);
@@ -664,10 +664,10 @@ MVMObject * MVM_repr_dimensions(MVMThreadContext *tc, MVMObject *obj) {
     }
 }
 
-MVMint64 MVM_repr_num_dimensions(MVMThreadContext *tc, MVMObject *obj) {
+int64_t MVM_repr_num_dimensions(MVMThreadContext *tc, MVMObject *obj) {
     if (IS_CONCRETE(obj)) {
-        MVMint64 num_dims;
-        MVMint64 *_;
+        int64_t num_dims;
+        int64_t *_;
         REPR(obj)->pos_funcs.dimensions(tc, STABLE(obj), obj, OBJECT_BODY(obj),
             &num_dims, &_);
         return num_dims;
@@ -677,13 +677,13 @@ MVMint64 MVM_repr_num_dimensions(MVMThreadContext *tc, MVMObject *obj) {
     }
 }
 
-MVMint64 MVM_repr_get_int(MVMThreadContext *tc, MVMObject *obj) {
+int64_t MVM_repr_get_int(MVMThreadContext *tc, MVMObject *obj) {
     if (!IS_CONCRETE(obj))
         MVM_exception_throw_adhoc(tc, "Cannot unbox a type object (%s) to int.", MVM_6model_get_debug_name(tc, obj));
     return REPR(obj)->box_funcs.get_int(tc, STABLE(obj), obj, OBJECT_BODY(obj));
 }
 
-MVMnum64 MVM_repr_get_num(MVMThreadContext *tc, MVMObject *obj) {
+double MVM_repr_get_num(MVMThreadContext *tc, MVMObject *obj) {
     if (!IS_CONCRETE(obj))
         MVM_exception_throw_adhoc(tc, "Cannot unbox a type object (%s) to a num.", MVM_6model_get_debug_name(tc, obj));
     return REPR(obj)->box_funcs.get_num(tc, STABLE(obj), obj, OBJECT_BODY(obj));
@@ -695,17 +695,17 @@ MVMString * MVM_repr_get_str(MVMThreadContext *tc, MVMObject *obj) {
     return REPR(obj)->box_funcs.get_str(tc, STABLE(obj), obj, OBJECT_BODY(obj));
 }
 
-MVMuint64 MVM_repr_get_uint(MVMThreadContext *tc, MVMObject *obj) {
+uint64_t MVM_repr_get_uint(MVMThreadContext *tc, MVMObject *obj) {
     if (!IS_CONCRETE(obj))
         MVM_exception_throw_adhoc(tc, "Cannot unbox a type object (%s) to an unsigned int.", MVM_6model_get_debug_name(tc, obj));
     return REPR(obj)->box_funcs.get_uint(tc, STABLE(obj), obj, OBJECT_BODY(obj));
 }
 
-void MVM_repr_set_int(MVMThreadContext *tc, MVMObject *obj, MVMint64 val) {
+void MVM_repr_set_int(MVMThreadContext *tc, MVMObject *obj, int64_t val) {
     REPR(obj)->box_funcs.set_int(tc, STABLE(obj), obj, OBJECT_BODY(obj), val);
 }
 
-void MVM_repr_set_num(MVMThreadContext *tc, MVMObject *obj, MVMnum64 val) {
+void MVM_repr_set_num(MVMThreadContext *tc, MVMObject *obj, double val) {
     REPR(obj)->box_funcs.set_num(tc, STABLE(obj), obj, OBJECT_BODY(obj), val);
 }
 
@@ -713,11 +713,11 @@ void MVM_repr_set_str(MVMThreadContext *tc, MVMObject *obj, MVMString *val) {
     REPR(obj)->box_funcs.set_str(tc, STABLE(obj), obj, OBJECT_BODY(obj), val);
 }
 
-void MVM_repr_set_uint(MVMThreadContext *tc, MVMObject *obj, MVMuint64 val) {
+void MVM_repr_set_uint(MVMThreadContext *tc, MVMObject *obj, uint64_t val) {
     REPR(obj)->box_funcs.set_uint(tc, STABLE(obj), obj, OBJECT_BODY(obj), val);
 }
 
-MVMObject * MVM_repr_box_int(MVMThreadContext *tc, MVMObject *type, MVMint64 val) {
+MVMObject * MVM_repr_box_int(MVMThreadContext *tc, MVMObject *type, int64_t val) {
     MVMObject *res;
     res = MVM_intcache_get(tc, type, val);
     if (res == 0) {
@@ -727,7 +727,7 @@ MVMObject * MVM_repr_box_int(MVMThreadContext *tc, MVMObject *type, MVMint64 val
     return res;
 }
 
-MVMObject * MVM_repr_box_num(MVMThreadContext *tc, MVMObject *type, MVMnum64 val) {
+MVMObject * MVM_repr_box_num(MVMThreadContext *tc, MVMObject *type, double val) {
     MVMObject *res = MVM_repr_alloc_init(tc, type);
     MVM_repr_set_num(tc, res, val);
     return res;
@@ -742,14 +742,14 @@ MVMObject * MVM_repr_box_str(MVMThreadContext *tc, MVMObject *type, MVMString *v
     return res;
 }
 
-MVMObject * MVM_repr_box_uint(MVMThreadContext *tc, MVMObject *type, MVMuint64 val) {
+MVMObject * MVM_repr_box_uint(MVMThreadContext *tc, MVMObject *type, uint64_t val) {
     MVMObject *res = MVM_repr_alloc_init(tc, type);
     MVM_repr_set_uint(tc, res, val);
     return res;
 }
 
-MVM_PUBLIC MVMint64 MVM_repr_get_attr_i(MVMThreadContext *tc, MVMObject *object, MVMObject *type,
-                                           MVMString *name, MVMint16 hint) {
+MVM_PUBLIC int64_t MVM_repr_get_attr_i(MVMThreadContext *tc, MVMObject *object, MVMObject *type,
+                                           MVMString *name, int16_t hint) {
     MVMRegister result_reg;
     if (!IS_CONCRETE(object))
         MVM_exception_throw_adhoc(tc, "Cannot look up attributes in a %s type object. Did you forget a '.new'?", MVM_6model_get_debug_name(tc, object));
@@ -760,8 +760,8 @@ MVM_PUBLIC MVMint64 MVM_repr_get_attr_i(MVMThreadContext *tc, MVMObject *object,
     return result_reg.i64;
 }
 
-MVM_PUBLIC MVMuint64 MVM_repr_get_attr_u(MVMThreadContext *tc, MVMObject *object, MVMObject *type,
-                                           MVMString *name, MVMint16 hint) {
+MVM_PUBLIC uint64_t MVM_repr_get_attr_u(MVMThreadContext *tc, MVMObject *object, MVMObject *type,
+                                           MVMString *name, int16_t hint) {
     MVMRegister result_reg;
     if (!IS_CONCRETE(object))
         MVM_exception_throw_adhoc(tc, "Cannot look up attributes in a %s type object. Did you forget a '.new'?", MVM_6model_get_debug_name(tc, object));
@@ -772,8 +772,8 @@ MVM_PUBLIC MVMuint64 MVM_repr_get_attr_u(MVMThreadContext *tc, MVMObject *object
     return result_reg.u64;
 }
 
-MVM_PUBLIC MVMnum64 MVM_repr_get_attr_n(MVMThreadContext *tc, MVMObject *object, MVMObject *type,
-                                           MVMString *name, MVMint16 hint) {
+MVM_PUBLIC double MVM_repr_get_attr_n(MVMThreadContext *tc, MVMObject *object, MVMObject *type,
+                                           MVMString *name, int16_t hint) {
     MVMRegister result_reg;
     if (!IS_CONCRETE(object))
         MVM_exception_throw_adhoc(tc, "Cannot look up attributes in a %s type object. Did you forget a '.new'?", MVM_6model_get_debug_name(tc, object));
@@ -785,7 +785,7 @@ MVM_PUBLIC MVMnum64 MVM_repr_get_attr_n(MVMThreadContext *tc, MVMObject *object,
 }
 
 MVM_PUBLIC MVMString * MVM_repr_get_attr_s(MVMThreadContext *tc, MVMObject *object, MVMObject *type,
-                                           MVMString *name, MVMint16 hint) {
+                                           MVMString *name, int16_t hint) {
     MVMRegister result_reg;
     if (!IS_CONCRETE(object))
         MVM_exception_throw_adhoc(tc, "Cannot look up attributes in a %s type object. Did you forget a '.new'?", MVM_6model_get_debug_name(tc, object));
@@ -797,7 +797,7 @@ MVM_PUBLIC MVMString * MVM_repr_get_attr_s(MVMThreadContext *tc, MVMObject *obje
 }
 
 MVM_PUBLIC MVMObject * MVM_repr_get_attr_o(MVMThreadContext *tc, MVMObject *object, MVMObject *type,
-                                           MVMString *name, MVMint16 hint) {
+                                           MVMString *name, int16_t hint) {
     MVMRegister result_reg;
     if (!IS_CONCRETE(object))
         MVM_exception_throw_adhoc(tc, "Cannot look up attributes in a %s type object. Did you forget a '.new'?", MVM_6model_get_debug_name(tc, object));
@@ -810,7 +810,7 @@ MVM_PUBLIC MVMObject * MVM_repr_get_attr_o(MVMThreadContext *tc, MVMObject *obje
 
 
 MVM_PUBLIC void MVM_repr_bind_attr_inso(MVMThreadContext *tc, MVMObject *object, MVMObject *type,
-                                           MVMString *name, MVMint16 hint, MVMRegister value_reg, MVMuint16 kind) {
+                                           MVMString *name, int16_t hint, MVMRegister value_reg, uint16_t kind) {
     if (!IS_CONCRETE(object))
         MVM_exception_throw_adhoc(tc, "Cannot bind attributes in a %s type object. Did you forget a '.new'?", MVM_6model_get_debug_name(tc, object));
     REPR(object)->attr_funcs.bind_attribute(tc,
@@ -820,7 +820,7 @@ MVM_PUBLIC void MVM_repr_bind_attr_inso(MVMThreadContext *tc, MVMObject *object,
     MVM_SC_WB_OBJ(tc, object);
 }
 
-MVM_PUBLIC MVMint64 MVM_repr_attribute_inited(MVMThreadContext *tc, MVMObject *obj, MVMObject *type,
+MVM_PUBLIC int64_t MVM_repr_attribute_inited(MVMThreadContext *tc, MVMObject *obj, MVMObject *type,
                                               MVMString *name) {
     if (!IS_CONCRETE(obj))
         MVM_exception_throw_adhoc(tc, "Cannot look up attributes in a %s type object. Did you forget a '.new'?", MVM_6model_get_debug_name(tc, obj));
@@ -829,11 +829,11 @@ MVM_PUBLIC MVMint64 MVM_repr_attribute_inited(MVMThreadContext *tc, MVMObject *o
         type, name, MVM_NO_HINT);
 }
 
-MVM_PUBLIC MVMint64    MVM_repr_compare_repr_id(MVMThreadContext *tc, MVMObject *object, uint32_t REPRId) {
+MVM_PUBLIC int64_t    MVM_repr_compare_repr_id(MVMThreadContext *tc, MVMObject *object, uint32_t REPRId) {
     return object && REPR(object)->ID == REPRId ? 1 : 0;
 }
 
-MVM_PUBLIC MVMint64    MVM_repr_hint_for(MVMThreadContext *tc, MVMObject *object, MVMString *attrname) {
+MVM_PUBLIC int64_t    MVM_repr_hint_for(MVMThreadContext *tc, MVMObject *object, MVMString *attrname) {
     return REPR(object)->attr_funcs.hint_for(tc, STABLE(object), object, attrname);
 }
 

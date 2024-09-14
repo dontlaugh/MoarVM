@@ -24,11 +24,11 @@ MVM_STATIC_INLINE uint32_t MVM_fixkey_hash_allocated_items(const struct MVMFixKe
 MVM_STATIC_INLINE uint32_t MVM_fixkey_hash_kompromat(const struct MVMFixKeyHashTableControl *control) {
     return MVM_fixkey_hash_official_size(control) + control->max_probe_distance - 1;
 }
-MVM_STATIC_INLINE MVMuint8 *MVM_fixkey_hash_metadata(const struct MVMFixKeyHashTableControl *control) {
-    return (MVMuint8 *) control + sizeof(struct MVMFixKeyHashTableControl);
+MVM_STATIC_INLINE uint8_t *MVM_fixkey_hash_metadata(const struct MVMFixKeyHashTableControl *control) {
+    return (uint8_t *) control + sizeof(struct MVMFixKeyHashTableControl);
 }
-MVM_STATIC_INLINE MVMuint8 *MVM_fixkey_hash_entries(const struct MVMFixKeyHashTableControl *control) {
-    return (MVMuint8 *) control - sizeof(MVMString ***);
+MVM_STATIC_INLINE uint8_t *MVM_fixkey_hash_entries(const struct MVMFixKeyHashTableControl *control) {
+    return (uint8_t *) control - sizeof(MVMString ***);
 }
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
@@ -67,7 +67,7 @@ MVM_STATIC_INLINE struct MVM_hash_loop_state
 MVM_fixkey_hash_create_loop_state(MVMThreadContext *tc,
                                   struct MVMFixKeyHashTableControl *control,
                                   MVMString *key) {
-    MVMuint64 hash_val = MVM_string_hash_code(tc, key);
+    uint64_t hash_val = MVM_string_hash_code(tc, key);
     struct MVM_hash_loop_state retval;
     retval.entry_size = sizeof(MVMString ***);
     retval.metadata_increment = 1 << control->metadata_hash_bits;
@@ -164,8 +164,8 @@ MVM_STATIC_INLINE void MVM_fixkey_hash_foreach(MVMThreadContext *tc, MVMFixKeyHa
         return;
 
     uint32_t entries_in_use = MVM_fixkey_hash_kompromat(control);
-    MVMuint8 *entry_raw = MVM_fixkey_hash_entries(control);
-    MVMuint8 *metadata = MVM_fixkey_hash_metadata(control);
+    uint8_t *entry_raw = MVM_fixkey_hash_entries(control);
+    uint8_t *metadata = MVM_fixkey_hash_metadata(control);
     uint32_t bucket = 0;
     while (bucket < entries_in_use) {
         if (*metadata) {

@@ -8,7 +8,7 @@ typedef struct {
 
 /* Creates a new thread handle with the MVMThread representation. Does not
  * actually start execution of the thread, but does give it its unique ID. */
-MVMObject * MVM_thread_new(MVMThreadContext *tc, MVMObject *invokee, MVMint64 app_lifetime) {
+MVMObject * MVM_thread_new(MVMThreadContext *tc, MVMObject *invokee, int64_t app_lifetime) {
     MVMThread *thread;
     MVMThreadContext *child_tc;
     unsigned int interval_id;
@@ -229,7 +229,7 @@ void MVM_thread_join(MVMThreadContext *tc, MVMObject *thread_obj) {
 }
 
 /* Gets the (VM-level) ID of a thread. */
-MVMint64 MVM_thread_id(MVMThreadContext *tc, MVMObject *thread_obj) {
+int64_t MVM_thread_id(MVMThreadContext *tc, MVMObject *thread_obj) {
     if (REPR(thread_obj)->ID == MVM_REPR_ID_MVMThread && IS_CONCRETE(thread_obj))
         return ((MVMThread *)thread_obj)->body.thread_id;
     else
@@ -239,7 +239,7 @@ MVMint64 MVM_thread_id(MVMThreadContext *tc, MVMObject *thread_obj) {
 
 /* Gets the native OS ID of a thread. If it's not yet available because
  * the thread was not yet started, this will return 0. */
-MVMint64 MVM_thread_native_id(MVMThreadContext *tc, MVMObject *thread_obj) {
+int64_t MVM_thread_native_id(MVMThreadContext *tc, MVMObject *thread_obj) {
     if (REPR(thread_obj)->ID == MVM_REPR_ID_MVMThread && IS_CONCRETE(thread_obj))
         return ((MVMThread *)thread_obj)->body.native_thread_id;
     else
@@ -259,7 +259,7 @@ MVMObject * MVM_thread_current(MVMThreadContext *tc) {
 }
 
 /* Gets the number of locks held by a thread. */
-MVMint64 MVM_thread_lock_count(MVMThreadContext *tc, MVMObject *thread_obj) {
+int64_t MVM_thread_lock_count(MVMThreadContext *tc, MVMObject *thread_obj) {
     if (REPR(thread_obj)->ID == MVM_REPR_ID_MVMThread && IS_CONCRETE(thread_obj)) {
         MVMThreadContext *thread_tc = ((MVMThread *)thread_obj)->body.tc;
         return thread_tc ? thread_tc->num_locks : 0;
@@ -336,7 +336,7 @@ void MVM_thread_dump(MVMThreadContext *tc) {
 
 /* Goes through all non-app-lifetime threads and joins them. */
 void MVM_thread_join_foreground(MVMThreadContext *tc) {
-    MVMint64 work = 1;
+    int64_t work = 1;
     while (work) {
         MVMThread *cur_thread = tc->instance->threads;
         work = 0;
@@ -360,9 +360,9 @@ void MVM_thread_join_foreground(MVMThreadContext *tc) {
 
 void MVM_thread_set_self_name(MVMThreadContext *tc, MVMString *name) {
     #if MVM_HAS_PTHREAD_SETNAME_NP
-    MVMuint64 name_length = MVM_string_graphs(tc, name);
-    MVMint16 acceptable_length = name_length > 15 ? 15 : name_length;
-    MVMuint8 success = 0;
+    uint64_t name_length = MVM_string_graphs(tc, name);
+    int16_t acceptable_length = name_length > 15 ? 15 : name_length;
+    uint8_t success = 0;
     MVMROOT(tc, name) {
     while (acceptable_length > 0 && !success) {
             MVMString *substring = MVM_string_substring(tc, name, 0, acceptable_length);

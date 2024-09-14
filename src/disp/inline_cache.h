@@ -34,7 +34,7 @@ typedef int MVMDispInlineCacheRunGetLexStatic(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMString *name, MVMRegister *r);
 typedef void MVMDispInlineCacheRunDispatch(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
-        MVMString *id, MVMCallsite *cs, MVMuint16 *arg_indices,
+        MVMString *id, MVMCallsite *cs, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset);
 
 #define MVM_INLINE_CACHE_KIND_INITIAL 0

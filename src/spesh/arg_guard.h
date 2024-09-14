@@ -55,15 +55,15 @@ struct MVMSpeshArgGuardNode {
      * the guard tree node array. A "no" value of zero indicates that there
      * are no more options, and the match should be termianted without a
      * result. */
-    MVMuint16 yes;
-    MVMuint16 no;
+    uint16_t yes;
+    uint16_t no;
 
     /* Data for the operation; union discriminated by op. */
     union {
         /* Used by CALLSITE */
         MVMCallsite *cs;
         /* Used by LOAD_ARG */
-        MVMuint16 arg_index;
+        uint16_t arg_index;
         /* Used by STABLE_CONC, STABLE_TYPE */
         MVMSTable *st;
         /* Used by DEREF_VALUE and DEREF_RW. */

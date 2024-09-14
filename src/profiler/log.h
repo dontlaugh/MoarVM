@@ -4,8 +4,8 @@ struct MVMProfileThreadData {
     MVMProfileCallNode *current_call;
 
     /* Cache whether moar currently has confprogs enabled */
-    MVMuint8 is_dynamic_confprog_installed;
-    MVMuint8 is_static_confprog_installed;
+    uint8_t is_dynamic_confprog_installed;
+    uint8_t is_static_confprog_installed;
 
     /* The thread ID of the thread responsible for spawning this thread. */
     uint32_t parent_thread_id;
@@ -14,10 +14,10 @@ struct MVMProfileThreadData {
     MVMProfileCallNode *call_graph;
 
     /* The time we started profiling. */
-    MVMuint64 start_time;
+    uint64_t start_time;
 
     /* The time we finished profiling, if we got there already. */
-    MVMuint64 end_time;
+    uint64_t end_time;
 
     /* The next two arrays are there to remove the need for the GC
      * to walk the entire call graph every time.
@@ -44,18 +44,18 @@ struct MVMProfileThreadData {
     uint32_t alloc_gcs;
 
     /* Amount of time spent in spesh. */
-    MVMuint64 spesh_time;
+    uint64_t spesh_time;
 
     /* Current spesh work start time, if any. */
-    MVMuint64 cur_spesh_start_time;
+    uint64_t cur_spesh_start_time;
 
     /* Current GC start time, if any. */
-    MVMuint64 cur_gc_start_time;
+    uint64_t cur_gc_start_time;
 
     /* We would like to split "promoted bytes" into managed and
      * unmanaged, so that subtracting it from the nursery size
      * doesn't give us negative values. */
-    MVMuint64 gc_promoted_unmanaged_bytes;
+    uint64_t gc_promoted_unmanaged_bytes;
 
     /* We have to make sure to not count the newest allocation infinitely
      * often if there's a conditionally-allocating operation (like getlex)
@@ -70,16 +70,16 @@ struct MVMProfileThreadData {
 /* Information collected about a GC run. */
 struct MVMProfileGC {
     /* How long the collection took. */
-    MVMuint64 time;
+    uint64_t time;
 
     /* When, relative to program start, did this GC take place? */
-    MVMuint64 abstime;
+    uint64_t abstime;
 
     /* Was it a full collection? */
-    MVMuint16 full;
+    uint16_t full;
 
     /* Was this thread responsible? */
-    MVMuint16 responsible;
+    uint16_t responsible;
 
     /* Which GC run does this belong to?
      * (Good to know in multithreaded situations where
@@ -91,7 +91,7 @@ struct MVMProfileGC {
     uint32_t retained_bytes;
     uint32_t promoted_bytes;
 
-    MVMuint64 promoted_unmanaged_bytes;
+    uint64_t promoted_unmanaged_bytes;
 
     /* Inter-generation links count */
     uint32_t num_gen2roots;
@@ -111,14 +111,14 @@ struct MVMProfileCallNode {
      * If this CallNode is for a native call, this is NULL. */
     uint32_t sf_idx;
     /* The timestamp when we entered the node. */
-    MVMuint64 cur_entry_time;
+    uint64_t cur_entry_time;
 
     /* Time we should skip since cur_entry_time because execution was
      * suspended due to GC or spesh. */
-    MVMuint64 cur_skip_time;
+    uint64_t cur_skip_time;
 
     /* Entry mode, persisted for the sake of continuations. */
-    MVMuint64 entry_mode;
+    uint64_t entry_mode;
 
     /* The node in the profiling call graph that we came from. */
     MVMProfileCallNode *pred;
@@ -137,34 +137,34 @@ struct MVMProfileCallNode {
     uint32_t alloc_alloc;
 
     /* The total inclusive time so far spent in this node. */
-    MVMuint64 total_time;
+    uint64_t total_time;
 
     /* The total number of times this node was entered. */
-    MVMuint64 total_entries;
+    uint64_t total_entries;
 
     /* Entries that were to specialized bytecode. */
-    MVMuint64 specialized_entries;
+    uint64_t specialized_entries;
 
     /* Entries that were inlined. */
-    MVMuint64 inlined_entries;
+    uint64_t inlined_entries;
 
     /* Entries that were to JITted code. */
-    MVMuint64 jit_entries;
+    uint64_t jit_entries;
 
     /* Number of times OSR took place. */
-    MVMuint64 osr_count;
+    uint64_t osr_count;
 
     /* Number of times deopt_one happened. */
-    MVMuint64 deopt_one_count;
+    uint64_t deopt_one_count;
 
     /* Number of times deopt_all happened. */
-    MVMuint64 deopt_all_count;
+    uint64_t deopt_all_count;
 
     /* If the static frame is NULL, we're collecting data on a native call */
     char *native_target_name;
 
     /* When was this node first entered, ever? */
-    MVMuint64 first_entry_time;
+    uint64_t first_entry_time;
 
 };
 
@@ -175,16 +175,16 @@ struct MVMProfileAllocationCount {
 
     /* The number of allocations we've counted. */
     /* a) in regularly interpreted code */
-    MVMuint64 allocations_interp;
+    uint64_t allocations_interp;
 
     /* b) in spesh'd code */
-    MVMuint64 allocations_spesh;
+    uint64_t allocations_spesh;
 
     /* c) in jitted code */
-    MVMuint64 allocations_jit;
+    uint64_t allocations_jit;
 
     /* The number of allocations elimianted thanks to scalar replacement. */
-    MVMuint64 scalar_replaced;
+    uint64_t scalar_replaced;
 };
 
 struct MVMProfileDeallocationCount {
@@ -209,10 +209,10 @@ struct MVMProfileContinuationData {
     MVMStaticFrame **sfs;
 
     /* Entry modes to restore also. */
-    MVMuint64 *modes;
+    uint64_t *modes;
 
     /* Number of static frames in the list. */
-    MVMuint64 num_sfs;
+    uint64_t num_sfs;
 };
 
 /* Ways we might enter a frame. */
@@ -223,7 +223,7 @@ struct MVMProfileContinuationData {
 #define MVM_PROFILE_ENTER_JIT_INLINE    4
 
 /* Logging functions. */
-void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, MVMuint64 mode);
+void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, uint64_t mode);
 void MVM_profile_log_enter_native(MVMThreadContext *tc, MVMObject *nativecallsite);
 void MVM_profile_log_exit(MVMThreadContext *tc);
 void MVM_profile_log_unwind(MVMThreadContext *tc);
@@ -234,11 +234,11 @@ void MVM_profile_log_allocated(MVMThreadContext *tc, MVMObject *obj);
 void MVM_profile_log_scalar_replaced(MVMThreadContext *tc, MVMSTable *st);
 void MVM_profiler_log_gc_start(MVMThreadContext *tc, uint32_t full, uint32_t this_thread_responsible);
 void MVM_profiler_log_gc_end(MVMThreadContext *tc);
-void MVM_profiler_log_gen2_roots(MVMThreadContext *tc, MVMuint64 amount, MVMThreadContext *other);
+void MVM_profiler_log_gen2_roots(MVMThreadContext *tc, uint64_t amount, MVMThreadContext *other);
 void MVM_profiler_log_gc_deallocate(MVMThreadContext *tc, MVMObject *object);
-void MVM_profiler_log_unmanaged_data_promoted(MVMThreadContext *tc, MVMuint64 amount);
+void MVM_profiler_log_unmanaged_data_promoted(MVMThreadContext *tc, uint64_t amount);
 void MVM_profiler_log_spesh_start(MVMThreadContext *tc);
 void MVM_profiler_log_spesh_end(MVMThreadContext *tc);
-void MVM_profiler_log_osr(MVMThreadContext *tc, MVMuint64 jitted);
+void MVM_profiler_log_osr(MVMThreadContext *tc, uint64_t jitted);
 void MVM_profiler_log_deopt_one(MVMThreadContext *tc);
 void MVM_profiler_log_deopt_all(MVMThreadContext *tc);

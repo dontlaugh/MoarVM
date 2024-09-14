@@ -1,6 +1,6 @@
 #include "moar.h"
 
-MVMint64 MVM_6model_container_iscont_rw(MVMThreadContext *tc, MVMObject *cont) {
+int64_t MVM_6model_container_iscont_rw(MVMThreadContext *tc, MVMObject *cont) {
     if (cont && IS_CONCRETE(cont)) {
         const MVMContainerSpec *cs = STABLE(cont)->container_spec;
         if (cs && cs->can_store(tc, cont)) {
@@ -61,13 +61,13 @@ static void code_pair_store(MVMThreadContext *tc, MVMObject *cont, MVMObject *ob
     code_pair_store_internal(tc, cont, r, MVM_callsite_get_common(tc, MVM_CALLSITE_ID_OBJ_OBJ));
 }
 
-static void code_pair_store_i(MVMThreadContext *tc, MVMObject *cont, MVMint64 value) {
+static void code_pair_store_i(MVMThreadContext *tc, MVMObject *cont, int64_t value) {
     MVMRegister r;
     r.i64 = value;
     code_pair_store_internal(tc, cont, r, MVM_callsite_get_common(tc, MVM_CALLSITE_ID_OBJ_INT));
 }
 
-static void code_pair_store_n(MVMThreadContext *tc, MVMObject *cont, MVMnum64 value) {
+static void code_pair_store_n(MVMThreadContext *tc, MVMObject *cont, double value) {
     MVMRegister r;
     r.n64 = value;
     code_pair_store_internal(tc, cont, r, MVM_callsite_get_common(tc, MVM_CALLSITE_ID_OBJ_NUM));
@@ -239,7 +239,7 @@ static void value_desc_cont_store(MVMThreadContext *tc, MVMObject *cont, MVMObje
     MVM_frame_dispatch_from_c(tc, data->store, args_record, NULL, MVM_RETURN_VOID);
 }
 
-static void value_desc_cont_store_i(MVMThreadContext *tc, MVMObject *cont, MVMint64 value) {
+static void value_desc_cont_store_i(MVMThreadContext *tc, MVMObject *cont, int64_t value) {
     MVMObject *boxed;
     MVMROOT(tc, cont) {
         boxed = MVM_repr_box_int(tc, MVM_hll_current(tc)->int_box_type, value);
@@ -247,7 +247,7 @@ static void value_desc_cont_store_i(MVMThreadContext *tc, MVMObject *cont, MVMin
     value_desc_cont_store(tc, cont, boxed);
 }
 
-static void value_desc_cont_store_n(MVMThreadContext *tc, MVMObject *cont, MVMnum64 value) {
+static void value_desc_cont_store_n(MVMThreadContext *tc, MVMObject *cont, double value) {
     MVMObject *boxed;
     MVMROOT(tc, cont) {
         boxed = MVM_repr_box_num(tc, MVM_hll_current(tc)->num_box_type, value);
@@ -324,7 +324,7 @@ static void value_desc_cont_spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshG
         ins->operands = MVM_spesh_alloc(tc, g, 3 * sizeof(MVMSpeshOperand));
         ins->operands[0] = old_operands[0];
         ins->operands[1] = old_operands[1];
-        ins->operands[2].lit_i16 = (MVMuint16)data->value_offset;
+        ins->operands[2].lit_i16 = (uint16_t)data->value_offset;
         break;
         }
     default: break;
@@ -564,7 +564,7 @@ static void native_ref_fetch(MVMThreadContext *tc, MVMObject *cont, MVMRegister 
     }
 }
 
-static void native_ref_store_i(MVMThreadContext *tc, MVMObject *cont, MVMint64 value) {
+static void native_ref_store_i(MVMThreadContext *tc, MVMObject *cont, int64_t value) {
     MVMNativeRefREPRData *repr_data = (MVMNativeRefREPRData *)STABLE(cont)->REPR_data;
     if (repr_data->primitive_type != MVM_STORAGE_SPEC_BP_INT)
         MVM_exception_throw_adhoc(tc, "This container does not reference a native integer");
@@ -586,7 +586,7 @@ static void native_ref_store_i(MVMThreadContext *tc, MVMObject *cont, MVMint64 v
     }
 }
 
-static void native_ref_store_u(MVMThreadContext *tc, MVMObject *cont, MVMuint64 value) {
+static void native_ref_store_u(MVMThreadContext *tc, MVMObject *cont, uint64_t value) {
     MVMNativeRefREPRData *repr_data = (MVMNativeRefREPRData *)STABLE(cont)->REPR_data;
     if (repr_data->primitive_type != MVM_STORAGE_SPEC_BP_UINT64)
         MVM_exception_throw_adhoc(tc, "This container does not reference a native integer");
@@ -608,7 +608,7 @@ static void native_ref_store_u(MVMThreadContext *tc, MVMObject *cont, MVMuint64 
     }
 }
 
-static void native_ref_store_n(MVMThreadContext *tc, MVMObject *cont, MVMnum64 value) {
+static void native_ref_store_n(MVMThreadContext *tc, MVMObject *cont, double value) {
     MVMNativeRefREPRData *repr_data = (MVMNativeRefREPRData *)STABLE(cont)->REPR_data;
     if (repr_data->primitive_type != MVM_STORAGE_SPEC_BP_NUM)
         MVM_exception_throw_adhoc(tc, "This container does not reference a native number");
@@ -719,7 +719,7 @@ static void native_ref_configure_container_spec(MVMThreadContext *tc, MVMSTable 
     /* Nothing to do. */
 }
 
-void *MVM_container_devirtualize_fetch_for_jit(MVMThreadContext *tc, MVMSTable *st, MVMuint16 type) {
+void *MVM_container_devirtualize_fetch_for_jit(MVMThreadContext *tc, MVMSTable *st, uint16_t type) {
     if (st->container_spec == &native_ref_spec) {
         MVMNativeRefREPRData *repr_data = (MVMNativeRefREPRData *)st->REPR_data;
         switch (repr_data->ref_kind) {
@@ -762,7 +762,7 @@ void *MVM_container_devirtualize_fetch_for_jit(MVMThreadContext *tc, MVMSTable *
     return NULL;
 }
 
-void *MVM_container_devirtualize_store_for_jit(MVMThreadContext *tc, MVMSTable *st, MVMuint16 type) {
+void *MVM_container_devirtualize_store_for_jit(MVMThreadContext *tc, MVMSTable *st, uint16_t type) {
     if (st->container_spec == &native_ref_spec) {
         MVMNativeRefREPRData *repr_data = (MVMNativeRefREPRData *)st->REPR_data;
         switch (repr_data->ref_kind) {
@@ -850,7 +850,7 @@ void MVM_6model_containers_setup(MVMThreadContext *tc) {
  * ***************************************************************************/
 
 /* Check if this is a container referencing a given native. */
-static MVMint64 get_container_primitive(MVMThreadContext *tc, MVMObject *cont) {
+static int64_t get_container_primitive(MVMThreadContext *tc, MVMObject *cont) {
     if (cont && IS_CONCRETE(cont)) {
         const MVMContainerSpec *cs = STABLE(cont)->container_spec;
         if (cs == &native_ref_spec && REPR(cont)->ID == MVM_REPR_ID_NativeRef)
@@ -858,7 +858,7 @@ static MVMint64 get_container_primitive(MVMThreadContext *tc, MVMObject *cont) {
     }
     return MVM_STORAGE_SPEC_BP_NONE;
 }
-MVMint64 MVM_6model_container_iscont_i(MVMThreadContext *tc, MVMObject *cont) {
+int64_t MVM_6model_container_iscont_i(MVMThreadContext *tc, MVMObject *cont) {
     if (cont && IS_CONCRETE(cont)) {
         const MVMContainerSpec *cs = STABLE(cont)->container_spec;
         if (cs == &native_ref_spec && REPR(cont)->ID == MVM_REPR_ID_NativeRef) {
@@ -868,7 +868,7 @@ MVMint64 MVM_6model_container_iscont_i(MVMThreadContext *tc, MVMObject *cont) {
     }
     return 0;
 }
-MVMint64 MVM_6model_container_iscont_u(MVMThreadContext *tc, MVMObject *cont) {
+int64_t MVM_6model_container_iscont_u(MVMThreadContext *tc, MVMObject *cont) {
     if (cont && IS_CONCRETE(cont)) {
         const MVMContainerSpec *cs = STABLE(cont)->container_spec;
         if (cs == &native_ref_spec && REPR(cont)->ID == MVM_REPR_ID_NativeRef) {
@@ -878,10 +878,10 @@ MVMint64 MVM_6model_container_iscont_u(MVMThreadContext *tc, MVMObject *cont) {
     }
     return 0;
 }
-MVMint64 MVM_6model_container_iscont_n(MVMThreadContext *tc, MVMObject *cont) {
+int64_t MVM_6model_container_iscont_n(MVMThreadContext *tc, MVMObject *cont) {
     return get_container_primitive(tc, cont) == MVM_STORAGE_SPEC_BP_NUM;
 }
-MVMint64 MVM_6model_container_iscont_s(MVMThreadContext *tc, MVMObject *cont) {
+int64_t MVM_6model_container_iscont_s(MVMThreadContext *tc, MVMObject *cont) {
     return get_container_primitive(tc, cont) == MVM_STORAGE_SPEC_BP_STR;
 }
 
@@ -926,7 +926,7 @@ void MVM_6model_container_decont_u(MVMThreadContext *tc, MVMObject *cont, MVMReg
 }
 
 /* Checks we have a container, and provided we do, assigns an int into it. */
-void MVM_6model_container_assign_i(MVMThreadContext *tc, MVMObject *cont, MVMint64 value) {
+void MVM_6model_container_assign_i(MVMThreadContext *tc, MVMObject *cont, int64_t value) {
     const MVMContainerSpec *cs = STABLE(cont)->container_spec;
     if (cs && IS_CONCRETE(cont))
         cs->store_i(tc, cont, value);
@@ -935,7 +935,7 @@ void MVM_6model_container_assign_i(MVMThreadContext *tc, MVMObject *cont, MVMint
 }
 
 /* Checks we have a container, and provided we do, assigns an uint into it. */
-void MVM_6model_container_assign_u(MVMThreadContext *tc, MVMObject *cont, MVMuint64 value) {
+void MVM_6model_container_assign_u(MVMThreadContext *tc, MVMObject *cont, uint64_t value) {
     const MVMContainerSpec *cs = STABLE(cont)->container_spec;
     if (cs && IS_CONCRETE(cont))
         cs->store_u(tc, cont, value);
@@ -944,7 +944,7 @@ void MVM_6model_container_assign_u(MVMThreadContext *tc, MVMObject *cont, MVMuin
 }
 
 /* Checks we have a container, and provided we do, assigns a num into it. */
-void MVM_6model_container_assign_n(MVMThreadContext *tc, MVMObject *cont, MVMnum64 value) {
+void MVM_6model_container_assign_n(MVMThreadContext *tc, MVMObject *cont, double value) {
     const MVMContainerSpec *cs = STABLE(cont)->container_spec;
     if (cs && IS_CONCRETE(cont))
         cs->store_n(tc, cont, value);
@@ -1061,27 +1061,27 @@ static AO_t * native_ref_as_atomic_i(MVMThreadContext *tc, MVMObject *cont) {
         "Can only do integer atomic operations on a container referencing a native integer");
 }
 
-MVMint64 MVM_6model_container_cas_i(MVMThreadContext *tc, MVMObject *cont,
-                                    MVMint64 expected, MVMint64 value) {
-    return (MVMint64)MVM_cas(native_ref_as_atomic_i(tc, cont), AO_CAST(expected), AO_CAST(value));
+int64_t MVM_6model_container_cas_i(MVMThreadContext *tc, MVMObject *cont,
+                                    int64_t expected, int64_t value) {
+    return (int64_t)MVM_cas(native_ref_as_atomic_i(tc, cont), AO_CAST(expected), AO_CAST(value));
 }
 
-MVMint64 MVM_6model_container_atomic_load_i(MVMThreadContext *tc, MVMObject *cont) {
-    return (MVMint64)MVM_load(native_ref_as_atomic_i(tc, cont));
+int64_t MVM_6model_container_atomic_load_i(MVMThreadContext *tc, MVMObject *cont) {
+    return (int64_t)MVM_load(native_ref_as_atomic_i(tc, cont));
 }
 
-void MVM_6model_container_atomic_store_i(MVMThreadContext *tc, MVMObject *cont, MVMint64 value) {
+void MVM_6model_container_atomic_store_i(MVMThreadContext *tc, MVMObject *cont, int64_t value) {
     MVM_store(native_ref_as_atomic_i(tc, cont), value);
 }
 
-MVMint64 MVM_6model_container_atomic_inc(MVMThreadContext *tc, MVMObject *cont) {
-    return (MVMint64)MVM_incr(native_ref_as_atomic_i(tc, cont));
+int64_t MVM_6model_container_atomic_inc(MVMThreadContext *tc, MVMObject *cont) {
+    return (int64_t)MVM_incr(native_ref_as_atomic_i(tc, cont));
 }
 
-MVMint64 MVM_6model_container_atomic_dec(MVMThreadContext *tc, MVMObject *cont) {
-    return (MVMint64)MVM_decr(native_ref_as_atomic_i(tc, cont));
+int64_t MVM_6model_container_atomic_dec(MVMThreadContext *tc, MVMObject *cont) {
+    return (int64_t)MVM_decr(native_ref_as_atomic_i(tc, cont));
 }
 
-MVMint64 MVM_6model_container_atomic_add(MVMThreadContext *tc, MVMObject *cont, MVMint64 value) {
-    return (MVMint64)MVM_add(native_ref_as_atomic_i(tc, cont), AO_CAST(value));
+int64_t MVM_6model_container_atomic_add(MVMThreadContext *tc, MVMObject *cont, int64_t value) {
+    return (int64_t)MVM_add(native_ref_as_atomic_i(tc, cont), AO_CAST(value));
 }

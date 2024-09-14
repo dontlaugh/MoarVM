@@ -11,10 +11,10 @@ void MVM_jit_compile_expr_tree(MVMThreadContext *tc, MVMJitCompiler *compiler, M
 
 #define COPY_ARRAY(a, n) ((n) > 0) ? memcpy(MVM_malloc((n) * sizeof(a[0])), a, (n) * sizeof(a[0])) : NULL;
 
-static const MVMuint16 MAGIC_BYTECODE[] = { MVM_OP_sp_jit_enter, 0 };
+static const uint16_t MAGIC_BYTECODE[] = { MVM_OP_sp_jit_enter, 0 };
 
 /* TODO this should be a debug utility somewhere */
-const char * MVM_register_type(MVMint8 reg_type) {
+const char * MVM_register_type(int8_t reg_type) {
     switch (reg_type) {
     case MVM_reg_int8: return "int8";
     case MVM_reg_int16: return "int16";
@@ -199,7 +199,7 @@ MVMJitCode * MVM_jit_compiler_assemble(MVMThreadContext *tc, MVMJitCompiler *cl,
 
     code->func_ptr   = (void (*)(MVMThreadContext*,MVMCompUnit*,void*)) memory;
     code->size       = codesize;
-    code->bytecode   = (MVMuint8*)MAGIC_BYTECODE;
+    code->bytecode   = (uint8_t*)MAGIC_BYTECODE;
 
     /* add sequence number */
     code->seq_nr       = tc->instance->spesh_produced;
@@ -212,11 +212,11 @@ MVMJitCode * MVM_jit_compiler_assemble(MVMThreadContext *tc, MVMJitCompiler *cl,
     if (cl->spills_num > 0) {
         int32_t sg_num_locals = jg->sg->num_locals;
         code->num_locals  = sg_num_locals + cl->spills_num;
-        code->local_types = MVM_malloc(code->num_locals * sizeof(MVMuint16));
+        code->local_types = MVM_malloc(code->num_locals * sizeof(uint16_t));
         if (jg->sg->local_types != NULL) {
-            memcpy(code->local_types, jg->sg->local_types, sizeof(MVMuint16)*sg_num_locals);
+            memcpy(code->local_types, jg->sg->local_types, sizeof(uint16_t)*sg_num_locals);
         } else {
-            memcpy(code->local_types, code->sf->body.local_types, sizeof(MVMuint16)*sg_num_locals);
+            memcpy(code->local_types, code->sf->body.local_types, sizeof(uint16_t)*sg_num_locals);
         }
         for (i = 0; i < cl->spills_num; i++) {
             code->local_types[sg_num_locals + i] = cl->spills[i].reg_type;
@@ -364,7 +364,7 @@ void MVM_jit_compile_expr_tree(MVMThreadContext *tc, MVMJitCompiler *compiler, M
     MVM_jit_tile_list_destroy(tc, list);
 }
 
-MVM_STATIC_INLINE int32_t reg_type_bucket(MVMint8 reg_type) {
+MVM_STATIC_INLINE int32_t reg_type_bucket(int8_t reg_type) {
     switch (reg_type) {
     case MVM_reg_num32:
     case MVM_reg_num64:
@@ -383,9 +383,9 @@ MVM_STATIC_INLINE int32_t reg_type_bucket(MVMint8 reg_type) {
 }
 
 
-uint32_t MVM_jit_spill_memory_select(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMint8 reg_type) {
+uint32_t MVM_jit_spill_memory_select(MVMThreadContext *tc, MVMJitCompiler *compiler, int8_t reg_type) {
     uint32_t idx;
-    MVMint8 bucket = reg_type_bucket(reg_type);
+    int8_t bucket = reg_type_bucket(reg_type);
 
     if (compiler->spills_free[bucket] >= 0) {
         idx = compiler->spills_free[bucket];
@@ -398,9 +398,9 @@ uint32_t MVM_jit_spill_memory_select(MVMThreadContext *tc, MVMJitCompiler *compi
     return compiler->spills_base + idx * sizeof(MVMRegister);
 }
 
-void MVM_jit_spill_memory_release(MVMThreadContext *tc, MVMJitCompiler *compiler, uint32_t pos, MVMint8 reg_type) {
+void MVM_jit_spill_memory_release(MVMThreadContext *tc, MVMJitCompiler *compiler, uint32_t pos, int8_t reg_type) {
     uint32_t idx   = (pos - compiler->spills_base) / sizeof(MVMRegister);
-    MVMint8 bucket = reg_type_bucket(reg_type);
+    int8_t bucket = reg_type_bucket(reg_type);
     compiler->spills[idx].next    = compiler->spills_free[bucket];
     compiler->spills_free[bucket] = idx;
 }

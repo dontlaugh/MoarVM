@@ -62,7 +62,7 @@ struct MVMDispProgramOutcome {
         /* A value to return, along with the kind of value it is. Marked. */
         struct {
             MVMRegister result_value;
-            MVMuint8 result_kind;
+            uint8_t result_kind;
         };
         /* A invocation of either bytecode or a C function. */
         struct {
@@ -172,10 +172,10 @@ struct MVMDispProgramRecordingValue {
      * literal string then we'd drop the literal value guard, or if it has a
      * literal guard then the type and concreteness guards are implicitly
      * covered anyway. */
-    MVMuint8 guard_type;
-    MVMuint8 guard_concreteness;
-    MVMuint8 guard_literal;
-    MVMuint8 guard_hll;
+    uint8_t guard_type;
+    uint8_t guard_concreteness;
+    uint8_t guard_literal;
+    uint8_t guard_hll;
 
     /* A list of objects that this value must *not* be. */
     MVM_VECTOR_DECL(MVMObject *, not_literal_guards);
@@ -309,7 +309,7 @@ struct MVMDispProgramRecording {
     /* Flag indicating if we should install the dispatch program at the
      * callsite or just keep it around until unwind (if resumptions need
      * us to). */
-    MVMuint8 do_not_install;
+    uint8_t do_not_install;
 };
 
 /* A "compiled" dispatch program, which is what we interpret at a callsite
@@ -351,8 +351,8 @@ struct MVMDispProgram {
 union MVMDispProgramConstant {
     MVMCallsite *cs;
     MVMHLLConfig *hll;
-    MVMint64 i64;
-    MVMnum64 n64;
+    int64_t i64;
+    double n64;
 };
 
 /* Opcodes we may execute in a dispatch program. */
@@ -525,7 +525,7 @@ struct MVMDispProgramOp {
         } resume_init_callsite;
         struct {
             /* The argument index in the incoming capture. */
-            MVMuint16 arg_idx;
+            uint16_t arg_idx;
             /* The thing to check it against (looked up in one of the constant
              * tables). */
             uint32_t checkee;
@@ -612,17 +612,17 @@ typedef enum {
 /* Where a value that is used to resume a dispatch originates from. */
 struct MVMDispProgramResumptionInitValue {
     /* The source of the resumption initialization value. */
-    MVMuint16 source;
+    uint16_t source;
     /* The index (either argument index, constant table index, or temporary
      * index). */
-    MVMuint16 index;
+    uint16_t index;
 };
 
 /* Functions called during the recording. */
 void MVM_disp_program_run_dispatch(MVMThreadContext *tc, MVMDispDefinition *disp,
         MVMArgs arg_info, MVMDispInlineCacheEntry **ic_entry_ptr,
         MVMDispInlineCacheEntry *ic_entry, MVMStaticFrame *update_sf);
-MVMint64 MVM_disp_program_record_get_inline_cache_size(MVMThreadContext *tc);
+int64_t MVM_disp_program_record_get_inline_cache_size(MVMThreadContext *tc);
 void MVM_disp_program_record_do_not_install(MVMThreadContext *tc);
 MVMHLLConfig * MVM_disp_program_record_get_hll(MVMThreadContext *tc);
 MVMObject * MVM_disp_program_record_track_arg(MVMThreadContext *tc, MVMObject *capture,
@@ -649,7 +649,7 @@ MVMObject * MVM_disp_program_record_capture_drop_args(MVMThreadContext *tc, MVMO
         uint32_t index, uint32_t count);
 MVMObject * MVM_disp_program_record_capture_insert_constant_arg(MVMThreadContext *tc,
         MVMObject *capture, uint32_t index, MVMCallsiteFlags kind, MVMRegister value);
-MVMint64 MVM_disp_program_record_capture_is_arg_literal(MVMThreadContext *tc,
+int64_t MVM_disp_program_record_capture_is_arg_literal(MVMThreadContext *tc,
         MVMObject *capture, uint32_t index);
 MVMObject * MVM_disp_program_record_capture_insert_arg(MVMThreadContext *tc,
         MVMObject *capture, uint32_t index, MVMObject *tracked);
@@ -686,7 +686,7 @@ void MVM_disp_program_record_tracked_c_code(MVMThreadContext *tc, MVMObject *tra
 uint32_t MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatchRecord* record);
 
 /* Functions to run dispatch programs. */
-MVMint64 MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
+int64_t MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
         MVMCallStackDispatchRun *disp_run, int32_t spesh_cid,
         uint32_t bytecode_offset, uint32_t dp_index);
 

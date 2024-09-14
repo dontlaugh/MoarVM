@@ -1,7 +1,7 @@
-MVMCompUnit * MVM_cu_from_bytes(MVMThreadContext *tc, MVMuint8 *bytes, uint32_t size);
+MVMCompUnit * MVM_cu_from_bytes(MVMThreadContext *tc, uint8_t *bytes, uint32_t size);
 MVMCompUnit * MVM_cu_map_from_file(MVMThreadContext *tc, const char *filename, int32_t free_filename);
-MVMCompUnit * MVM_cu_map_from_file_handle(MVMThreadContext *tc, uv_file fd, MVMuint64 pos);
-MVMuint16 MVM_cu_callsite_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMCallsite *cs);
+MVMCompUnit * MVM_cu_map_from_file_handle(MVMThreadContext *tc, uv_file fd, uint64_t pos);
+uint16_t MVM_cu_callsite_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMCallsite *cs);
 uint32_t MVM_cu_string_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMString *str);
 MVMString * MVM_cu_obtain_string(MVMThreadContext *tc, MVMCompUnit *cu, uint32_t idx);
 

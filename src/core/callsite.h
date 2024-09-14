@@ -43,7 +43,7 @@ typedef enum {
 } MVMCommonCallsiteID;
 
 /* A callsite entry is just one of the above flags. */
-typedef MVMuint8 MVMCallsiteEntry;
+typedef uint8_t MVMCallsiteEntry;
 
 /* A callsite is an argument count, a bunch of flags, and names of named
  * arguments (excluding any flattening ones). Note that it does not contain
@@ -55,21 +55,21 @@ struct MVMCallsite {
     MVMCallsiteEntry *arg_flags;
 
     /* The number of arg flags. */
-    MVMuint16 flag_count;
+    uint16_t flag_count;
 
     /* The total argument count (including 2 for each named arg). */
-    MVMuint16 arg_count;
+    uint16_t arg_count;
 
     /* Number of positionals, including flattening positionals but
      * excluding named positionals. */
-    MVMuint16 num_pos;
+    uint16_t num_pos;
 
     /* Whether it has any flattening args. */
-    MVMuint8 has_flattening;
+    uint8_t has_flattening;
 
     /* Whether it has been interned (which means it is suitable for using in
      * specialization). */
-    MVMuint8 is_interned;
+    uint8_t is_interned;
 
     /* Names of named arguments, in the order that they are passed (and thus
      * matching the flags). Note that named flattening args do not have an
@@ -128,9 +128,9 @@ MVM_STATIC_INLINE uint32_t MVM_callsite_has_nameds(MVMThreadContext *tc, const M
 }
 
 /* Count the number of nameds (excluding flattening). */
-MVM_STATIC_INLINE MVMuint16 MVM_callsite_num_nameds(MVMThreadContext *tc, const MVMCallsite *cs) {
-    MVMuint16 i = cs->num_pos;
-    MVMuint16 nameds = 0;
+MVM_STATIC_INLINE uint16_t MVM_callsite_num_nameds(MVMThreadContext *tc, const MVMCallsite *cs) {
+    uint16_t i = cs->num_pos;
+    uint16_t nameds = 0;
     while (i < cs->flag_count) {
         if (!(cs->arg_flags[i] & MVM_CALLSITE_ARG_FLAT))
             nameds++;

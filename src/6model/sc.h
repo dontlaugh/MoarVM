@@ -5,31 +5,31 @@ void MVM_sc_all_scs_destroy(MVMThreadContext *tc);
 MVMString * MVM_sc_get_handle(MVMThreadContext *tc, MVMSerializationContext *sc);
 MVMString * MVM_sc_get_description(MVMThreadContext *tc, MVMSerializationContext *sc);
 void MVM_sc_set_description(MVMThreadContext *tc, MVMSerializationContext *sc, MVMString *desc);
-MVMint64 MVM_sc_find_object_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *obj);
-MVMint64 MVM_sc_find_object_idx_jit(MVMThreadContext *tc, MVMObject *sc, MVMObject *obj);
-MVMint64 MVM_sc_find_stable_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMSTable *st);
-MVMint64 MVM_sc_find_code_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *obj);
-MVMuint8 MVM_sc_is_object_immediately_available(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx);
-MVMObject * MVM_sc_get_object(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx);
-MVMObject * MVM_sc_try_get_object(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx);
-void MVM_sc_set_object(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx, MVMObject *obj);
-void MVM_sc_set_object_op(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx, MVMObject *obj);
-void MVM_sc_set_object_no_update(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx, MVMObject *obj);
-MVMSTable * MVM_sc_get_stable(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx);
-MVMSTable * MVM_sc_try_get_stable(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx);
-void MVM_sc_set_stable(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx, MVMSTable *st);
+int64_t MVM_sc_find_object_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *obj);
+int64_t MVM_sc_find_object_idx_jit(MVMThreadContext *tc, MVMObject *sc, MVMObject *obj);
+int64_t MVM_sc_find_stable_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMSTable *st);
+int64_t MVM_sc_find_code_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *obj);
+uint8_t MVM_sc_is_object_immediately_available(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
+MVMObject * MVM_sc_get_object(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
+MVMObject * MVM_sc_try_get_object(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
+void MVM_sc_set_object(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx, MVMObject *obj);
+void MVM_sc_set_object_op(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx, MVMObject *obj);
+void MVM_sc_set_object_no_update(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx, MVMObject *obj);
+MVMSTable * MVM_sc_get_stable(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
+MVMSTable * MVM_sc_try_get_stable(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
+void MVM_sc_set_stable(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx, MVMSTable *st);
 void MVM_sc_push_stable(MVMThreadContext *tc, MVMSerializationContext *sc, MVMSTable *st);
-MVMObject * MVM_sc_get_code(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx);
-void MVM_sc_set_code_op(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx, MVMObject *code);
+MVMObject * MVM_sc_get_code(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx);
+void MVM_sc_set_code_op(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx, MVMObject *code);
 MVMSerializationContext * MVM_sc_find_by_handle(MVMThreadContext *tc, MVMString *handle);
-MVMSerializationContext * MVM_sc_get_sc_slow(MVMThreadContext *tc, MVMCompUnit *cu, MVMint16 dep);
+MVMSerializationContext * MVM_sc_get_sc_slow(MVMThreadContext *tc, MVMCompUnit *cu, int16_t dep);
 MVM_STATIC_INLINE MVMSerializationContext * MVM_sc_get_sc(MVMThreadContext *tc,
-                                                          MVMCompUnit *cu, MVMint16 dep) {
+                                                          MVMCompUnit *cu, int16_t dep) {
     MVMSerializationContext *sc = cu->body.scs[dep];
     return sc ? sc : MVM_sc_get_sc_slow(tc, cu, dep);
 }
 MVM_STATIC_INLINE MVMObject * MVM_sc_get_sc_object(MVMThreadContext *tc, MVMCompUnit *cu,
-                                 MVMuint16 dep, MVMuint64 idx) {
+                                 uint16_t dep, uint64_t idx) {
     MVMSerializationContext *sc = MVM_sc_get_sc(tc, cu, dep);
     if (MVM_UNLIKELY(sc == NULL))
         MVM_exception_throw_adhoc(tc, "SC not yet resolved; lookup failed");
@@ -143,7 +143,7 @@ MVM_STATIC_INLINE void MVM_sc_set_stable_sc(MVMThreadContext *tc, MVMSTable *st,
 }
 
 /* Given an SC, an index and a code ref, store it and the index. */
-MVM_STATIC_INLINE void MVM_sc_set_code(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx, MVMObject *code) {
+MVM_STATIC_INLINE void MVM_sc_set_code(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx, MVMObject *code) {
     MVMObject *roots = sc->body->root_codes;
     MVM_repr_bind_pos_o(tc, roots, idx, code);
     if (MVM_sc_get_idx_of_sc(&code->header) == sc->body->sc_idx)
@@ -156,7 +156,7 @@ MVM_STATIC_INLINE void MVM_sc_set_code_list(MVMThreadContext *tc, MVMSerializati
 }
 
 /* Gets the number of objects in the SC. */
-MVM_STATIC_INLINE MVMuint64 MVM_sc_get_object_count(MVMThreadContext *tc, MVMSerializationContext *sc) {
+MVM_STATIC_INLINE uint64_t MVM_sc_get_object_count(MVMThreadContext *tc, MVMSerializationContext *sc) {
     return sc->body->num_objects;
 }
 

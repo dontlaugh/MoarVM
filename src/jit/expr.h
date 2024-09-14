@@ -1,7 +1,7 @@
 #define MVM_JIT_PTR_SZ sizeof(void*)
 #define MVM_JIT_REG_SZ sizeof(MVMRegister)
-#define MVM_JIT_INT_SZ sizeof(MVMint64)
-#define MVM_JIT_NUM_SZ sizeof(MVMnum64)
+#define MVM_JIT_INT_SZ sizeof(int64_t)
+#define MVM_JIT_NUM_SZ sizeof(double)
 
 /* C argument types */
 enum {
@@ -24,12 +24,12 @@ MVM_JIT_EXPR_OPS(MVM_JIT_OP_ENUM)
 /* Tree node information for easy access and use during compilation (a
    symbol table entry of sorts) */
 struct MVMJitExprInfo {
-    MVMuint8 num_links;
-    MVMuint8 num_args;
+    uint8_t num_links;
+    uint8_t num_args;
     /* VM 'register' type represented by this node */
-    MVMint8 type;
+    int8_t type;
     /* Size of computed value */
-    MVMuint8 size;
+    uint8_t size;
 };
 
 MVM_STATIC_ASSERT(sizeof(MVMJitExprInfo) <= sizeof(int32_t));
@@ -39,8 +39,8 @@ struct MVMJitExprTree {
     MVM_VECTOR_DECL(int32_t, nodes);
     MVM_VECTOR_DECL(int32_t, roots);
     MVM_VECTOR_DECL(union {
-        MVMint64 i;
-        MVMnum64 n;
+        int64_t i;
+        double n;
         const void *p;
         uintptr_t u;
     }, constants);
@@ -100,11 +100,11 @@ MVM_STATIC_INLINE MVMJitExprInfo * MVM_JIT_EXPR_INFO(MVMJitExprTree *tree, int32
     return (MVMJitExprInfo*)(tree->nodes + node + 1);
 }
 
-MVM_STATIC_INLINE MVMuint8 MVM_JIT_EXPR_NCHILD(MVMJitExprTree *tree, int32_t node) {
+MVM_STATIC_INLINE uint8_t MVM_JIT_EXPR_NCHILD(MVMJitExprTree *tree, int32_t node) {
     return MVM_JIT_EXPR_INFO(tree, node)->num_links;
 }
 
-MVM_STATIC_INLINE MVMuint8 MVM_JIT_EXPR_TYPE(MVMJitExprTree *tree, int32_t node) {
+MVM_STATIC_INLINE uint8_t MVM_JIT_EXPR_TYPE(MVMJitExprTree *tree, int32_t node) {
     return MVM_JIT_EXPR_INFO(tree, node)->type;
 }
 
@@ -122,6 +122,6 @@ MVM_STATIC_INLINE int32_t * MVM_JIT_EXPR_ARGS(MVMJitExprTree *tree, int32_t node
 }
 
 MVM_STATIC_INLINE int32_t MVM_JIT_EXPR_IS_NUM(MVMJitExprTree *tree, int32_t node) {
-    MVMuint8 expr_type = MVM_JIT_EXPR_TYPE(tree,node);
+    uint8_t expr_type = MVM_JIT_EXPR_TYPE(tree,node);
     return expr_type == MVM_reg_num32 || expr_type == MVM_reg_num64;
 }

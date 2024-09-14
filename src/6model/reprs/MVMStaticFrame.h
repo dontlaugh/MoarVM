@@ -2,7 +2,7 @@
  * call or usage. */
 struct MVMStaticFrameBody {
     /* The start of the stream of bytecode for this routine. */
-    MVMuint8 *bytecode;
+    uint8_t *bytecode;
 
     /* The compilation unit this frame belongs to. */
     MVMCompUnit *cu;
@@ -11,10 +11,10 @@ struct MVMStaticFrameBody {
     MVMDispInlineCache inline_cache;
 
     /* The list of local types. */
-    MVMuint16 *local_types;
+    uint16_t *local_types;
 
     /* The list of lexical types. */
-    MVMuint16 *lexical_types;
+    uint16_t *lexical_types;
 
     /* Lexicals name map. */
     MVMIndexHashTable lexical_names;
@@ -24,22 +24,22 @@ struct MVMStaticFrameBody {
     MVMRegister *static_env;
 
     /* Flags for static environment (0 = static, 1 = clone, 2 = state). */
-    MVMuint8 *static_env_flags;
+    uint8_t *static_env_flags;
 
     /* If the frame has state variables. */
-    MVMuint8 has_state_vars;
+    uint8_t has_state_vars;
 
     /* Should we allocate the frame directly on the heap? Doing so may avoid
      * needing to promote it there later. Set by measuring the number of times
      * the frame is promoted to the heap relative to the number of times it is
      * invoked, and then only pre-specialization. */
-    MVMuint8 allocate_on_heap;
+    uint8_t allocate_on_heap;
 
     /* Is the frame marked as not being allowed to inline? */
-    MVMuint8 no_inline;
+    uint8_t no_inline;
 
     /* Does the frame contain specializable instructions? */
-    MVMuint8 specializable;
+    uint8_t specializable;
 
     /* Zero if the frame was never invoked. Above zero is the instrumentation
      * level the VM was atlast time the frame was invoked. See MVMInstance for
@@ -47,7 +47,7 @@ struct MVMStaticFrameBody {
     uint32_t instrumentation_level;
 
     /* Has the frame's bytecode been validated? */
-    MVMuint8 validated;
+    uint8_t validated;
 
     /* Specialization-related information. Attached when a frame is first
      * verified. Held in a separate object rather than the MVMStaticFrame
@@ -86,13 +86,13 @@ struct MVMStaticFrameBody {
     uint32_t num_handlers;
 
     /* Is the frame full deserialized? */
-    MVMuint8 fully_deserialized;
+    uint8_t fully_deserialized;
 
     /* Is the frame a thunk, and thus hidden to caller/outer? */
-    MVMuint8 is_thunk;
+    uint8_t is_thunk;
 
     /* Does the frame have an exit handler we need to run? */
-    MVMuint8 has_exit_handler;
+    uint8_t has_exit_handler;
 
     /* The compilation unit unique ID of this frame. */
     MVMString *cuuid;
@@ -107,16 +107,16 @@ struct MVMStaticFrameBody {
     MVMCode *static_code;
 
     /* Annotation details */
-    MVMuint8              *annotations_data;
+    uint8_t              *annotations_data;
 
     /* The original bytecode for this frame (before endian swapping). */
-    MVMuint8 *orig_bytecode;
+    uint8_t *orig_bytecode;
 
     /* The serialized data about this frame, used to set up the things above
      * marked (lazy). Also, once we've done that, the static lexical wvals
      * data pos; we may be able to re-use the same slot for these to. */
-    MVMuint8 *frame_data_pos;
-    MVMuint8 *frame_static_lex_pos;
+    uint8_t *frame_data_pos;
+    uint8_t *frame_static_lex_pos;
 
     /* Off-by-one SC dependency index (zero indicates invalid) for the code
      * object, plus the index of it within that SC. This is relevant for the
@@ -135,23 +135,23 @@ struct MVMStaticFrame {
 /* Extra state that static frames carry when instrumented, so that the
  * can later be removed again. */
 struct MVMStaticFrameInstrumentation {
-    MVMuint8        *instrumented_bytecode;
-    MVMuint8        *uninstrumented_bytecode;
+    uint8_t        *instrumented_bytecode;
+    uint8_t        *uninstrumented_bytecode;
     MVMFrameHandler *instrumented_handlers;
     MVMFrameHandler *uninstrumented_handlers;
     uint32_t        uninstrumented_bytecode_size;
     uint32_t        instrumented_bytecode_size;
     MVMStrHashTable  debug_locals;
 
-    MVMuint8         profiler_confprog_result;
-    MVMuint8         profiler_confprog_version;
+    uint8_t         profiler_confprog_result;
+    uint8_t         profiler_confprog_version;
 };
 
 struct MVMStaticFrameDebugLocal {
     /* The lexical's name is the key: */
     struct MVMStrHashHandle hash_handle;
     /* The index of the local where the value lives. */
-    MVMuint16 local_idx;
+    uint16_t local_idx;
 };
 
 /* Function for REPR setup. */

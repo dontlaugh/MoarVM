@@ -1,9 +1,9 @@
 #include "moar.h"
 
-#define GET_UI16(pc, idx)   *((MVMuint16 *)((pc) + (idx)))
+#define GET_UI16(pc, idx)   *((uint16_t *)((pc) + (idx)))
 
-MVM_STATIC_INLINE MVMuint64 GET_UI64(const MVMuint8 *pc, int32_t idx) {
-    MVMuint64 retval;
+MVM_STATIC_INLINE uint64_t GET_UI64(const uint8_t *pc, int32_t idx) {
+    uint64_t retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
 }
@@ -17,7 +17,7 @@ size_t MVM_spesh_disp_dispatch_op_info_size(MVMThreadContext *tc,
     uint32_t total_ops = base_info->num_operands + callsite->flag_count;
     return sizeof(MVMOpInfo) + (total_ops > MVM_MAX_OPERANDS
             ? total_ops - MVM_MAX_OPERANDS
-            : 0) * sizeof(MVMuint8);
+            : 0) * sizeof(uint8_t);
 }
 void MVM_spesh_disp_initialize_dispatch_op_info(MVMThreadContext *tc,
         const MVMOpInfo *base_info, MVMCallsite *callsite, MVMOpInfo *dispatch_info) {
@@ -27,8 +27,8 @@ void MVM_spesh_disp_initialize_dispatch_op_info(MVMThreadContext *tc,
 
     /* Tweak the operand count and set up new operand info based on the callsite. */
     dispatch_info->num_operands += callsite->flag_count;
-    MVMuint16 operand_index = base_info->num_operands;
-    MVMuint16 flag_index;
+    uint16_t operand_index = base_info->num_operands;
+    uint16_t flag_index;
     for (flag_index = 0; flag_index < callsite->flag_count; operand_index++, flag_index++) {
         MVMCallsiteFlags flag = callsite->arg_flags[flag_index];
         if (flag & MVM_CALLSITE_ARG_OBJ) {
@@ -51,7 +51,7 @@ void MVM_spesh_disp_initialize_dispatch_op_info(MVMThreadContext *tc,
 }
 
 /* Returns the callsite argument offset for an opcode. */
-MVMCallsite * MVM_spesh_disp_callsite_for_dispatch_op(MVMuint16 opcode, MVMuint8 *args,
+MVMCallsite * MVM_spesh_disp_callsite_for_dispatch_op(uint16_t opcode, uint8_t *args,
         MVMCompUnit *cu) {
     switch (opcode) {
         case MVM_OP_dispatch_v:
@@ -209,7 +209,7 @@ static void set_deopt(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
 /* Emit a type, concreteness or object literal guard instruction (when concreteness
  * only, comparee is null). */
 static MVMSpeshOperand emit_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshBB *bb, MVMSpeshIns **insert_after, MVMuint16 op,
+        MVMSpeshBB *bb, MVMSpeshIns **insert_after, uint16_t op,
         MVMSpeshOperand guard_reg, MVMCollectable *comparee, MVMSpeshAnn *deopt_ann,
         uint32_t *reused_deopt_ann) {
     /* Produce a new version for after the guarding. */
@@ -256,7 +256,7 @@ static MVMSpeshOperand emit_hll_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
     guard->operands = MVM_spesh_alloc(tc, g, 4 * sizeof(MVMSpeshOperand));
     guard->operands[0] = guarded_reg;
     guard->operands[1] = guard_reg;
-    guard->operands[2].lit_ui64 = (MVMuint64)hll;
+    guard->operands[2].lit_ui64 = (uint64_t)hll;
     set_deopt(tc, g, guard, &(guard->operands[3]), deopt_ann, reused_deopt_ann);
     MVM_spesh_manipulate_insert_ins(tc, bb, *insert_after, guard);
     *insert_after = guard;
@@ -273,7 +273,7 @@ static MVMSpeshOperand emit_hll_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
 /* Emit a simple binary instruction with a result register and either a
  * input register or input constant. */
 static void emit_bi_op(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshBB *bb, MVMSpeshIns **insert_after, MVMuint16 op,
+        MVMSpeshBB *bb, MVMSpeshIns **insert_after, uint16_t op,
         MVMSpeshOperand to_reg, MVMSpeshOperand from_reg) {
     /* Produce the instruction and insert it. */
     MVMSpeshIns *ins = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
@@ -293,7 +293,7 @@ static void emit_bi_op(MVMThreadContext *tc, MVMSpeshGraph *g,
 /* Emit a simple three-ary instruction where the first register is written
  * to and the other two operands are registers that are read from. */
 static void emit_tri_op(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshBB *bb, MVMSpeshIns **insert_after, MVMuint16 op,
+        MVMSpeshBB *bb, MVMSpeshIns **insert_after, uint16_t op,
         MVMSpeshOperand to_reg, MVMSpeshOperand from_reg, MVMSpeshOperand third_reg) {
     /* Produce the instruction and insert it. */
     MVMSpeshIns *ins = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
@@ -312,7 +312,7 @@ static void emit_tri_op(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 static void emit_iffy_op(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshBB *bb, MVMSpeshIns **insert_after, MVMuint16 op,
+        MVMSpeshBB *bb, MVMSpeshIns **insert_after, uint16_t op,
         MVMSpeshOperand condition_reg, MVMSpeshBB *target) {
     /* Produce the instruction and insert it. */
     MVMSpeshIns *ins = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
@@ -352,8 +352,8 @@ static void emit_load_spesh_slot(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 /* Emit an instruction to load an attribute. */
 static void emit_load_attribute(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshBB *bb, MVMSpeshIns **insert_after, MVMuint16 op,
-        MVMSpeshOperand to_reg, MVMSpeshOperand from_reg, MVMuint16 offset) {
+        MVMSpeshBB *bb, MVMSpeshIns **insert_after, uint16_t op,
+        MVMSpeshOperand to_reg, MVMSpeshOperand from_reg, uint16_t offset) {
     /* Produce instruction. */
     MVMSpeshIns *ins = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
     ins->info = MVM_op_get_op(op);
@@ -393,13 +393,13 @@ static MVMSpeshOperand emit_literal_str_guard(MVMThreadContext *tc, MVMSpeshGrap
     return testee;
 }
 
-static MVMuint16 resumption_op_non_constant(MVMDispProgram *dp, MVMuint16 res_idx) {
+static uint16_t resumption_op_non_constant(MVMDispProgram *dp, uint16_t res_idx) {
     /* Count up how many non-constant values the resume init capture will
      * involve. */
     MVMDispProgramResumption *dpr = &(dp->resumptions[res_idx]);
-    MVMuint16 non_constant;
+    uint16_t non_constant;
     if (dpr->init_values) {
-        MVMuint16 i;
+        uint16_t i;
         non_constant = 0;
         for (i = 0; i < dpr->init_callsite->flag_count; i++) {
             switch (dpr->init_values[i].source) {
@@ -419,13 +419,13 @@ static MVMuint16 resumption_op_non_constant(MVMDispProgram *dp, MVMuint16 res_id
 }
 
 size_t MVM_spesh_disp_resumption_op_info_size(MVMThreadContext *tc,
-        MVMDispProgram *dp, MVMuint16 res_idx) {
+        MVMDispProgram *dp, uint16_t res_idx) {
 
-    MVMuint16 non_constant = resumption_op_non_constant(dp, res_idx);
+    uint16_t non_constant = resumption_op_non_constant(dp, res_idx);
 
     /* Form the operand info. */
     const MVMOpInfo *base_info = MVM_op_get_op(MVM_OP_sp_resumption);
-    MVMuint16 total_ops = base_info->num_operands + non_constant;
+    uint16_t total_ops = base_info->num_operands + non_constant;
     return sizeof(MVMOpInfo) + (total_ops > MVM_MAX_OPERANDS
             ? total_ops - MVM_MAX_OPERANDS
             : 0);
@@ -435,15 +435,15 @@ size_t MVM_spesh_disp_resumption_op_info_size(MVMThreadContext *tc,
  * program resumption. This is a varargs instruction, thus why we need to
  * synthesize the instruction info. */
 MVMOpInfo * MVM_spesh_disp_initialize_resumption_op_info(MVMThreadContext *tc,
-        MVMDispProgram *dp, MVMuint16 res_idx, MVMOpInfo *res_info) {
+        MVMDispProgram *dp, uint16_t res_idx, MVMOpInfo *res_info) {
     const MVMOpInfo *base_info = MVM_op_get_op(MVM_OP_sp_resumption);
-    MVMuint16 non_constant = resumption_op_non_constant(dp, res_idx);
+    uint16_t non_constant = resumption_op_non_constant(dp, res_idx);
     MVMDispProgramResumption *dpr = &(dp->resumptions[res_idx]);
 
     memcpy(res_info, base_info, sizeof(MVMOpInfo));
     res_info->num_operands += non_constant;
-    MVMuint16 operand_index = base_info->num_operands;
-    MVMuint16 i;
+    uint16_t operand_index = base_info->num_operands;
+    uint16_t i;
     for (i = 0; i < dpr->init_callsite->flag_count; i++) {
         int32_t include = dpr->init_values
             ? dpr->init_values[i].source == MVM_DISP_RESUME_INIT_ARG ||
@@ -504,8 +504,8 @@ static void insert_resume_inits(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpesh
         MVM_VECTOR_PUSH(g->resume_inits, init_record);
 
         /* Add all of the non-constant args. */
-        MVMuint16 j;
-        MVMuint16 insert_pos = 3;
+        uint16_t j;
+        uint16_t insert_pos = 3;
         for (j = 0; j < dpr->init_callsite->flag_count; j++) {
             MVMSpeshOperand source;
             if (!dpr->init_values) {
@@ -883,7 +883,7 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
                 break;
             case MVMDispOpcodeLoadConstantObjOrStr: {
                 MVMCollectable *value = dp->gc_constants[op->load.idx];
-                MVMuint16 reg_kind = REPR(value)->ID == MVM_REPR_ID_MVMString
+                uint16_t reg_kind = REPR(value)->ID == MVM_REPR_ID_MVMString
                     ? MVM_reg_str
                     : MVM_reg_obj;
                 MVMSpeshOperand temp = MVM_spesh_manipulate_get_temp_reg(tc, g, reg_kind);
@@ -1217,7 +1217,7 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
                      rb_op->num_operands * sizeof(MVMSpeshOperand));
 
                 /* Write result into dispatch result register unless void. */
-                MVMuint16 cur_op = 0;
+                uint16_t cur_op = 0;
                 if (has_return_value) {
                     if (box_return_value) {
                         rb_ins->operands[cur_op] = MVM_spesh_manipulate_get_temp_reg(tc, g, MVM_reg_int64);
@@ -1237,11 +1237,11 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
                 int has_rw_dummy = 0;
                 MVMSpeshOperand rw_dummy = { 0 };
 
-                MVMuint8 *is_rw_operand = MVM_spesh_alloc(tc, g, rb_op->num_operands * sizeof(MVMuint8));
+                uint8_t *is_rw_operand = MVM_spesh_alloc(tc, g, rb_op->num_operands * sizeof(uint8_t));
                 MVMSpeshOperand *rw_operands = MVM_spesh_alloc(tc, g, rb_op->num_operands * sizeof(MVMSpeshOperand));
                 if (body) {
-                    MVMint16 *arg_types = body->arg_types;
-                    MVMuint16 j;
+                    int16_t *arg_types = body->arg_types;
+                    uint16_t j;
                     for (j = 1; j < callsite->flag_count; j++) { /* first arg is return type */
                         if ((arg_types[j - 1] & MVM_NATIVECALL_ARG_RW_MASK) == MVM_NATIVECALL_ARG_RW) {
                             switch (arg_types[j - 1] & MVM_NATIVECALL_ARG_TYPE_MASK) {
@@ -1301,11 +1301,11 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
                 }
 
                 /* Add the callsite operand, smuggled as a 64-bit int. */
-                rb_ins->operands[cur_op++].lit_ui64 = (MVMuint64)callsite;
+                rb_ins->operands[cur_op++].lit_ui64 = (uint64_t)callsite;
 
                 /* Add the argument operands. */
                 if (skip_args >= 0) {
-                    MVMuint16 j;
+                    uint16_t j;
                     for (j = 0; j < callsite->flag_count; j++) {
                         rb_ins->operands[cur_op] = is_rw_operand[j]
                             ? rw_operands[j]
@@ -1315,7 +1315,7 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
                     }
                 }
                 else {
-                    MVMuint16 j;
+                    uint16_t j;
                     for (j = 0; j < callsite->flag_count; j++) {
                         rb_ins->operands[cur_op] = is_rw_operand[j]
                             ? rw_operands[j]
@@ -1331,7 +1331,7 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
 
                 MVMSpeshIns *post_call_instructions = NULL;
 
-                MVMuint16 j;
+                uint16_t j;
                 for (j = 1; j < callsite->flag_count; j++) {
                     if (is_rw_operand[j]) {
                         MVMSpeshOperand var = has_rw_dummy
@@ -1463,7 +1463,7 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
                      rb_op->num_operands * sizeof(MVMSpeshOperand));
 
                 /* Write result into dispatch result register unless void. */
-                MVMuint16 cur_op = 0;
+                uint16_t cur_op = 0;
                 if (ins->info->opcode != MVM_OP_dispatch_v) {
                     rb_ins->operands[cur_op] = ins->operands[0];
                     MVM_spesh_get_facts(tc, g, rb_ins->operands[cur_op])->writer = rb_ins;
@@ -1476,7 +1476,7 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
                 cur_op++;
 
                 /* Add the callsite operand, smuggled as a 64-bit int. */
-                rb_ins->operands[cur_op++].lit_ui64 = (MVMuint64)callsite;
+                rb_ins->operands[cur_op++].lit_ui64 = (uint64_t)callsite;
 
                 /* If it's not C, we can pre-select a spesh candidate. This will
                  * be taken care of by the optimizer; for now we poke -1 into the
@@ -1497,7 +1497,7 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
 
                 /* Add the argument operands. */
                 if (skip_args >= 0) {
-                    MVMuint16 j;
+                    uint16_t j;
                     for (j = 0; j < callsite->flag_count; j++) {
                         rb_ins->operands[cur_op] = args[skip_args + j];
                         MVM_spesh_usages_add_by_reg(tc, g, rb_ins->operands[cur_op], rb_ins);
@@ -1505,7 +1505,7 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
                     }
                 }
                 else {
-                    MVMuint16 j;
+                    uint16_t j;
                     for (j = 0; j < callsite->flag_count; j++) {
                         rb_ins->operands[cur_op] = temporaries[dp->first_args_temporary + j];
                         MVM_spesh_usages_add_by_reg(tc, g, rb_ins->operands[cur_op], rb_ins);

@@ -51,7 +51,7 @@ static MVMDispSysCall dispatcher_delegate = {
 /* dispatcher-track-arg */
 static void dispatcher_track_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVMObject *tracked = MVM_disp_program_record_track_arg(tc, capture, (uint32_t)idx);
     MVM_args_set_result_obj(tc, tracked, MVM_RETURN_CURRENT_FRAME);
 }
@@ -151,7 +151,7 @@ static MVMDispSysCall dispatcher_track_how = {
 /* dispatcher-drop-arg */
 static void dispatcher_drop_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVMObject *derived = MVM_disp_program_record_capture_drop_args(tc, capture, (uint32_t)idx, 1);
     MVM_args_set_result_obj(tc, derived, MVM_RETURN_CURRENT_FRAME);
 }
@@ -168,8 +168,8 @@ static MVMDispSysCall dispatcher_drop_arg = {
 /* dispatcher-drop-n-args */
 static void dispatcher_drop_n_args_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx   = get_int_arg(arg_info, 1);
-    MVMint64 count = get_int_arg(arg_info, 2);
+    int64_t idx   = get_int_arg(arg_info, 1);
+    int64_t count = get_int_arg(arg_info, 2);
     MVMObject *derived = MVM_disp_program_record_capture_drop_args(tc, capture, (uint32_t)idx, (uint32_t)count);
     MVM_args_set_result_obj(tc, derived, MVM_RETURN_CURRENT_FRAME);
 }
@@ -186,7 +186,7 @@ static MVMDispSysCall dispatcher_drop_n_args = {
 /* dispatcher-insert-arg */
 static void dispatcher_insert_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVMObject *tracked = get_obj_arg(arg_info, 2);
     MVMObject *derived = MVM_disp_program_record_capture_insert_arg(tc, capture,
             (uint32_t)idx, tracked);
@@ -205,7 +205,7 @@ static MVMDispSysCall dispatcher_insert_arg = {
 /* dispatcher-replace-arg */
 static void dispatcher_replace_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVMObject *tracked = get_obj_arg(arg_info, 2);
     MVMObject *derived = MVM_disp_program_record_capture_replace_arg(tc, capture,
             (uint32_t)idx, tracked);
@@ -224,7 +224,7 @@ static MVMDispSysCall dispatcher_replace_arg = {
 /* dispatcher-replace-arg-literal-obj */
 static void dispatcher_replace_arg_literal_obj_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .o = get_obj_arg(arg_info, 2) };
     MVMObject *derived = MVM_disp_program_record_capture_replace_literal_arg(tc, capture,
             (uint32_t)idx, MVM_CALLSITE_ARG_OBJ, insertee);
@@ -244,7 +244,7 @@ static MVMDispSysCall dispatcher_replace_arg_literal_obj = {
 /* dispatcher-insert-arg-literal-obj */
 static void dispatcher_insert_arg_literal_obj_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .o = get_obj_arg(arg_info, 2) };
     MVMObject *derived = MVM_disp_program_record_capture_insert_constant_arg(tc,
             capture, (uint32_t)idx, MVM_CALLSITE_ARG_OBJ, insertee);
@@ -263,7 +263,7 @@ static MVMDispSysCall dispatcher_insert_arg_literal_obj = {
 /* dispatcher-insert-arg-literal-str */
 static void dispatcher_insert_arg_literal_str_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .s = get_str_arg(arg_info, 2) };
     MVMObject *derived = MVM_disp_program_record_capture_insert_constant_arg(tc,
             capture, (uint32_t)idx, MVM_CALLSITE_ARG_STR, insertee);
@@ -282,7 +282,7 @@ static MVMDispSysCall dispatcher_insert_arg_literal_str = {
 /* dispatcher-insert-arg-literal-int */
 static void dispatcher_insert_arg_literal_int_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .i64 = get_int_arg(arg_info, 2) };
     MVMObject *derived = MVM_disp_program_record_capture_insert_constant_arg(tc,
             capture, (uint32_t)idx, MVM_CALLSITE_ARG_INT, insertee);
@@ -301,7 +301,7 @@ static MVMDispSysCall dispatcher_insert_arg_literal_int = {
 /* dispatcher-insert-arg-literal-num */
 static void dispatcher_insert_arg_literal_num_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .n64 = get_num_arg(arg_info, 2) };
     MVMObject *derived = MVM_disp_program_record_capture_insert_constant_arg(tc,
             capture, (uint32_t)idx, MVM_CALLSITE_ARG_NUM, insertee);
@@ -320,8 +320,8 @@ static MVMDispSysCall dispatcher_insert_arg_literal_num = {
 /* dispatcher-is-arg-literal */
 static void dispatcher_is_arg_literal_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
-    MVMint64 literal = MVM_disp_program_record_capture_is_arg_literal(tc, capture,
+    int64_t idx = get_int_arg(arg_info, 1);
+    int64_t literal = MVM_disp_program_record_capture_is_arg_literal(tc, capture,
             (uint32_t)idx);
     MVM_args_set_result_int(tc, literal, MVM_RETURN_CURRENT_FRAME);
 }
@@ -547,7 +547,7 @@ static MVMDispSysCall dispatcher_next_resumption = {
 
 /* dispatcher-resume-on-bind-failure */
 static void dispatcher_resume_on_bind_failure_impl(MVMThreadContext *tc, MVMArgs arg_info) {
-    MVMint64 flag = get_int_arg(arg_info, 0);
+    int64_t flag = get_int_arg(arg_info, 0);
     MVM_disp_program_record_resume_on_bind_failure(tc, flag);
     MVM_args_set_result_obj(tc, tc->instance->VMNull, MVM_RETURN_CURRENT_FRAME);
 }
@@ -563,8 +563,8 @@ static MVMDispSysCall dispatcher_resume_on_bind_failure = {
 
 /* dispatcher-resume-after-bind */
 static void dispatcher_resume_after_bind_impl(MVMThreadContext *tc, MVMArgs arg_info) {
-    MVMint64 failure_flag = get_int_arg(arg_info, 0);
-    MVMint64 success_flag = get_int_arg(arg_info, 1);
+    int64_t failure_flag = get_int_arg(arg_info, 0);
+    int64_t success_flag = get_int_arg(arg_info, 1);
     MVM_disp_program_record_resume_after_bind(tc, failure_flag, success_flag);
     MVM_args_set_result_obj(tc, tc->instance->VMNull, MVM_RETURN_CURRENT_FRAME);
 }
@@ -626,7 +626,7 @@ static MVMDispSysCall boolify_bigint = {
 /* boolify-boxed-int */
 void MVM_disp_syscall_boolify_boxed_int_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
-    MVMint64 unboxed = REPR(obj)->box_funcs.get_int(tc, STABLE(obj), obj, OBJECT_BODY(obj));
+    int64_t unboxed = REPR(obj)->box_funcs.get_int(tc, STABLE(obj), obj, OBJECT_BODY(obj));
     MVM_args_set_result_int(tc, unboxed != 0, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall boolify_boxed_int = {
@@ -642,7 +642,7 @@ static MVMDispSysCall boolify_boxed_int = {
 /* boolify-boxed-num */
 static void boolify_boxed_num_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
-    MVMnum64 unboxed = REPR(obj)->box_funcs.get_num(tc, STABLE(obj), obj, OBJECT_BODY(obj));
+    double unboxed = REPR(obj)->box_funcs.get_num(tc, STABLE(obj), obj, OBJECT_BODY(obj));
     MVM_args_set_result_int(tc, unboxed != 0.0, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall boolify_boxed_num = {
@@ -675,12 +675,12 @@ static MVMDispSysCall boolify_boxed_str = {
 static void boolify_boxed_str_with_zero_false_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     MVMString *str = REPR(obj)->box_funcs.get_str(tc, STABLE(obj), obj, OBJECT_BODY(obj));
-    MVMint64 result;
+    int64_t result;
     if (str == NULL || !IS_CONCRETE(str)) {
         result = 0;
     }
     else {
-        MVMint64 chars = MVM_string_graphs_nocheck(tc, str);
+        int64_t chars = MVM_string_graphs_nocheck(tc, str);
         result = chars == 0 ||
                 (chars == 1 && MVM_string_get_grapheme_at_nocheck(tc, str, 0) == 48)
                 ? 0 : 1;
@@ -730,7 +730,7 @@ static MVMDispSysCall boolify_using_elems = {
 /* capture-is-literal-arg */
 static void capture_is_literal_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVM_args_set_result_int(tc, MVM_capture_is_literal_arg(tc, capture, idx),
         MVM_RETURN_CURRENT_FRAME);
 }
@@ -822,7 +822,7 @@ static MVMDispSysCall capture_num_args = {
 /* capture-arg-prim-spec */
 static void capture_arg_prim_spec_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVM_args_set_result_int(tc, MVM_capture_arg_primspec(tc, capture, idx), MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall capture_arg_prim_spec = {
@@ -838,7 +838,7 @@ static MVMDispSysCall capture_arg_prim_spec = {
 /* capture-arg-value */
 static void capture_arg_value_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
-    MVMint64 idx = get_int_arg(arg_info, 1);
+    int64_t idx = get_int_arg(arg_info, 1);
     MVMRegister value;
     MVMCallsiteFlags kind;
     MVM_capture_arg(tc, capture, idx, &value, &kind);
@@ -876,7 +876,7 @@ static MVMDispSysCall capture_arg_value = {
 static void can_unbox_to_int_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     const MVMStorageSpec *ss = REPR(obj)->get_storage_spec(tc, STABLE(obj));
-    MVMint64 result = ss->can_box & MVM_STORAGE_SPEC_CAN_BOX_INT;
+    int64_t result = ss->can_box & MVM_STORAGE_SPEC_CAN_BOX_INT;
     MVM_args_set_result_int(tc, result, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall can_unbox_to_int = {
@@ -893,7 +893,7 @@ static MVMDispSysCall can_unbox_to_int = {
 static void can_unbox_to_num_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     const MVMStorageSpec *ss = REPR(obj)->get_storage_spec(tc, STABLE(obj));
-    MVMint64 result = ss->can_box & MVM_STORAGE_SPEC_CAN_BOX_NUM;
+    int64_t result = ss->can_box & MVM_STORAGE_SPEC_CAN_BOX_NUM;
     MVM_args_set_result_int(tc, result, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall can_unbox_to_num = {
@@ -910,7 +910,7 @@ static MVMDispSysCall can_unbox_to_num = {
 static void can_unbox_to_str_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
     const MVMStorageSpec *ss = REPR(obj)->get_storage_spec(tc, STABLE(obj));
-    MVMint64 result = ss->can_box & MVM_STORAGE_SPEC_CAN_BOX_STR;
+    int64_t result = ss->can_box & MVM_STORAGE_SPEC_CAN_BOX_STR;
     MVM_args_set_result_int(tc, result, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall can_unbox_to_str = {
@@ -960,7 +960,7 @@ static MVMDispSysCall coerce_boxed_num_to_str = {
 /* coerce-boxed-str-to-int */
 static void coerce_boxed_str_to_int_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
-    MVMint64 result = MVM_coerce_s_i(tc,
+    int64_t result = MVM_coerce_s_i(tc,
         REPR(obj)->box_funcs.get_str(tc, STABLE(obj), obj, OBJECT_BODY(obj)));
     MVM_args_set_result_int(tc, result, MVM_RETURN_CURRENT_FRAME);
 }
@@ -977,7 +977,7 @@ static MVMDispSysCall coerce_boxed_str_to_int = {
 /* coerce-boxed-num-to-int */
 static void coerce_boxed_num_to_int_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
-    MVMint64 result = (MVMint64)REPR(obj)->box_funcs.get_num(tc, STABLE(obj),
+    int64_t result = (int64_t)REPR(obj)->box_funcs.get_num(tc, STABLE(obj),
             obj, OBJECT_BODY(obj));
     MVM_args_set_result_int(tc, result, MVM_RETURN_CURRENT_FRAME);
 }
@@ -994,7 +994,7 @@ static MVMDispSysCall coerce_boxed_num_to_int = {
 /* coerce-boxed-int-to-num */
 static void coerce_boxed_int_to_num_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
-    MVMnum64 result = (MVMnum64)REPR(obj)->box_funcs.get_int(tc, STABLE(obj),
+    double result = (double)REPR(obj)->box_funcs.get_int(tc, STABLE(obj),
             obj, OBJECT_BODY(obj));
     MVM_args_set_result_num(tc, result, MVM_RETURN_CURRENT_FRAME);
 }
@@ -1011,7 +1011,7 @@ static MVMDispSysCall coerce_boxed_int_to_num = {
 /* coerce-boxed-str-to-num */
 static void coerce_boxed_str_to_num_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
-    MVMnum64 result = MVM_coerce_s_n(tc, REPR(obj)->box_funcs.get_str(tc, STABLE(obj),
+    double result = MVM_coerce_s_n(tc, REPR(obj)->box_funcs.get_str(tc, STABLE(obj),
             obj, OBJECT_BODY(obj)));
     MVM_args_set_result_num(tc, result, MVM_RETURN_CURRENT_FRAME);
 }
@@ -1111,7 +1111,7 @@ static MVMDispSysCall get_code_outer_ctx = {
 /* bind-will-resume-on-failure */
 static void bind_will_resume_on_failure_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMCallStackIterator iter;
-    MVMint64 result = 0;
+    int64_t result = 0;
     MVM_callstack_iter_frame_init(tc, &iter, tc->stack_top);
     if (MVM_callstack_iter_move_next(tc, &iter)) {
         MVMCallStackRecord *frame_rec = MVM_callstack_iter_current(tc, &iter);
@@ -1134,7 +1134,7 @@ static MVMDispSysCall bind_will_resume_on_failure = {
 /* type-check-mode-flags */
 static void type_check_mode_flags_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *type = get_obj_arg(arg_info, 0);
-    MVMint64 mode = STABLE(type)->mode_flags & MVM_TYPE_CHECK_CACHE_FLAG_MASK;
+    int64_t mode = STABLE(type)->mode_flags & MVM_TYPE_CHECK_CACHE_FLAG_MASK;
     MVM_args_set_result_int(tc, mode, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall type_check_mode_flags = {
@@ -1150,7 +1150,7 @@ static MVMDispSysCall type_check_mode_flags = {
 /* has-type-check-cache */
 static void has_type_check_cache_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
-    MVMint64 has_cache = STABLE(obj)->type_check_cache != NULL;
+    int64_t has_cache = STABLE(obj)->type_check_cache != NULL;
     MVM_args_set_result_int(tc, has_cache, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall has_type_check_cache = {
@@ -1166,7 +1166,7 @@ static MVMDispSysCall has_type_check_cache = {
 /* code-is-stub */
 static void code_is_stub_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
-    MVMint64 is_stub = ((MVMCode *)obj)->body.is_compiler_stub;
+    int64_t is_stub = ((MVMCode *)obj)->body.is_compiler_stub;
     MVM_args_set_result_int(tc, is_stub, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall code_is_stub = {
@@ -1275,12 +1275,12 @@ static void handle_open_mode_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMOSHandle *handle  = (MVMOSHandle *)get_obj_arg(arg_info, 0);
 
     if (handle->body.ops->introspection && handle->body.ops->introspection->mvm_open_mode) {
-        MVMint64 open_mode = handle->body.ops->introspection->mvm_open_mode(tc, handle);
+        int64_t open_mode = handle->body.ops->introspection->mvm_open_mode(tc, handle);
 
         if (open_mode < 1)
             MVM_exception_throw_adhoc(tc, "Incomprehensible open mode: %"PRId64" (valid modes are 1=RO|2=WO|3=RW)", open_mode);
 
-        MVM_args_set_result_int(tc, (MVMint64) open_mode, MVM_RETURN_CURRENT_FRAME);
+        MVM_args_set_result_int(tc, (int64_t) open_mode, MVM_RETURN_CURRENT_FRAME);
     } else {
         MVM_exception_throw_adhoc(tc, "Incompatible handle type supplied");
     }
@@ -1320,7 +1320,7 @@ static void stat_flags_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat   *stat_obj  = (MVMStat *)get_obj_arg(arg_info, 0);
     int32_t   stat_flag = get_int_arg(arg_info, 1);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
-    MVMint64           r = -1;
+    int64_t           r = -1;
     switch (stat_flag) {
         case MVM_STAT_EXISTS:             r = stat_obj->body.exists; break;
 
@@ -1399,7 +1399,7 @@ static void stat_time_impl(MVMThreadContext *tc, MVMArgs arg_info) {
             MVM_args_set_result_num(tc, -1, MVM_RETURN_CURRENT_FRAME);
             return;
     }
-    MVMnum64 time = ts.tv_sec + 1e-9 * (MVMnum64)ts.tv_nsec;
+    double time = ts.tv_sec + 1e-9 * (double)ts.tv_nsec;
     MVM_args_set_result_num(tc, time, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall stat_time = {
@@ -1431,7 +1431,7 @@ static void stat_time_nanos_impl(MVMThreadContext *tc, MVMArgs arg_info) {
             MVM_args_set_result_int(tc, -1, MVM_RETURN_CURRENT_FRAME);
             return;
     }
-    MVMint64 time = ts.tv_sec * 1000000000 + ts.tv_nsec;
+    int64_t time = ts.tv_sec * 1000000000 + ts.tv_nsec;
     MVM_args_set_result_int(tc, time, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall stat_time_nanos = {
@@ -1448,12 +1448,12 @@ static MVMDispSysCall stat_time_nanos = {
 static void stat_is_readable_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat    *stat_obj = (MVMStat *)get_obj_arg(arg_info, 0);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
-    MVMint64    readable;
+    int64_t    readable;
     if (stat_obj->body.exists) {
 #ifdef _WIN32
-        MVMint64 r = (file_stat->st_mode & S_IREAD);
+        int64_t r = (file_stat->st_mode & S_IREAD);
 #else
-        MVMint64 r = (file_stat->st_mode & S_IROTH)
+        int64_t r = (file_stat->st_mode & S_IROTH)
                   || (file_stat->st_uid == geteuid() && (file_stat->st_mode & S_IRUSR))
                   || (geteuid() == 0)
                   || (MVM_are_we_group_member(tc, file_stat->st_gid) && (file_stat->st_mode & S_IRGRP));
@@ -1479,12 +1479,12 @@ static MVMDispSysCall stat_is_readable = {
 static void stat_is_writable_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat    *stat_obj = (MVMStat *)get_obj_arg(arg_info, 0);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
-    MVMint64    writable;
+    int64_t    writable;
     if (stat_obj->body.exists) {
 #ifdef _WIN32
-        MVMint64 r = (file_stat->st_mode & S_IWRITE);
+        int64_t r = (file_stat->st_mode & S_IWRITE);
 #else
-        MVMint64 r = (file_stat->st_mode & S_IWOTH)
+        int64_t r = (file_stat->st_mode & S_IWOTH)
                   || (file_stat->st_uid == geteuid() && (file_stat->st_mode & S_IWUSR))
                   || (geteuid() == 0)
                   || (MVM_are_we_group_member(tc, file_stat->st_gid) && (file_stat->st_mode & S_IWGRP));
@@ -1510,16 +1510,16 @@ static MVMDispSysCall stat_is_writable = {
 static void stat_is_executable_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat    *stat_obj = (MVMStat *)get_obj_arg(arg_info, 0);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
-    MVMint64    executable;
+    int64_t    executable;
     if (stat_obj->body.exists) {
 #ifdef _WIN32
-        MVMint64 r = 0;
+        int64_t r = 0;
         if ((file_stat->st_mode & S_IFMT) == S_IFDIR) {
             r = 1;
         }
         else {
             /* true if fileext is in PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC */
-            MVMint64 n = MVM_string_index_from_end(tc, stat_obj->body.filename, tc->instance->str_consts.dot, 0);
+            int64_t n = MVM_string_index_from_end(tc, stat_obj->body.filename, tc->instance->str_consts.dot, 0);
             if (n >= 0) {
                 MVMString *fileext = MVM_string_substring(tc, stat_obj->body.filename, n, -1);
                 char *ext  = MVM_string_utf8_c8_encode_C_string(tc, fileext);
@@ -1536,7 +1536,7 @@ static void stat_is_executable_impl(MVMThreadContext *tc, MVMArgs arg_info) {
             }
         }
 #else
-        MVMint64 r = (file_stat->st_mode & S_IXOTH)
+        int64_t r = (file_stat->st_mode & S_IXOTH)
                   || (file_stat->st_uid == geteuid() && (file_stat->st_mode & S_IXUSR))
                   || (MVM_are_we_group_member(tc, file_stat->st_gid) && (file_stat->st_mode & S_IXGRP))
                   || (geteuid() == 0 && (file_stat->st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)));

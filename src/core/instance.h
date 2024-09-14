@@ -117,8 +117,8 @@ struct MVMEventSubscriptions {
     MVMObject *GCEvent;
     MVMObject *SpeshOverviewEvent;
 
-    MVMuint64 vm_startup_hrtime;
-    MVMuint64 vm_startup_now;
+    uint64_t vm_startup_hrtime;
+    uint64_t vm_startup_now;
 };
 
 struct MVMSerializationContextWeakHashEntry {
@@ -286,8 +286,8 @@ struct MVMInstance {
      * of elements; if it ever is not enough we allocate one to the maximum
      * number of arguments. We cannot free the smaller one until termination
      * as it may still be referenced. */
-    MVMuint16 *identity_arg_map;
-    MVMuint16 *small_identity_arg_map;
+    uint16_t *identity_arg_map;
+    uint16_t *small_identity_arg_map;
     uint32_t identity_arg_map_alloc;
 
     /************************************************************************
@@ -298,13 +298,13 @@ struct MVMInstance {
     FILE *spesh_log_fh;
 
     /* Flag for if spesh (and certain spesh features) are enabled. */
-    MVMint8 spesh_enabled;
-    MVMint8 spesh_inline_enabled;
-    MVMint8 spesh_inline_log;
-    MVMint8 spesh_osr_enabled;
-    MVMint8 spesh_pea_enabled;
-    MVMint8 spesh_nodelay;
-    MVMint8 spesh_blocking;
+    int8_t spesh_enabled;
+    int8_t spesh_inline_enabled;
+    int8_t spesh_inline_log;
+    int8_t spesh_osr_enabled;
+    int8_t spesh_pea_enabled;
+    int8_t spesh_nodelay;
+    int8_t spesh_blocking;
 
     /* Number of specializations produced, and limit on number of
      * specializations (zero if no limit). */
@@ -338,9 +338,9 @@ struct MVMInstance {
      ************************************************************************/
 
     /* Flag for if jit is enabled */
-    MVMuint8 jit_enabled;
-    MVMuint8 jit_expr_enabled;
-    MVMuint8 jit_debug_enabled;
+    uint8_t jit_enabled;
+    uint8_t jit_expr_enabled;
+    uint8_t jit_debug_enabled;
 
     /* bisection flags, to stop the JIT from using the expression compiler above
      * certain frame seq nr / basic blocks nrs, allowing a debugger to figure
@@ -388,7 +388,7 @@ struct MVMInstance {
     /* Raw command line args */
     char          **raw_clargs;
     /* Number of passed command-line args */
-    MVMint64        num_clargs;
+    int64_t        num_clargs;
     /* executable name */
     const char     *exec_name;
     /* program name; becomes first clargs entry */
@@ -405,7 +405,7 @@ struct MVMInstance {
     MVMObject      *sig_arr;
 
     /* Flags indicating the signals available on the host system */
-    MVMuint64       valid_sigs;
+    uint64_t       valid_sigs;
 
     /************************************************************************
      * Caching and interning
@@ -491,7 +491,7 @@ struct MVMInstance {
      * hll_compilee_depth is > 0. */
     MVMFixKeyHashTable compiler_hll_configs;
     MVMFixKeyHashTable compilee_hll_configs;
-    MVMint64      hll_compilee_depth;
+    int64_t      hll_compilee_depth;
     uv_mutex_t    mutex_hllconfigs;
 
     /* Hash of hashes of symbol tables per hll. */
@@ -547,7 +547,7 @@ struct MVMInstance {
     uint32_t  coverage_control;
 
     /* The time it takes to run the profiler instrumentation. */
-    MVMuint64 profiling_overhead;
+    uint64_t profiling_overhead;
 
     /************************************************************************
      * Debugging
@@ -559,14 +559,14 @@ struct MVMInstance {
 
     /* Log file for dynamic var performance, if we're to log it. */
     FILE *dynvar_log_fh;
-    MVMint64 dynvar_log_lasttime;
+    int64_t dynvar_log_lasttime;
 
     /* Flag for if NFA debugging is enabled. */
-    MVMint8 nfa_debug_enabled;
+    int8_t nfa_debug_enabled;
 
     /* Hash Secrets which is used as the hash seed. This is to avoid denial of
      * service type attacks. */
-    MVMuint64 hashSecrets[2];
+    uint64_t hashSecrets[2];
 
     /************************************************************************
      * VM Event subscription

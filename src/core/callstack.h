@@ -43,13 +43,13 @@ struct MVMCallStackRecord {
 
     /* The kind of record this is (constants defined below with each record
      * type). */
-    MVMuint8 kind;
+    uint8_t kind;
 
     /* Deoptimization of the whole call stack proceeds lazily, by marking a
      * frame that needs deopt when it's unwound to with the deopt kind (in
      * the kind field). In that case, this field holds the frame kind that
      * we started out with. */
-    MVMuint8 orig_kind;
+    uint8_t orig_kind;
 };
 
 /* The start of a callstack as a whole, for seeing when we've reached the
@@ -205,7 +205,7 @@ struct MVMCallStackDispatchRecord {
 
     /* If there is a produced dispatch program here, was it installed? If not,
      * we need to clear it up as we unwind this frame.  */
-    MVMuint8 produced_dp_installed;
+    uint8_t produced_dp_installed;
 
     /* Temporaries as the dispatch program would write them, but only for the
      * case where they are used for making resume init state available. NULL
@@ -387,11 +387,11 @@ MVMCallStackDispatchRecord * MVM_callstack_allocate_dispatch_record(MVMThreadCon
 MVMCallStackDispatchRun * MVM_callstack_allocate_dispatch_run(MVMThreadContext *tc,
         uint32_t num_temps);
 MVMCallStackFlattening * MVM_callstack_allocate_flattening(MVMThreadContext *tc,
-        MVMuint16 num_args, MVMuint16 num_pos);
+        uint16_t num_args, uint16_t num_pos);
 MVMCallStackBindControl * MVM_callstack_allocate_bind_control_failure_only(MVMThreadContext *tc,
-        MVMint64 failure_flag);
+        int64_t failure_flag);
 MVMCallStackBindControl * MVM_callstack_allocate_bind_control(MVMThreadContext *tc,
-        MVMint64 flag, MVMint64 success_flag);
+        int64_t flag, int64_t success_flag);
 MVMCallStackArgsFromC * MVM_callstack_allocate_args_from_c(MVMThreadContext *tc,
         MVMCallsite *cs);
 MVMCallStackDeoptedResumeInit * MVM_callstack_allocate_deopted_resume_init(
@@ -403,8 +403,8 @@ void MVM_callstack_continuation_append(MVMThreadContext *tc, MVMCallStackRegion 
         MVMCallStackRecord *stack_top, MVMObject *update_tag);
 MVMFrame * MVM_callstack_first_frame_from_region(MVMThreadContext *tc, MVMCallStackRegion *region);
 MVMCallStackDispatchRecord * MVM_callstack_find_topmost_dispatch_recording(MVMThreadContext *tc);
-MVMuint64 MVM_callstack_unwind_frame(MVMThreadContext *tc, MVMuint8 exceptional);
-void MVM_callstack_unwind_to_frame(MVMThreadContext *tc, MVMuint8 exceptional);
+uint64_t MVM_callstack_unwind_frame(MVMThreadContext *tc, uint8_t exceptional);
+void MVM_callstack_unwind_to_frame(MVMThreadContext *tc, uint8_t exceptional);
 void MVM_callstack_unwind_dispatch_record(MVMThreadContext *tc);
 void MVM_callstack_unwind_dispatch_run(MVMThreadContext *tc);
 void MVM_callstack_unwind_failed_dispatch_run(MVMThreadContext *tc);
@@ -416,7 +416,7 @@ void MVM_callstack_mark_detached(MVMThreadContext *tc, MVMCallStackRecord *stack
 void MVM_callstack_free_detached_regions(MVMThreadContext *tc, MVMCallStackRegion *first_region,
         MVMCallStackRecord *stack_top);
 void MVM_callstack_destroy(MVMThreadContext *tc);
-MVM_STATIC_INLINE MVMuint8 MVM_callstack_kind_ignoring_deopt(MVMCallStackRecord *record) {
+MVM_STATIC_INLINE uint8_t MVM_callstack_kind_ignoring_deopt(MVMCallStackRecord *record) {
     return record->kind == MVM_CALLSTACK_RECORD_DEOPT_FRAME ? record->orig_kind : record->kind;
 }
 MVM_STATIC_INLINE MVMFrame * MVM_callstack_record_to_frame(MVMCallStackRecord *record) {
@@ -439,12 +439,12 @@ MVM_STATIC_INLINE MVMFrame * MVM_callstack_current_frame(MVMThreadContext *tc) {
 struct MVMCallStackIterator {
     MVMCallStackRecord *start;
     MVMCallStackRecord *current;
-    MVMuint64 filter;
+    uint64_t filter;
 };
 
 /* Create an iterator over a certain kind of record. */
 MVM_STATIC_INLINE void MVM_callstack_iter_one_kind_init(MVMThreadContext *tc,
-        MVMCallStackIterator *iter, MVMCallStackRecord *start, MVMuint8 kind) {
+        MVMCallStackIterator *iter, MVMCallStackRecord *start, uint8_t kind) {
     iter->start = start;
     iter->current = NULL;
     iter->filter = 1 << kind;

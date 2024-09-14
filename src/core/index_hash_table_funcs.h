@@ -24,11 +24,11 @@ MVM_STATIC_INLINE uint32_t MVM_index_hash_allocated_items(const struct MVMIndexH
 MVM_STATIC_INLINE uint32_t MVM_index_hash_kompromat(const struct MVMIndexHashTableControl *control) {
     return MVM_index_hash_official_size(control) + control->max_probe_distance  - 1;
 }
-MVM_STATIC_INLINE MVMuint8 *MVM_index_hash_metadata(const struct MVMIndexHashTableControl *control) {
-    return (MVMuint8 *) control + sizeof(struct MVMIndexHashTableControl);
+MVM_STATIC_INLINE uint8_t *MVM_index_hash_metadata(const struct MVMIndexHashTableControl *control) {
+    return (uint8_t *) control + sizeof(struct MVMIndexHashTableControl);
 }
-MVM_STATIC_INLINE MVMuint8 *MVM_index_hash_entries(const struct MVMIndexHashTableControl *control) {
-    return (MVMuint8 *) control - sizeof(struct MVMIndexHashEntry);
+MVM_STATIC_INLINE uint8_t *MVM_index_hash_entries(const struct MVMIndexHashTableControl *control) {
+    return (uint8_t *) control - sizeof(struct MVMIndexHashEntry);
 }
 
 MVM_STATIC_INLINE size_t MVM_index_hash_allocated_size(MVMThreadContext *tc, MVMIndexHashTable *hashtable) {
@@ -94,7 +94,7 @@ MVM_STATIC_INLINE struct MVM_hash_loop_state
 MVM_index_hash_create_loop_state(MVMThreadContext *tc,
                                  struct MVMIndexHashTableControl *control,
                                  MVMString *key) {
-    MVMuint64 hash_val = MVM_string_hash_code(tc, key);
+    uint64_t hash_val = MVM_string_hash_code(tc, key);
     struct MVM_hash_loop_state retval;
     retval.entry_size = sizeof(struct MVMIndexHashEntry);
     retval.metadata_increment = 1 << control->metadata_hash_bits;

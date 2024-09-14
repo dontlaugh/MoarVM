@@ -7,7 +7,7 @@
 #endif
 
 /* Creates a compilation unit from a byte array. */
-MVMCompUnit * MVM_cu_from_bytes(MVMThreadContext *tc, MVMuint8 *bytes, uint32_t size) {
+MVMCompUnit * MVM_cu_from_bytes(MVMThreadContext *tc, uint8_t *bytes, uint32_t size) {
     /* Create compilation unit data structure. Allocate it in gen2 always, so
      * it will never move (the JIT relies on this). */
     MVMCompUnit *cu;
@@ -34,7 +34,7 @@ MVMCompUnit * MVM_cu_map_from_file(MVMThreadContext *tc, const char *filename, i
     void        *block       = NULL;
     void        *handle      = NULL;
     uv_file      fd;
-    MVMuint64    size;
+    uint64_t    size;
     uv_fs_t req;
     char *waste[2] = { free_filename ? (char *)filename : NULL, NULL };
 
@@ -63,18 +63,18 @@ MVMCompUnit * MVM_cu_map_from_file(MVMThreadContext *tc, const char *filename, i
         MVM_free((char *)filename);
 
     /* Turn it into a compilation unit. */
-    cu = MVM_cu_from_bytes(tc, (MVMuint8 *)block, (uint32_t)size);
+    cu = MVM_cu_from_bytes(tc, (uint8_t *)block, (uint32_t)size);
     cu->body.handle = handle;
     cu->body.deallocate = MVM_DEALLOCATE_UNMAP;
     return cu;
 }
 
 /* Loads a compilation unit from a bytecode file handle, mapping it into memory. */
-MVMCompUnit * MVM_cu_map_from_file_handle(MVMThreadContext *tc, uv_file fd, MVMuint64 pos) {
+MVMCompUnit * MVM_cu_map_from_file_handle(MVMThreadContext *tc, uv_file fd, uint64_t pos) {
     MVMCompUnit *cu          = NULL;
     void        *block       = NULL;
     void        *handle      = NULL;
-    MVMuint64    size;
+    uint64_t    size;
     uv_fs_t req;
 
     /* Ensure the file exists, and get its size. */
@@ -92,15 +92,15 @@ MVMCompUnit * MVM_cu_map_from_file_handle(MVMThreadContext *tc, uv_file fd, MVMu
     block = ((char*)block) + pos;
 
     /* Turn it into a compilation unit. */
-    cu = MVM_cu_from_bytes(tc, (MVMuint8 *)block, (uint32_t)size);
+    cu = MVM_cu_from_bytes(tc, (uint8_t *)block, (uint32_t)size);
     cu->body.handle = handle;
     cu->body.deallocate = MVM_DEALLOCATE_UNMAP;
     return cu;
 }
 
 /* Adds an extra callsite, needed due to an inlining, and returns its index. */
-MVMuint16 MVM_cu_callsite_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMCallsite *cs) {
-    MVMuint16 found = 0;
+uint16_t MVM_cu_callsite_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMCallsite *cs) {
+    uint16_t found = 0;
     uint32_t idx;
 
     uv_mutex_lock(cu->body.inline_tweak_mutex);
@@ -165,11 +165,11 @@ uint32_t MVM_cu_string_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMString *str
 
 /* Used when we try to read a string from the string heap, but it's not there.
  * Decodes it "on-demand" and stores it in the string heap. */
-static uint32_t read_uint32(MVMuint8 *src) {
+static uint32_t read_uint32(uint8_t *src) {
 #ifdef MVM_BIGENDIAN
     uint32_t value;
     size_t i;
-    MVMuint8 *destbytes = (MVMuint8 *)&value;
+    uint8_t *destbytes = (uint8_t *)&value;
     for (i = 0; i < 4; i++)
          destbytes[4 - i - 1] = src[i];
     return value;
@@ -179,8 +179,8 @@ static uint32_t read_uint32(MVMuint8 *src) {
 }
 static void compute_fast_table_upto(MVMThreadContext *tc, MVMCompUnit *cu, uint32_t end_bin) {
     uint32_t  cur_bin = cu->body.string_heap_fast_table_top;
-    MVMuint8  *cur_pos = cu->body.string_heap_start + cu->body.string_heap_fast_table[cur_bin];
-    MVMuint8  *limit   = cu->body.string_heap_read_limit;
+    uint8_t  *cur_pos = cu->body.string_heap_start + cu->body.string_heap_fast_table[cur_bin];
+    uint8_t  *limit   = cu->body.string_heap_read_limit;
     while (cur_bin < end_bin) {
         uint32_t i;
         for (i = 0; i < MVM_STRING_FAST_TABLE_SPAN; i++) {
@@ -202,8 +202,8 @@ static void compute_fast_table_upto(MVMThreadContext *tc, MVMCompUnit *cu, uint3
 }
 MVMString * MVM_cu_obtain_string(MVMThreadContext *tc, MVMCompUnit *cu, uint32_t idx) {
     uint32_t  cur_idx;
-    MVMuint8  *cur_pos;
-    MVMuint8  *limit = cu->body.string_heap_read_limit;
+    uint8_t  *cur_pos;
+    uint8_t  *limit = cu->body.string_heap_read_limit;
 
     /* Make sure we've enough entries in the fast table to jump close to where
      * the string will be. */

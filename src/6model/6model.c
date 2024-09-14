@@ -19,8 +19,8 @@ MVMObject * MVM_6model_get_how_obj(MVMThreadContext *tc, MVMObject *obj) {
  * is not in the cache and the cache is authoritative, then we know the answer
  * too; result is set to zero and a true value is returned. Otherwise, we can
  * not tell and a false value is returned and result is undefined. */
-MVMint64 MVM_6model_try_cache_type_check(MVMThreadContext *tc, MVMObject *obj,
-        MVMObject *type, MVMint64 *result) {
+int64_t MVM_6model_try_cache_type_check(MVMThreadContext *tc, MVMObject *obj,
+        MVMObject *type, int64_t *result) {
     /* A null is always false. */
     if (MVM_is_null(tc, obj)) {
         *result = 0;
@@ -28,7 +28,7 @@ MVMint64 MVM_6model_try_cache_type_check(MVMThreadContext *tc, MVMObject *obj,
     }
 
     /* Consider type cache. */
-    MVMuint16 i, elems = STABLE(obj)->type_check_cache_length;
+    uint16_t i, elems = STABLE(obj)->type_check_cache_length;
     MVMObject  **cache = STABLE(obj)->type_check_cache;
     if (cache) {
         for (i = 0; i < elems; i++) {
@@ -61,8 +61,8 @@ void MVM_6model_stable_gc_free(MVMThreadContext *tc, MVMSTable *st) {
 }
 
 /* Get the next type cache ID for a newly created STable. */
-MVMuint64 MVM_6model_next_type_cache_id(MVMThreadContext *tc) {
-    return (MVMuint64)MVM_add(&tc->instance->cur_type_cache_id, MVM_TYPE_CACHE_ID_INCR) + MVM_TYPE_CACHE_ID_INCR;
+uint64_t MVM_6model_next_type_cache_id(MVMThreadContext *tc) {
+    return (uint64_t)MVM_add(&tc->instance->cur_type_cache_id, MVM_TYPE_CACHE_ID_INCR) + MVM_TYPE_CACHE_ID_INCR;
 }
 
 /* For type objects, marks the type as never repossessable. For concrete object

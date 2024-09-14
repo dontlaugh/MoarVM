@@ -432,8 +432,8 @@ void MVM_gc_root_add_frame_roots_to_worklist(MVMThreadContext *tc, MVMGCWorklist
 
 /* Takes a frame, scans its registers and adds them to the roots. */
 void MVM_gc_root_add_frame_registers_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *frame) {
-    MVMuint16  i, count;
-    MVMuint16 *type_map;
+    uint16_t  i, count;
+    uint16_t *type_map;
     /* We only need to do any of this work if the frame is in dynamic scope. */
     if (frame->work) {
         /* Scan locals. */
@@ -460,8 +460,8 @@ void MVM_gc_root_add_frame_registers_to_worklist(MVMThreadContext *tc, MVMGCWork
 /* Takes a frame, scans its lexicals and adds them to the roots. */
 static void scan_lexicals(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMFrame *frame) {
     if (frame->env) {
-        MVMuint16  i, count;
-        MVMuint16 *type_map;
+        uint16_t  i, count;
+        uint16_t *type_map;
         if (frame->spesh_cand && frame->spesh_cand->body.lexical_types) {
             type_map = frame->spesh_cand->body.lexical_types;
             count    = frame->spesh_cand->body.num_lexicals;

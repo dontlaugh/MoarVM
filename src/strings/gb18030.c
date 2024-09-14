@@ -47,7 +47,7 @@ static int32_t gb18030_valid_check_len4_first2(int32_t c_1, int32_t c_2) {
 }
 
 MVMString * MVM_string_gb18030_decode(MVMThreadContext *tc, const MVMObject *result_type, const char *gb18030_char, size_t bytes) {
-    MVMuint8 *gb18030 = (MVMuint8*)gb18030_char;
+    uint8_t *gb18030 = (uint8_t*)gb18030_char;
     size_t i, result_graphs;
 
     MVMString *result;
@@ -68,8 +68,8 @@ MVMString * MVM_string_gb18030_decode(MVMThreadContext *tc, const MVMObject *res
         else {
             if (i + 1 < bytes) {
                 /* GB18030 codepoint of length 2 */
-                MVMuint8 byte1 = gb18030[i];
-                MVMuint8 byte2 = gb18030[i + 1];
+                uint8_t byte1 = gb18030[i];
+                uint8_t byte2 = gb18030[i + 1];
                 if (gb18030_valid_check_len2(byte1, byte2)) {
                     MVMGrapheme32 index = gb18030_index_to_cp_len2(byte1, byte2);
                     if (index != GB18030_NULL) {
@@ -81,10 +81,10 @@ MVMString * MVM_string_gb18030_decode(MVMThreadContext *tc, const MVMObject *res
             }
             if (i + 3 < bytes) {
                 /* GB18030 codepoint of length 4 */
-                MVMuint8 byte1 = gb18030[i];
-                MVMuint8 byte2 = gb18030[i + 1];
-                MVMuint8 byte3 = gb18030[i + 2];
-                MVMuint8 byte4 = gb18030[i + 3];
+                uint8_t byte1 = gb18030[i];
+                uint8_t byte2 = gb18030[i + 1];
+                uint8_t byte3 = gb18030[i + 2];
+                uint8_t byte4 = gb18030[i + 3];
                 if (gb18030_valid_check_len4(byte1, byte2, byte3, byte4)) {
                     MVMGrapheme32 index = gb18030_index_to_cp_len4(byte1, byte2, byte3, byte4);
                     if (index != GB18030_NULL) {
@@ -98,7 +98,7 @@ MVMString * MVM_string_gb18030_decode(MVMThreadContext *tc, const MVMObject *res
             MVM_free(buffer);
             MVM_exception_throw_adhoc(tc,
                 "Error decoding gb18030 string: invalid gb18030 format. Last byte seen was 0x%hhX\n",
-                (MVMuint8)gb18030[i]);
+                (uint8_t)gb18030[i]);
         }
     }
 
@@ -154,7 +154,7 @@ uint32_t MVM_string_gb18030_decodestream(MVMThreadContext *tc, MVMDecodeStream *
     while (cur_bytes) {
         /* Process this buffer. */
         int32_t pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
-        MVMuint8 *bytes = (MVMuint8 *)cur_bytes->bytes;
+        uint8_t *bytes = (uint8_t *)cur_bytes->bytes;
 
         while (pos < cur_bytes->length) {
             MVMGrapheme32 graph = 0;
@@ -264,16 +264,16 @@ done:
 }
 
 char * MVM_string_gb18030_encode_substr(MVMThreadContext *tc, MVMString *str,
-                                       MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement,
+                                       uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement,
                                        int32_t translate_newlines) {
 
     uint32_t startu = (uint32_t)start;
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
     uint32_t lengthu = (uint32_t)(length == -1 ? strgraphs - startu : length);
-    MVMuint8 *result = NULL;
+    uint8_t *result = NULL;
     size_t result_alloc;
-    MVMuint8 *repl_bytes = NULL;
-    MVMuint64 repl_length;
+    uint8_t *repl_bytes = NULL;
+    uint64_t repl_length;
 
     if (start < 0 || start > strgraphs)
         MVM_exception_throw_adhoc(tc, "start out of range");
@@ -281,7 +281,7 @@ char * MVM_string_gb18030_encode_substr(MVMThreadContext *tc, MVMString *str,
         MVM_exception_throw_adhoc(tc, "length out of range");
 
     if (replacement)
-        repl_bytes = (MVMuint8 *) MVM_string_gb18030_encode_substr(tc,
+        repl_bytes = (uint8_t *) MVM_string_gb18030_encode_substr(tc,
                      replacement, &repl_length, 0, -1, NULL, translate_newlines);
 
     result_alloc = lengthu;
@@ -309,7 +309,7 @@ char * MVM_string_gb18030_encode_substr(MVMThreadContext *tc, MVMString *str,
                 result[out_pos++] = codepoint;
             }
             else {
-                MVMint64 gb18030_cp;
+                int64_t gb18030_cp;
                 gb18030_cp = gb18030_cp_to_index(codepoint);
                 if (gb18030_cp == GB18030_NULL) {
                     if (replacement) {

@@ -69,19 +69,19 @@ typedef enum {
 } argument_kind;
 
 typedef struct {
-    MVMuint8 arg_kind;
+    uint8_t arg_kind;
     /* In order to pass an existing object we have a handle to as a string (as
      * defined by the callsite we generate) we need to differentiate between
      * kind set to string and the .o entry being set. */
-    MVMuint8 str_uses_handle;
+    uint8_t str_uses_handle;
     /* If a string was passed via messagepack, store the full length here
      * (since strings are not necessarily null-terminated) */
-    MVMuint64 string_length;
+    uint64_t string_length;
     union {
-        MVMint64 i;
-        MVMnum64 n;
+        int64_t i;
+        double n;
         char *s;
-        MVMint64 o;
+        int64_t o;
     } arg_u;
 } argument_data;
 
@@ -103,21 +103,21 @@ typedef enum {
 } fields_set;
 
 typedef struct {
-    MVMuint16 type;
-    MVMuint64 id;
+    uint16_t type;
+    uint64_t id;
 
     uint32_t thread_id;
 
     char *file;
     uint32_t line;
 
-    MVMuint8  suspend;
-    MVMuint8  stacktrace;
+    uint8_t  suspend;
+    uint8_t  stacktrace;
 
-    MVMuint16 handle_count;
-    MVMuint64 *handles;
+    uint16_t handle_count;
+    uint64_t *handles;
 
-    MVMuint64 handle_id;
+    uint64_t handle_id;
 
     uint32_t frame_number;
 
@@ -126,7 +126,7 @@ typedef struct {
     uint32_t argument_count;
     argument_data *arguments;
 
-    MVMuint8  parse_fail;
+    uint8_t  parse_fail;
     const char *parse_fail_message;
 
     char *hll;
@@ -136,7 +136,7 @@ typedef struct {
 
 static void write_stacktrace_frames(MVMThreadContext *dtc, cmp_ctx_t *ctx, MVMThread *thread);
 static void request_all_threads_suspend(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument);
-static MVMuint64 allocate_handle(MVMThreadContext *dtc, MVMObject *target);
+static uint64_t allocate_handle(MVMThreadContext *dtc, MVMObject *target);
 
 /* Breakpoint stuff */
 static void normalize_filename(char *name) {
@@ -206,7 +206,7 @@ MVM_PUBLIC void MVM_debugserver_register_line(MVMThreadContext *tc, char *filena
         found->filename_length = filename_len;
 
         found->lines_active_alloc = line_no + 32;
-        found->lines_active = MVM_calloc(found->lines_active_alloc, sizeof(MVMuint8));
+        found->lines_active = MVM_calloc(found->lines_active_alloc, sizeof(uint8_t));
 
         *file_idx = table->files_used - 1;
 
@@ -255,11 +255,11 @@ static void stop_point_hit(MVMThreadContext *tc) {
     tc->debugserver_can_invoke_here = 0;
 }
 
-static MVMuint8 breakpoint_hit(MVMThreadContext *tc, MVMDebugServerBreakpointFileTable *file, uint32_t line_no) {
+static uint8_t breakpoint_hit(MVMThreadContext *tc, MVMDebugServerBreakpointFileTable *file, uint32_t line_no) {
     cmp_ctx_t *ctx = NULL;
     MVMDebugServerBreakpointInfo *info;
     uint32_t index;
-    MVMuint8 must_suspend = 0;
+    uint8_t must_suspend = 0;
 
     if (tc->instance->debugserver && tc->instance->debugserver->messagepack_data) {
         ctx = (cmp_ctx_t*)tc->instance->debugserver->messagepack_data;
@@ -317,7 +317,7 @@ static void step_point_hit(MVMThreadContext *tc) {
 
 MVM_PUBLIC int32_t MVM_debugserver_breakpoint_check(MVMThreadContext *tc, uint32_t file_idx, uint32_t line_no) {
     MVMDebugServerData *debugserver = tc->instance->debugserver;
-    MVMuint8 shall_suspend = 0;
+    uint8_t shall_suspend = 0;
 
     if (debugserver->any_breakpoints_at_all && (file_idx != tc->cur_file_idx || line_no != tc->cur_line_no)) {
         MVMDebugServerBreakpointTable *table = debugserver->breakpoints;
@@ -369,10 +369,10 @@ MVM_PUBLIC int32_t MVM_debugserver_breakpoint_check(MVMThreadContext *tc, uint32
 
 #define REQUIRE(field, message) do { if (!(data->fields_set & (field))) { data->parse_fail = 1; data->parse_fail_message = (message); return 0; }; accepted = accepted | (field); } while (0)
 
-static MVMuint8 check_requirements(MVMThreadContext *tc, request_data *data) {
+static uint8_t check_requirements(MVMThreadContext *tc, request_data *data) {
     fields_set accepted = FS_id | FS_type;
 
-    MVMuint8 allow_optional = 0;
+    uint8_t allow_optional = 0;
 
     REQUIRE(FS_id, "An id field is required");
     REQUIRE(FS_type, "A type field is required");
@@ -452,7 +452,7 @@ static MVMuint8 check_requirements(MVMThreadContext *tc, request_data *data) {
     return 1;
 }
 
-static MVMuint16 big_endian_16(MVMuint16 number) {
+static uint16_t big_endian_16(uint16_t number) {
 #ifdef MVM_BIGENDIAN
     return number;
 #else
@@ -461,14 +461,14 @@ static MVMuint16 big_endian_16(MVMuint16 number) {
     tmp = bytes[1];
     bytes[1] = bytes[0];
     bytes[0] = tmp;
-    return *((MVMuint16 *)bytes);
+    return *((uint16_t *)bytes);
 #endif
 }
 
 static void send_greeting(MVMSocket *sock) {
     char buffer[24] = "MOARVM-REMOTE-DEBUG\0";
-    MVMuint16 version = big_endian_16(DEBUGSERVER_MAJOR_PROTOCOL_VERSION);
-    MVMuint16 *verptr = (MVMuint16 *)(&buffer[strlen("MOARVM-REMOTE-DEBUG") + 1]);
+    uint16_t version = big_endian_16(DEBUGSERVER_MAJOR_PROTOCOL_VERSION);
+    uint16_t *verptr = (uint16_t *)(&buffer[strlen("MOARVM-REMOTE-DEBUG") + 1]);
 
     *verptr = version;
     verptr++;
@@ -524,7 +524,7 @@ static void communicate_success(MVMThreadContext *tc, cmp_ctx_t *ctx, request_da
 MVM_PUBLIC void MVM_debugserver_notify_thread_creation(MVMThreadContext *tc) {
     if (tc->instance->debugserver && tc->instance->debugserver->messagepack_data) {
         cmp_ctx_t *ctx = (cmp_ctx_t*)tc->instance->debugserver->messagepack_data;
-        MVMuint64 event_id;
+        uint64_t event_id;
 
         uv_mutex_lock(&tc->instance->debugserver->mutex_network_send);
 
@@ -553,7 +553,7 @@ MVM_PUBLIC void MVM_debugserver_notify_thread_creation(MVMThreadContext *tc) {
 MVM_PUBLIC void MVM_debugserver_notify_thread_destruction(MVMThreadContext *tc) {
     if (tc->instance->debugserver && tc->instance->debugserver->messagepack_data) {
         cmp_ctx_t *ctx = (cmp_ctx_t*)tc->instance->debugserver->messagepack_data;
-        MVMuint64 event_id;
+        uint64_t event_id;
 
         uv_mutex_lock(&tc->instance->debugserver->mutex_network_send);
 
@@ -576,7 +576,7 @@ MVM_PUBLIC void MVM_debugserver_notify_thread_destruction(MVMThreadContext *tc) 
 MVM_PUBLIC void MVM_debugserver_notify_unhandled_exception(MVMThreadContext *tc, MVMException *ex) {
     if (tc->instance->debugserver && tc->instance->debugserver->messagepack_data) {
         cmp_ctx_t *ctx = (cmp_ctx_t*)tc->instance->debugserver->messagepack_data;
-        MVMuint64 event_id;
+        uint64_t event_id;
 
         uv_mutex_lock(&tc->instance->debugserver->mutex_network_send);
 
@@ -608,7 +608,7 @@ MVM_PUBLIC void MVM_debugserver_notify_unhandled_exception(MVMThreadContext *tc,
     }
 }
 
-static MVMuint8 is_thread_id_eligible(MVMInstance *vm, uint32_t id) {
+static uint8_t is_thread_id_eligible(MVMInstance *vm, uint32_t id) {
     if (id == vm->debugserver->thread_id || id == vm->speshworker_thread_id) {
         return 0;
     }
@@ -780,7 +780,7 @@ static int32_t request_thread_resumes(MVMThreadContext *dtc, cmp_ctx_t *ctx, req
 static void request_all_threads_resume(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     MVMThread *cur_thread = 0;
-    MVMuint8 success = 1;
+    uint8_t success = 1;
 
     uv_mutex_lock(&vm->mutex_threads);
     cur_thread = vm->threads;
@@ -818,7 +818,7 @@ static void request_all_threads_resume(MVMThreadContext *dtc, cmp_ctx_t *ctx, re
 
 static void write_stacktrace_frames(MVMThreadContext *dtc, cmp_ctx_t *ctx, MVMThread *thread) {
     MVMThreadContext *tc = thread->body.tc;
-    MVMuint64 stack_size = 0;
+    uint64_t stack_size = 0;
 
     MVMFrame *cur_frame = tc->cur_frame;
 
@@ -839,13 +839,13 @@ static void write_stacktrace_frames(MVMThreadContext *dtc, cmp_ctx_t *ctx, MVMTh
         MVMString *bc_filename = cur_frame->static_info->body.cu->body.filename;
         MVMString *name     = cur_frame->static_info->body.name;
 
-        MVMuint8 *cur_op = stack_size != 0 ? cur_frame->return_address : *(tc->interp_cur_op);
+        uint8_t *cur_op = stack_size != 0 ? cur_frame->return_address : *(tc->interp_cur_op);
         uint32_t offset = cur_op - MVM_frame_effective_bytecode(cur_frame);
         MVMBytecodeAnnotation *annot = MVM_bytecode_resolve_annotation(tc, &cur_frame->static_info->body,
                                           offset > 0 ? offset - 1 : 0);
 
         int32_t line_number = annot ? annot->line_number : 1;
-        MVMuint16 string_heap_index = annot ? annot->filename_string_heap_index : 1;
+        uint16_t string_heap_index = annot ? annot->filename_string_heap_index : 1;
 
         char *tmp1 = annot && string_heap_index < cur_frame->static_info->body.cu->body.num_strings
             ? MVM_string_utf8_encode_C_string(tc, MVM_cu_string(tc,
@@ -975,7 +975,7 @@ static void send_thread_info(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data
 
 static void send_is_execution_suspended_info(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
-    MVMuint8 result = 1;
+    uint8_t result = 1;
     MVMThread *cur_thread;
 
     uv_mutex_lock(&vm->mutex_threads);
@@ -1001,7 +1001,7 @@ static void send_is_execution_suspended_info(MVMThreadContext *dtc, cmp_ctx_t *c
     cmp_write_bool(ctx, result);
 }
 
-static MVMuint8 setup_step(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMDebugSteppingMode mode, MVMThread *thread) {
+static uint8_t setup_step(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMDebugSteppingMode mode, MVMThread *thread) {
     MVMThread *to_do = thread ? thread : find_thread_by_id(dtc->instance, argument->thread_id);
     MVMThreadContext *tc;
 
@@ -1100,7 +1100,7 @@ void MVM_debugserver_clear_all_breakpoints(MVMThreadContext *tc, cmp_ctx_t *ctx,
 
     for (index = 0; index < table->files_used; index++) {
         found = &table->files[index];
-        memset(found->lines_active, 0, found->lines_active_alloc * sizeof(MVMuint8));
+        memset(found->lines_active, 0, found->lines_active_alloc * sizeof(uint8_t));
         found->breakpoints_used = 0;
     }
 
@@ -1170,12 +1170,12 @@ static void release_all_handles(MVMThreadContext *dtc) {
     dht->next_id = 1;
 }
 
-static MVMuint64 release_handles(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static uint64_t release_handles(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMDebugServerHandleTable *dht = dtc->instance->debugserver->handle_table;
 
     uint32_t handle_index = 0;
-    MVMuint16 id_index = 0;
-    MVMuint16 handles_cleared = 0;
+    uint16_t id_index = 0;
+    uint16_t handles_cleared = 0;
     for (handle_index = 0; handle_index < dht->used; handle_index++) {
         for (id_index = 0; id_index < argument->handle_count; id_index++) {
             if (argument->handles[id_index] == dht->entries[handle_index].id) {
@@ -1195,13 +1195,13 @@ static MVMuint64 release_handles(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_
     }
 }
 
-static MVMuint64 allocate_handle(MVMThreadContext *dtc, MVMObject *target) {
+static uint64_t allocate_handle(MVMThreadContext *dtc, MVMObject *target) {
     if (!target || MVM_is_null(dtc, target)) {
         return 0;
     } else {
         MVMDebugServerHandleTable *dht = dtc->instance->debugserver->handle_table;
 
-        MVMuint64 id = dht->next_id++;
+        uint64_t id = dht->next_id++;
 
         if (dht->used + 1 > dht->allocated) {
             if (dht->allocated < 8192)
@@ -1219,8 +1219,8 @@ static MVMuint64 allocate_handle(MVMThreadContext *dtc, MVMObject *target) {
     }
 }
 
-static MVMuint64 allocate_and_send_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMObject *target) {
-    MVMuint64 id = allocate_handle(dtc, target);
+static uint64_t allocate_and_send_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMObject *target) {
+    uint64_t id = allocate_handle(dtc, target);
     cmp_write_map(ctx, 3);
     cmp_write_str(ctx, "id", 2);
     cmp_write_integer(ctx, argument->id);
@@ -1232,7 +1232,7 @@ static MVMuint64 allocate_and_send_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx,
     return id;
 }
 
-static MVMObject *find_handle_target(MVMThreadContext *dtc, MVMuint64 id) {
+static MVMObject *find_handle_target(MVMThreadContext *dtc, uint64_t id) {
     MVMDebugServerHandleTable *dht = dtc->instance->debugserver->handle_table;
     uint32_t index;
 
@@ -1243,8 +1243,8 @@ static MVMObject *find_handle_target(MVMThreadContext *dtc, MVMuint64 id) {
     return NULL;
 }
 
-static MVMuint64 find_representant(MVMuint16 *representant, MVMuint64 index) {
-    MVMuint64 last = index;
+static uint64_t find_representant(uint16_t *representant, uint64_t index) {
+    uint64_t last = index;
 
     while (representant[last] != last) {
         last = representant[last];
@@ -1254,11 +1254,11 @@ static MVMuint64 find_representant(MVMuint16 *representant, MVMuint64 index) {
 }
 
 static void send_handle_equivalence_classes(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
-    MVMuint16  *representant = MVM_calloc(argument->handle_count, sizeof(MVMuint64));
+    uint16_t  *representant = MVM_calloc(argument->handle_count, sizeof(uint64_t));
     MVMObject **objects      = MVM_calloc(argument->handle_count, sizeof(MVMObject *));
-    MVMuint16  *counts       = MVM_calloc(argument->handle_count, sizeof(MVMuint16));
-    MVMuint16   idx;
-    MVMuint16   classes_count = 0;
+    uint16_t  *counts       = MVM_calloc(argument->handle_count, sizeof(uint16_t));
+    uint16_t   idx;
+    uint16_t   classes_count = 0;
 
     /* Set up our sentinel values. Any object that represents itself
      * is the end of a chain. At the beginning, everything represents
@@ -1269,7 +1269,7 @@ static void send_handle_equivalence_classes(MVMThreadContext *dtc, cmp_ctx_t *ct
     }
 
     for (idx = 0; idx < argument->handle_count; idx++) {
-        MVMuint16 other_idx;
+        uint16_t other_idx;
         objects[idx] = find_handle_target(dtc, argument->handles[idx]);
 
         for (other_idx = 0; other_idx < idx; other_idx++) {
@@ -1284,7 +1284,7 @@ static void send_handle_equivalence_classes(MVMThreadContext *dtc, cmp_ctx_t *ct
     /* First, we have to count how many distinct classes there are.
      * Whenever we hit 2, we know we've found a class. */
     for (idx = 0; idx < argument->handle_count; idx++) {
-        MVMuint16 the_repr = find_representant(representant, idx);
+        uint16_t the_repr = find_representant(representant, idx);
         counts[the_repr]++;
         if (counts[the_repr] == 2)
             classes_count++;
@@ -1303,11 +1303,11 @@ static void send_handle_equivalence_classes(MVMThreadContext *dtc, cmp_ctx_t *ct
     cmp_write_array(ctx, classes_count);
     for (idx = 0; idx < argument->handle_count; idx++) {
         if (representant[idx] != idx) {
-            MVMuint16 count = counts[find_representant(representant, idx)];
-            MVMuint16 pointer = idx;
+            uint16_t count = counts[find_representant(representant, idx)];
+            uint16_t pointer = idx;
             cmp_write_array(ctx, count);
             do {
-                MVMuint16 current_representant = representant[pointer];
+                uint16_t current_representant = representant[pointer];
                 representant[pointer] = pointer;
                 cmp_write_integer(ctx, argument->handles[pointer]);
                 pointer = current_representant;
@@ -1322,7 +1322,7 @@ static void send_handle_equivalence_classes(MVMThreadContext *dtc, cmp_ctx_t *ct
     MVM_free(counts);
 }
 
-static MVMuint64 request_hll_symbol_data(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static uint64_t request_hll_symbol_data(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
 
     MVMHash *hll_syms;
@@ -1357,7 +1357,7 @@ static MVMuint64 request_hll_symbol_data(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
 
     if (!(argument->fields_set & FS_hll)) {
         /* First variant: return all knows HLLs */
-        MVMuint64 num_hlls = MVM_str_hash_count(dtc, hashtable);
+        uint64_t num_hlls = MVM_str_hash_count(dtc, hashtable);
         MVMStrHashIterator iterator = MVM_str_hash_first(dtc, hashtable);
 
         cmp_write_map(ctx, 3);
@@ -1401,7 +1401,7 @@ static MVMuint64 request_hll_symbol_data(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
 
     if (!(argument->fields_set & FS_name)) {
         /* Second variant: return all keys of this HLLs */
-        MVMuint64 num_keys = MVM_str_hash_count(dtc, hashtable);
+        uint64_t num_keys = MVM_str_hash_count(dtc, hashtable);
         MVMStrHashIterator iterator = MVM_str_hash_first(dtc, hashtable);
 
         cmp_write_map(ctx, 3);
@@ -1450,7 +1450,7 @@ static MVMuint64 request_hll_symbol_data(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
 }
 
 typedef struct {
-    MVMuint64 id;
+    uint64_t id;
     MVMRegister return_target;
 } DebugserverInvocationSpecialReturnData;
 
@@ -1523,7 +1523,7 @@ static void debugserver_invocation_special_return(MVMThreadContext *tc, void *da
         case MVM_RETURN_STR: {
             /* TODO handle strings with null bytes in them */
             char *str_result = MVM_string_utf8_encode_C_string(tc, data->return_target.s);
-            MVMuint64 handle = allocate_handle(tc, (MVMObject *)data->return_target.s);
+            uint64_t handle = allocate_handle(tc, (MVMObject *)data->return_target.s);
             cmp_write_map(ctx, 6);
             cmp_write_str(ctx, "type", 4);
             cmp_write_int(ctx, MT_InvokeResult);
@@ -1556,7 +1556,7 @@ static void debugserver_invocation_special_unwind(MVMThreadContext *tc, void *da
 }
 
 
-static MVMuint64 request_invoke_code(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static uint64_t request_invoke_code(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     MVMThread *to_do = find_thread_by_id(vm, argument->thread_id);
     MVMObject *target = find_handle_target(dtc, argument->handle_id);
@@ -1617,7 +1617,7 @@ static MVMuint64 request_invoke_code(MVMThreadContext *dtc, cmp_ctx_t *ctx, requ
 
     {
         /* Time to create a callsite from the arguments we've received */
-        MVMuint64 index;
+        uint64_t index;
         cs = MVM_malloc(sizeof(MVMCallsite));
         cs->flag_count = argument->argument_count;
         cs->arg_count  = argument->argument_count;
@@ -1712,7 +1712,7 @@ static MVMuint64 request_invoke_code(MVMThreadContext *dtc, cmp_ctx_t *ctx, requ
     }
 }
 
-static MVMuint64 request_object_decontainerize(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static uint64_t request_object_decontainerize(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     MVMThread *to_do = find_thread_by_id(vm, argument->thread_id);
     MVMObject *target = find_handle_target(dtc, argument->handle_id);
@@ -1820,7 +1820,7 @@ static int32_t create_caller_or_outer_context_debug_handle(MVMThreadContext *dtc
 }
 
 static void write_one_context_lexical(MVMThreadContext *dtc, cmp_ctx_t *ctx, const char *c_key_name,
-        MVMuint16 lextype, MVMRegister *result) {
+        uint16_t lextype, MVMRegister *result) {
     cmp_write_str(ctx, c_key_name, strlen(c_key_name));
 
     if (lextype == MVM_reg_obj) { /* Object */
@@ -1905,7 +1905,7 @@ static int32_t request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
     if (num_lexicals || debug_locals) {
         /* Count up total number of symbols; that is, the lexicals plus the
          * debug names where the names to not overlap with the lexicals. */
-        MVMuint64 lexcount = static_info->body.num_lexicals;
+        uint64_t lexcount = static_info->body.num_lexicals;
         if (debug_locals) {
             MVMStrHashIterator iterator = MVM_str_hash_first(dtc, debug_locals);
             while (!MVM_str_hash_at_end(dtc, debug_locals, iterator)) {
@@ -1934,7 +1934,7 @@ static int32_t request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
 
         for (uint32_t j = 0; j < num_lexicals; j++) {
             MVMString *name = lexical_names_list[j];
-            MVMuint16 lextype = static_info->body.lexical_types[j];
+            uint16_t lextype = static_info->body.lexical_types[j];
             MVMRegister *result = &frame->env[j];
             int32_t was_from_local = 0;
             /* Lexical has to have a name - to get here it has already been added
@@ -1972,7 +1972,7 @@ static int32_t request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
                 if (idx != MVM_INDEX_HASH_NOT_FOUND) {
                     char *c_key_name = MVM_string_utf8_encode_C_string(dtc, lexical_names_list[idx]);
                     MVMRegister *result = &frame->work[debug_entry->local_idx];
-                    MVMuint16 lextype = static_info->body.local_types[debug_entry->local_idx];
+                    uint16_t lextype = static_info->body.local_types[debug_entry->local_idx];
                     write_one_context_lexical(dtc, ctx, c_key_name, lextype, result);
                 }
                 iterator = MVM_str_hash_next_nocheck(dtc, debug_locals, iterator);
@@ -1993,7 +1993,7 @@ static int32_t request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
     return 0;
 }
 
-MVM_STATIC_INLINE MVMObject * get_obj_at_offset(void *data, MVMint64 offset) {
+MVM_STATIC_INLINE MVMObject * get_obj_at_offset(void *data, int64_t offset) {
     void *location = (char *)data + offset;
     return *((MVMObject **)location);
 }
@@ -2030,7 +2030,7 @@ static int32_t request_object_attributes(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
         MVMP6opaqueREPRData *repr_data = (MVMP6opaqueREPRData *)STABLE(target)->REPR_data;
         MVMP6opaqueBody *data = MVM_p6opaque_real_data(dtc, OBJECT_BODY(target));
         if (repr_data) {
-            MVMint16 num_attributes = 0;
+            int16_t num_attributes = 0;
             MVMP6opaqueNameMap * name_to_index_mapping = repr_data->name_to_index_mapping;
 
             while (name_to_index_mapping != NULL && name_to_index_mapping->class_key != NULL) {
@@ -2050,7 +2050,7 @@ static int32_t request_object_attributes(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
 
                 while (cur_map_entry->class_key != NULL) {
                     uint32_t i;
-                    MVMint64 slot;
+                    int64_t slot;
                     char *class_name = MVM_6model_get_stable_debug_name(dtc, cur_map_entry->class_key->st);
 
                     if (vm->debugserver->debugspam_protocol)
@@ -2060,7 +2060,7 @@ static int32_t request_object_attributes(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
                         char * name = MVM_string_utf8_encode_C_string(dtc, cur_map_entry->names[i]);
 
                         slot = cur_map_entry->slots[i];
-                        MVMuint16 const offset = repr_data->attribute_offsets[slot];
+                        uint16_t const offset = repr_data->attribute_offsets[slot];
                         MVMSTable * const attr_st = repr_data->flattened_stables[slot];
                         if (attr_st == NULL) {
                             MVMObject *value = get_obj_at_offset(data, offset);
@@ -2166,7 +2166,7 @@ static int32_t request_object_attributes(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
 
     return 1;
 }
-static void write_object_features(MVMThreadContext *tc, cmp_ctx_t *ctx, MVMuint8 attributes, MVMuint8 positional, MVMuint8 associative) {
+static void write_object_features(MVMThreadContext *tc, cmp_ctx_t *ctx, uint8_t attributes, uint8_t positional, uint8_t associative) {
     cmp_write_str(ctx, "attr_features", 13);
     cmp_write_bool(ctx, attributes);
     cmp_write_str(ctx, "pos_features", 12);
@@ -2174,7 +2174,7 @@ static void write_object_features(MVMThreadContext *tc, cmp_ctx_t *ctx, MVMuint8
     cmp_write_str(ctx, "ass_features", 12);
     cmp_write_bool(ctx, associative);
 }
-static void write_vmarray_slot_type(MVMThreadContext *tc, cmp_ctx_t *ctx, MVMuint8 slot_type) {
+static void write_vmarray_slot_type(MVMThreadContext *tc, cmp_ctx_t *ctx, uint8_t slot_type) {
     char *text = "unknown";
     switch (slot_type) {
         case MVM_ARRAY_OBJ: text = "obj"; break;
@@ -2198,9 +2198,9 @@ static void write_vmarray_slot_type(MVMThreadContext *tc, cmp_ctx_t *ctx, MVMuin
     }
     cmp_write_str(ctx, text, strlen(text));
 }
-static MVMuint16 write_vmarray_slot_kind(MVMThreadContext *tc, cmp_ctx_t *ctx, MVMuint8 slot_type) {
+static uint16_t write_vmarray_slot_kind(MVMThreadContext *tc, cmp_ctx_t *ctx, uint8_t slot_type) {
     char *text = "unknown";
-    MVMuint16 kind = 0;
+    uint16_t kind = 0;
     switch (slot_type) {
         case MVM_ARRAY_OBJ: text = "obj"; kind = MVM_reg_obj; break;
         case MVM_ARRAY_STR: text = "str"; kind = MVM_reg_str; break;
@@ -2229,7 +2229,7 @@ static int32_t request_object_metadata(MVMThreadContext *dtc, cmp_ctx_t *ctx, re
         ? find_handle_target(dtc, argument->handle_id)
         : dtc->instance->VMNull;
 
-    MVMint64 slots = 2; /* Always have the repr name and debug name */
+    int64_t slots = 2; /* Always have the repr name and debug name */
     uint32_t repr_id;
 
     if (MVM_is_null(dtc, target)) {
@@ -2346,8 +2346,8 @@ static int32_t request_object_metadata(MVMThreadContext *dtc, cmp_ctx_t *ctx, re
         MVMArgProcContext *argctx = &frame->params;
         MVMCallsite *cs =  argctx->arg_info.callsite;
         MVMCallsiteEntry *cse = cs->arg_flags;
-        MVMuint16 flag_idx;
-        MVMuint16 flag_count = cs->flag_count;
+        uint16_t flag_idx;
+        uint16_t flag_count = cs->flag_count;
         char *name = MVM_string_utf8_encode_C_string(dtc, frame->static_info->body.name);
         char *cuuid = MVM_string_utf8_encode_C_string(dtc, frame->static_info->body.cuuid);
 
@@ -2380,7 +2380,7 @@ static int32_t request_object_metadata(MVMThreadContext *dtc, cmp_ctx_t *ctx, re
 
         for (flag_idx = 0; flag_idx < flag_count; flag_idx++) {
             MVMCallsiteEntry entry = cse[flag_idx];
-            MVMuint8 entry_count =
+            uint8_t entry_count =
                 !!(entry & MVM_CALLSITE_ARG_OBJ)
                 + !!(entry & MVM_CALLSITE_ARG_INT)
                 + !!(entry & MVM_CALLSITE_ARG_UINT)
@@ -2444,8 +2444,8 @@ static int32_t request_object_metadata(MVMThreadContext *dtc, cmp_ctx_t *ctx, re
         }
 
         if (string->body.storage_type == MVM_STRING_STRAND) {
-            MVMuint16 num_strands = string->body.num_strands;
-            MVMuint16 strand_idx;
+            uint16_t num_strands = string->body.num_strands;
+            uint16_t strand_idx;
             cmp_write_str(ctx, "string_strand_count", 19);
             cmp_write_int(ctx, num_strands);
 
@@ -2543,8 +2543,8 @@ static int32_t request_object_positionals(MVMThreadContext *dtc, cmp_ctx_t *ctx,
     if (REPR(target)->ID == MVM_REPR_ID_VMArray) {
         MVMArrayBody *body = (MVMArrayBody *)OBJECT_BODY(target);
         MVMArrayREPRData *repr_data = (MVMArrayREPRData *)STABLE(target)->REPR_data;
-        MVMuint16 kind;
-        MVMuint64 index;
+        uint16_t kind;
+        uint64_t index;
 
         cmp_write_map(ctx, 5);
         cmp_write_str(ctx, "id", 2);
@@ -2625,7 +2625,7 @@ static int32_t request_object_associatives(MVMThreadContext *dtc, cmp_ctx_t *ctx
 
     if (REPR(target)->ID == MVM_REPR_ID_MVMHash) {
         MVMStrHashTable *hashtable = &(((MVMHashBody *)OBJECT_BODY(target))->hashtable);
-        MVMuint64 count = MVM_str_hash_count(dtc, hashtable);
+        uint64_t count = MVM_str_hash_count(dtc, hashtable);
 
         cmp_write_map(ctx, 4);
         cmp_write_str(ctx, "id", 2);
@@ -2674,13 +2674,13 @@ static int32_t request_object_associatives(MVMThreadContext *dtc, cmp_ctx_t *ctx
     return 0;
 }
 
-MVMuint8 debugspam_network;
+uint8_t debugspam_network;
 
 static bool socket_reader(cmp_ctx_t *ctx, void *data, size_t limit) {
     size_t idx;
     size_t total_read = 0;
     ssize_t read;
-    MVMuint8 *orig_data = (MVMuint8 *)data;
+    uint8_t *orig_data = (uint8_t *)data;
     if (debugspam_network)
         fprintf(stderr, "asked to read %zu bytes\n", limit);
     while (total_read < limit) {
@@ -2695,7 +2695,7 @@ static bool socket_reader(cmp_ctx_t *ctx, void *data, size_t limit) {
         }
         if (debugspam_network)
             fprintf(stderr, "%zu ", read);
-        data = (void *)(((MVMuint8*)data) + read);
+        data = (void *)(((uint8_t*)data) + read);
         total_read += (size_t)read;
     }
 
@@ -2727,7 +2727,7 @@ static size_t socket_writer(cmp_ctx_t *ctx, const void *data, size_t limit) {
         }
         if (debugspam_network)
             fprintf(stderr, "%2zu ", sent);
-        data = (void *)(((MVMuint8*)data) + sent);
+        data = (void *)(((uint8_t*)data) + sent);
         total_sent += (size_t)sent;
     }
     if (debugspam_network)
@@ -2735,7 +2735,7 @@ static size_t socket_writer(cmp_ctx_t *ctx, const void *data, size_t limit) {
     return 1;
 }
 
-static bool is_valid_int(cmp_object_t *obj, MVMuint64 *result) {
+static bool is_valid_int(cmp_object_t *obj, uint64_t *result) {
     switch (obj->type) {
         case CMP_TYPE_POSITIVE_FIXNUM:
         case CMP_TYPE_UINT8:
@@ -2772,7 +2772,7 @@ static bool is_valid_int(cmp_object_t *obj, MVMuint64 *result) {
     return 1;
 }
 
-static bool is_valid_num(cmp_object_t *obj, MVMnum64 *result) {
+static bool is_valid_num(cmp_object_t *obj, double *result) {
     switch (obj->type) {
         case CMP_TYPE_FLOAT:
             *result = obj->as.flt;
@@ -2789,7 +2789,7 @@ static bool is_valid_num(cmp_object_t *obj, MVMnum64 *result) {
 #define CHECK(operation, message) do { if(!(operation)) { data->parse_fail = 1; data->parse_fail_message = (message); if (tc->instance->debugserver->debugspam_protocol) fprintf(stderr, "CMP error: %s; %s\n", cmp_strerror(ctx), message); return 0; } } while(0)
 #define FIELD_FOUND(field, duplicated_message) do { if(data->fields_set & (field)) { data->parse_fail = 1; data->parse_fail_message = duplicated_message;  return 0; }; field_to_set = (field); } while (0)
 
-static MVMint8 skip_all_read_data(cmp_ctx_t *ctx, uint32_t size) {
+static int8_t skip_all_read_data(cmp_ctx_t *ctx, uint32_t size) {
     char dump[1024];
 
     while (size > 1024) {
@@ -2804,7 +2804,7 @@ static MVMint8 skip_all_read_data(cmp_ctx_t *ctx, uint32_t size) {
     return 1;
 }
 
-static MVMint8 skip_whole_object(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *data) {
+static int8_t skip_whole_object(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *data) {
     cmp_object_t obj;
     uint32_t obj_size = 0;
     uint32_t index;
@@ -2971,7 +2971,7 @@ static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_d
 
         if (type_to_parse == 1) {
             cmp_object_t object;
-            MVMuint64 result;
+            uint64_t result;
             CHECK(cmp_read_object(ctx, &object), "Couldn't read value for a key");
             CHECK(is_valid_int(&object, &result), "Couldn't read integer value for a key");
             switch (field_to_set) {
@@ -3042,10 +3042,10 @@ static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_d
             uint32_t index;
             CHECK(cmp_read_array(ctx, &arraysize), "Couldn't read array for a key");
             data->handle_count = arraysize;
-            data->handles = MVM_malloc(arraysize * sizeof(MVMuint64));
+            data->handles = MVM_malloc(arraysize * sizeof(uint64_t));
             for (index = 0; index < arraysize; index++) {
                 cmp_object_t object;
-                MVMuint64 result;
+                uint64_t result;
                 CHECK(cmp_read_object(ctx, &object), "Couldn't read value for a key");
                 CHECK(is_valid_int(&object, &result), "Couldn't read integer value for a key");
                 data->handles[index] = result;
@@ -3064,10 +3064,10 @@ static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_d
                 uint32_t map_size;
                 uint32_t map_index;
 
-                MVMuint8 kind_set = 0;
+                uint8_t kind_set = 0;
                 int32_t kind = -1;
-                MVMuint8 handle_is_set = 0;
-                MVMuint8 str_uses_handle = 0;
+                uint8_t handle_is_set = 0;
+                uint8_t str_uses_handle = 0;
 
                 CHECK(cmp_read_map(ctx, &map_size), "Couldn't read map inside an array for arguments");
                 CHECK(map_size >= 2, "map inside of array for arguments is too small.");
@@ -3110,7 +3110,7 @@ static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_d
                     }
                     else if (strncmp(key_str, "handle", 15) == 0) {
                         cmp_object_t object;
-                        MVMuint64 result;
+                        uint64_t result;
                         CHECK(kind_set == 0 || kind == MVM_reg_obj || kind == MVM_reg_str, "kind for argument inappropriate for handle argument");
                         CHECK(handle_is_set == 0, "handle field duplicated in argument");
                         CHECK(cmp_read_object(ctx, &object), "Couldn't read value for a key");
@@ -3128,8 +3128,8 @@ static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_d
                         CHECK(kind_set == 0 || kind != MVM_reg_obj, "kind for argument inappropriate for non-handle argument");
                         CHECK(handle_is_set == 0, "cannot have both handle and value entry in argument");
                         cmp_object_t object;
-                        MVMuint64 int_result;
-                        MVMnum64 num_result;
+                        uint64_t int_result;
+                        double num_result;
                         CHECK(cmp_read_object(ctx, &object), "Couldn't read value for a key");
                         if (is_valid_int(&object, &int_result)) {
                             CHECK(kind_set == 0 || kind == MVM_reg_int64, "kind for argument inappropriate");
@@ -3185,7 +3185,7 @@ static void debugserver_worker(MVMThreadContext *tc, MVMArgs arg_info) {
     int continue_running = 1;
     MVMSocket listensocket;
     MVMInstance *vm = tc->instance;
-    MVMuint64 port = vm->debugserver->port;
+    uint64_t port = vm->debugserver->port;
 
     vm->debugserver->thread_id = tc->thread_obj->body.thread_id;
 

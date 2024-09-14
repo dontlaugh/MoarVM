@@ -129,7 +129,7 @@ static void compute_allocation_strategy(MVMThreadContext *tc, MVMObject *repr_in
             MVMObject *attr  = MVM_repr_at_pos_o(tc, flat_list, i);
             MVMObject *type  = MVM_repr_at_key_o(tc, attr, tc->instance->str_consts.type);
             MVMObject *inlined_val = MVM_repr_at_key_o(tc, attr, tc->instance->str_consts.inlined);
-            MVMint64 inlined = !MVM_is_null(tc, inlined_val) && MVM_repr_get_int(tc, inlined_val);
+            int64_t inlined = !MVM_is_null(tc, inlined_val) && MVM_repr_get_int(tc, inlined_val);
             int32_t   bits  = sizeof(void *) * 8;
             int32_t   align = ALIGNOF(void *);
 
@@ -289,15 +289,15 @@ static void set_int_at_offset(void *data, int32_t offset, int32_t value) {
 }
 
 /* Helper for reading a num at the specified offset. */
-static MVMnum32 get_num_at_offset(void *data, int32_t offset) {
+static float get_num_at_offset(void *data, int32_t offset) {
     void *location = (char *)data + offset;
-    return *((MVMnum32 *)location);
+    return *((float *)location);
 }
 
 /* Helper for writing a num at the specified offset. */
-static void set_num_at_offset(void *data, int32_t offset, MVMnum32 value) {
+static void set_num_at_offset(void *data, int32_t offset, float value) {
     void *location = (char *)data + offset;
-    *((MVMnum32 *)location) = value;
+    *((float *)location) = value;
 }
 
 /* Helper for reading a pointer at the specified offset. */
@@ -400,11 +400,11 @@ static void die_no_attrs(MVMThreadContext *tc) {
 }
 
 static void get_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-        void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint,
-        MVMRegister *result_reg, MVMuint16 kind) {
+        void *data, MVMObject *class_handle, MVMString *name, int64_t hint,
+        MVMRegister *result_reg, uint16_t kind) {
     MVMCUnionREPRData *repr_data = (MVMCUnionREPRData *)st->REPR_data;
     MVMCUnionBody *body = (MVMCUnionBody *)data;
-    MVMint64 slot;
+    int64_t slot;
 
     if (!repr_data)
         MVM_exception_throw_adhoc(tc, "CUnion: must compose before using get_attribute");
@@ -523,11 +523,11 @@ static void get_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
 
 /* Binds the given value to the specified attribute. */
 static void bind_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-        void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint,
-        MVMRegister value_reg, MVMuint16 kind) {
+        void *data, MVMObject *class_handle, MVMString *name, int64_t hint,
+        MVMRegister value_reg, uint16_t kind) {
     MVMCUnionREPRData *repr_data = (MVMCUnionREPRData *)st->REPR_data;
     MVMCUnionBody *body = (MVMCUnionBody *)data;
-    MVMint64 slot;
+    int64_t slot;
 
     if (!repr_data)
         MVM_exception_throw_adhoc(tc, "CUnion: must compose before using bind_attribute");
@@ -628,12 +628,12 @@ static void bind_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
 
 
 /* Checks if an attribute has been initialized. */
-static MVMint64 is_attribute_initialized(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint) {
+static int64_t is_attribute_initialized(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, int64_t hint) {
     die_no_attrs(tc);
 }
 
 /* Gets the hint for the given attribute ID. */
-static MVMint64 hint_for(MVMThreadContext *tc, MVMSTable *st, MVMObject *class_handle, MVMString *name) {
+static int64_t hint_for(MVMThreadContext *tc, MVMSTable *st, MVMObject *class_handle, MVMString *name) {
     return MVM_NO_HINT;
 }
 

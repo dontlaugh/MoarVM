@@ -39,8 +39,8 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
     dest_body->convention = src_body->convention;
     dest_body->num_args = src_body->num_args;
     if (src_body->arg_types) {
-        dest_body->arg_types = MVM_malloc(sizeof(MVMint16) * (src_body->num_args ? src_body->num_args : 1));
-        memcpy(dest_body->arg_types, src_body->arg_types, src_body->num_args * sizeof(MVMint16));
+        dest_body->arg_types = MVM_malloc(sizeof(int16_t) * (src_body->num_args ? src_body->num_args : 1));
+        memcpy(dest_body->arg_types, src_body->arg_types, src_body->num_args * sizeof(int16_t));
     }
     if (src_body->arg_info) {
         dest_body->arg_info = MVM_malloc(sizeof(MVMObject*) * (src_body->num_args ? src_body->num_args : 1));
@@ -80,7 +80,7 @@ static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *
  * more involved approaches are possible. */
 static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMNativeCallBody *body = (MVMNativeCallBody *)data;
-    MVMint16 i = 0;
+    int16_t i = 0;
     MVM_serialization_write_cstr(
         tc,
         writer,
@@ -107,13 +107,13 @@ static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSeri
 
 static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMNativeCallBody *body = (MVMNativeCallBody *)data;
-    MVMint16 i = 0;
+    int16_t i = 0;
     body->lib_name = MVM_serialization_read_cstr(tc, reader, NULL);
     body->sym_name = MVM_serialization_read_cstr(tc, reader, NULL);
     body->convention = MVM_serialization_read_int(tc, reader);
     body->num_args = MVM_serialization_read_int(tc, reader);
     body->ret_type = MVM_serialization_read_int(tc, reader);
-    body->arg_types = body->num_args ? MVM_malloc(body->num_args * sizeof(MVMint16)) : NULL;
+    body->arg_types = body->num_args ? MVM_malloc(body->num_args * sizeof(int16_t)) : NULL;
     body->arg_info  = body->num_args ? MVM_malloc(body->num_args * sizeof(MVMObject*)) : NULL;
     for (i = 0; i < body->num_args; i++) {
         body->arg_types[i] = MVM_serialization_read_int(tc, reader);
@@ -135,7 +135,7 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMNativeCallBody *body = (MVMNativeCallBody *)data;
     if (body->arg_info) {
-        MVMint16 i;
+        int16_t i;
         for (i = 0; i < body->num_args; i++)
             if (body->arg_info[i])
                 MVM_gc_worklist_add(tc, worklist, &body->arg_info[i]);
@@ -182,7 +182,7 @@ const MVMREPROps * MVMNativeCall_initialize(MVMThreadContext *tc) {
 }
 
 /* gets the setup state */
-static MVMint64 get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static int64_t get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMNativeCallBody *body = (MVMNativeCallBody *)data;
     return (body->lib_handle ? 1 : 0);
 }

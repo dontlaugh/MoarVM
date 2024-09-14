@@ -6,8 +6,8 @@
 struct MVMP6numBody {
     /* Float storage slot. */
     union {
-        MVMnum64 n64;
-        MVMnum32 n32;
+        double n64;
+        float n32;
     } value;
 };
 struct MVMP6num {
@@ -17,7 +17,7 @@ struct MVMP6num {
 
 /* The bit width requirement is shared for all instances of the same type. */
 struct MVMP6numREPRData {
-    MVMint16       bits;
+    int16_t       bits;
     MVMStorageSpec storage_spec;
 };
 

@@ -5,11 +5,11 @@
  * REPR. */
 MVMString * MVM_string_latin1_decode(MVMThreadContext *tc, const MVMObject *result_type,
                                      char *latin1_c, size_t bytes) {
-    MVMuint8  *latin1 = (MVMuint8 *)latin1_c;
+    uint8_t  *latin1 = (uint8_t *)latin1_c;
     MVMString *result;
     size_t i, k, result_graphs;
 
-    MVMuint8 writing_32bit = 0;
+    uint8_t writing_32bit = 0;
 
     if (bytes == 0 && tc->instance->str_consts.empty) {
         return tc->instance->str_consts.empty;
@@ -18,7 +18,7 @@ MVMString * MVM_string_latin1_decode(MVMThreadContext *tc, const MVMObject *resu
     result = (MVMString *)REPR(result_type)->allocate(tc, STABLE(result_type));
 
     result->body.storage_type   = MVM_STRING_GRAPHEME_8;
-    result->body.storage.blob_8 = MVM_malloc(sizeof(MVMint8) * bytes);
+    result->body.storage.blob_8 = MVM_malloc(sizeof(int8_t) * bytes);
 
     result_graphs = 0;
     for (i = 0; i < bytes; i++) {
@@ -97,7 +97,7 @@ uint32_t MVM_string_latin1_decodestream(MVMThreadContext *tc, MVMDecodeStream *d
     while (cur_bytes) {
         /* Process this buffer. */
         int32_t  pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
-        MVMuint8 *bytes = cur_bytes->bytes;
+        uint8_t *bytes = cur_bytes->bytes;
         while (pos < cur_bytes->length) {
             MVMCodepoint codepoint = bytes[pos++];
             MVMGrapheme32 graph;
@@ -155,16 +155,16 @@ uint32_t MVM_string_latin1_decodestream(MVMThreadContext *tc, MVMDecodeStream *d
 /* Encodes the specified substring to latin-1. Anything outside of latin-1 range
  * will become a ?. The result string is NULL terminated, but the specified
  * size is the non-null part. */
-char * MVM_string_latin1_encode_substr(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size, MVMint64 start, MVMint64 length,
+char * MVM_string_latin1_encode_substr(MVMThreadContext *tc, MVMString *str, uint64_t *output_size, int64_t start, int64_t length,
         MVMString *replacement, int32_t translate_newlines) {
     /* Latin-1 is a single byte encoding, but \r\n is a 2-byte grapheme, so we
      * may have to resize as we go. */
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
     uint32_t lengthu = (uint32_t)(length == -1 ? strgraphs - (uint32_t)start : length);
-    MVMuint8 *result;
+    uint8_t *result;
     size_t result_alloc;
-    MVMuint8 *repl_bytes = NULL;
-    MVMuint64 repl_length;
+    uint8_t *repl_bytes = NULL;
+    uint64_t repl_length;
 
     /* must check start first since it's used in the length check */
     if (start < 0 || start > strgraphs)
@@ -173,7 +173,7 @@ char * MVM_string_latin1_encode_substr(MVMThreadContext *tc, MVMString *str, MVM
         MVM_exception_throw_adhoc(tc, "length (%"PRId64") out of range (-1..%"PRIu32")", length, strgraphs);
 
     if (replacement)
-        repl_bytes = (MVMuint8 *) MVM_string_latin1_encode_substr(tc,
+        repl_bytes = (uint8_t *) MVM_string_latin1_encode_substr(tc,
             replacement, &repl_length, 0, -1, NULL, translate_newlines);
 
     result_alloc = lengthu;
@@ -196,7 +196,7 @@ char * MVM_string_latin1_encode_substr(MVMThreadContext *tc, MVMString *str, MVM
                 result = MVM_realloc(result, result_alloc + 1);
             }
             if (ord >= 0 && ord <= 255) {
-                result[i] = (MVMuint8)ord;
+                result[i] = (uint8_t)ord;
                 i++;
             }
             else if (replacement) {
@@ -226,7 +226,7 @@ char * MVM_string_latin1_encode_substr(MVMThreadContext *tc, MVMString *str, MVM
 /* Encodes the specified string to latin-1. Anything outside of latin-1 range
  * will become a ?. The result string is NULL terminated, but the specified
  * size is the non-null part. */
-char * MVM_string_latin1_encode(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size,
+char * MVM_string_latin1_encode(MVMThreadContext *tc, MVMString *str, uint64_t *output_size,
         int32_t translate_newlines) {
     return MVM_string_latin1_encode_substr(tc, str, output_size, 0, -1, NULL, translate_newlines);
 }

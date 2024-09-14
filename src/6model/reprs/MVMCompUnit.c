@@ -127,9 +127,9 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMCompUnitBody *body = (MVMCompUnitBody *)data;
-    MVMuint64 size = 0;
+    uint64_t size = 0;
     uint32_t index;
 
     size += sizeof(MVMCallsite *) * body->num_callsites;
@@ -172,10 +172,10 @@ static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTa
     MVMCompUnitBody     *body      = (MVMCompUnitBody *)data;
     uint32_t i;
 
-    MVMuint64 cache_1 = 0;
-    MVMuint64 cache_2 = 0;
-    MVMuint64 cache_3 = 0;
-    MVMuint64 cache_4 = 0;
+    uint64_t cache_1 = 0;
+    uint64_t cache_2 = 0;
+    uint64_t cache_3 = 0;
+    uint64_t cache_4 = 0;
 
     /* Add code refs to the worklists. */
     for (i = 0; i < body->num_frames; i++)

@@ -5,9 +5,9 @@
 #endif
 
 /* Get a native int64 from an mp_int. */
-static MVMint64 mp_get_int64(MVMThreadContext *tc, mp_int * a) {
-    MVMuint64 res;
-    MVMuint64 signed_max = 9223372036854775807ULL;
+static int64_t mp_get_int64(MVMThreadContext *tc, mp_int * a) {
+    uint64_t res;
+    uint64_t signed_max = 9223372036854775807ULL;
     const int bits = mp_count_bits(a);
 
     /* For 64-bit 2's complement numbers the positive max is 2**63-1, which is 63 bits,
@@ -34,12 +34,12 @@ static MVMint64 mp_get_int64(MVMThreadContext *tc, mp_int * a) {
     return MP_NEG == a->sign ? -res : res;
 }
 
-MVMint64 MVM_p6bigint_get_int64(MVMThreadContext *tc, MVMP6bigintBody *body) {
+int64_t MVM_p6bigint_get_int64(MVMThreadContext *tc, MVMP6bigintBody *body) {
     return mp_get_int64(tc, body->u.bigint);
 }
 
 /* Get a native uint64 from an mp_int. */
-static MVMuint64 mp_get_uint64(MVMThreadContext *tc, mp_int * a) {
+static uint64_t mp_get_uint64(MVMThreadContext *tc, mp_int * a) {
     const int bits = mp_count_bits(a);
 
     if (bits > 64) {
@@ -90,7 +90,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
     }
 }
 
-void MVM_p6bigint_store_as_mp_int(MVMThreadContext *tc, MVMP6bigintBody *body, MVMint64 value) {
+void MVM_p6bigint_store_as_mp_int(MVMThreadContext *tc, MVMP6bigintBody *body, int64_t value) {
     mp_err err;
     mp_int *i = MVM_malloc(sizeof(mp_int));
     if ((err = mp_init_i64(i, value)) != MP_OKAY) {
@@ -100,7 +100,7 @@ void MVM_p6bigint_store_as_mp_int(MVMThreadContext *tc, MVMP6bigintBody *body, M
     body->u.bigint = i;
 }
 
-static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 value) {
+static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (MVM_IS_32BIT_INT(value)) {
         body->u.smallint.flag = MVM_BIGINT_32_FLAG;
@@ -110,7 +110,7 @@ static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
         MVM_p6bigint_store_as_mp_int(tc, body, value);
     }
 }
-static MVMint64 get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static int64_t get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (MVM_BIGINT_IS_BIG(body)) {
         mp_int *i = body->u.bigint;
@@ -121,7 +121,7 @@ static MVMint64 get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
     }
 }
 
-static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMuint64 value) {
+static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t value) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (value < 2147483647ULL) {
         body->u.smallint.flag = MVM_BIGINT_32_FLAG;
@@ -137,7 +137,7 @@ static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
         body->u.bigint = i;
     }
 }
-static MVMuint64 get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (MVM_BIGINT_IS_BIG(body)) {
         mp_int *i = body->u.bigint;
@@ -261,7 +261,7 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (MVM_BIGINT_IS_BIG(body))
         return body->u.bigint->alloc;

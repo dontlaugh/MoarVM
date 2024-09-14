@@ -13,11 +13,11 @@
   #define ROTL64(x,r)  _rotl64(x,r)
 #else
   /* gcc recognises this code and generates a rotate instruction for CPUs with one */
-  #define ROTL64(x,r)  ( ( (MVMuint64)(x) << (r) ) | ( (MVMuint64)(x) >> ( 64 - (r) ) ) )
+  #define ROTL64(x,r)  ( ( (uint64_t)(x) << (r) ) | ( (uint64_t)(x) >> ( 64 - (r) ) ) )
 #endif
 
-MVM_STATIC_INLINE MVMuint64 jfs64_generate_uint64(MVMuint64 *rand_state) {
-    MVMuint64 e = rand_state[0] - ROTL64(rand_state[1], 7);
+MVM_STATIC_INLINE uint64_t jfs64_generate_uint64(uint64_t *rand_state) {
+    uint64_t e = rand_state[0] - ROTL64(rand_state[1], 7);
     rand_state[0] = rand_state[1] ^ ROTL64(rand_state[2], 13);
     rand_state[1] = rand_state[2] + ROTL64(rand_state[3], 37);
     rand_state[2] = rand_state[3] + e;
@@ -25,7 +25,7 @@ MVM_STATIC_INLINE MVMuint64 jfs64_generate_uint64(MVMuint64 *rand_state) {
     return rand_state[3];
 }
 
-MVM_STATIC_INLINE void jfs64_init(MVMuint64 *rand_state, MVMuint64 seed) {
+MVM_STATIC_INLINE void jfs64_init(uint64_t *rand_state, uint64_t seed) {
     rand_state[0] = 0xf1ea5eed;
     rand_state[1] = rand_state[2] = rand_state[3] = seed;
     for (int i = 0; i < 20; ++i) {

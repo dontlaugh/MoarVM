@@ -41,23 +41,23 @@ struct MVMFrameHandler {
     uint32_t category_mask;
 
     /* The kind of handler it is. */
-    MVMuint16 action;
+    uint16_t action;
 
     /* Register containing block to invoke, for invokey handlers. */
-    MVMuint16 block_reg;
+    uint16_t block_reg;
 
     /* Offset into the frame's bytecode of the handler, for goto handlers. */
     uint32_t goto_offset;
 
     /* Register containing a label in case we have a labeled loop. We need to
      * be able to check for its identity when handling e.g. `next LABEL`. */
-    MVMuint16 label_reg;
+    uint16_t label_reg;
 
     /* The inlinee that this handler is associated with. Set to -1 for the
      * top-level handlers of a frame. Used both to skip non-top-level
      * handlers, but also to indicate, for a inline boundary indicator
      * entry in the table, the inline whose handlers end at this point. */
-    MVMint16 inlinee;
+    int16_t inlinee;
 };
 
 /* An active (currently executing) exception handler. */
@@ -82,10 +82,10 @@ struct MVMActiveHandler {
 MVMObject * MVM_exception_backtrace(MVMThreadContext *tc, MVMObject *ex_obj);
 MVMObject * MVM_exception_backtrace_strings(MVMThreadContext *tc, MVMObject *exObj);
 void MVM_dump_backtrace(MVMThreadContext *tc);
-void MVM_exception_throwcat(MVMThreadContext *tc, MVMuint8 mode, uint32_t cat, MVMRegister *resume_result);
+void MVM_exception_throwcat(MVMThreadContext *tc, uint8_t mode, uint32_t cat, MVMRegister *resume_result);
 void MVM_exception_die(MVMThreadContext *tc, MVMString *str, MVMRegister *rr);
-void MVM_exception_throwobj(MVMThreadContext *tc, MVMuint8 mode, MVMObject *exObj, MVMRegister *resume_result);
-void MVM_exception_throwpayload(MVMThreadContext *tc, MVMuint8 mode, uint32_t cat, MVMObject *payload, MVMRegister *resume_result);
+void MVM_exception_throwobj(MVMThreadContext *tc, uint8_t mode, MVMObject *exObj, MVMRegister *resume_result);
+void MVM_exception_throwpayload(MVMThreadContext *tc, uint8_t mode, uint32_t cat, MVMObject *payload, MVMRegister *resume_result);
 void MVM_exception_resume(MVMThreadContext *tc, MVMObject *exObj);
 MVM_PUBLIC MVM_NO_RETURN void MVM_panic_allocation_failed(size_t len) MVM_NO_RETURN_ATTRIBUTE;
 MVM_PUBLIC MVM_NO_RETURN void MVM_panic(int32_t exitCode, const char *messageFormat, ...) MVM_NO_RETURN_ATTRIBUTE MVM_FORMAT(printf, 2, 3);
@@ -95,7 +95,7 @@ MVM_NO_RETURN void MVM_exception_throw_adhoc_va(MVMThreadContext *tc, const char
 MVM_PUBLIC MVM_NO_RETURN void MVM_exception_throw_adhoc_free(MVMThreadContext *tc, char **waste, const char *messageFormat, ...) MVM_NO_RETURN_ATTRIBUTE MVM_FORMAT(printf, 3, 4);
 MVM_NO_RETURN void MVM_exception_throw_adhoc_free_va(MVMThreadContext *tc, char **waste, const char *messageFormat, va_list args) MVM_NO_RETURN_ATTRIBUTE;
 MVM_PUBLIC void MVM_crash_on_error(void);
-char * MVM_exception_backtrace_line(MVMThreadContext *tc, MVMFrame *cur_frame, MVMuint16 not_top, MVMuint8 *throw_address);
+char * MVM_exception_backtrace_line(MVMThreadContext *tc, MVMFrame *cur_frame, uint16_t not_top, uint8_t *throw_address);
 int32_t MVM_get_exception_category(MVMThreadContext *tc, MVMObject *ex);
 void MVM_bind_exception_category(MVMThreadContext *tc, MVMObject *ex, int32_t category);
 MVMObject * MVM_get_exception_payload(MVMThreadContext *tc, MVMObject *ex);

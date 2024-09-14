@@ -10,13 +10,13 @@ struct MVMContextBody {
     MVMFrame *context;
 
     /* An array of traversal operations to perform relative to context. */
-    MVMuint8 *traversals;
+    uint8_t *traversals;
 
     /* The number of traversal operations. */
     uint32_t num_traversals;
 
     /* Is traversal (moving to caller or outer contexts) allowed? */
-    MVMuint8 traversable;
+    uint8_t traversable;
 };
 struct MVMContext {
     MVMObject common;
@@ -35,11 +35,11 @@ const MVMREPROps * MVMContext_initialize(MVMThreadContext *tc);
 /* Functions for working with an MVMContext. */
 MVM_PUBLIC MVMObject * MVM_context_from_frame(MVMThreadContext *tc, MVMFrame *f);
 MVMObject * MVM_context_from_frame_non_traversable(MVMThreadContext *tc, MVMFrame *f);
-MVMObject * MVM_context_apply_traversal(MVMThreadContext *tc, MVMContext *ctx, MVMuint8 traversal);
+MVMObject * MVM_context_apply_traversal(MVMThreadContext *tc, MVMContext *ctx, uint8_t traversal);
 MVMFrame * MVM_context_get_frame(MVMThreadContext *tc, MVMContext *ctx);
 MVMFrame * MVM_context_get_frame_or_outer(MVMThreadContext *tc, MVMContext *ctx);
 MVMObject * MVM_context_lexicals_as_hash(MVMThreadContext *tc, MVMContext *ctx);
-MVMint64 MVM_context_lexical_primspec(MVMThreadContext *tc, MVMContext *ctx, MVMString *name);
+int64_t MVM_context_lexical_primspec(MVMThreadContext *tc, MVMContext *ctx, MVMString *name);
 MVMObject * MVM_context_get_code(MVMThreadContext *tc, MVMContext *ctx);
 MVMObject * MVM_context_lexical_lookup(MVMThreadContext *tc, MVMContext *ctx, MVMString *name);
 void MVM_context_dynamic_lookup(MVMThreadContext *tc, MVMContext *ctx, MVMString *name, MVMRegister *result);

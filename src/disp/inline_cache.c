@@ -51,12 +51,12 @@ static int getlexstatic_resolved(MVMThreadContext *tc,
 
 static void dispatch_initial(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
-        MVMString *id, MVMCallsite *cs, MVMuint16 *arg_indices,
+        MVMString *id, MVMCallsite *cs, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset);
 
 static void dispatch_initial_flattening(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
-        MVMString *id, MVMCallsite *cs, MVMuint16 *arg_indices,
+        MVMString *id, MVMCallsite *cs, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset);
 
 static MVMDispInlineCacheEntry unlinked_dispatch = { .run_dispatch = dispatch_initial };
@@ -66,7 +66,7 @@ static MVMDispInlineCacheEntry unlinked_dispatch_flattening =
 
 static void dispatch_initial(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
-        MVMString *id, MVMCallsite *callsite, MVMuint16 *arg_indices,
+        MVMString *id, MVMCallsite *callsite, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
     /* Resolve the dispatcher. */
     MVMDispDefinition *disp = MVM_disp_registry_find(tc, id);
@@ -82,7 +82,7 @@ static void dispatch_initial(MVMThreadContext *tc,
 
 static void dispatch_initial_flattening(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
-        MVMString *id, MVMCallsite *cs, MVMuint16 *arg_indices,
+        MVMString *id, MVMCallsite *cs, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
     /* Resolve the dispatcher. */
     MVMDispDefinition *disp = MVM_disp_registry_find(tc, id);
@@ -95,7 +95,7 @@ static void dispatch_initial_flattening(MVMThreadContext *tc,
 
 static void dispatch_monomorphic(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
-        MVMString *id, MVMCallsite *callsite, MVMuint16 *arg_indices,
+        MVMString *id, MVMCallsite *callsite, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
     int32_t cid = MVM_spesh_log_is_logging(tc) ? tc->cur_frame->spesh_correlation_id : 0;
     MVMDispProgram *dp = ((MVMDispInlineCacheEntryMonomorphicDispatch *)seen)->dp;
@@ -104,7 +104,7 @@ static void dispatch_monomorphic(MVMThreadContext *tc,
     record->arg_info.callsite = callsite;
     record->arg_info.source = source;
     record->arg_info.map = arg_indices;
-    MVMint64 outcome;
+    int64_t outcome;
     MVMROOT2(tc, id, sf) {
         outcome = MVM_disp_program_run(tc, dp, record, cid, bytecode_offset, 0);
     }
@@ -119,7 +119,7 @@ static void dispatch_monomorphic(MVMThreadContext *tc,
 
 static void dispatch_monomorphic_flattening(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
-        MVMString *id, MVMCallsite *callsite, MVMuint16 *arg_indices,
+        MVMString *id, MVMCallsite *callsite, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
     int32_t cid = MVM_spesh_log_is_logging(tc) ? tc->cur_frame->spesh_correlation_id : 0;
     /* First, perform flattening of the arguments. */
@@ -135,7 +135,7 @@ static void dispatch_monomorphic_flattening(MVMThreadContext *tc,
         MVMCallStackDispatchRun *record = MVM_callstack_allocate_dispatch_run(tc,
                 dp->num_temporaries);
         record->arg_info = flat_record->arg_info;
-        MVMint64 outcome;
+        int64_t outcome;
         MVMROOT2(tc, id, sf) {
             outcome = MVM_disp_program_run(tc, dp, record, cid, bytecode_offset, 0);
         }
@@ -158,7 +158,7 @@ static void dispatch_monomorphic_flattening(MVMThreadContext *tc,
 
 static void dispatch_polymorphic(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
-        MVMString *id, MVMCallsite *callsite, MVMuint16 *arg_indices,
+        MVMString *id, MVMCallsite *callsite, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
     int32_t cid = MVM_spesh_log_is_logging(tc) ? tc->cur_frame->spesh_correlation_id : 0;
     /* Set up dispatch run record. */
@@ -175,7 +175,7 @@ static void dispatch_polymorphic(MVMThreadContext *tc,
      * first one that works. */
     int32_t i;
     for (i = entry->num_dps - 1; i >= 0; i--) {
-        MVMint64 outcome;
+        int64_t outcome;
         MVMROOT2(tc, id, sf) {
             outcome = MVM_disp_program_run(tc, entry->dps[i], record, cid, bytecode_offset, i);
         }
@@ -192,7 +192,7 @@ static void dispatch_polymorphic(MVMThreadContext *tc,
 
 static void dispatch_polymorphic_flattening(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
-        MVMString *id, MVMCallsite *callsite, MVMuint16 *arg_indices,
+        MVMString *id, MVMCallsite *callsite, uint16_t *arg_indices,
         MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset) {
     int32_t cid = MVM_spesh_log_is_logging(tc) ? tc->cur_frame->spesh_correlation_id : 0;
     /* First, perform flattening of the arguments. */
@@ -211,7 +211,7 @@ static void dispatch_polymorphic_flattening(MVMThreadContext *tc,
     int32_t i;
     for (i = entry->num_dps - 1; i >= 0; i--) {
         if (flat_record->arg_info.callsite == entry->flattened_css[i]) {
-            MVMint64 outcome;
+            int64_t outcome;
             MVMROOT2(tc, id, sf) {
                 outcome = MVM_disp_program_run(tc, entry->dps[i], record, cid, bytecode_offset, i);
             }
@@ -442,12 +442,12 @@ void MVM_disp_inline_cache_setup(MVMThreadContext *tc, MVMStaticFrame *sf) {
     /* Walk the bytecode, looking for instructions that want cache entries.
      * Also look for the minimum byte distance between two such instructions. */
     MVMCompUnit *cu = sf->body.cu;
-    MVMuint8 *cur_op = sf->body.bytecode;
-    MVMuint8 *end = cur_op + sf->body.bytecode_size;
+    uint8_t *cur_op = sf->body.bytecode;
+    uint8_t *end = cur_op + sf->body.bytecode_size;
     typedef struct {
         size_t offset;
-        MVMuint16 op;
-        MVMuint16 callsite_idx;
+        uint16_t op;
+        uint16_t callsite_idx;
     } Cacheable;
     uint32_t min_byte_interval = sf->body.bytecode_size;
     uint32_t last_cacheable = 0;
@@ -456,7 +456,7 @@ void MVM_disp_inline_cache_setup(MVMThreadContext *tc, MVMStaticFrame *sf) {
     MVM_VECTOR_INIT(cacheable_ins, sf->body.bytecode_size >> 5);
     while (cur_op < end) {
         /* If the op is cacheable, then collect it. */
-        MVMuint16 op = *((MVMuint16 *)cur_op);
+        uint16_t op = *((uint16_t *)cur_op);
         const MVMOpInfo *info = MVM_bytecode_get_validated_op_info(tc, cu, op);
         int32_t save_callsite_to = -1;
         if (info->uses_cache) {
@@ -473,8 +473,8 @@ void MVM_disp_inline_cache_setup(MVMThreadContext *tc, MVMStaticFrame *sf) {
         /* Step to the next op, saving any spotted callsite if needed. */
         cur_op += 2;
         for (i = 0; i < info->num_operands; i++) {
-            MVMuint8 flags = info->operands[i];
-            MVMuint8 rw    = flags & MVM_operand_rw_mask;
+            uint8_t flags = info->operands[i];
+            uint8_t rw    = flags & MVM_operand_rw_mask;
             switch (rw) {
             case MVM_operand_read_reg:
             case MVM_operand_write_reg:
@@ -496,7 +496,7 @@ void MVM_disp_inline_cache_setup(MVMThreadContext *tc, MVMStaticFrame *sf) {
                     break;
                 case MVM_operand_callsite:
                     if (save_callsite_to >= 0)
-                        cacheable_ins[save_callsite_to].callsite_idx = *((MVMuint16 *)cur_op);
+                        cacheable_ins[save_callsite_to].callsite_idx = *((uint16_t *)cur_op);
                     cur_op += 2;
                     break;
                 case MVM_operand_int32:
@@ -522,7 +522,7 @@ void MVM_disp_inline_cache_setup(MVMThreadContext *tc, MVMStaticFrame *sf) {
         }
         if (MVM_op_get_mark(op)[1] == 'd') {
             /* Dispatch op, so skip over argument registers. */
-            MVMCallsite *cs = cu->body.callsites[*((MVMuint16 *)(cur_op -2))];
+            MVMCallsite *cs = cu->body.callsites[*((uint16_t *)(cur_op -2))];
             cur_op += cs->flag_count * 2;
         }
     }
@@ -593,7 +593,7 @@ void MVM_disp_inline_cache_setup(MVMThreadContext *tc, MVMStaticFrame *sf) {
 }
 
 /* Cleans up a cache entry. */
-static void cleanup_entry(MVMThreadContext *tc, MVMDispInlineCacheEntry *entry, MVMuint8 destroy_dps) {
+static void cleanup_entry(MVMThreadContext *tc, MVMDispInlineCacheEntry *entry, uint8_t destroy_dps) {
     if (!entry)
         return;
     else if (entry->run_getlexstatic == getlexstatic_initial) {

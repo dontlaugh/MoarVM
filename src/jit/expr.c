@@ -3,8 +3,8 @@
 
 struct OpInfo {
     const char *name;
-    MVMint8   nchild;
-    MVMuint8   nargs;
+    int8_t   nchild;
+    uint8_t   nargs;
 };
 
 
@@ -135,7 +135,7 @@ int32_t MVM_jit_expr_op_is_call(enum MVMJitExprOperator op) {
 
 
 static int32_t MVM_jit_expr_add_regaddr(MVMThreadContext *tc, MVMJitExprTree *tree,
-                                         MVMuint16 reg) {
+                                         uint16_t reg) {
     return MVM_jit_expr_apply_template_adhoc(tc, tree, "nsnsl.",
                                              MVM_JIT_LOCAL, 0,
                                              MVM_JIT_ADDR, 1, 0, reg * MVM_JIT_REG_SZ);
@@ -173,7 +173,7 @@ static int32_t MVM_jit_expr_add_label(MVMThreadContext *tc, MVMJitExprTree *tree
 }
 
 static int32_t MVM_jit_expr_add_lexaddr(MVMThreadContext *tc, MVMJitExprTree *tree,
-                                         MVMuint16 outers, MVMuint16 idx) {
+                                         uint16_t outers, uint16_t idx) {
     int32_t i;
     /* (frame) as the root */
     int32_t root = MVM_jit_expr_add_loadframe(tc, tree);
@@ -195,7 +195,7 @@ static int32_t MVM_jit_expr_add_lexaddr(MVMThreadContext *tc, MVMJitExprTree *tr
 }
 
 /* Manage large constants - by the way, no attempt is being made to unify them */
-static int32_t MVM_jit_expr_add_const_i64(MVMThreadContext *tc, MVMJitExprTree *tree, MVMint64 const_i64) {
+static int32_t MVM_jit_expr_add_const_i64(MVMThreadContext *tc, MVMJitExprTree *tree, int64_t const_i64) {
     MVM_VECTOR_ENSURE_SPACE(tree->constants, 1);
     {
         int32_t t = tree->constants_num++;
@@ -204,7 +204,7 @@ static int32_t MVM_jit_expr_add_const_i64(MVMThreadContext *tc, MVMJitExprTree *
     }
 }
 
-static int32_t MVM_jit_expr_add_const_n64(MVMThreadContext *tc, MVMJitExprTree *tree, MVMnum64 const_n64) {
+static int32_t MVM_jit_expr_add_const_n64(MVMThreadContext *tc, MVMJitExprTree *tree, double const_n64) {
     MVM_VECTOR_ENSURE_SPACE(tree->constants, 1);
     {
         int32_t t = tree->constants_num++;
@@ -223,25 +223,25 @@ static int32_t MVM_jit_expr_add_const_ptr(MVMThreadContext *tc, MVMJitExprTree *
 }
 
 static int32_t MVM_jit_expr_add_const(MVMThreadContext *tc, MVMJitExprTree *tree,
-                                       MVMSpeshOperand opr, MVMuint8 type) {
+                                       MVMSpeshOperand opr, uint8_t type) {
     int32_t operator = MVM_JIT_CONST, constant = 0, size = 0;
     char *info = "ns..";
     switch(type & MVM_operand_type_mask) {
     case MVM_operand_int8:
         constant = opr.lit_i8;
-        size = sizeof(MVMint8);
+        size = sizeof(int8_t);
         break;
     case MVM_operand_int16:
         constant = opr.lit_i16;
-        size = sizeof(MVMint16);
+        size = sizeof(int16_t);
         break;
     case MVM_operand_uint16:
         constant = opr.lit_ui16;
-        size = sizeof(MVMuint16);
+        size = sizeof(uint16_t);
         break;
     case MVM_operand_coderef:
         constant = opr.coderef_idx;
-        size = sizeof(MVMuint16);
+        size = sizeof(uint16_t);
         break;
     case MVM_operand_int32:
         constant = opr.lit_i32;
@@ -254,8 +254,8 @@ static int32_t MVM_jit_expr_add_const(MVMThreadContext *tc, MVMJitExprTree *tree
         break;
     case MVM_operand_num32:
         operator = MVM_JIT_CONST_NUM;
-        constant = MVM_jit_expr_add_const_n64(tc, tree, (MVMnum64)opr.lit_n32);
-        size = sizeof(MVMnum32);
+        constant = MVM_jit_expr_add_const_n64(tc, tree, (double)opr.lit_n32);
+        size = sizeof(float);
         break;
     case MVM_operand_num64:
         operator = MVM_JIT_CONST_NUM;
@@ -274,11 +274,11 @@ static int32_t MVM_jit_expr_add_const(MVMThreadContext *tc, MVMJitExprTree *tree
         break;
     case MVM_operand_callsite:
         constant = opr.callsite_idx;
-        size = sizeof(MVMuint16);
+        size = sizeof(uint16_t);
         break;
     case MVM_operand_spesh_slot:
         constant = opr.lit_i16;
-        size = sizeof(MVMuint16);
+        size = sizeof(uint16_t);
         break;
     case MVM_operand_uint32:
         constant = opr.lit_ui32;
@@ -292,18 +292,18 @@ static int32_t MVM_jit_expr_add_const(MVMThreadContext *tc, MVMJitExprTree *tree
 
 static int32_t getlex_needs_autoviv(MVMThreadContext *tc, MVMJitGraph *jg, MVMSpeshIns *ins) {
     MVMSpeshOperand opr = ins->operands[1];
-    MVMuint16 lexical_type = MVM_spesh_get_lex_type(tc, jg->sg, opr.lex.outers, opr.lex.idx);
+    uint16_t lexical_type = MVM_spesh_get_lex_type(tc, jg->sg, opr.lex.outers, opr.lex.idx);
     return lexical_type == MVM_reg_obj;
 }
 
 static int32_t bindlex_needs_write_barrier(MVMThreadContext *tc, MVMJitGraph *jg, MVMSpeshIns *ins) {
     MVMSpeshOperand opr = ins->operands[0];
-    MVMuint16 lexical_type = MVM_spesh_get_lex_type(tc, jg->sg, opr.lex.outers, opr.lex.idx);
+    uint16_t lexical_type = MVM_spesh_get_lex_type(tc, jg->sg, opr.lex.outers, opr.lex.idx);
     /* need to hit a write barrier if we bindlex to a string */
     return lexical_type == MVM_reg_obj || lexical_type == MVM_reg_str;
 }
 
-static int32_t load_value(MVMThreadContext *tc, MVMJitExprTree *tree, int32_t addr, MVMuint8 opr_type) {
+static int32_t load_value(MVMThreadContext *tc, MVMJitExprTree *tree, int32_t addr, uint8_t opr_type) {
     if (opr_type == MVM_operand_num32 || opr_type == MVM_operand_num64) {
         return MVM_jit_expr_add_load_num(tc, tree, addr);
     }
@@ -324,7 +324,7 @@ static int32_t ins_has_single_input_output_operand(MVMSpeshIns *ins) {
 }
 
 /* One of the operands might not even have a type (LOAD and CONST are untyped, should they be?) */
-static MVMuint8 coalesce_type(MVMuint8 left, MVMuint8 right) {
+static uint8_t coalesce_type(uint8_t left, uint8_t right) {
     if (left != 0) {
         /* Bit 5 indicates unsignedness, we don't care about that */
         assert(right == 0 || (right & 0xf) == (left & 0xf));
@@ -339,8 +339,8 @@ void MVM_jit_expr_load_operands(MVMThreadContext *tc, MVMJitExprTree *tree,
     int32_t i;
     for (i = 0; i < ins->info->num_operands; i++) {
         MVMSpeshOperand opr = ins->operands[i];
-        MVMuint8   opr_kind = ins->info->operands[i];
-        MVMuint8   opr_type = MVM_spesh_get_opr_type(tc, sg, ins, i);
+        uint8_t   opr_kind = ins->info->operands[i];
+        uint8_t   opr_type = MVM_spesh_get_opr_type(tc, sg, ins, i);
         switch(opr_kind & MVM_operand_rw_mask) {
         case MVM_operand_read_reg:
             if (values[opr.reg.orig].node >= 0) {
@@ -386,7 +386,7 @@ void MVM_jit_expr_load_operands(MVMThreadContext *tc, MVMJitExprTree *tree,
      * input and the output operand.
      */
     if (ins_has_single_input_output_operand(ins)) {
-        MVMuint16 reg = ins->operands[0].reg.orig;
+        uint16_t reg = ins->operands[0].reg.orig;
         if (values[reg].node >= 0) {
             operands[1] = values[reg].node;
         } else {
@@ -477,7 +477,7 @@ static void analyze_node(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
     int32_t        *links = MVM_JIT_EXPR_LINKS(tree, node);
     int32_t         *args = MVM_JIT_EXPR_ARGS(tree, node);
     int32_t     cast_mode = MVM_JIT_NOOP;
-    MVMint8      node_type = MVM_JIT_EXPR_INFO(tree, node)->type;
+    int8_t      node_type = MVM_JIT_EXPR_INFO(tree, node)->type;
     uint32_t node_size = 0;
     int32_t i;
 
@@ -485,7 +485,7 @@ static void analyze_node(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
     /* propagate node sizes */
     switch (tree->nodes[node]) {
     case MVM_JIT_CONST_NUM:
-        node_type = (args[1] == sizeof(MVMnum32) ? MVM_reg_num32 : MVM_reg_num64);
+        node_type = (args[1] == sizeof(float) ? MVM_reg_num32 : MVM_reg_num64);
         /* fallthrough */
     case MVM_JIT_CONST:
     case MVM_JIT_CONST_LARGE:
@@ -500,7 +500,7 @@ static void analyze_node(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
         node_type = MVM_JIT_EXPR_INFO(tree, links[0])->type;
         break;
     case MVM_JIT_LOAD_NUM:
-        node_type = (args[0] == sizeof(MVMnum32) ? MVM_reg_num32 : MVM_reg_num64);
+        node_type = (args[0] == sizeof(float) ? MVM_reg_num32 : MVM_reg_num64);
         /* fallthrough */
     case MVM_JIT_LOAD:
         node_size = args[0];
@@ -583,7 +583,7 @@ static void analyze_node(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
         node_size = args[0];
         break;
     case MVM_JIT_CALLN:
-        node_size = sizeof(MVMnum64);
+        node_size = sizeof(double);
         node_type = MVM_reg_num64;
         break;
     case MVM_JIT_NZ:
@@ -605,7 +605,7 @@ static void analyze_node(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
     if (cast_mode != MVM_JIT_NOOP) {
         for (i = 0; i < nchild; i++) {
             int32_t child = tree->nodes[first_child+i];
-            MVMuint8 child_size = MVM_JIT_EXPR_INFO(tree, child)->size;
+            uint8_t child_size = MVM_JIT_EXPR_INFO(tree, child)->size;
             if (tree->nodes[child] == MVM_JIT_CONST) {
                 /* CONST nodes can always take over their target size, so they never need to be cast */
                 MVM_JIT_EXPR_INFO(tree, child)->size = node_size;
@@ -667,7 +667,7 @@ MVMJitExprTree * MVM_jit_expr_tree_build(MVMThreadContext *tc, MVMJitGraph *jg, 
     MVMSpeshIns *ins;
     MVMJitExprTree *tree;
     struct ValueDefinition *values;
-    MVMuint16 i;
+    uint16_t i;
     /* No instructions, just skip */
     if (!iter->ins)
         return NULL;
@@ -701,8 +701,8 @@ MVMJitExprTree * MVM_jit_expr_tree_build(MVMThreadContext *tc, MVMJitGraph *jg, 
         /* NB - we probably will want to involve the spesh info in selecting a
            template. And for optimisation, I'd like to copy spesh facts (if any)
            to the tree info */
-        MVMuint16 opcode = ins->info->opcode;
-        MVMuint16 operands_needed = MAX(2, ins->info->num_operands); /* At least 2 for inc_i hack */
+        uint16_t opcode = ins->info->opcode;
+        uint16_t operands_needed = MAX(2, ins->info->num_operands); /* At least 2 for inc_i hack */
         int32_t *operands = alloca(operands_needed * sizeof(int32_t));
         MVMSpeshAnn *ann;
         const MVMJitExprTemplate *template;
@@ -830,8 +830,8 @@ MVMJitExprTree * MVM_jit_expr_tree_build(MVMThreadContext *tc, MVMJitGraph *jg, 
         /* mark operand types */
         for (i = 0; i < ins->info->num_operands; i++) {
             MVMSpeshOperand opr = ins->operands[i];
-            MVMuint8 opr_kind = ins->info->operands[i];
-            MVMuint8 opr_type = MVM_spesh_get_opr_type(tc, sg, ins, i);
+            uint8_t opr_kind = ins->info->operands[i];
+            uint8_t opr_type = MVM_spesh_get_opr_type(tc, sg, ins, i);
             switch(opr_kind & MVM_operand_rw_mask) {
             case MVM_operand_read_reg:
             case MVM_operand_read_lex:

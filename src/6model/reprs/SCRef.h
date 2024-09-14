@@ -10,14 +10,14 @@ struct MVMSerializationContextBody {
     MVMString *description;
 
     /* The root set of objects that live in this SC. */
-    MVMuint64   num_objects;
-    MVMuint64   alloc_objects;
+    uint64_t   num_objects;
+    uint64_t   alloc_objects;
     MVMObject **root_objects;
 
     /* The root set of STables that live in this SC. */
     MVMSTable **root_stables;
-    MVMuint64   num_stables;
-    MVMuint64   alloc_stables;
+    uint64_t   num_stables;
+    uint64_t   alloc_stables;
 
     /* The root set of code refs that live in this SC. */
     MVMObject *root_codes;
@@ -28,10 +28,10 @@ struct MVMSerializationContextBody {
     MVMObject *rep_indexes;
     MVMObject *rep_scs;
 
-    MVMuint64  num_param_intern_lookup;
+    uint64_t  num_param_intern_lookup;
     uint32_t *param_intern_lookup;
 
-    MVMuint64  num_param_intern_st_lookup;
+    uint64_t  num_param_intern_st_lookup;
     uint32_t *param_intern_st_lookup;
 
     /* Some things we deserialize are not directly in an SC root set, but

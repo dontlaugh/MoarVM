@@ -89,8 +89,8 @@ typedef struct {
  * plans specializations to produce for it. */
 static void plan_for_cs(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame *sf,
                         MVMSpeshStatsByCallsite *by_cs,
-                        MVMuint64 *in_certain_specialization, MVMuint64 *in_observed_specialization,
-                        MVMuint64 *in_osr_specialization) {
+                        uint64_t *in_certain_specialization, uint64_t *in_observed_specialization,
+                        uint64_t *in_osr_specialization) {
     /* First, make sure it even is possible to specialize something by type
      * in this code. */
     uint32_t specializations = 0;
@@ -98,7 +98,7 @@ static void plan_for_cs(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame
         /* It is. We'll try and produce some specializations, looping until
          * no tuples that remain give us anything significant. */
         uint32_t required_hits = (PERCENT_RELEVANT * (by_cs->hits + by_cs->osr_hits)) / 100;
-        MVMuint8 *tuples_used = MVM_calloc(by_cs->num_by_type, 1);
+        uint8_t *tuples_used = MVM_calloc(by_cs->num_by_type, 1);
         uint32_t num_obj_args = 0, i;
         for (i = 0; i < by_cs->cs->flag_count; i++)
             if (by_cs->cs->arg_flags[i] & MVM_CALLSITE_ARG_OBJ)
@@ -113,7 +113,7 @@ static void plan_for_cs(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame
              * argument, but a lot in the second. */
             MVMSpeshStatsType *chosen_tuple = MVM_calloc(by_cs->cs->flag_count,
                     sizeof(MVMSpeshStatsType));
-            MVMuint8 *chosen_position = MVM_calloc(by_cs->cs->flag_count, 1);
+            uint8_t *chosen_position = MVM_calloc(by_cs->cs->flag_count, 1);
             uint32_t param_idx, j, k, have_chosen;
             MVM_VECTOR_DECL(ParamTypeCount, type_counts);
             MVM_VECTOR_INIT(type_counts, by_cs->num_by_type);
@@ -234,7 +234,7 @@ static void plan_for_cs(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame
 /* Considers the statistics of a given static frame and plans specializtions
  * to produce for it. */
 static void plan_for_sf(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame *sf,
-        MVMuint64 *in_certain_specialization, MVMuint64 *in_observed_specialization, MVMuint64 *in_osr_specialization) {
+        uint64_t *in_certain_specialization, uint64_t *in_observed_specialization, uint64_t *in_osr_specialization) {
     MVMSpeshStats *ss = sf->body.spesh->body.spesh_stats;
     uint32_t threshold = MVM_spesh_threshold(tc, sf);
     if (ss->hits >= threshold || ss->osr_hits >= MVM_SPESH_PLAN_SF_MIN_OSR) {
@@ -305,10 +305,10 @@ static void sort_plan(MVMThreadContext *tc, MVMSpeshPlanned *planned, uint32_t n
 
 /* Forms a specialization plan from considering all frames whose statics have
  * changed. */
-MVMSpeshPlan * MVM_spesh_plan(MVMThreadContext *tc, MVMObject *updated_static_frames, MVMuint64 *in_certain_specialization, MVMuint64 *in_observed_specialization, MVMuint64 *in_osr_specialization) {
+MVMSpeshPlan * MVM_spesh_plan(MVMThreadContext *tc, MVMObject *updated_static_frames, uint64_t *in_certain_specialization, uint64_t *in_observed_specialization, uint64_t *in_osr_specialization) {
     MVMSpeshPlan *plan = MVM_calloc(1, sizeof(MVMSpeshPlan));
-    MVMint64 updated = MVM_repr_elems(tc, updated_static_frames);
-    MVMint64 i;
+    int64_t updated = MVM_repr_elems(tc, updated_static_frames);
+    int64_t i;
 #if MVM_GC_DEBUG
     tc->in_spesh = 1;
 #endif
@@ -347,9 +347,9 @@ void MVM_spesh_plan_gc_mark(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMGCWorkl
 
 void MVM_spesh_plan_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSpeshPlan *plan) {
     uint32_t i;
-    MVMuint64 cache_1 = 0;
-    MVMuint64 cache_2 = 0;
-    MVMuint64 cache_3 = 0;
+    uint64_t cache_1 = 0;
+    uint64_t cache_2 = 0;
+    uint64_t cache_3 = 0;
     if (!plan)
         return;
     for (i = 0; i < plan->num_planned; i++) {

@@ -20,9 +20,9 @@ struct MVMContainerSpec {
     void (*store) (MVMThreadContext *tc, MVMObject *cont, MVMObject *obj);
 
     /* Native container stores. */
-    void (*store_i) (MVMThreadContext *tc, MVMObject *cont, MVMint64 value);
-    void (*store_u) (MVMThreadContext *tc, MVMObject *cont, MVMuint64 value);
-    void (*store_n) (MVMThreadContext *tc, MVMObject *cont, MVMnum64 value);
+    void (*store_i) (MVMThreadContext *tc, MVMObject *cont, int64_t value);
+    void (*store_u) (MVMThreadContext *tc, MVMObject *cont, uint64_t value);
+    void (*store_n) (MVMThreadContext *tc, MVMObject *cont, double value);
     void (*store_s) (MVMThreadContext *tc, MVMObject *cont, MVMString *value);
 
     /* Stores a value in a container, without any checking of it (this
@@ -63,7 +63,7 @@ struct MVMContainerSpec {
     /* Set this to a non-zero value if a fetch promises to never invoke any
      * code. This means the VM knows it can safely decontainerize in places
      * it would not be safe or practical to return to the interpreter. */
-    MVMuint8 fetch_never_invokes;
+    uint8_t fetch_never_invokes;
 };
 
 /* A container configurer knows how to attach a certain type of container
@@ -79,30 +79,30 @@ struct MVMContainerConfigurer {
 
 const MVMContainerConfigurer * MVM_6model_get_container_config(MVMThreadContext *tc, MVMString *name);
 void MVM_6model_containers_setup(MVMThreadContext *tc);
-MVMint64 MVM_6model_container_iscont_rw(MVMThreadContext *tc, MVMObject *cont);
-MVMint64 MVM_6model_container_iscont_i(MVMThreadContext *tc, MVMObject *cont);
-MVMint64 MVM_6model_container_iscont_u(MVMThreadContext *tc, MVMObject *cont);
-MVMint64 MVM_6model_container_iscont_n(MVMThreadContext *tc, MVMObject *cont);
-MVMint64 MVM_6model_container_iscont_s(MVMThreadContext *tc, MVMObject *cont);
+int64_t MVM_6model_container_iscont_rw(MVMThreadContext *tc, MVMObject *cont);
+int64_t MVM_6model_container_iscont_i(MVMThreadContext *tc, MVMObject *cont);
+int64_t MVM_6model_container_iscont_u(MVMThreadContext *tc, MVMObject *cont);
+int64_t MVM_6model_container_iscont_n(MVMThreadContext *tc, MVMObject *cont);
+int64_t MVM_6model_container_iscont_s(MVMThreadContext *tc, MVMObject *cont);
 void MVM_6model_container_decont_i(MVMThreadContext *tc, MVMObject *cont, MVMRegister *res);
 void MVM_6model_container_decont_n(MVMThreadContext *tc, MVMObject *cont, MVMRegister *res);
 void MVM_6model_container_decont_s(MVMThreadContext *tc, MVMObject *cont, MVMRegister *res);
 void MVM_6model_container_decont_u(MVMThreadContext *tc, MVMObject *cont, MVMRegister *res);
-void MVM_6model_container_assign_i(MVMThreadContext *tc, MVMObject *cont, MVMint64 value);
-void MVM_6model_container_assign_u(MVMThreadContext *tc, MVMObject *cont, MVMuint64 value);
-void MVM_6model_container_assign_n(MVMThreadContext *tc, MVMObject *cont, MVMnum64 value);
+void MVM_6model_container_assign_i(MVMThreadContext *tc, MVMObject *cont, int64_t value);
+void MVM_6model_container_assign_u(MVMThreadContext *tc, MVMObject *cont, uint64_t value);
+void MVM_6model_container_assign_n(MVMThreadContext *tc, MVMObject *cont, double value);
 void MVM_6model_container_assign_s(MVMThreadContext *tc, MVMObject *cont, MVMString *value);
 void MVM_6model_container_cas(MVMThreadContext *tc, MVMObject *cont,
     MVMObject *expected, MVMObject *value, MVMRegister *result);
 MVMObject * MVM_6model_container_atomic_load(MVMThreadContext *tc, MVMObject *cont);
 void MVM_6model_container_atomic_store(MVMThreadContext *tc, MVMObject *cont, MVMObject *value);
-MVMint64 MVM_6model_container_cas_i(MVMThreadContext *tc, MVMObject *cont,
-    MVMint64 expected, MVMint64 value);
-MVMint64 MVM_6model_container_atomic_load_i(MVMThreadContext *tc, MVMObject *cont);
-void MVM_6model_container_atomic_store_i(MVMThreadContext *tc, MVMObject *cont, MVMint64 value);
-MVMint64 MVM_6model_container_atomic_inc(MVMThreadContext *tc, MVMObject *cont);
-MVMint64 MVM_6model_container_atomic_dec(MVMThreadContext *tc, MVMObject *cont);
-MVMint64 MVM_6model_container_atomic_add(MVMThreadContext *tc, MVMObject *cont, MVMint64 value);
+int64_t MVM_6model_container_cas_i(MVMThreadContext *tc, MVMObject *cont,
+    int64_t expected, int64_t value);
+int64_t MVM_6model_container_atomic_load_i(MVMThreadContext *tc, MVMObject *cont);
+void MVM_6model_container_atomic_store_i(MVMThreadContext *tc, MVMObject *cont, int64_t value);
+int64_t MVM_6model_container_atomic_inc(MVMThreadContext *tc, MVMObject *cont);
+int64_t MVM_6model_container_atomic_dec(MVMThreadContext *tc, MVMObject *cont);
+int64_t MVM_6model_container_atomic_add(MVMThreadContext *tc, MVMObject *cont, int64_t value);
 
-void *MVM_container_devirtualize_fetch_for_jit(MVMThreadContext *tc, MVMSTable *st, MVMuint16 type);
-void *MVM_container_devirtualize_store_for_jit(MVMThreadContext *tc, MVMSTable *st, MVMuint16 type);
+void *MVM_container_devirtualize_fetch_for_jit(MVMThreadContext *tc, MVMSTable *st, uint16_t type);
+void *MVM_container_devirtualize_store_for_jit(MVMThreadContext *tc, MVMSTable *st, uint16_t type);

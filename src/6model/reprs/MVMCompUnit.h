@@ -11,18 +11,18 @@ struct MVMExtOpRecord {
 
     /* Tells the interpreter by how much to increment
      * the instruction pointer. */
-    MVMuint16 operand_bytes;
+    uint16_t operand_bytes;
 
     /* Indicates the JIT should not emit a call to this op, because it needs
      * to be used in an interpreter context. */
-    MVMuint16 no_jit;
+    uint16_t no_jit;
 
     /* Indicates the extop allocates and that its output is some allocated
      * object. Used by allocation profiling. */
-    MVMuint16 allocating;
+    uint16_t allocating;
 
     /* Read from the bytecode stream. */
-    MVMuint8 operand_descriptor[MVM_MAX_OPERANDS];
+    uint8_t operand_descriptor[MVM_MAX_OPERANDS];
 
     /* Specialization function. */
     MVMExtOpSpesh *spesh;
@@ -41,11 +41,11 @@ typedef enum {
 /* Representation for a compilation unit in the VM. */
 struct MVMCompUnitBody {
     /* The start and size of the raw data for this compilation unit. */
-    MVMuint8  *data_start;
+    uint8_t  *data_start;
     uint32_t  data_size;
 
     /* Refers to the extops pointer below. Lives here for struct layout */
-    MVMuint16       num_extops;
+    uint16_t       num_extops;
 
     /* The code objects for each frame, along with counts of frames. */
     MVMObject      **coderefs;
@@ -92,12 +92,12 @@ struct MVMCompUnitBody {
     /* Refers to serialized below. sneaked in here to optimize struct layout */
     int32_t  serialized_size;
 
-    MVMuint8  *string_heap_start;
-    MVMuint8  *string_heap_read_limit;
+    uint8_t  *string_heap_start;
+    uint8_t  *string_heap_read_limit;
 
     /* Serialized data, if any. */
     /* For its size, see serialized_size above. */
-    MVMuint8 *serialized;
+    uint8_t *serialized;
 
     /* Array of the resolved serialization contexts, and how many we
      * have. A null in the list indicates not yet resolved */
@@ -143,10 +143,10 @@ struct MVMCompUnitBody {
     MVMCode *dynamic_resolver;
 
     /* Version of the bytecode format we deserialized this comp unit from. */
-    MVMuint16 bytecode_version;
+    uint16_t bytecode_version;
 
     /* Was a frame in this compilation unit invoked yet? */
-    MVMuint8 invoked;
+    uint8_t invoked;
 };
 struct MVMCompUnit {
     MVMObject common;

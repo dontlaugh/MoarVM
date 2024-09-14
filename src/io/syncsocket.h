@@ -14,13 +14,13 @@
 #define MVM_SOCKET_PROTOCOL_TCP 1
 #define MVM_SOCKET_PROTOCOL_UDP 2
 
-MVMObject * MVM_io_socket_create(MVMThreadContext *tc, MVMint64 listen);
-/* TODO: MVMuint16 can be too small for the machine's value for the
+MVMObject * MVM_io_socket_create(MVMThreadContext *tc, int64_t listen);
+/* TODO: uint16_t can be too small for the machine's value for the
  *       given family, which this function doesn't use anymore in the
  *       first place and can be any Int from Raku land; it should be an
- *       MVMint64 instead. */
+ *       int64_t instead. */
 struct sockaddr * MVM_io_resolve_host_name(MVMThreadContext *tc,
-        MVMString *host, MVMint64 port,
-        MVMuint16 family, MVMint64 type, MVMint64 protocol,
+        MVMString *host, int64_t port,
+        uint16_t family, int64_t type, int64_t protocol,
         int32_t passive);
 MVMString * MVM_io_get_hostname(MVMThreadContext *tc);

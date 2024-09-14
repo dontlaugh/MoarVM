@@ -28,7 +28,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
     dest_body->ptr = src_body->ptr;
 }
 
-static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 value) {
+static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
     MVMCPointerBody *body = (MVMCPointerBody *)OBJECT_BODY(root);
 #if MVM_PTR_SIZE == 4
     body->ptr = (void *)(int32_t)value;
@@ -37,16 +37,16 @@ static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
 #endif
 }
 
-static MVMint64 get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static int64_t get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMCPointerBody *body = (MVMCPointerBody *)OBJECT_BODY(root);
 #if MVM_PTR_SIZE == 4
-    return (MVMint64)(int32_t)body->ptr;
+    return (int64_t)(int32_t)body->ptr;
 #else
-    return (MVMint64)body->ptr;
+    return (int64_t)body->ptr;
 #endif
 }
 
-static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMuint64 value) {
+static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t value) {
     MVMCPointerBody *body = (MVMCPointerBody *)OBJECT_BODY(root);
 #if MVM_PTR_SIZE == 4
     body->ptr = (void *)(uint32_t)value;
@@ -55,12 +55,12 @@ static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
 #endif
 }
 
-static MVMuint64 get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMCPointerBody *body = (MVMCPointerBody *)OBJECT_BODY(root);
 #if MVM_PTR_SIZE == 4
-    return (MVMuint64)(uint32_t)body->ptr;
+    return (uint64_t)(uint32_t)body->ptr;
 #else
-    return (MVMuint64)body->ptr;
+    return (uint64_t)body->ptr;
 #endif
 }
 
@@ -85,7 +85,7 @@ static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSeri
 
 static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMCPointerBody *body = (MVMCPointerBody *)data;
-    MVMint64 value;
+    int64_t value;
 
     if (reader->root.version >= 19) {
         value = MVM_serialization_read_int(tc, reader);
@@ -105,9 +105,9 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
     MVMCPointerBody *body = (MVMCPointerBody *)data;
     MVM_serialization_write_int(tc, writer,
 #if MVM_PTR_SIZE == 4
-        (MVMuint64)(uint32_t)body->ptr
+        (uint64_t)(uint32_t)body->ptr
 #else
-        (MVMuint64)body->ptr
+        (uint64_t)body->ptr
 #endif
     );
 }

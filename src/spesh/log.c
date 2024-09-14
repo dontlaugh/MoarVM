@@ -78,7 +78,7 @@ void MVM_spesh_log_new_compunit(MVMThreadContext *tc) {
 }
 
 /* Log the entry to a call frame along with the parameters. */
-static void log_param_type(MVMThreadContext *tc, int32_t cid, MVMuint16 arg_idx,
+static void log_param_type(MVMThreadContext *tc, int32_t cid, uint16_t arg_idx,
                            MVMObject *value, MVMSpeshLogEntryKind kind, int32_t rw_cont) {
     MVMSpeshLog *sl = tc->spesh_log;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);
@@ -91,7 +91,7 @@ static void log_param_type(MVMThreadContext *tc, int32_t cid, MVMuint16 arg_idx,
     entry->param.arg_idx = arg_idx;
     commit_entry(tc, sl);
 }
-static void log_parameter(MVMThreadContext *tc, int32_t cid, MVMuint16 arg_idx, MVMObject *param) {
+static void log_parameter(MVMThreadContext *tc, int32_t cid, uint16_t arg_idx, MVMObject *param) {
     MVMContainerSpec const *cs = STABLE(param)->container_spec;
     MVMROOT(tc, param) {
         log_param_type(tc, cid, arg_idx, param, MVM_SPESH_LOG_PARAMETER,
@@ -157,7 +157,7 @@ void MVM_spesh_log_type(MVMThreadContext *tc, MVMObject *value) {
     commit_entry(tc, sl);
 }
 
-void MVM_spesh_log_type_at(MVMThreadContext *tc, MVMObject *value, MVMuint8 *prev_op) {
+void MVM_spesh_log_type_at(MVMThreadContext *tc, MVMObject *value, uint8_t *prev_op) {
     MVMSpeshLog *sl = tc->spesh_log;
     int32_t cid = tc->cur_frame->spesh_correlation_id;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);
@@ -170,7 +170,7 @@ void MVM_spesh_log_type_at(MVMThreadContext *tc, MVMObject *value, MVMuint8 *pre
 }
 
 /* Log a decont, only those that did not invoke. */
-void MVM_spesh_log_decont(MVMThreadContext *tc, MVMuint8 *prev_op, MVMObject *value) {
+void MVM_spesh_log_decont(MVMThreadContext *tc, uint8_t *prev_op, MVMObject *value) {
     MVMSpeshLog *sl = tc->spesh_log;
     int32_t cid = tc->cur_frame->spesh_correlation_id;
     if (prev_op + 4 == *(tc->interp_cur_op)) {
@@ -231,7 +231,7 @@ void MVM_spesh_log_return_to_unlogged(MVMThreadContext *tc) {
 
 /* Log the result of a dispatch. */
 void MVM_spesh_log_dispatch_resolution_for_correlation_id(MVMThreadContext *tc,
-        int32_t cid, uint32_t bytecode_offset, MVMuint16 result_index) {
+        int32_t cid, uint32_t bytecode_offset, uint16_t result_index) {
     MVMSpeshLog *sl = tc->spesh_log;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);
     entry->kind = MVM_SPESH_LOG_DISPATCH_RESOLUTION;

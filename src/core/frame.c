@@ -7,9 +7,9 @@
 #define MVM_SPESH_CHECK_PRESELECTION 0
 
 /* Computes the initial work area for a frame or a specialization of a frame. */
-MVMRegister * MVM_frame_initial_work(MVMThreadContext *tc, MVMuint16 *local_types,
-                                     MVMuint16 num_locals) {
-    MVMuint16 i;
+MVMRegister * MVM_frame_initial_work(MVMThreadContext *tc, uint16_t *local_types,
+                                     uint16_t num_locals) {
+    uint16_t i;
     MVMRegister *work_initial = MVM_calloc(num_locals, sizeof(MVMRegister));
     for (i = 0; i < num_locals; i++)
         if (local_types[i] == MVM_reg_obj)
@@ -59,9 +59,9 @@ static void prepare_and_verify_static_frame(MVMThreadContext *tc, MVMStaticFrame
 
     /* Check if we have any state var lexicals. */
     if (static_frame_body->static_env_flags) {
-        MVMuint8 *flags  = static_frame_body->static_env_flags;
-        MVMint64  numlex = static_frame_body->num_lexicals;
-        MVMint64  i;
+        uint8_t *flags  = static_frame_body->static_env_flags;
+        int64_t  numlex = static_frame_body->num_lexicals;
+        int64_t  i;
         for (i = 0; i < numlex; i++)
             if (flags[i] == 2) {
                 static_frame_body->has_state_vars = 1;
@@ -171,8 +171,8 @@ static MVMFrame * create_context_only(MVMThreadContext *tc, MVMStaticFrame *stat
         frame->allocd_env = static_frame->body.env_size;
         if (autoclose) {
             MVMROOT2(tc, frame, static_frame) {
-                MVMuint16 i;
-                MVMuint16 num_lexicals = static_frame->body.num_lexicals;
+                uint16_t i;
+                uint16_t num_lexicals = static_frame->body.num_lexicals;
                 for (i = 0; i < num_lexicals; i++) {
                     if (!static_frame->body.static_env[i].o && static_frame->body.static_env_flags[i] == 1) {
                         uint32_t scid;
@@ -355,11 +355,11 @@ static void setup_state_vars(MVMThreadContext *tc, MVMStaticFrame *static_frame)
      * as GC action may invalidate it. */
     MVMFrame    *frame     = tc->cur_frame;
     MVMRegister *env       = static_frame->body.static_env;
-    MVMuint8    *flags     = static_frame->body.static_env_flags;
-    MVMint64     numlex    = static_frame->body.num_lexicals;
+    uint8_t    *flags     = static_frame->body.static_env_flags;
+    int64_t     numlex    = static_frame->body.num_lexicals;
     MVMRegister *state     = NULL;
-    MVMint64     state_act = 0; /* 0 = none so far, 1 = first time, 2 = later */
-    MVMint64 i;
+    int64_t     state_act = 0; /* 0 = none so far, 1 = first time, 2 = later */
+    int64_t i;
     MVMROOT(tc, frame) {
         for (i = 0; i < numlex; i++) {
             if (flags[i] == 2) {
@@ -520,7 +520,7 @@ void MVM_frame_dispatch(MVMThreadContext *tc, MVMCode *code, MVMArgs args, int32
 
     /* Now go by whether we have a specialization. */
     MVMFrame *frame;
-    MVMuint8 *chosen_bytecode;
+    uint8_t *chosen_bytecode;
     if (spesh_cand >= 0) {
         MVMSpeshCandidate *chosen_cand = spesh->body.spesh_candidates[spesh_cand];
         if (static_frame->body.allocate_on_heap) {
@@ -879,7 +879,7 @@ MVMFrame * MVM_frame_debugserver_move_to_heap(MVMThreadContext *debug_tc,
 static void remove_after_handler(MVMThreadContext *tc, void *sr_data) {
     MVM_callstack_unwind_frame(tc, 0);
 }
-MVMuint64 MVM_frame_try_return(MVMThreadContext *tc) {
+uint64_t MVM_frame_try_return(MVMThreadContext *tc) {
     MVMFrame *cur_frame = tc->cur_frame;
 
     if (cur_frame->static_info->body.has_exit_handler &&
@@ -941,7 +941,7 @@ MVMuint64 MVM_frame_try_return(MVMThreadContext *tc) {
 }
 
 /* Try a return from the current frame; skip running any exit handlers. */
-MVMuint64 MVM_frame_try_return_no_exit_handlers(MVMThreadContext *tc) {
+uint64_t MVM_frame_try_return_no_exit_handlers(MVMThreadContext *tc) {
     return MVM_callstack_unwind_frame(tc, 0);
 }
 
@@ -950,7 +950,7 @@ MVMuint64 MVM_frame_try_return_no_exit_handlers(MVMThreadContext *tc) {
  * setting a returned result. */
 typedef struct {
     MVMFrame  *frame;
-    MVMuint8  *abs_addr;
+    uint8_t  *abs_addr;
     uint32_t  rel_addr;
     void      *jit_return_label;
     MVMObject *payload;
@@ -962,13 +962,13 @@ static void mark_unwind_data(MVMThreadContext *tc, void *sr_data, MVMGCWorklist 
 static void continue_unwind(MVMThreadContext *tc, void *sr_data) {
     MVMUnwindData *ud  = (MVMUnwindData *)sr_data;
     MVMFrame *frame    = ud->frame;
-    MVMuint8 *abs_addr = ud->abs_addr;
+    uint8_t *abs_addr = ud->abs_addr;
     uint32_t rel_addr = ud->rel_addr;
     void *jit_return_label = ud->jit_return_label;
     tc->last_payload = ud->payload;
     MVM_frame_unwind_to(tc, frame, abs_addr, rel_addr, NULL, jit_return_label);
 }
-void MVM_frame_unwind_to(MVMThreadContext *tc, MVMFrame *frame, MVMuint8 *abs_addr,
+void MVM_frame_unwind_to(MVMThreadContext *tc, MVMFrame *frame, uint8_t *abs_addr,
                          uint32_t rel_addr, MVMObject *return_value, void *jit_return_label) {
     /* Lazy deopt means that we might have located an exception handler in
      * optimized code, but then at the point we call MVM_callstack_unwind_frame we'll
@@ -1165,11 +1165,11 @@ MVMObject * MVM_frame_takeclosure(MVMThreadContext *tc, MVMObject *code) {
 }
 
 /* Vivifies a lexical in a frame. */
-MVMObject * MVM_frame_vivify_lexical(MVMThreadContext *tc, MVMFrame *f, MVMuint16 idx) {
-    MVMuint8       *flags;
-    MVMint16        flag;
+MVMObject * MVM_frame_vivify_lexical(MVMThreadContext *tc, MVMFrame *f, uint16_t idx) {
+    uint8_t       *flags;
+    int16_t        flag;
     MVMRegister    *static_env;
-    MVMuint16       effective_idx = 0;
+    uint16_t       effective_idx = 0;
     MVMStaticFrame *effective_sf;
     if (idx < f->static_info->body.num_lexicals) {
         flags         = f->static_info->body.static_env_flags;
@@ -1243,7 +1243,7 @@ MVMObject * MVM_frame_vivify_lexical(MVMThreadContext *tc, MVMFrame *f, MVMuint1
  * specified type. Non-existing object lexicals produce NULL, expected
  * (for better or worse) by various things. Otherwise, an error is thrown
  * if it does not exist. Incorrect type always throws. */
-int MVM_frame_find_lexical_by_name(MVMThreadContext *tc, MVMString *name, MVMuint16 type, MVMRegister *r) {
+int MVM_frame_find_lexical_by_name(MVMThreadContext *tc, MVMString *name, uint16_t type, MVMRegister *r) {
     MVMSpeshFrameWalker fw;
     MVM_spesh_frame_walker_init_for_outers(tc, &fw, tc->cur_frame);
     MVMRegister *res = MVM_frame_lexical_lookup_using_frame_walker(tc, &fw, name, type);
@@ -1272,7 +1272,7 @@ int MVM_frame_find_lexical_by_name(MVMThreadContext *tc, MVMString *name, MVMuin
 
 /* Binds the specified value to the given lexical, finding it along the static
  * chain. */
-MVM_PUBLIC void MVM_frame_bind_lexical_by_name(MVMThreadContext *tc, MVMString *name, MVMuint16 type, MVMRegister value) {
+MVM_PUBLIC void MVM_frame_bind_lexical_by_name(MVMThreadContext *tc, MVMString *name, uint16_t type, MVMRegister value) {
     MVMFrame *cur_frame = tc->cur_frame;
     while (cur_frame != NULL) {
         if (cur_frame->static_info->body.num_lexicals) {
@@ -1360,11 +1360,11 @@ int MVM_frame_find_lexical_by_name_rel(MVMThreadContext *tc, MVMString *name, MV
 /* Performs some kind of lexical lookup using the frame walker. The exact walk
  * that is done depends on the frame walker setup. */
 MVMRegister * MVM_frame_lexical_lookup_using_frame_walker(MVMThreadContext *tc,
-        MVMSpeshFrameWalker *fw, MVMString *name, MVMuint16 type) {
+        MVMSpeshFrameWalker *fw, MVMString *name, uint16_t type) {
     MVM_gc_root_temp_push(tc, (MVMCollectable **)&(name));
     while (MVM_spesh_frame_walker_next(tc, fw)) {
         MVMRegister *found;
-        MVMuint16 found_kind;
+        uint16_t found_kind;
         if (MVM_spesh_frame_walker_get_lex(tc, fw, name, &found, &found_kind, 1, NULL)) {
             MVM_spesh_frame_walker_cleanup(tc, fw);
             MVM_gc_root_temp_pop(tc);
@@ -1395,7 +1395,7 @@ MVMRegister * MVM_frame_find_lexical_by_name_rel_caller(MVMThreadContext *tc, MV
 
 /* Looks up the address of the lexical with the specified name and the
  * specified type. Returns null if it does not exist. */
-static void try_cache_dynlex(MVMThreadContext *tc, MVMFrame *from, MVMFrame *to, MVMString *name, MVMRegister *reg, MVMuint16 type, uint32_t fcost, uint32_t icost) {
+static void try_cache_dynlex(MVMThreadContext *tc, MVMFrame *from, MVMFrame *to, MVMString *name, MVMRegister *reg, uint16_t type, uint32_t fcost, uint32_t icost) {
 #if MVM_DYNLEX_CACHE_ENABLED
     int32_t next = 0;
     int32_t frames = 0;
@@ -1427,7 +1427,7 @@ static void try_cache_dynlex(MVMThreadContext *tc, MVMFrame *from, MVMFrame *to,
 #endif
 }
 MVMRegister * MVM_frame_find_dynamic_using_frame_walker(MVMThreadContext *tc,
-        MVMSpeshFrameWalker *fw, MVMString *name, MVMuint16 *type, MVMFrame *initial_frame,
+        MVMSpeshFrameWalker *fw, MVMString *name, uint16_t *type, MVMFrame *initial_frame,
         int32_t vivify, MVMFrame **found_frame) {
     FILE *dlog = tc->instance->dynvar_log_fh;
     uint32_t fcost = 0;  /* frames traversed */
@@ -1436,8 +1436,8 @@ MVMRegister * MVM_frame_find_dynamic_using_frame_walker(MVMThreadContext *tc,
     uint32_t xcost = 0;  /* frames traversed with wrong name */
     MVMFrame *last_real_frame = initial_frame;
     char *c_name;
-    MVMuint64 start_time;
-    MVMuint64 last_time;
+    uint64_t start_time;
+    uint64_t last_time;
 
     if (MVM_UNLIKELY(!name))
         MVM_exception_throw_adhoc(tc, "Contextual name cannot be null");
@@ -1522,7 +1522,7 @@ MVMRegister * MVM_frame_find_dynamic_using_frame_walker(MVMThreadContext *tc,
     return NULL;
 }
 MVMRegister * MVM_frame_find_contextual_by_name(MVMThreadContext *tc, MVMString *name,
-        MVMuint16 *type, MVMFrame *initial_frame, int32_t vivify, MVMFrame **found_frame) {
+        uint16_t *type, MVMFrame *initial_frame, int32_t vivify, MVMFrame **found_frame) {
     MVMSpeshFrameWalker fw;
     MVM_spesh_frame_walker_init(tc, &fw, initial_frame, 0);
     return MVM_frame_find_dynamic_using_frame_walker(tc, &fw, name, type, initial_frame,
@@ -1531,7 +1531,7 @@ MVMRegister * MVM_frame_find_contextual_by_name(MVMThreadContext *tc, MVMString 
 
 void MVM_frame_getdynlex_with_frame_walker(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
                                                   MVMString *name, MVMRegister *r) {
-    MVMuint16 type;
+    uint16_t type;
     MVMFrame *found_frame;
     MVMRegister *lex_reg = MVM_frame_find_dynamic_using_frame_walker(tc, fw, name, &type,
             MVM_spesh_frame_walker_current_frame(tc, fw), 1, &found_frame);
@@ -1616,7 +1616,7 @@ void MVM_frame_getdynlex(MVMThreadContext *tc, MVMString *name, MVMFrame *cur_fr
 }
 
 void MVM_frame_binddynlex(MVMThreadContext *tc, MVMString *name, MVMObject *value, MVMFrame *cur_frame) {
-    MVMuint16 type;
+    uint16_t type;
     MVMFrame *found_frame;
     MVMRegister *lex_reg;
     MVMROOT2(tc, name, value) {
@@ -1666,7 +1666,7 @@ MVMRegister * MVM_frame_lexical(MVMThreadContext *tc, MVMFrame *f, MVMString *na
 }
 
 /* Returns the storage unit for the lexical in the specified frame. */
-MVMRegister * MVM_frame_try_get_lexical(MVMThreadContext *tc, MVMFrame *f, MVMString *name, MVMuint16 type) {
+MVMRegister * MVM_frame_try_get_lexical(MVMThreadContext *tc, MVMFrame *f, MVMString *name, uint16_t type) {
     if (f->static_info->body.num_lexicals) {
         uint32_t idx = MVM_get_lexical_by_name(tc, f->static_info, name);
         if (idx != MVM_INDEX_HASH_NOT_FOUND && f->static_info->body.lexical_types[idx] == type) {
@@ -1680,7 +1680,7 @@ MVMRegister * MVM_frame_try_get_lexical(MVMThreadContext *tc, MVMFrame *f, MVMSt
 }
 
 /* Translates a register kind into a primitive storage spec constant. */
-MVMuint16 MVM_frame_translate_to_primspec(MVMThreadContext *tc, MVMuint16 kind) {
+uint16_t MVM_frame_translate_to_primspec(MVMThreadContext *tc, uint16_t kind) {
     switch (MVM_EXPECT(kind, MVM_reg_obj)) {
         case MVM_reg_int64:
             return MVM_STORAGE_SPEC_BP_INT;
@@ -1712,7 +1712,7 @@ MVMuint16 MVM_frame_translate_to_primspec(MVMThreadContext *tc, MVMuint16 kind) 
 }
 
 /* Returns the primitive type specification for a lexical. */
-MVMuint16 MVM_frame_lexical_primspec(MVMThreadContext *tc, MVMFrame *f, MVMString *name) {
+uint16_t MVM_frame_lexical_primspec(MVMThreadContext *tc, MVMFrame *f, MVMString *name) {
     if (f->static_info->body.num_lexicals) {
         uint32_t idx = MVM_get_lexical_by_name(tc, f->static_info, name);
         if (idx != MVM_INDEX_HASH_NOT_FOUND)

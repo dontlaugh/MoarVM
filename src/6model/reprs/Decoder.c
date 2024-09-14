@@ -152,7 +152,7 @@ static int has_config(MVMThreadContext *tc, MVMObject *config) {
 void MVM_decoder_configure(MVMThreadContext *tc, MVMDecoder *decoder,
                            MVMString *encoding, MVMObject *config) {
     if (!decoder->body.ds) {
-        MVMuint8 encid = MVM_string_find_encoding(tc, encoding);
+        uint8_t encid = MVM_string_find_encoding(tc, encoding);
         enter_single_user(tc, decoder);
         decoder->body.ds = MVM_string_decodestream_create(tc, encid, 0,
             should_translate_newlines(tc, config));
@@ -188,8 +188,8 @@ void MVM_decoder_set_separators(MVMThreadContext *tc, MVMDecoder *decoder, MVMOb
     get_ds(tc, decoder); /* Ensure we're sufficiently initialized. */
     if (is_str_array) {
         MVMString **c_seps = NULL;
-        MVMuint64 i;
-        MVMuint64 num_seps = MVM_repr_elems(tc, seps);
+        uint64_t i;
+        uint64_t num_seps = MVM_repr_elems(tc, seps);
         if (num_seps > 0xFFFFFF)
             MVM_exception_throw_adhoc(tc, "Too many line separators");
         c_seps = MVM_malloc((num_seps ? num_seps : 1) * sizeof(MVMString *));
@@ -212,22 +212,22 @@ void MVM_decoder_add_bytes(MVMThreadContext *tc, MVMDecoder *decoder, MVMObject 
     if (REPR(buffer)->ID == MVM_REPR_ID_VMArray) {
         /* To be safe, we need to make a copy of data in a resizable array; it
          * may change/move under us. */
-        MVMuint8 *output = NULL, *copy = NULL;
-        MVMint64 output_size;
+        uint8_t *output = NULL, *copy = NULL;
+        int64_t output_size;
         switch (((MVMArrayREPRData *)STABLE(buffer)->REPR_data)->slot_type) {
             case MVM_ARRAY_U8:
             case MVM_ARRAY_I8:
-                output = (MVMuint8 *)(((MVMArray *)buffer)->body.slots.u8 + ((MVMArray *)buffer)->body.start);
+                output = (uint8_t *)(((MVMArray *)buffer)->body.slots.u8 + ((MVMArray *)buffer)->body.start);
                 output_size = ((MVMArray *)buffer)->body.elems;
                 break;
             case MVM_ARRAY_U16:
             case MVM_ARRAY_I16:
-                output = (MVMuint8 *)(((MVMArray *)buffer)->body.slots.u16 + ((MVMArray *)buffer)->body.start);
+                output = (uint8_t *)(((MVMArray *)buffer)->body.slots.u16 + ((MVMArray *)buffer)->body.start);
                 output_size = ((MVMArray *)buffer)->body.elems * 2;
                 break;
             case MVM_ARRAY_U32:
             case MVM_ARRAY_I32:
-                output = (MVMuint8 *)(((MVMArray *)buffer)->body.slots.u32 + ((MVMArray *)buffer)->body.start);
+                output = (uint8_t *)(((MVMArray *)buffer)->body.slots.u32 + ((MVMArray *)buffer)->body.start);
                 output_size = ((MVMArray *)buffer)->body.elems * 4;
                 break;
             default:
@@ -247,8 +247,8 @@ void MVM_decoder_add_bytes(MVMThreadContext *tc, MVMDecoder *decoder, MVMObject 
 
 /* Takes the specified number of chars from the decoder, or all if there
  * is not enough. */
-MVMString * MVM_decoder_take_chars(MVMThreadContext *tc, MVMDecoder *decoder, MVMint64 chars,
-                                   MVMint64 eof) {
+MVMString * MVM_decoder_take_chars(MVMThreadContext *tc, MVMDecoder *decoder, int64_t chars,
+                                   int64_t eof) {
     MVMString *result = NULL;
     enter_single_user(tc, decoder);
     MVMROOT(tc, decoder) {
@@ -282,7 +282,7 @@ MVMString * MVM_decoder_take_available_chars(MVMThreadContext *tc, MVMDecoder *d
 
 /* Takes a line from the decoder. */
 MVMString * MVM_decoder_take_line(MVMThreadContext *tc, MVMDecoder *decoder,
-                                  MVMint64 chomp, MVMint64 incomplete_ok) {
+                                  int64_t chomp, int64_t incomplete_ok) {
     MVMDecodeStream *ds = get_ds(tc, decoder);
     MVMDecodeStreamSeparators *sep_spec = get_sep_spec(tc, decoder);
     MVMString *result = NULL;
@@ -297,22 +297,22 @@ MVMString * MVM_decoder_take_line(MVMThreadContext *tc, MVMDecoder *decoder,
 }
 
 /* Returns true if the decoder is empty. */
-MVMint64 MVM_decoder_empty(MVMThreadContext *tc, MVMDecoder *decoder) {
+int64_t MVM_decoder_empty(MVMThreadContext *tc, MVMDecoder *decoder) {
     return MVM_string_decodestream_is_empty(tc, get_ds(tc, decoder));
 }
 
 /* Gets the number of (undecoded) bytes available in the decoder. */
-MVMint64 MVM_decoder_bytes_available(MVMThreadContext *tc, MVMDecoder *decoder) {
+int64_t MVM_decoder_bytes_available(MVMThreadContext *tc, MVMDecoder *decoder) {
     return MVM_string_decodestream_bytes_available(tc, get_ds(tc, decoder));
 }
 
 /* Takes bytes from the decode stream and places them into a buffer. If there
  * are less available than requested, hand back null. */
 MVMObject * MVM_decoder_take_bytes(MVMThreadContext *tc, MVMDecoder *decoder,
-                                   MVMObject *buf_type, MVMint64 bytes) {
+                                   MVMObject *buf_type, int64_t bytes) {
     MVMDecodeStream *ds = get_ds(tc, decoder);
-    MVMuint8 *buf = NULL;
-    MVMint64 read;
+    uint8_t *buf = NULL;
+    int64_t read;
     MVMObject *result = NULL;
 
     /* Ensure the target is in the correct form. */
@@ -335,7 +335,7 @@ MVMObject * MVM_decoder_take_bytes(MVMThreadContext *tc, MVMDecoder *decoder,
 
     /* Allocate after we're done with decoder to avoid having to MVMROOT */
     result = MVM_repr_alloc_init(tc, buf_type);
-    ((MVMArray *)result)->body.slots.i8 = (MVMint8 *)buf;
+    ((MVMArray *)result)->body.slots.i8 = (int8_t *)buf;
     ((MVMArray *)result)->body.start    = 0;
     ((MVMArray *)result)->body.ssize    = read;
     ((MVMArray *)result)->body.elems    = read;

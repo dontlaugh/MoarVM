@@ -10,8 +10,8 @@
 static void add_facts(MVMThreadContext *tc, MVMSpeshGraph *g, int32_t slot,
                       MVMSpeshStatsType type_tuple_entry, MVMSpeshIns *arg_ins) {
     /* Add appropriate facts from the arg type tuple. */
-    MVMint16 orig = arg_ins->operands[0].reg.orig;
-    MVMint16 i = arg_ins->operands[0].reg.i;
+    int16_t orig = arg_ins->operands[0].reg.orig;
+    int16_t i = arg_ins->operands[0].reg.i;
     MVMObject *type = type_tuple_entry.type;
     g->facts[orig][i].type = type;
     g->facts[orig][i].flags |= MVM_SPESH_FACT_KNOWN_TYPE;
@@ -45,7 +45,7 @@ static void pos_unbox(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
 /* Handles a pos arg that needs boxing. */
 static void pos_box(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                     MVMSpeshIns *ins, const MVMOpInfo *hlltype_op, const MVMOpInfo *box_op,
-                    const MVMOpInfo *arg_op, MVMuint8 kind) {
+                    const MVMOpInfo *arg_op, uint8_t kind) {
     MVMSpeshOperand  temp_bt, temp_arg;
     MVMSpeshIns     *hlltype, *box;
 
@@ -77,7 +77,7 @@ static void pos_box(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
 }
 
 /* Gets the primitive boxed by a type. */
-static MVMuint16 prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, int32_t i) {
+static uint16_t prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, int32_t i) {
     MVMObject *type = type_tuple ? type_tuple[i].type : NULL;
     const MVMStorageSpec *ss;
     if (!type)
@@ -88,7 +88,7 @@ static MVMuint16 prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, 
     return 0;
 }
 
-static MVMuint8 cmp_prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, int32_t i, int32_t wanted_prim_spec) {
+static uint8_t cmp_prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, int32_t i, int32_t wanted_prim_spec) {
     MVMObject *type = NULL;
     int32_t concrete = 0;
     const MVMStorageSpec *ss;
@@ -147,9 +147,9 @@ static void insert_getarg_and_box(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpe
         /* We need to box it. Get a temporary register to box into, and one
          * for the HLL type. */
         MVMSpeshOperand unboxed_temp, box_type_temp;
-        MVMuint16 box_op;
-        MVMuint16 hlltype_op;
-        MVMuint16 fetch_op;
+        uint16_t box_op;
+        uint16_t hlltype_op;
+        uint16_t fetch_op;
         switch (arg_flags & MVM_CALLSITE_ARG_TYPE_MASK) {
             case MVM_CALLSITE_ARG_INT:
                 unboxed_temp = MVM_spesh_manipulate_get_temp_reg(tc, g, MVM_reg_int64);
@@ -221,7 +221,7 @@ static void slurp_named_arg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
     /* Look up arg flags and name, and compute index. */
     MVMCallsiteFlags flags = g->cs->arg_flags[g->cs->num_pos + named_idx];
     MVMString *name = g->cs->arg_names[named_idx];
-    MVMuint16 arg_idx = g->cs->num_pos + named_idx;
+    uint16_t arg_idx = g->cs->num_pos + named_idx;
 
     /* Allocate temporary registers for the key and value. */
     MVMSpeshOperand key_temp = MVM_spesh_manipulate_get_temp_reg(tc, g, MVM_reg_str);
@@ -308,7 +308,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
 
     MVMSpeshIns **pos_ins    = MVM_calloc(MAX_POS_ARGS, sizeof(MVMSpeshIns *));
     MVMSpeshBB  **pos_bb     = MVM_calloc(MAX_POS_ARGS, sizeof(MVMSpeshBB *));
-    MVMuint8     *pos_added  = MVM_calloc(MAX_POS_ARGS, sizeof(MVMuint8));
+    uint8_t     *pos_added  = MVM_calloc(MAX_POS_ARGS, sizeof(uint8_t));
     MVMSpeshIns **named_ins  = MVM_calloc(MAX_NAMED_ARGS, sizeof(MVMSpeshIns *));
     MVMSpeshBB  **named_bb   = MVM_calloc(MAX_NAMED_ARGS, sizeof(MVMSpeshBB *));
     int32_t      req_max    = -1;
@@ -321,7 +321,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
 
     /* We use a bit field to track named argument use; on deopt we will put it
      * into the deoptimized frame. */
-    MVMuint64 named_used_bit_field = 0;
+    uint64_t named_used_bit_field = 0;
 
     MVMSpeshBB *bb = g->entry;
     g->cs = cs;
@@ -343,7 +343,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
             case MVM_OP_param_rp_s:
             case MVM_OP_param_rp_o: {
                 /* Required positional. */
-                MVMint16 idx = ins->operands[1].lit_i16;
+                int16_t idx = ins->operands[1].lit_i16;
                 if (idx < 0 || idx >= MAX_POS_ARGS)
                     goto cleanup;
                 if (pos_ins[idx]) { /* Dupe; weird. */
@@ -363,7 +363,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
             case MVM_OP_param_op_s:
             case MVM_OP_param_op_o: {
                 /* Optional Positional int/num/string/object */
-                MVMint16 idx = ins->operands[1].lit_i16;
+                int16_t idx = ins->operands[1].lit_i16;
                 if (idx < 0 || idx >= MAX_POS_ARGS)
                     goto cleanup;
                 if (pos_ins[idx]) { /* Dupe; weird. */
@@ -530,7 +530,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
             MVMString *arg_name       = MVM_spesh_get_string(tc, g, named_ins[i]->operands[1]);
             int32_t   cur_idx        = 0;
             int32_t   cur_named      = 0;
-            MVMuint8   found_flag     = 0;
+            uint8_t   found_flag     = 0;
             int32_t   found_flag_idx = -1;
             int32_t   found_idx      = -1;
             int32_t   j;
@@ -754,13 +754,13 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
             default:
                 break;
             }
-            pos_ins[i]->operands[1].lit_i16 = (MVMint16)i;
+            pos_ins[i]->operands[1].lit_i16 = (int16_t)i;
         }
 
         /* Now consider any optionals. */
         if (opt_min >= 0) {
             for (i = opt_min; i <= opt_max; i++) {
-                MVMuint8 passed = i < cs->num_pos;
+                uint8_t passed = i < cs->num_pos;
                 if (passed) {
                     /* If we know the argument has been passed, then add a goto
                      * to the "passed" code. */
@@ -790,7 +790,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
             MVMString *arg_name       = MVM_spesh_get_string(tc, g, named_ins[i]->operands[1]);
             int32_t   cur_idx        = 0;
             int32_t   cur_named      = 0;
-            MVMuint8   found_flag     = 0;
+            uint8_t   found_flag     = 0;
             int32_t   found_idx      = -1;
             int32_t   found_flag_idx = -1;
             int32_t   j;
@@ -814,13 +814,13 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                 if (found_flag & MVM_CALLSITE_ARG_INT) {
                     named_ins[i]->info = MVM_op_get_op(MVM_OP_sp_getarg_i);
                     named_ins[i]->operands[1].lit_i16 = found_idx;
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                 }
                 else if (found_flag & MVM_CALLSITE_ARG_OBJ
                         && prim_spec(tc, type_tuple, found_flag_idx) == MVM_STORAGE_SPEC_BP_INT) {
                     named_ins[i]->operands[1].lit_i16 = found_idx;
                     pos_unbox(tc, g, named_bb[i], named_ins[i], MVM_op_get_op(MVM_OP_decont_i));
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                 }
                 named_used++;
                 break;
@@ -828,13 +828,13 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                 if (found_flag & MVM_CALLSITE_ARG_UINT) {
                     named_ins[i]->info = MVM_op_get_op(MVM_OP_sp_getarg_u);
                     named_ins[i]->operands[1].lit_i16 = found_idx;
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                 }
                 else if (found_flag & MVM_CALLSITE_ARG_OBJ
                         && prim_spec(tc, type_tuple, found_flag_idx) == MVM_STORAGE_SPEC_BP_UINT64) {
                     named_ins[i]->operands[1].lit_i16 = found_idx;
                     pos_unbox(tc, g, named_bb[i], named_ins[i], MVM_op_get_op(MVM_OP_decont_u));
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                 }
                 named_used++;
                 break;
@@ -842,13 +842,13 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                 if (found_flag & MVM_CALLSITE_ARG_NUM) {
                     named_ins[i]->info = MVM_op_get_op(MVM_OP_sp_getarg_n);
                     named_ins[i]->operands[1].lit_i16 = found_idx;
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                 }
                 else if (found_flag & MVM_CALLSITE_ARG_OBJ
                         && prim_spec(tc, type_tuple, found_flag_idx) == MVM_STORAGE_SPEC_BP_NUM) {
                     named_ins[i]->operands[1].lit_i16 = found_idx;
                     pos_unbox(tc, g, named_bb[i], named_ins[i], MVM_op_get_op(MVM_OP_decont_n));
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                 }
                 named_used++;
                 break;
@@ -856,27 +856,27 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                 if (found_flag & MVM_CALLSITE_ARG_STR) {
                     named_ins[i]->info = MVM_op_get_op(MVM_OP_sp_getarg_s);
                     named_ins[i]->operands[1].lit_i16 = found_idx;
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                 }
                 else if (found_flag & MVM_CALLSITE_ARG_OBJ
                         && prim_spec(tc, type_tuple, found_flag_idx) == MVM_STORAGE_SPEC_BP_STR) {
                     named_ins[i]->operands[1].lit_i16 = found_idx;
                     pos_unbox(tc, g, named_bb[i], named_ins[i], MVM_op_get_op(MVM_OP_decont_s));
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                 }
                 named_used++;
                 break;
             case MVM_OP_param_rn_o:
                 if (found_flag & MVM_CALLSITE_ARG_OBJ) {
-                    MVMuint16 arg_idx = found_idx;
+                    uint16_t arg_idx = found_idx;
                     named_ins[i]->info = MVM_op_get_op(MVM_OP_sp_getarg_o);
                     named_ins[i]->operands[1].lit_i16 = arg_idx;
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                     if (type_tuple && type_tuple[found_flag_idx].type)
                         add_facts(tc, g, arg_idx, type_tuple[found_flag_idx], named_ins[i]);
                 }
                 else if (found_flag & (MVM_CALLSITE_ARG_INT | MVM_CALLSITE_ARG_UINT | MVM_CALLSITE_ARG_NUM | MVM_CALLSITE_ARG_STR)) {
-                    MVMuint16 arg_idx = found_idx;
+                    uint16_t arg_idx = found_idx;
                     named_ins[i]->operands[1].lit_i16 = arg_idx;
                     if (found_flag & MVM_CALLSITE_ARG_INT)
                         pos_box(tc, g, named_bb[i], named_ins[i],
@@ -894,7 +894,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                         pos_box(tc, g, named_bb[i], named_ins[i],
                             MVM_op_get_op(MVM_OP_hllboxtype_s), MVM_op_get_op(MVM_OP_box_s),
                             MVM_op_get_op(MVM_OP_sp_getarg_s), MVM_reg_str);
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                 }
                 named_used++;
                 break;
@@ -910,7 +910,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                         named_ins[i]->operands[2].ins_bb);
                     MVM_spesh_manipulate_remove_successor(tc, named_bb[i],
                         named_bb[i]->linear_next);
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                     named_used++;
                 }
                 else if (found_flag & MVM_CALLSITE_ARG_OBJ
@@ -921,7 +921,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                         named_ins[i]->operands[2].ins_bb);
                     MVM_spesh_manipulate_remove_successor(tc, named_bb[i],
                         named_bb[i]->linear_next);
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                     named_used++;
                 }
                 break;
@@ -937,7 +937,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                         named_ins[i]->operands[2].ins_bb);
                     MVM_spesh_manipulate_remove_successor(tc, named_bb[i],
                         named_bb[i]->linear_next);
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                     named_used++;
                 }
                 else if (found_flag & MVM_CALLSITE_ARG_OBJ
@@ -948,7 +948,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                         named_ins[i]->operands[2].ins_bb);
                     MVM_spesh_manipulate_remove_successor(tc, named_bb[i],
                         named_bb[i]->linear_next);
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                     named_used++;
                 }
                 break;
@@ -964,7 +964,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                         named_ins[i]->operands[2].ins_bb);
                     MVM_spesh_manipulate_remove_successor(tc, named_bb[i],
                         named_bb[i]->linear_next);
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                     named_used++;
                 }
                 else if (found_flag & MVM_CALLSITE_ARG_OBJ
@@ -975,7 +975,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                         named_ins[i]->operands[2].ins_bb);
                     MVM_spesh_manipulate_remove_successor(tc, named_bb[i],
                         named_bb[i]->linear_next);
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                     named_used++;
                 }
                 break;
@@ -991,7 +991,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                         named_ins[i]->operands[2].ins_bb);
                     MVM_spesh_manipulate_remove_successor(tc, named_bb[i],
                         named_bb[i]->linear_next);
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                     named_used++;
                 }
                 else if (found_flag & MVM_CALLSITE_ARG_OBJ
@@ -1002,7 +1002,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                         named_ins[i]->operands[2].ins_bb);
                     MVM_spesh_manipulate_remove_successor(tc, named_bb[i],
                         named_bb[i]->linear_next);
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                     named_used++;
                 }
                 break;
@@ -1012,20 +1012,20 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                     MVM_spesh_manipulate_remove_successor(tc, named_bb[i], named_ins[i]->operands[2].ins_bb);
                 }
                 else if (found_flag & MVM_CALLSITE_ARG_OBJ) {
-                    MVMuint16 arg_idx = found_idx;
+                    uint16_t arg_idx = found_idx;
                     named_ins[i]->info = MVM_op_get_op(MVM_OP_sp_getarg_o);
                     named_ins[i]->operands[1].lit_i16 = arg_idx;
                     MVM_spesh_manipulate_insert_goto(tc, g, named_bb[i], named_ins[i],
                         named_ins[i]->operands[2].ins_bb);
                     MVM_spesh_manipulate_remove_successor(tc, named_bb[i],
                         named_bb[i]->linear_next);
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                     if (type_tuple && type_tuple[found_flag_idx].type)
                         add_facts(tc, g, arg_idx, type_tuple[found_flag_idx], named_ins[i]);
                     named_used++;
                 }
                 else if (found_flag & (MVM_CALLSITE_ARG_INT | MVM_CALLSITE_ARG_UINT | MVM_CALLSITE_ARG_NUM | MVM_CALLSITE_ARG_STR)) {
-                    MVMuint16 arg_idx = found_idx;
+                    uint16_t arg_idx = found_idx;
                     named_ins[i]->operands[1].lit_i16 = arg_idx;
                     if (found_flag & MVM_CALLSITE_ARG_INT)
                         pos_box(tc, g, named_bb[i], named_ins[i],
@@ -1047,7 +1047,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
                         named_ins[i]->operands[2].ins_bb);
                     MVM_spesh_manipulate_remove_successor(tc, named_bb[i],
                         named_bb[i]->linear_next);
-                    named_used_bit_field |= (MVMuint64)1 << cur_named;
+                    named_used_bit_field |= (uint64_t)1 << cur_named;
                     named_used++;
                 }
                 break;
@@ -1066,9 +1066,9 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
             /* Otherwise, we have unexpected named arguments. Turn it into an
              * error. */
             else {
-                MVMuint16 i;
+                uint16_t i;
                 for (i = 0; i < named_passed; i++) {
-                    if (!(named_used_bit_field & ((MVMuint64)1 << i))) {
+                    if (!(named_used_bit_field & ((uint64_t)1 << i))) {
                         paramnamesused_ins->info = MVM_op_get_op(MVM_OP_sp_paramnamesused);
                         paramnamesused_ins->operands = MVM_spesh_alloc(tc,
                             g, sizeof(MVMSpeshOperand));
@@ -1102,7 +1102,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
              * the way. */
             if (named_passed > named_used)
                 for (i = 0; i < named_passed; i++)
-                    if (!(named_used_bit_field & ((MVMuint64)1 << i)))
+                    if (!(named_used_bit_field & ((uint64_t)1 << i)))
                         slurp_named_arg(tc, g, param_sn_bb, param_sn_ins, i);
         }
 

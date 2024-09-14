@@ -10,14 +10,14 @@ struct MVMExceptionBody {
     int32_t category;
 
     /* Flag indicating if we should return after unwinding. */
-    MVMuint8 return_after_unwind;
+    uint8_t return_after_unwind;
 
     /* Where was the exception thrown from? */
     MVMFrame *origin;
-    MVMuint8 *throw_address;
+    uint8_t *throw_address;
 
     /* Where should we resume to, if it's possible? */
-    MVMuint8 *resume_addr;
+    uint8_t *resume_addr;
     void     *jit_resume_label;
 };
 struct MVMException {

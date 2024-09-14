@@ -412,9 +412,9 @@ be worth it.
  */
 
 struct MVMStrHashTableControl {
-    MVMuint64 salt;
+    uint64_t salt;
 #if HASH_DEBUG_ITER
-    MVMuint64 ht_id;
+    uint64_t ht_id;
     uint32_t serial;
     uint32_t last_delete_at;
 #endif
@@ -427,25 +427,25 @@ struct MVMStrHashTableControl {
      * result, and insert will immediately allocate the default minimum size. */
     MVMHashNumItems cur_items;
     MVMHashNumItems max_items; /* hit this and we grow */
-    MVMuint8 official_size_log2;
-    MVMuint8 key_right_shift;
-    MVMuint8 entry_size;
+    uint8_t official_size_log2;
+    uint8_t key_right_shift;
+    uint8_t entry_size;
     /* This is the maximum probe distance we can use without updating the
      * metadata. It might not *yet* be the maximum probe distance possible for
      * the official_size. */
-    MVMuint8 max_probe_distance;
+    uint8_t max_probe_distance;
     /* This is the maximum probe distance possible for the official size.
      * We can (re)calcuate this from other values in the struct, but it's easier
      * to cache it as we have the space. */
-    MVMuint8 max_probe_distance_limit;
-    MVMuint8 metadata_hash_bits;
+    uint8_t max_probe_distance_limit;
+    uint8_t metadata_hash_bits;
     /* This is set to 0 when the control structure is allocated. When the hash
      * expands (and needs a new larger allocation) this is set to 1 in the
      * soon-to-be-freed memory, and the memory is scheduled to be released at
      * the next safe point. This way avoid C-level use-after-free if threads
      * attempt to mutate the same hash concurrently, and hopefully can spot at
      * least some cases and fault them, often enough for bugs to be noticed. */
-    volatile MVMuint8 stale;
+    volatile uint8_t stale;
 };
 
 struct MVMStrHashTable {
@@ -460,7 +460,7 @@ typedef struct {
     uint32_t pos;
 #if HASH_DEBUG_ITER
     uint32_t serial;
-    MVMuint64 owner;
+    uint64_t owner;
 #endif
 }  MVMStrHashIterator;
 
@@ -498,7 +498,7 @@ MVM_STATIC_INLINE int MVM_str_hash_at_end(MVMThreadContext *tc,
     }
 #if HASH_DEBUG_ITER
     struct MVMStrHashTableControl *control = hashtable->table;
-    MVMuint64 ht_id = control ? control->ht_id : 0;
+    uint64_t ht_id = control ? control->ht_id : 0;
     if (iterator.owner != ht_id) {
         MVM_oops(tc, "MVM_str_hash_at_end called with an iterator from a different hash table: %016" PRIx64 " != %016" PRIx64,
                  iterator.owner, ht_id);

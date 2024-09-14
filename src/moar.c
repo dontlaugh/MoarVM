@@ -34,9 +34,9 @@ static void setup_std_handles(MVMThreadContext *tc);
 static FILE *fopen_perhaps_with_pid(char *env_var, char *path, const char *mode) {
     FILE *result;
     if (strstr(path, "%d")) {
-        MVMuint64 path_length = strlen(path);
-        MVMuint64 found_percents = 0;
-        MVMuint64 i;
+        uint64_t path_length = strlen(path);
+        uint64_t found_percents = 0;
+        uint64_t i;
 
         /* Let's sanitize the format string a bit. Must only have
          * a single printf-recognized directive. */
@@ -55,7 +55,7 @@ static FILE *fopen_perhaps_with_pid(char *env_var, char *path, const char *mode)
             result = MVM_platform_fopen(path, mode);
         } else {
             char *fixed_path = MVM_malloc(path_length + 16);
-            MVMint64 pid = MVM_proc_getpid(NULL);
+            int64_t pid = MVM_proc_getpid(NULL);
             /* We make the brave assumption that
              * pids only go up to 16 characters. */
             snprintf(fixed_path, path_length + 16, path, pid);
@@ -73,7 +73,7 @@ static FILE *fopen_perhaps_with_pid(char *env_var, char *path, const char *mode)
     exit(1);
 }
 
-MVM_STATIC_INLINE MVMuint64 ptr_hash_64_to_64(MVMuint64 u) {
+MVM_STATIC_INLINE uint64_t ptr_hash_64_to_64(uint64_t u) {
     /* Thomas Wong's hash from
      * https://web.archive.org/web/20120211151329/http://www.concentric.net/~Ttwang/tech/inthash.htm */
     u = (~u) + (u << 21);
@@ -83,7 +83,7 @@ MVM_STATIC_INLINE MVMuint64 ptr_hash_64_to_64(MVMuint64 u) {
     u =  (u  + (u <<  2)) + (u << 4);
     u =   u  ^ (u >> 28);
     u =   u  + (u << 31);
-    return (MVMuint64)u;
+    return (uint64_t)u;
 }
 
 #ifdef MVM_THREAD_LOCAL
@@ -126,7 +126,7 @@ MVMInstance * MVM_vm_create_instance(void) {
 
 #if MVM_HASH_RANDOMIZE
     /* Get the 128-bit hashSecret */
-    MVM_getrandom(instance->main_thread, instance->hashSecrets, sizeof(MVMuint64) * 2);
+    MVM_getrandom(instance->main_thread, instance->hashSecrets, sizeof(uint64_t) * 2);
     /* Just in case MVM_getrandom didn't work, XOR it with some (poorly) randomized data */
     instance->hashSecrets[0] ^= ptr_hash_64_to_64((uintptr_t)instance);
     instance->hashSecrets[1] ^= MVM_proc_getpid(instance->main_thread) * MVM_platform_now();
@@ -479,7 +479,7 @@ static void toplevel_initial_invoke(MVMThreadContext *tc, void *data) {
  * code. */
 static void run_deserialization_frame(MVMThreadContext *tc, MVMCompUnit *cu) {
     if (cu->body.deserialize_frame) {
-        MVMint8 spesh_enabled_orig = tc->instance->spesh_enabled;
+        int8_t spesh_enabled_orig = tc->instance->spesh_enabled;
         tc->instance->spesh_enabled = 0;
         MVM_interp_run(tc, toplevel_initial_invoke, cu->body.deserialize_frame, NULL);
         tc->instance->spesh_enabled = spesh_enabled_orig;
@@ -506,7 +506,7 @@ void MVM_vm_run_file(MVMInstance *instance, const char *filename) {
 }
 
 /* Loads bytecode from memory and runs it. */
-void MVM_vm_run_bytecode(MVMInstance *instance, MVMuint8 *bytes, uint32_t size) {
+void MVM_vm_run_bytecode(MVMInstance *instance, uint8_t *bytes, uint32_t size) {
     /* Map the compilation unit into memory and dissect it. */
     MVMThreadContext *tc = instance->main_thread;
     MVMCompUnit      *cu = MVM_cu_from_bytes(tc, bytes, size);
@@ -525,7 +525,7 @@ void MVM_vm_dump_file(MVMInstance *instance, const char *filename) {
     void        *block       = NULL;
     void        *handle      = NULL;
     uv_file      fd;
-    MVMuint64    size;
+    uint64_t    size;
     uv_fs_t req;
 
     /* Ensure the file exists, and get its size. */

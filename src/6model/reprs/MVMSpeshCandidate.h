@@ -8,13 +8,13 @@ struct MVMSpeshCandidateBody {
     MVMSpeshStatsType *type_tuple;
 
     /* Has the candidated been discarded? */
-    MVMuint8 discarded;
+    uint8_t discarded;
 
     /* Length of the specialized bytecode in bytes. */
     uint32_t bytecode_size;
 
     /* The specialized bytecode. */
-    MVMuint8 *bytecode;
+    uint8_t *bytecode;
 
     /* Frame handlers for this specialization. */
     MVMFrameHandler *handlers;
@@ -33,7 +33,7 @@ struct MVMSpeshCandidateBody {
 
     /* Bit field of named args used to put in place during deopt, since we
      * typically don't update the array in specialized code. */
-    MVMuint64 deopt_named_used_bit_field;
+    uint64_t deopt_named_used_bit_field;
 
     /* Deopt information produced by escape analysis and scalar replacement. */
     MVMSpeshPEADeopt deopt_pea;
@@ -48,17 +48,17 @@ struct MVMSpeshCandidateBody {
     uint32_t num_resume_inits;
 
     /* The list of local types (only set up if we do inlines). */
-    MVMuint16 *local_types;
+    uint16_t *local_types;
 
     /* The list of lexical types (only set up if we do inlines). */
-    MVMuint16 *lexical_types;
+    uint16_t *lexical_types;
 
     /* Number of locals the specialized code has (may be different from the
      * original frame thanks to inlining). */
-    MVMuint16 num_locals;
+    uint16_t num_locals;
 
     /* Number of lexicals the specialized code has. */
-    MVMuint16 num_lexicals;
+    uint16_t num_lexicals;
 
     /* Memory sizes to allocate for work/env, taking into account inlining. */
     uint32_t work_size;

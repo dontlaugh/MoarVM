@@ -20,8 +20,8 @@ struct MVMIterBody {
             MVMStrHashIterator next;
         } hash_state;
         struct {
-            MVMint64 index;
-            MVMint64 limit;
+            int64_t index;
+            int64_t limit;
         } array_state;
     };
 };
@@ -34,21 +34,21 @@ struct MVMIter {
 const MVMREPROps * MVMIter_initialize(MVMThreadContext *tc);
 
 MVMObject * MVM_iter(MVMThreadContext *tc, MVMObject *target);
-MVMint64 MVM_iter_istrue(MVMThreadContext *tc, MVMIter *iter);
+int64_t MVM_iter_istrue(MVMThreadContext *tc, MVMIter *iter);
 MVMString * MVM_iterkey_s(MVMThreadContext *tc, MVMIter *iterator);
 MVMObject * MVM_iterval(MVMThreadContext *tc, MVMIter *iterator);
 
-MVM_STATIC_INLINE MVMint64 MVM_iter_istrue_array(MVMThreadContext *tc, MVMIter *iterator) {
+MVM_STATIC_INLINE int64_t MVM_iter_istrue_array(MVMThreadContext *tc, MVMIter *iterator) {
     return iterator->body.array_state.index + 1 < iterator->body.array_state.limit ? 1 : 0;
 }
 
-MVM_STATIC_INLINE MVMint64 MVM_iter_istrue_hash(MVMThreadContext *tc, MVMIter *iterator) {
+MVM_STATIC_INLINE int64_t MVM_iter_istrue_hash(MVMThreadContext *tc, MVMIter *iterator) {
     MVMIterBody *body = &iterator->body;
     MVMStrHashTable *hashtable = &(((MVMHash *)body->target)->body.hashtable);
 
 #if HASH_DEBUG_ITER
     struct MVMStrHashTableControl *control = hashtable->table;
-    MVMuint64 ht_id = control ? control->ht_id : 0;
+    uint64_t ht_id = control ? control->ht_id : 0;
     if (body->hash_state.curr.owner != ht_id) {
         MVM_oops(tc, "MVM_iter_istruehash called with an iterator from a different hash table: %016" PRIx64 " != %016" PRIx64,
                  body->hash_state.curr.owner, control ? control->ht_id : 0);

@@ -638,7 +638,7 @@ static void run_resume(MVMThreadContext *tc, MVMCallStackDispatchRecord *record,
 /* Gets the size of the inline cache at the site we're currently recording a
  * dispatch program for. (Useful for when dispatchers want to do something
  * different when there's megamorphic callsites.) */
-MVMint64 MVM_disp_program_record_get_inline_cache_size(MVMThreadContext *tc) {
+int64_t MVM_disp_program_record_get_inline_cache_size(MVMThreadContext *tc) {
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
     return record->rec.inline_cache_size;
 }
@@ -1512,7 +1512,7 @@ MVMObject * MVM_disp_program_record_capture_insert_constant_arg(MVMThreadContext
 /* Check if an argument in a capture is a literal, either due to being flagged
  * that way in the callsite, or because it was a literal value that was
  * inserted into the capture. */
-MVMint64 MVM_disp_program_record_capture_is_arg_literal(MVMThreadContext *tc,
+int64_t MVM_disp_program_record_capture_is_arg_literal(MVMThreadContext *tc,
         MVMObject *capture, uint32_t index) {
     /* Obtain the value from the capture to ensure it is in range. */
     MVMRegister value;
@@ -1708,7 +1708,7 @@ static MVMObject * resume_init_capture(MVMThreadContext *tc, MVMDispResumptionDa
     rec_resumption->initial_resume_args = callsite->flag_count
             ? MVM_malloc(callsite->flag_count * sizeof(MVMRegister))
             : NULL;
-    for (MVMuint16 i = 0; i < callsite->flag_count; i++)
+    for (uint16_t i = 0; i < callsite->flag_count; i++)
         rec_resumption->initial_resume_args[i] = MVM_disp_resume_get_init_arg(tc,
                 resume_data, i);
     MVMArgs arg_info = {
@@ -2057,13 +2057,13 @@ typedef struct {
     uint32_t args_buffer_temps;
 } compile_state;
 static uint32_t add_program_constant_int(MVMThreadContext *tc, compile_state *cs,
-        MVMint64 value) {
+        int64_t value) {
     MVMDispProgramConstant c = { .i64 = value };
     MVM_VECTOR_PUSH(cs->constants, c);
     return MVM_VECTOR_ELEMS(cs->constants) - 1;
 }
 static uint32_t add_program_constant_num(MVMThreadContext *tc, compile_state *cs,
-        MVMnum64 value) {
+        double value) {
     MVMDispProgramConstant c = { .n64 = value };
     MVM_VECTOR_PUSH(cs->constants, c);
     return MVM_VECTOR_ELEMS(cs->constants) - 1;
@@ -2260,7 +2260,7 @@ static void emit_capture_guards(MVMThreadContext *tc, compile_state *cs,
                  * type and concreteness. */
                 MVMDispProgramOp op;
                 op.code = MVMDispOpcodeGuardArgLiteralObj;
-                op.arg_guard.arg_idx = (MVMuint16)index;
+                op.arg_guard.arg_idx = (uint16_t)index;
                 op.arg_guard.checkee = add_program_constant_obj(tc, cs,
                         MVM_capture_arg_o(tc, capture_obj, index));
                 MVM_VECTOR_PUSH(cs->ops, op);
@@ -2275,7 +2275,7 @@ static void emit_capture_guards(MVMThreadContext *tc, compile_state *cs,
                                 : MVMDispOpcodeGuardArgTypeTypeObject;
                     else
                         op.code = MVMDispOpcodeGuardArgType;
-                    op.arg_guard.arg_idx = (MVMuint16)index;
+                    op.arg_guard.arg_idx = (uint16_t)index;
                     op.arg_guard.checkee = add_program_constant_stable(tc, cs,
                             STABLE(value));
                     MVM_VECTOR_PUSH(cs->ops, op);
@@ -2287,7 +2287,7 @@ static void emit_capture_guards(MVMThreadContext *tc, compile_state *cs,
                         op.code = IS_CONCRETE(value)
                                 ? MVMDispOpcodeGuardArgConc
                                 : MVMDispOpcodeGuardArgTypeObject;
-                        op.arg_guard.arg_idx = (MVMuint16)index;
+                        op.arg_guard.arg_idx = (uint16_t)index;
                         MVM_VECTOR_PUSH(cs->ops, op);
                     }
                     if (v->guard_hll) {
@@ -2295,7 +2295,7 @@ static void emit_capture_guards(MVMThreadContext *tc, compile_state *cs,
                         MVMHLLConfig *hll = STABLE(value)->hll_owner;
                         MVMDispProgramOp op;
                         op.code = MVMDispOpcodeGuardArgHLL;
-                        op.arg_guard.arg_idx = (MVMuint16)index;
+                        op.arg_guard.arg_idx = (uint16_t)index;
                         op.arg_guard.checkee = add_program_constant_hll(tc, cs, hll);
                         MVM_VECTOR_PUSH(cs->ops, op);
                     }
@@ -2304,7 +2304,7 @@ static void emit_capture_guards(MVMThreadContext *tc, compile_state *cs,
                 for (i = 0; i < MVM_VECTOR_ELEMS(v->not_literal_guards); i++) {
                     MVMDispProgramOp op;
                     op.code = MVMDispOpcodeGuardArgNotLiteralObj;
-                    op.arg_guard.arg_idx = (MVMuint16)index;
+                    op.arg_guard.arg_idx = (uint16_t)index;
                     op.arg_guard.checkee = add_program_constant_obj(tc, cs,
                             v->not_literal_guards[i]);
                     MVM_VECTOR_PUSH(cs->ops, op);
@@ -2315,7 +2315,7 @@ static void emit_capture_guards(MVMThreadContext *tc, compile_state *cs,
             if (v->guard_literal) {
                 MVMDispProgramOp op;
                 op.code = MVMDispOpcodeGuardArgLiteralStr;
-                op.arg_guard.arg_idx = (MVMuint16)index;
+                op.arg_guard.arg_idx = (uint16_t)index;
                 op.arg_guard.checkee = add_program_constant_str(tc, cs,
                         MVM_capture_arg_pos_s(tc, capture_obj, index));
                 MVM_VECTOR_PUSH(cs->ops, op);
@@ -2326,7 +2326,7 @@ static void emit_capture_guards(MVMThreadContext *tc, compile_state *cs,
             if (v->guard_literal) {
                 MVMDispProgramOp op;
                 op.code = MVMDispOpcodeGuardArgLiteralInt;
-                op.arg_guard.arg_idx = (MVMuint16)index;
+                op.arg_guard.arg_idx = (uint16_t)index;
                 op.arg_guard.checkee = add_program_constant_int(tc, cs,
                         MVM_capture_arg_pos_i(tc, capture_obj, index));
                 MVM_VECTOR_PUSH(cs->ops, op);
@@ -2336,7 +2336,7 @@ static void emit_capture_guards(MVMThreadContext *tc, compile_state *cs,
             if (v->guard_literal) {
                 MVMDispProgramOp op;
                 op.code = MVMDispOpcodeGuardArgLiteralInt;
-                op.arg_guard.arg_idx = (MVMuint16)index;
+                op.arg_guard.arg_idx = (uint16_t)index;
                 op.arg_guard.checkee = add_program_constant_num(tc, cs,
                         MVM_capture_arg_pos_n(tc, capture_obj, index));
                 MVM_VECTOR_PUSH(cs->ops, op);
@@ -2703,11 +2703,11 @@ static void produce_resumption_init_values(MVMThreadContext *tc, compile_state *
 
     /* Allocate storage for the resumption init value sources according to
      * the callsite size. */
-    MVMuint16 arg_count = init_capture->body.callsite->flag_count;
+    uint16_t arg_count = init_capture->body.callsite->flag_count;
     res->init_values = MVM_malloc(arg_count * sizeof(MVMDispProgramResumptionInitValue));
 
     /* Go through the capture and source each value. */
-    for (MVMuint16 i = 0; i < arg_count; i++) {
+    for (uint16_t i = 0; i < arg_count; i++) {
         int32_t j;
         uint32_t real_index = i;
         int32_t found_value_index = -1;
@@ -3155,8 +3155,8 @@ uint32_t MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatchR
         case MVM_DISP_OUTCOME_BYTECODE: {
             MVMDispProgramRecordingBindControlKind bind_control_kind =
                 record->rec.map_bind_outcome_to_resumption;
-            MVMint64 bind_failure_resumption_flag = record->rec.bind_failure_resumption_flag;
-            MVMint64 bind_success_resumption_flag = record->rec.bind_success_resumption_flag;
+            int64_t bind_failure_resumption_flag = record->rec.bind_failure_resumption_flag;
+            int64_t bind_success_resumption_flag = record->rec.bind_success_resumption_flag;
             process_recording(tc, record);
             MVM_disp_program_recording_destroy(tc, &(record->rec));
             record->common.kind = MVM_CALLSTACK_RECORD_DISPATCH_RECORDED;
@@ -3218,7 +3218,7 @@ uint32_t MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatchR
 #endif
 #define GET_ARG MVMRegister val = args->source[args->map[op.arg_guard.arg_idx]]
 #define MAX_RES_STATES 8
-MVMint64 MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
+int64_t MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
         MVMCallStackDispatchRun *record, int32_t spesh_cid, uint32_t bytecode_offset,
         uint32_t dp_index) {
 #if MVM_CGOTO
@@ -3229,7 +3229,7 @@ MVMint64 MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
      * program. */
     MVMObject **resume_state_targets[MAX_RES_STATES];
     MVMObject *resume_state_values[MAX_RES_STATES];
-    MVMuint8 num_resume_states = 0;
+    uint8_t num_resume_states = 0;
 
     MVMArgs *args = &(record->arg_info);
     uint32_t i = 0 ;
@@ -3688,7 +3688,7 @@ void MVM_disp_program_mark_recording(MVMThreadContext *tc, MVMDispProgramRecordi
             mark_recording_capture(tc, &(resumption->initial_resume_capture), worklist, snapshot);
             if (resumption->initial_resume_args) {
                 MVMCallsite *init_callsite = ((MVMCapture *)resumption->initial_resume_capture.capture)->body.callsite;
-                for (MVMuint16 j = 0; j < init_callsite->flag_count; j++) {
+                for (uint16_t j = 0; j < init_callsite->flag_count; j++) {
                     MVMCallsiteFlags flag = init_callsite->arg_flags[j] & MVM_CALLSITE_ARG_TYPE_MASK;
                     if (flag == MVM_CALLSITE_ARG_OBJ || flag == MVM_CALLSITE_ARG_STR)
                         add_collectable(tc, worklist, snapshot,

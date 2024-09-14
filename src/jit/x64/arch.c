@@ -26,7 +26,7 @@ const MVMBitmap MVM_JIT_AVAILABLE_REGISTERS =
     R(CX)|R(DX)|R(SI)|R(DI)|R(8)|R(9)|R(10)|R(11)|
     XMM(1)|XMM(2)|XMM(3)|XMM(4)|XMM(5)|XMM(6)|XMM(7);
 
-static const MVMint8 arg_gpr[] = {
+static const int8_t arg_gpr[] = {
     MVM_JIT_REG(RDI),
     MVM_JIT_REG(RSI),
     MVM_JIT_REG(RDX),
@@ -35,7 +35,7 @@ static const MVMint8 arg_gpr[] = {
     MVM_JIT_REG(R9),
 };
 
-static const MVMint8 arg_fpr[] = {
+static const int8_t arg_fpr[] = {
     MVM_JIT_REG(XMM0),
     MVM_JIT_REG(XMM1),
     MVM_JIT_REG(XMM2),
@@ -81,14 +81,14 @@ const MVMBitmap MVM_JIT_RESERVED_REGISTERS =
 const MVMBitmap MVM_JIT_AVAILABLE_REGISTERS =
     R(CX)|R(DX)|R(8)|R(9)|R(10)|R(11)|XMM(1)|XMM(2)|XMM(3)|XMM(4)|XMM(5);
 
-static const MVMint8 arg_gpr[] = {
+static const int8_t arg_gpr[] = {
     MVM_JIT_REG(RCX),
     MVM_JIT_REG(RDX),
     MVM_JIT_REG(R8),
     MVM_JIT_REG(R9),
 };
 
-static const MVMint8 arg_fpr[] = {
+static const int8_t arg_fpr[] = {
     MVM_JIT_REG(XMM0),
     MVM_JIT_REG(XMM1),
     MVM_JIT_REG(XMM2),
@@ -125,7 +125,7 @@ void MVM_jit_arch_storage_for_arglist(MVMThreadContext *tc, MVMJitCompiler *comp
 #error "Unknown platform " MVM_JIT_PLATFORM
 #endif
 
-MVMJitStorageClass MVM_jit_arch_register_class(MVMuint8 reg_id) {
+MVMJitStorageClass MVM_jit_arch_register_class(uint8_t reg_id) {
     if (reg_id >= MVM_JIT_REG(XMM0))
         return MVM_JIT_STORAGE_FPR;
     return MVM_JIT_STORAGE_GPR;

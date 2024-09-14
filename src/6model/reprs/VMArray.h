@@ -7,28 +7,28 @@
  * Patrick Michaud. */
 struct MVMArrayBody {
     /* number of elements (from user's point of view) */
-    MVMuint64   elems;
+    uint64_t   elems;
 
     /* slot index of first element */
-    MVMuint64   start;
+    uint64_t   start;
 
     /* size of slots array */
-    MVMuint64   ssize;
+    uint64_t   ssize;
 
     /* slot array; union of various types of storage we may have. */
     union {
         MVMObject **o;
         MVMString **s;
-        MVMint64   *i64;
+        int64_t   *i64;
         int32_t   *i32;
-        MVMint16   *i16;
-        MVMint8    *i8;
-        MVMnum64   *n64;
-        MVMnum32   *n32;
-        MVMuint64  *u64;
+        int16_t   *i16;
+        int8_t    *i8;
+        double   *n64;
+        float   *n32;
+        uint64_t  *u64;
         uint32_t  *u32;
-        MVMuint16  *u16;
-        MVMuint8   *u8;
+        uint16_t  *u16;
+        uint8_t   *u8;
         void       *any;
     } slots;
 
@@ -70,13 +70,13 @@ struct MVMArrayREPRData {
     size_t elem_size;
 
     /* What type of slots we have. */
-    MVMuint8 slot_type;
+    uint8_t slot_type;
 
     /* Type object for the element type. */
     MVMObject *elem_type;
 };
-void MVM_VMArray_at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister *value, MVMuint16 kind);
-void *MVM_VMArray_find_fast_impl_for_jit(MVMThreadContext *tc, MVMSTable *st, MVMint16 op, MVMuint16 kind);
-void MVM_VMArray_bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister value, MVMuint16 kind);
+void MVM_VMArray_at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind);
+void *MVM_VMArray_find_fast_impl_for_jit(MVMThreadContext *tc, MVMSTable *st, int16_t op, uint16_t kind);
+void MVM_VMArray_bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister value, uint16_t kind);
 
-void MVM_VMArray_push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, MVMuint16 kind);
+void MVM_VMArray_push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind);

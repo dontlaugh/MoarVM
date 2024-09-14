@@ -36,7 +36,7 @@ static void push_name_and_port(MVMThreadContext *tc, struct sockaddr_storage *na
     /* XXX windows support kludge. 64 bit is much too big, but we'll
      * get the proper data from the struct anyway, however windows
      * decides to declare it. */
-    MVMuint64 port;
+    uint64_t port;
     MVMObject *host_o;
     MVMObject *port_o;
     if (name) {
@@ -102,7 +102,7 @@ static void on_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const 
 
             /* Produce a buffer and push it. */
             res_buf      = (MVMArray *)MVM_repr_alloc_init(tc, ri->buf_type);
-            res_buf->body.slots.i8 = (MVMint8 *)buf->base;
+            res_buf->body.slots.i8 = (int8_t *)buf->base;
             res_buf->body.start    = 0;
             res_buf->body.ssize    = buf->len;
             res_buf->body.elems    = nread;
@@ -366,7 +366,7 @@ static const MVMAsyncTaskOps write_op_table = {
 
 static MVMAsyncTask * write_bytes_to(MVMThreadContext *tc, MVMOSHandle *h, MVMObject *queue,
                                      MVMObject *schedulee, MVMObject *buffer, MVMObject *async_type,
-                                     MVMString *host, MVMint64 port) {
+                                     MVMString *host, int64_t port) {
     MVMAsyncTask    *task;
     WriteInfo       *wi;
     struct sockaddr *dest_addr;
@@ -427,7 +427,7 @@ static const MVMAsyncTaskOps close_op_table = {
     NULL
 };
 
-static MVMint64 close_socket(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t close_socket(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncUDPSocketData *data = (MVMIOAsyncUDPSocketData *)h->body.data;
     MVMAsyncTask *task;
 
@@ -442,13 +442,13 @@ static MVMint64 close_socket(MVMThreadContext *tc, MVMOSHandle *h) {
     return 0;
 }
 
-static MVMint64 socket_is_tty(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_is_tty(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncUDPSocketData *data   = (MVMIOAsyncUDPSocketData *)h->body.data;
     uv_handle_t             *handle = (uv_handle_t *)data->handle;
-    return (MVMint64)(handle->type == UV_TTY);
+    return (int64_t)(handle->type == UV_TTY);
 }
 
-static MVMint64 socket_handle(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t socket_handle(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOAsyncUDPSocketData *data   = (MVMIOAsyncUDPSocketData *)h->body.data;
     uv_handle_t             *handle = (uv_handle_t *)data->handle;
     int        fd;
@@ -456,7 +456,7 @@ static MVMint64 socket_handle(MVMThreadContext *tc, MVMOSHandle *h) {
 
     uv_fileno(handle, &fh);
     fd = uv_open_osfhandle(fh);
-    return (MVMint64)fd;
+    return (int64_t)fd;
 }
 
 /* IO ops table, populated with functions. */
@@ -485,7 +485,7 @@ static const MVMIOOps op_table = {
 /* Info we convey about a socket setup task. */
 typedef struct {
     struct sockaddr  *bind_addr;
-    MVMint64          flags;
+    int64_t          flags;
 } SocketSetupInfo;
 
 /* Initilalize the UDP socket on the event loop. */
@@ -562,7 +562,7 @@ static const MVMAsyncTaskOps setup_op_table = {
 /* Creates a UDP socket and binds it to the specified host/port. */
 MVMObject * MVM_io_socket_udp_async(MVMThreadContext *tc, MVMObject *queue,
                                     MVMObject *schedulee, MVMString *host,
-                                    MVMint64 port, MVMint64 flags,
+                                    int64_t port, int64_t flags,
                                     MVMObject *async_type) {
     MVMAsyncTask    *task;
     SocketSetupInfo *ssi;

@@ -9,14 +9,14 @@
 
 #define E6 1000000
 
-MVMuint64 MVM_platform_now(void)
+uint64_t MVM_platform_now(void)
 {
-    union { FILETIME ft; MVMuint64 u; } now;
+    union { FILETIME ft; uint64_t u; } now;
     GetSystemTimeAsFileTime(&now.ft);
     return (now.u - OFFSET) * 100;
 }
 
-void MVM_platform_sleep(MVMnum64 second)
+void MVM_platform_sleep(double second)
 {
 
     DWORD millis = (DWORD)(second * 1000);
@@ -24,11 +24,11 @@ void MVM_platform_sleep(MVMnum64 second)
     Sleep(millis);
 }
 
-void MVM_platform_nanosleep(MVMuint64 nanos)
+void MVM_platform_nanosleep(uint64_t nanos)
 {
-    MVMuint64 now;
+    uint64_t now;
     DWORD millis;
-    const MVMuint64 end = MVM_platform_now() + nanos;
+    const uint64_t end = MVM_platform_now() + nanos;
 
     millis = (DWORD)((nanos + E6 - 1) / E6);
 
@@ -43,7 +43,7 @@ void MVM_platform_nanosleep(MVMuint64 nanos)
     }
 }
 
-void MVM_platform_decodelocaltime(MVMThreadContext *tc, MVMint64 time, MVMint64 decoded[]) {
+void MVM_platform_decodelocaltime(MVMThreadContext *tc, int64_t time, int64_t decoded[]) {
     const time_t t = (time_t)time;
     struct tm tm;
     errno_t error = localtime_s(&tm, &t);

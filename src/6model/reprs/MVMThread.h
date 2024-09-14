@@ -28,7 +28,7 @@ struct MVMThreadBody {
     AO_t stage;
 
     /* Thread's OS-level thread ID. */
-    MVMint64 native_thread_id;
+    int64_t native_thread_id;
 
     /* Copy of the VM-level thread ID (also stored in the ThreadContext while
      * the thread is alive). */

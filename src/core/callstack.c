@@ -14,7 +14,7 @@ static MVMCallStackRegion * allocate_region(size_t size) {
 /* Allocates a record in the current call stack region and returns it. Doesn't
  * check if growth is needed. Sets its previous record to the current stack
  * top, but does not itself update the stack top. */
-static MVMCallStackRecord * allocate_record_unchecked(MVMThreadContext *tc, MVMuint8 kind, size_t size) {
+static MVMCallStackRecord * allocate_record_unchecked(MVMThreadContext *tc, uint8_t kind, size_t size) {
     MVMCallStackRegion *region = tc->stack_current_region;
     MVMCallStackRecord *record = (MVMCallStackRecord *)region->alloc;
     record->prev = tc->stack_top;
@@ -53,7 +53,7 @@ static void next_oversize_region(MVMThreadContext *tc, size_t size) {
 }
 
 /* Gets the name of the callstack record type. */
-static char * record_name(MVMuint8 kind) {
+static char * record_name(uint8_t kind) {
     switch (kind) {
         case MVM_CALLSTACK_RECORD_START: return "start";
         case MVM_CALLSTACK_RECORD_START_REGION: return "start region";
@@ -78,7 +78,7 @@ static char * record_name(MVMuint8 kind) {
 /* Allocates a record, placing it in the current call stack region if possible
  * but moving to the next one if not. Sets its previous record to the current
  * stack top, but does not itself update the stack top. */
-static MVMCallStackRecord * allocate_record(MVMThreadContext *tc, MVMuint8 kind, size_t size) {
+static MVMCallStackRecord * allocate_record(MVMThreadContext *tc, uint8_t kind, size_t size) {
     MVMCallStackRegion *region = tc->stack_current_region;
     if ((region->alloc_limit - region->alloc) < (ptrdiff_t)size) {
         size_t start_size = sizeof(MVMCallStackRegion) + sizeof(MVMCallStackRegionStart);
@@ -321,7 +321,7 @@ MVMCallStackDispatchRun * MVM_callstack_allocate_dispatch_run(MVMThreadContext *
  * Neither the arg_flags nor the arg names list nor the source are zeroed, as
  * it is expected they will all be written during the flattening process. */
 MVMCallStackFlattening * MVM_callstack_allocate_flattening(MVMThreadContext *tc,
-        MVMuint16 num_args, MVMuint16 num_pos) {
+        uint16_t num_args, uint16_t num_pos) {
     /* Allocate. */
     size_t record_size = to_8_bytes(sizeof(MVMCallStackFlattening));
     size_t flags_size = to_8_bytes(num_args);
@@ -351,7 +351,7 @@ MVMCallStackFlattening * MVM_callstack_allocate_flattening(MVMThreadContext *tc,
 /* Allocate a callstack record for indicating that a bind failure in the
  * next frame on the stack should be handled via dispatch resumption. */
 MVMCallStackBindControl * MVM_callstack_allocate_bind_control_failure_only(
-        MVMThreadContext *tc, MVMint64 failure_flag) {
+        MVMThreadContext *tc, int64_t failure_flag) {
     tc->stack_top = allocate_record(tc, MVM_CALLSTACK_RECORD_BIND_CONTROL,
             sizeof(MVMCallStackBindControl));
     MVMCallStackBindControl *record = (MVMCallStackBindControl *)tc->stack_top;
@@ -363,7 +363,7 @@ MVMCallStackBindControl * MVM_callstack_allocate_bind_control_failure_only(
 /* Allocate a callstack record for indicating that a bind failure or success
  * in the next frame on the stack should be handled via dispatch resumption. */
 MVMCallStackBindControl * MVM_callstack_allocate_bind_control(MVMThreadContext *tc,
-        MVMint64 failure_flag, MVMint64 success_flag) {
+        int64_t failure_flag, int64_t success_flag) {
     tc->stack_top = allocate_record(tc, MVM_CALLSTACK_RECORD_BIND_CONTROL,
             sizeof(MVMCallStackBindControl));
     MVMCallStackBindControl *record = (MVMCallStackBindControl *)tc->stack_top;
@@ -534,7 +534,7 @@ MVMCallStackDispatchRecord * MVM_callstack_find_topmost_dispatch_recording(MVMTh
 /* Unwind the calls stack until we reach a prior bytecode frame. Returns a
  * true value if we should continue running code in the interpreter and
  * false if not. */
-static int is_bytecode_frame(MVMuint8 kind) {
+static int is_bytecode_frame(uint8_t kind) {
     switch (kind) {
         case MVM_CALLSTACK_RECORD_FRAME:
         case MVM_CALLSTACK_RECORD_HEAP_FRAME:
@@ -632,7 +632,7 @@ static void handle_bind_control(MVMThreadContext *tc, MVMCallStackBindControl *c
     MVMDispInlineCacheEntry *ice = *ice_ptr;
     MVMString *id = tc->instance->str_consts.boot_resume;
     MVMCallsite *callsite = MVM_callsite_get_common(tc, MVM_CALLSITE_ID_INT);
-    MVMuint16 *args_map = MVM_args_identity_map(tc, callsite);
+    uint16_t *args_map = MVM_args_identity_map(tc, callsite);
     ice->run_dispatch(tc, ice_ptr, ice, id, callsite, args_map, flag_ptr,
             control_record->sf, 0);
 }
@@ -659,9 +659,9 @@ MVM_STATIC_INLINE void cleanup_dispatch_run_record(MVMThreadContext *tc) {
         MVM_disp_resume_destroy_resumption_state(tc, &(disp_run->resumption_state));
     move_to_prev_record(tc);
 }
-MVM_STATIC_INLINE int32_t cleanup_dispatch_record_record(MVMThreadContext *tc, MVMuint8 exceptional) {
+MVM_STATIC_INLINE int32_t cleanup_dispatch_record_record(MVMThreadContext *tc, uint8_t exceptional) {
     if (!exceptional) {
-        MVMuint8 *bytecode_was = *(tc->interp_cur_op);
+        uint8_t *bytecode_was = *(tc->interp_cur_op);
         handle_end_of_dispatch_record(tc);
         if (*(tc->interp_cur_op) != bytecode_was)
             return 1;
@@ -691,7 +691,7 @@ MVM_STATIC_INLINE int32_t cleanup_bind_control_record(MVMThreadContext *tc) {
         return 0;
     }
 }
-MVM_STATIC_INLINE int32_t cleanup_special_return_record(MVMThreadContext *tc, MVMuint8 exceptional) {
+MVM_STATIC_INLINE int32_t cleanup_special_return_record(MVMThreadContext *tc, uint8_t exceptional) {
     MVMCallStackSpecialReturn *sr = (MVMCallStackSpecialReturn *)tc->stack_top;
     MVMSpecialReturn special_return = sr->special_return;
     MVMSpecialReturn special_unwind = sr->special_unwind;
@@ -699,7 +699,7 @@ MVM_STATIC_INLINE int32_t cleanup_special_return_record(MVMThreadContext *tc, MV
     move_to_prev_record(tc);
 
     /* Run the callback if present. */
-    MVMuint8 *bytecode_was = *(tc->interp_cur_op);
+    uint8_t *bytecode_was = *(tc->interp_cur_op);
     if (!exceptional && special_return) {
         MVM_callstack_unwind_to_frame(tc, exceptional);
         special_return(tc, data);
@@ -716,7 +716,7 @@ MVM_STATIC_INLINE int32_t cleanup_special_return_record(MVMThreadContext *tc, MV
 }
 
 /* Unwinds the callstack until a frame is on top */
-void MVM_callstack_unwind_to_frame(MVMThreadContext *tc, MVMuint8 exceptional) {
+void MVM_callstack_unwind_to_frame(MVMThreadContext *tc, uint8_t exceptional) {
     while (tc->stack_top && !is_bytecode_frame(tc->stack_top->kind)) {
         /* Ensure region and stack top are in a consistent state. */
         assert(tc->stack_current_region->start <= (char *)tc->stack_top);
@@ -775,7 +775,7 @@ void MVM_callstack_unwind_to_frame(MVMThreadContext *tc, MVMuint8 exceptional) {
 }
 
 /* Unwinds the frame on top of the callstack and the non-bytecode entries below it */
-MVMuint64 MVM_callstack_unwind_frame(MVMThreadContext *tc, MVMuint8 exceptional) {
+uint64_t MVM_callstack_unwind_frame(MVMThreadContext *tc, uint8_t exceptional) {
     int32_t thunked = 0;
     assert(is_bytecode_frame(tc->stack_top->kind));
 
@@ -966,11 +966,11 @@ static void mark(MVMThreadContext *tc, MVMCallStackRecord *from_record, MVMGCWor
             }
             case MVM_CALLSTACK_RECORD_FLATTENING: {
                 MVMCallStackFlattening *f_record = (MVMCallStackFlattening *)record;
-                MVMuint16 flagi;
+                uint16_t flagi;
                 MVMCallsite *cs = &f_record->produced_cs;
                 MVM_callsite_mark(tc, cs, worklist, snapshot);
                 for (flagi = 0; flagi < cs->flag_count; flagi++) {
-                    MVMuint8 flagtype = cs->arg_flags[flagi] & MVM_CALLSITE_ARG_TYPE_MASK;
+                    uint8_t flagtype = cs->arg_flags[flagi] & MVM_CALLSITE_ARG_TYPE_MASK;
                     if (flagtype == MVM_CALLSITE_ARG_OBJ || flagtype == MVM_CALLSITE_ARG_STR) {
                         add_collectable(tc, worklist, snapshot, f_record->arg_info.source[f_record->arg_info.map[flagi]].o,
                                 "Flattened callstack entry register value");
@@ -990,9 +990,9 @@ static void mark(MVMThreadContext *tc, MVMCallStackRecord *from_record, MVMGCWor
             case MVM_CALLSTACK_RECORD_ARGS_FROM_C: {
                 MVMCallStackArgsFromC *a_record = (MVMCallStackArgsFromC *)record;
                 MVMCallsite *cs = a_record->args.callsite;
-                MVMuint16 flagi;
+                uint16_t flagi;
                 for (flagi = 0; flagi < cs->flag_count; flagi++) {
-                    MVMuint8 flagtype = cs->arg_flags[flagi] & MVM_CALLSITE_ARG_TYPE_MASK;
+                    uint8_t flagtype = cs->arg_flags[flagi] & MVM_CALLSITE_ARG_TYPE_MASK;
                     if (flagtype == MVM_CALLSITE_ARG_OBJ || flagtype == MVM_CALLSITE_ARG_STR) {
                         add_collectable(tc, worklist, snapshot, a_record->args.source[flagi].o,
                                 "Argument from C");
@@ -1006,9 +1006,9 @@ static void mark(MVMThreadContext *tc, MVMCallStackRecord *from_record, MVMGCWor
                         "Deoptimized dispatch resume init state");
                 MVMCallsite *cs = dri->dpr->init_callsite;
                 MVMDispProgramResumptionInitValue *init_values = dri->dpr->init_values;
-                MVMuint16 flagi;
+                uint16_t flagi;
                 for (flagi = 0; flagi < cs->flag_count; flagi++) {
-                    MVMuint8 flagtype = cs->arg_flags[flagi] & MVM_CALLSITE_ARG_TYPE_MASK;
+                    uint8_t flagtype = cs->arg_flags[flagi] & MVM_CALLSITE_ARG_TYPE_MASK;
                     if (flagtype == MVM_CALLSITE_ARG_OBJ || flagtype == MVM_CALLSITE_ARG_STR) {
                         if (init_values == NULL ||
                                 init_values[flagi].source == MVM_DISP_RESUME_INIT_ARG ||

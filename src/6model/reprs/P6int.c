@@ -6,7 +6,7 @@
 /* This representation's function pointer table. */
 static const MVMREPROps P6int_this_repr;
 
-static void mk_storage_spec(MVMThreadContext *tc, MVMuint16 bits, MVMuint16 is_unsigned, MVMStorageSpec *spec) {
+static void mk_storage_spec(MVMThreadContext *tc, uint16_t bits, uint16_t is_unsigned, MVMStorageSpec *spec) {
     /* create storage spec */
     spec->inlineable      = MVM_STORAGE_SPEC_INLINED;
     spec->boxed_primitive = is_unsigned ? MVM_STORAGE_SPEC_BP_UINT64 : MVM_STORAGE_SPEC_BP_INT;
@@ -14,10 +14,10 @@ static void mk_storage_spec(MVMThreadContext *tc, MVMuint16 bits, MVMuint16 is_u
     spec->bits            = bits;
     spec->is_unsigned     = is_unsigned;
     switch (bits) {
-    case 64: spec->align = ALIGNOF(MVMint64); break;
+    case 64: spec->align = ALIGNOF(int64_t); break;
     case 32: spec->align = ALIGNOF(int32_t); break;
-    case 16: spec->align = ALIGNOF(MVMint16); break;
-    default: spec->align = ALIGNOF(MVMint8);  break;
+    case 16: spec->align = ALIGNOF(int16_t); break;
+    default: spec->align = ALIGNOF(int8_t);  break;
     }
 }
 
@@ -31,7 +31,7 @@ static MVMObject * type_object_for(MVMThreadContext *tc, MVMObject *HOW) {
         MVMObject *obj = MVM_gc_allocate_type_object(tc, st);
         MVMP6intREPRData *repr_data = (MVMP6intREPRData *)MVM_malloc(sizeof(MVMP6intREPRData));
 
-        repr_data->bits = sizeof(MVMint64) * 8;
+        repr_data->bits = sizeof(int64_t) * 8;
         repr_data->is_unsigned = 0;
         mk_storage_spec(tc, repr_data->bits, repr_data->is_unsigned, &repr_data->storage_spec);
         MVM_ASSIGN_REF(tc, &(st->header), st->WHAT, obj);
@@ -56,17 +56,17 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
     }
 }
 
-static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMuint64 value) {
+static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t value) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     switch (repr_data->bits) {
         case 64: ((MVMP6intBody *)data)->value.u64 = value; break;
         case 32: ((MVMP6intBody *)data)->value.u32 = (uint32_t)value; break;
-        case 16: ((MVMP6intBody *)data)->value.u16 = (MVMuint16)value; break;
-        default: ((MVMP6intBody *)data)->value.u8 = (MVMuint8)value; break;
+        case 16: ((MVMP6intBody *)data)->value.u16 = (uint16_t)value; break;
+        default: ((MVMP6intBody *)data)->value.u8 = (uint8_t)value; break;
     }
 }
 
-static MVMuint64 get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     switch (repr_data->bits) {
         case 64: return ((MVMP6intBody *)data)->value.u64;
@@ -76,17 +76,17 @@ static MVMuint64 get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, 
     }
 }
 
-void MVMP6int_set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 value) {
+void MVMP6int_set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t value) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     switch (repr_data->bits) {
         case 64: ((MVMP6intBody *)data)->value.i64 = value; break;
         case 32: ((MVMP6intBody *)data)->value.i32 = (int32_t)value; break;
-        case 16: ((MVMP6intBody *)data)->value.i16 = (MVMint16)value; break;
-        default: ((MVMP6intBody *)data)->value.i8 = (MVMint8)value; break;
+        case 16: ((MVMP6intBody *)data)->value.i16 = (int16_t)value; break;
+        default: ((MVMP6intBody *)data)->value.i8 = (int8_t)value; break;
     }
 }
 
-MVMint64 MVMP6int_get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+int64_t MVMP6int_get_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     switch (repr_data->bits) {
         case 64: return ((MVMP6intBody *)data)->value.i64;
@@ -103,8 +103,8 @@ static void gc_free_repr_data(MVMThreadContext *tc, MVMSTable *st) {
 
 static const MVMStorageSpec default_storage_spec = {
     MVM_STORAGE_SPEC_INLINED,     /* inlineable */
-    sizeof(MVMint64) * 8,         /* bits */
-    ALIGNOF(MVMint64),            /* align */
+    sizeof(int64_t) * 8,         /* bits */
+    ALIGNOF(int64_t),            /* align */
     MVM_STORAGE_SPEC_BP_INT,      /* boxed_primitive */
     MVM_STORAGE_SPEC_CAN_BOX_INT, /* can_box */
     0,                            /* is_unsigned */
@@ -184,7 +184,7 @@ static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerial
 
     if (repr_data->bits !=  1 && repr_data->bits !=  2 && repr_data->bits !=  4 && repr_data->bits != 8
      && repr_data->bits != 16 && repr_data->bits != 32 && repr_data->bits != 64) {
-        MVMint16 bits = repr_data->bits;
+        int16_t bits = repr_data->bits;
         MVM_free(repr_data);
         MVM_exception_throw_adhoc(tc, "MVMP6int: Unsupported int size (%dbit)", bits);
     }
@@ -224,7 +224,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
                 ins->operands[2].lit_i16 = MVM_spesh_add_spesh_slot(tc, g, (MVMCollectable *)st);
                 ins->operands[3].lit_i16 = offsetof(MVMP6int, body.value);
                 ins->operands[4] = orig_operands[1];
-                ins->operands[5].lit_i16 = (MVMint16)int_cache_type_idx;
+                ins->operands[5].lit_i16 = (int16_t)int_cache_type_idx;
                 MVM_spesh_usages_delete_by_reg(tc, g, orig_operands[2], ins);
                 tgt_facts->flags |= MVM_SPESH_FACT_KNOWN_TYPE | MVM_SPESH_FACT_CONCRETE;
                 tgt_facts->type = st->WHAT;
@@ -250,7 +250,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
                 ins->operands[2].lit_i16 = MVM_spesh_add_spesh_slot(tc, g, (MVMCollectable *)st);
                 ins->operands[3].lit_i16 = offsetof(MVMP6int, body.value);
                 ins->operands[4] = orig_operands[1];
-                ins->operands[5].lit_i16 = (MVMint16)int_cache_type_idx;
+                ins->operands[5].lit_i16 = (int16_t)int_cache_type_idx;
                 MVM_spesh_usages_delete_by_reg(tc, g, orig_operands[2], ins);
                 tgt_facts->flags |= MVM_SPESH_FACT_KNOWN_TYPE | MVM_SPESH_FACT_CONCRETE;
                 tgt_facts->type = st->WHAT;
@@ -260,7 +260,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
         case MVM_OP_unbox_i:
         case MVM_OP_decont_i: {
             int32_t bits = repr_data->bits;
-            MVMuint16 op = bits == 64 ? MVM_OP_sp_get_i64 :
+            uint16_t op = bits == 64 ? MVM_OP_sp_get_i64 :
                            bits == 32 ? MVM_OP_sp_get_i32 :
                            bits == 16 ? MVM_OP_sp_get_i16 :
                            bits == 8  ? MVM_OP_sp_get_i8  : 0;
@@ -283,7 +283,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
         case MVM_OP_unbox_u:
         case MVM_OP_decont_u: {
             int32_t bits = repr_data->bits;
-            MVMuint16 op = bits == 64 ? MVM_OP_sp_get_u64 :
+            uint16_t op = bits == 64 ? MVM_OP_sp_get_u64 :
                            bits == 32 ? MVM_OP_sp_get_u32 :
                            bits == 16 ? MVM_OP_sp_get_u16 :
                            bits == 8  ? MVM_OP_sp_get_u8  : 0;

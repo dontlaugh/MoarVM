@@ -14,11 +14,11 @@
 #define DEFAULT_MODE _S_IWRITE /* work around sucky libuv defaults */
 #endif
 
-static MVMint64 file_info_with_error(MVMThreadContext *tc, uv_stat_t* stat, MVMString *filename, int32_t use_lstat) {
+static int64_t file_info_with_error(MVMThreadContext *tc, uv_stat_t* stat, MVMString *filename, int32_t use_lstat) {
     char * const a = MVM_string_utf8_c8_encode_C_string(tc, filename);
     uv_fs_t req;
 
-    MVMint64 res = use_lstat
+    int64_t res = use_lstat
       ? uv_fs_lstat(NULL, &req, a, NULL)
       :  uv_fs_stat(NULL, &req, a, NULL);
     *stat = req.statbuf;
@@ -27,7 +27,7 @@ static MVMint64 file_info_with_error(MVMThreadContext *tc, uv_stat_t* stat, MVMS
     return res;
 }
 
-MVMint64 MVM_file_info_with_error(MVMThreadContext *tc, uv_stat_t* stat, MVMString *filename, int32_t use_lstat) {
+int64_t MVM_file_info_with_error(MVMThreadContext *tc, uv_stat_t* stat, MVMString *filename, int32_t use_lstat) {
     return file_info_with_error(tc, stat, filename, use_lstat);
 }
 
@@ -51,8 +51,8 @@ uv_stat_t MVM_file_info(MVMThreadContext *tc, MVMString *filename, int32_t use_l
     return file_info(tc, filename, use_lstat);
 }
 
-MVMint64 MVM_file_stat(MVMThreadContext *tc, MVMString *filename, MVMint64 status, int32_t use_lstat) {
-    MVMint64 r = -1;
+int64_t MVM_file_stat(MVMThreadContext *tc, MVMString *filename, int64_t status, int32_t use_lstat) {
+    int64_t r = -1;
 
     switch (status) {
 
@@ -125,7 +125,7 @@ MVMint64 MVM_file_stat(MVMThreadContext *tc, MVMString *filename, MVMint64 statu
     return r;
 }
 
-MVMnum64 MVM_file_time(MVMThreadContext *tc, MVMString *filename, MVMint64 status, int32_t use_lstat) {
+double MVM_file_time(MVMThreadContext *tc, MVMString *filename, int64_t status, int32_t use_lstat) {
     uv_stat_t statbuf = file_info(tc, filename, use_lstat);
     uv_timespec_t ts;
 
@@ -137,7 +137,7 @@ MVMnum64 MVM_file_time(MVMThreadContext *tc, MVMString *filename, MVMint64 statu
         default: return -1;
     }
 
-    return ts.tv_sec + 1e-9 * (MVMnum64)ts.tv_nsec;
+    return ts.tv_sec + 1e-9 * (double)ts.tv_nsec;
 }
 
 /* copy a file from one to another */
@@ -196,7 +196,7 @@ void MVM_file_delete(MVMThreadContext *tc, MVMString *f) {
     MVM_free(a);
 }
 
-void MVM_file_chmod(MVMThreadContext *tc, MVMString *f, MVMint64 flag) {
+void MVM_file_chmod(MVMThreadContext *tc, MVMString *f, int64_t flag) {
     char * const a = MVM_string_utf8_c8_encode_C_string(tc, f);
     uv_fs_t req;
 
@@ -208,7 +208,7 @@ void MVM_file_chmod(MVMThreadContext *tc, MVMString *f, MVMint64 flag) {
     MVM_free(a);
 }
 
-void MVM_file_chown(MVMThreadContext *tc, MVMString *f, MVMuint64 uid, MVMuint64 gid) {
+void MVM_file_chown(MVMThreadContext *tc, MVMString *f, uint64_t uid, uint64_t gid) {
     char * const a = MVM_string_utf8_c8_encode_C_string(tc, f);
     uv_fs_t req;
 
@@ -220,10 +220,10 @@ void MVM_file_chown(MVMThreadContext *tc, MVMString *f, MVMuint64 uid, MVMuint64
     MVM_free(a);
 }
 
-MVMint64 MVM_file_exists(MVMThreadContext *tc, MVMString *f, int32_t use_lstat) {
+int64_t MVM_file_exists(MVMThreadContext *tc, MVMString *f, int32_t use_lstat) {
     uv_fs_t req;
     char * const a = MVM_string_utf8_c8_encode_C_string(tc, f);
-    const MVMint64 result = (use_lstat
+    const int64_t result = (use_lstat
       ? uv_fs_lstat(NULL, &req, a, NULL)
       :  uv_fs_stat(NULL, &req, a, NULL)
     ) < 0 ? 0 : 1;
@@ -235,20 +235,20 @@ MVMint64 MVM_file_exists(MVMThreadContext *tc, MVMString *f, int32_t use_lstat) 
 
 #ifdef _WIN32
 #define FILE_IS(name, rwx) \
-    MVMint64 MVM_file_is ## name (MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) { \
+    int64_t MVM_file_is ## name (MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) { \
         uv_stat_t statbuf; \
         if (file_info_with_error(tc, &statbuf, filename, use_lstat) < 0) { \
             return 0; \
         } \
         else { \
-            MVMint64 r = (statbuf.st_mode & S_I ## rwx ); \
+            int64_t r = (statbuf.st_mode & S_I ## rwx ); \
             return r ? 1 : 0; \
         } \
     }
 FILE_IS(readable, READ)
 FILE_IS(writable, WRITE)
-MVMint64 MVM_file_isexecutable(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) {
-    MVMint64 r = 0;
+int64_t MVM_file_isexecutable(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) {
+    int64_t r = 0;
     uv_stat_t statbuf;
     if (file_info_with_error(tc, &statbuf, filename, use_lstat) < 0)
         return 0;
@@ -256,7 +256,7 @@ MVMint64 MVM_file_isexecutable(MVMThreadContext *tc, MVMString *filename, int32_
         return 1;
     else {
         /* true if fileext is in PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC */
-        MVMint64 n = MVM_string_index_from_end(tc, filename, tc->instance->str_consts.dot, 0);
+        int64_t n = MVM_string_index_from_end(tc, filename, tc->instance->str_consts.dot, 0);
         if (n >= 0) {
             MVMString *fileext = MVM_string_substring(tc, filename, n, -1);
             char *ext  = MVM_string_utf8_c8_encode_C_string(tc, fileext);
@@ -304,17 +304,17 @@ static int are_we_group_member(MVMThreadContext *tc, gid_t group) {
     MVM_free(gids);
     return res;
 }
-MVMint64 MVM_are_we_group_member(MVMThreadContext *tc, gid_t group) {
-    return (MVMint64)are_we_group_member(tc, group);
+int64_t MVM_are_we_group_member(MVMThreadContext *tc, gid_t group) {
+    return (int64_t)are_we_group_member(tc, group);
 }
 
 #define FILE_IS(name, rwx) \
-    MVMint64 MVM_file_is ## name (MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) { \
+    int64_t MVM_file_is ## name (MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) { \
         uv_stat_t statbuf; \
         if (file_info_with_error(tc, &statbuf, filename, use_lstat) < 0) \
             return 0; \
         else { \
-            MVMint64 r = (statbuf.st_mode & S_I ## rwx ## OTH) \
+            int64_t r = (statbuf.st_mode & S_I ## rwx ## OTH) \
                       || (statbuf.st_uid == geteuid() && (statbuf.st_mode & S_I ## rwx ## USR)) \
                       || (geteuid() == 0) \
                       || (are_we_group_member(tc, statbuf.st_gid) && (statbuf.st_mode & S_I ## rwx ## GRP)); \
@@ -323,12 +323,12 @@ MVMint64 MVM_are_we_group_member(MVMThreadContext *tc, gid_t group) {
     }
 FILE_IS(readable, R)
 FILE_IS(writable, W)
-    MVMint64 MVM_file_isexecutable(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) {
+    int64_t MVM_file_isexecutable(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) {
         uv_stat_t statbuf;
         if (file_info_with_error(tc, &statbuf, filename, use_lstat) < 0)
             return 0;
         else {
-            MVMint64 r = (statbuf.st_mode & S_IXOTH)
+            int64_t r = (statbuf.st_mode & S_IXOTH)
                       || (statbuf.st_uid == geteuid() && (statbuf.st_mode & S_IXUSR))
                       || (are_we_group_member(tc, statbuf.st_gid) && (statbuf.st_mode & S_IXGRP))
                       || (geteuid() == 0 && (statbuf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)));

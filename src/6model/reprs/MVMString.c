@@ -64,7 +64,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
     MVMStringBody *body = (MVMStringBody *)data;
     if (body->storage_type == MVM_STRING_STRAND) {
         MVMStringStrand *strands = body->storage.strands;
-        MVMuint16 i;
+        uint16_t i;
         for (i = 0; i < body->num_strands; i++)
             MVM_gc_worklist_add(tc, worklist, &(strands[i].blob_string));
     }
@@ -98,7 +98,7 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMStringBody *body = (MVMStringBody *)data;
     switch (body->storage_type) {
         case MVM_STRING_GRAPHEME_32:

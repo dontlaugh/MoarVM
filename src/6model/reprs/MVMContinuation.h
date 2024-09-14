@@ -7,7 +7,7 @@ struct MVMContinuationBody {
     MVMCallStackRegion *first_region;
 
     /* Address to resume execution at when the continuation is invoked. */
-    MVMuint8 *addr;
+    uint8_t *addr;
 
     /* Register to put invoke argument into after resume. */
     MVMRegister *res_reg;

@@ -55,7 +55,7 @@ struct MVMNativeCallback {
     MVMInstance *instance;
 
     /* Return and argument type flags. */
-    MVMint16 *typeinfos;
+    int16_t *typeinfos;
 
     /* Return and argument types themselves. */
     MVMObject **types;
@@ -89,8 +89,8 @@ struct MVMNativeCallbackCacheHead {
 
 /* Functions for working with native callsites. */
 MVMNativeCallBody * MVM_nativecall_get_nc_body(MVMThreadContext *tc, MVMObject *obj);
-MVMint16 MVM_nativecall_get_arg_type(MVMThreadContext *tc, MVMObject *info, MVMint16 is_return);
-MVMint8 MVM_nativecall_build(MVMThreadContext *tc, MVMObject *site, MVMString *lib,
+int16_t MVM_nativecall_get_arg_type(MVMThreadContext *tc, MVMObject *info, int16_t is_return);
+int8_t MVM_nativecall_build(MVMThreadContext *tc, MVMObject *site, MVMString *lib,
     MVMString *sym, MVMString *conv, MVMObject *arg_spec, MVMObject *ret_spec);
 void MVM_nativecall_setup(MVMThreadContext *tc, MVMNativeCallBody *body, unsigned int interval_id);
 void MVM_nativecall_restore_library(MVMThreadContext *tc, MVMNativeCallBody *body, MVMObject *root);
@@ -102,7 +102,7 @@ MVMObject * MVM_nativecall_global(MVMThreadContext *tc, MVMString *lib, MVMStrin
     MVMObject *target_spec, MVMObject *target_type);
 MVMObject * MVM_nativecall_cast(MVMThreadContext *tc, MVMObject *target_spec,
     MVMObject *res_type, MVMObject *obj);
-MVMint64 MVM_nativecall_sizeof(MVMThreadContext *tc, MVMObject *obj);
+int64_t MVM_nativecall_sizeof(MVMThreadContext *tc, MVMObject *obj);
 void MVM_nativecall_refresh(MVMThreadContext *tc, MVMObject *cthingy);
 
 MVMObject * MVM_nativecall_make_cstruct(MVMThreadContext *tc, MVMObject *type, void *cstruct);
@@ -111,10 +111,10 @@ MVMObject * MVM_nativecall_make_cunion(MVMThreadContext *tc, MVMObject *type, vo
 MVMObject * MVM_nativecall_make_cpointer(MVMThreadContext *tc, MVMObject *type, void *ptr);
 MVMObject * MVM_nativecall_make_carray(MVMThreadContext *tc, MVMObject *type, void *carray);
 
-MVMObject * MVM_nativecall_make_int(MVMThreadContext *tc, MVMObject *type, MVMint64 value);
-MVMObject * MVM_nativecall_make_uint(MVMThreadContext *tc, MVMObject *type, MVMuint64 value);
-MVMObject * MVM_nativecall_make_num(MVMThreadContext *tc, MVMObject *type, MVMnum64 value);
-MVMObject * MVM_nativecall_make_str(MVMThreadContext *tc, MVMObject *type, MVMint16 ret_type, char *cstring);
+MVMObject * MVM_nativecall_make_int(MVMThreadContext *tc, MVMObject *type, int64_t value);
+MVMObject * MVM_nativecall_make_uint(MVMThreadContext *tc, MVMObject *type, uint64_t value);
+MVMObject * MVM_nativecall_make_num(MVMThreadContext *tc, MVMObject *type, double value);
+MVMObject * MVM_nativecall_make_str(MVMThreadContext *tc, MVMObject *type, int16_t ret_type, char *cstring);
 
 signed char         MVM_nativecall_unmarshal_char(MVMThreadContext *tc, MVMObject *value);
 signed short        MVM_nativecall_unmarshal_short(MVMThreadContext *tc, MVMObject *value);
@@ -129,14 +129,14 @@ unsigned long long  MVM_nativecall_unmarshal_ulonglong(MVMThreadContext *tc, MVM
 float               MVM_nativecall_unmarshal_float(MVMThreadContext *tc, MVMObject *value);
 double              MVM_nativecall_unmarshal_double(MVMThreadContext *tc, MVMObject *value);
 
-char * MVM_nativecall_encode_string(MVMThreadContext *tc, MVMString *value_str, MVMint16 type, MVMint16 *free, MVMint16 unmarshal_kind, const MVMREPROps *repr);
-char * MVM_nativecall_unmarshal_string(MVMThreadContext *tc, MVMObject *value, MVMint16 type, MVMint16 *free, MVMint16 unmarshal_kind);
-void * MVM_nativecall_unmarshal_cstruct(MVMThreadContext *tc, MVMObject *value, MVMint16 unmarshal_kind);
-void * MVM_nativecall_unmarshal_cppstruct(MVMThreadContext *tc, MVMObject *value, MVMint16 unmarshal_kind);
-void * MVM_nativecall_unmarshal_cpointer(MVMThreadContext *tc, MVMObject *value, MVMint16 unmarshal_kind);
-void * MVM_nativecall_unmarshal_carray(MVMThreadContext *tc, MVMObject *value, MVMint16 unmarshal_kind);
-void * MVM_nativecall_unmarshal_vmarray(MVMThreadContext *tc, MVMObject *value, MVMint16 unmarshal_kind);
-void * MVM_nativecall_unmarshal_cunion(MVMThreadContext *tc, MVMObject *value, MVMint16 unmarshal_kind);
+char * MVM_nativecall_encode_string(MVMThreadContext *tc, MVMString *value_str, int16_t type, int16_t *free, int16_t unmarshal_kind, const MVMREPROps *repr);
+char * MVM_nativecall_unmarshal_string(MVMThreadContext *tc, MVMObject *value, int16_t type, int16_t *free, int16_t unmarshal_kind);
+void * MVM_nativecall_unmarshal_cstruct(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind);
+void * MVM_nativecall_unmarshal_cppstruct(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind);
+void * MVM_nativecall_unmarshal_cpointer(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind);
+void * MVM_nativecall_unmarshal_carray(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind);
+void * MVM_nativecall_unmarshal_vmarray(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind);
+void * MVM_nativecall_unmarshal_cunion(MVMThreadContext *tc, MVMObject *value, int16_t unmarshal_kind);
 
 /* Locate the thread that a callback should be run on. */
 MVM_STATIC_INLINE MVMThreadContext * MVM_nativecall_find_thread_context(MVMInstance *instance) {
@@ -154,7 +154,7 @@ MVMJitGraph *MVM_nativecall_jit_graph_for_caller_code(
     MVMThreadContext   *tc,
     MVMSpeshGraph      *sg,
     MVMNativeCallBody  *body,
-    MVMint16            restype,
-    MVMint16            dst,
+    int16_t            restype,
+    int16_t            dst,
     MVMSpeshIns       **arg_ins
 );

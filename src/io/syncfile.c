@@ -39,7 +39,7 @@ typedef struct {
 
     /* How many bytes have we read/written? Used to fake tell on handles that
      * are not seekable. */
-    MVMint64 byte_position;
+    int64_t byte_position;
 
     /* Did read already report EOF? */
     int eof_reported;
@@ -58,21 +58,21 @@ typedef struct {
 } MVMIOFileData;
 
 /* Checks if the file is a TTY. */
-static MVMint64 is_tty(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t is_tty(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
     return isatty(data->fd);
 }
 
 /* Gets the file descriptor. */
-static MVMint64 mvm_fileno(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t mvm_fileno(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
-    return (MVMint64)data->fd;
+    return (int64_t)data->fd;
 }
 
 /* Performs a write, either because a buffer filled or because we are not
  * buffering output. */
-static void perform_write(MVMThreadContext *tc, MVMIOFileData *data, char *buf, MVMint64 bytes) {
-    MVMint64 bytes_written = 0;
+static void perform_write(MVMThreadContext *tc, MVMIOFileData *data, char *buf, int64_t bytes) {
+    int64_t bytes_written = 0;
     MVM_gc_mark_thread_blocked(tc);
     while (bytes > 0) {
         int r;
@@ -103,7 +103,7 @@ static void flush_output_buffer(MVMThreadContext *tc, MVMIOFileData *data) {
 }
 
 /* Seek to the specified position in the file. */
-static void seek(MVMThreadContext *tc, MVMOSHandle *h, MVMint64 offset, MVMint64 whence) {
+static void seek(MVMThreadContext *tc, MVMOSHandle *h, int64_t offset, int64_t whence) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
     if (!data->seekable)
         MVM_exception_throw_adhoc(tc, "It is not possible to seek this kind of handle");
@@ -113,11 +113,11 @@ static void seek(MVMThreadContext *tc, MVMOSHandle *h, MVMint64 offset, MVMint64
 }
 
 /* Get current position in the file. */
-static MVMint64 mvm_tell(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t mvm_tell(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
     flush_output_buffer(tc, data);
     if (data->seekable) {
-        MVMint64 r;
+        int64_t r;
         if ((r = MVM_platform_lseek(data->fd, 0, SEEK_CUR)) == -1)
             MVM_exception_throw_adhoc(tc, "Failed to tell in filehandle: %d", errno);
         return r;
@@ -129,7 +129,7 @@ static MVMint64 mvm_tell(MVMThreadContext *tc, MVMOSHandle *h) {
 
 /* Reads the specified number of bytes into the supplied buffer, returning
  * the number actually read. */
-static MVMint64 read_bytes(MVMThreadContext *tc, MVMOSHandle *h, char **buf_out, MVMuint64 bytes) {
+static int64_t read_bytes(MVMThreadContext *tc, MVMOSHandle *h, char **buf_out, uint64_t bytes) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
     char *buf = MVM_malloc(bytes);
     unsigned int interval_id = MVM_telemetry_interval_start(tc, "syncfile.read_to_buffer");
@@ -163,10 +163,10 @@ static MVMint64 read_bytes(MVMThreadContext *tc, MVMOSHandle *h, char **buf_out,
 }
 
 /* Checks if the end of file has been reached. */
-static MVMint64 mvm_eof(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t mvm_eof(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
     if (data->seekable) {
-        MVMint64 seek_pos;
+        int64_t seek_pos;
         STAT_t statbuf;
         if (fstat(data->fd, &statbuf) == -1)
             MVM_exception_throw_adhoc(tc, "Failed to stat file descriptor: %s",
@@ -185,7 +185,7 @@ static MVMint64 mvm_eof(MVMThreadContext *tc, MVMOSHandle *h) {
 
 /* Sets the output buffer size; if <= 0, means no buffering. Flushes any
  * existing buffer before changing. */
-static void set_buffer_size(MVMThreadContext *tc, MVMOSHandle *h, MVMint64 size) {
+static void set_buffer_size(MVMThreadContext *tc, MVMOSHandle *h, int64_t size) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
 
     /* Flush and clear up any existing output buffer. */
@@ -204,7 +204,7 @@ static void set_buffer_size(MVMThreadContext *tc, MVMOSHandle *h, MVMint64 size)
 }
 
 /* Writes the specified bytes to the file handle. */
-static MVMint64 write_bytes(MVMThreadContext *tc, MVMOSHandle *h, char *buf, MVMuint64 bytes) {
+static int64_t write_bytes(MVMThreadContext *tc, MVMOSHandle *h, char *buf, uint64_t bytes) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
     if (data->output_buffer_size && data->known_writable) {
         /* If we can't fit it on the end of the buffer, flush the buffer. */
@@ -243,14 +243,14 @@ static void flush(MVMThreadContext *tc, MVMOSHandle *h, int32_t sync){
 }
 
 /* Truncates the file handle. */
-static void truncatefh(MVMThreadContext *tc, MVMOSHandle *h, MVMint64 bytes) {
+static void truncatefh(MVMThreadContext *tc, MVMOSHandle *h, int64_t bytes) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
     if (ftruncate(data->fd, bytes) == -1)
         MVM_exception_throw_adhoc(tc, "Failed to truncate filehandle: %s", strerror(errno));
 }
 
 /* Closes the file. */
-static MVMint64 closefh(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t closefh(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
     if (data->fd != -1) {
         int r;
@@ -265,7 +265,7 @@ static MVMint64 closefh(MVMThreadContext *tc, MVMOSHandle *h) {
 }
 
 /* Locks a file. */
-static MVMint64 lock(MVMThreadContext *tc, MVMOSHandle *h, MVMint64 flag) {
+static int64_t lock(MVMThreadContext *tc, MVMOSHandle *h, int64_t flag) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
 
 #ifdef _WIN32
@@ -382,10 +382,10 @@ static void gc_free(MVMThreadContext *tc, MVMObject *h, void *d) {
 }
 
 /* Used to recover the MVM open mode from the (simple) POSIX-based open mode flag */
-static MVMint64 mvm_open_mode(MVMThreadContext *tc, MVMOSHandle *h) {
+static int64_t mvm_open_mode(MVMThreadContext *tc, MVMOSHandle *h) {
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
 
-    MVMint64 mvm_open_mode = -1;
+    int64_t mvm_open_mode = -1;
     switch(data->open_mode) {
         case O_RDONLY: mvm_open_mode = 1; break;
         case O_WRONLY: mvm_open_mode = 2; break;

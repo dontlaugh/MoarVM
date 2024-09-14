@@ -115,14 +115,14 @@ void MVM_6model_parametric_parameterize(MVMThreadContext *tc, MVMObject *type, M
 /* Try to find an existing parameterization of the specified type and
  * parameters. If none is found, returns NULL. */
 MVMObject * MVM_6model_parametric_try_find_parameterization(MVMThreadContext *tc, MVMSTable *st, MVMObject *params) {
-    MVMint64 i, j, num_lookups, params_elems;
+    int64_t i, j, num_lookups, params_elems;
     num_lookups  = MVM_repr_elems(tc, st->paramet.ric.lookup);
     params_elems = MVM_repr_elems(tc, params);
     for (i = 0; i < num_lookups; i += 2) {
         MVMObject *compare       = MVM_repr_at_pos_o(tc, st->paramet.ric.lookup, i);
-        MVMint64   compare_elems = MVM_repr_elems(tc, compare);
+        int64_t   compare_elems = MVM_repr_elems(tc, compare);
         if (params_elems == compare_elems) {
-            MVMint64 match = 1;
+            int64_t match = 1;
             for (j = 0; j < params_elems; j++) {
                 MVMObject *want = MVM_repr_at_pos_o(tc, params, j);
                 MVMObject *got  = MVM_repr_at_pos_o(tc, compare, j);
@@ -157,7 +157,7 @@ MVMObject * MVM_6model_parametric_type_parameters(MVMThreadContext *tc, MVMObjec
 }
 
 /* Provided this is a parameterized type, returns the type parameter at the specified index. */
-MVMObject * MVM_6model_parametric_type_parameter_at(MVMThreadContext *tc, MVMObject *type, MVMint64 idx) {
+MVMObject * MVM_6model_parametric_type_parameter_at(MVMThreadContext *tc, MVMObject *type, int64_t idx) {
     MVMSTable *st = STABLE(type);
     if (!(st->mode_flags & MVM_PARAMETERIZED_TYPE))
         MVM_exception_throw_adhoc(tc, "This type is not parameterized");

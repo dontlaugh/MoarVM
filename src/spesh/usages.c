@@ -238,8 +238,8 @@ static void process_bb_for_deopt_usage(MVMThreadContext *tc, DeoptAnalysisState 
         }
 
         /* Process the read operands. */
-        MVMint16 opcode = ins->info->opcode;
-        MVMuint8 is_phi = opcode == MVM_SSA_PHI;
+        int16_t opcode = ins->info->opcode;
+        uint8_t is_phi = opcode == MVM_SSA_PHI;
         if (MVM_spesh_is_inc_dec_op(opcode)) {
             MVMSpeshOperand read = ins->operands[0];
             read.reg.i--;
@@ -377,7 +377,7 @@ void MVM_spesh_usages_remove_unused_deopt(MVMThreadContext *tc, MVMSpeshGraph *g
     uint32_t i, j;
 
     /* First, walk graph to find which deopt points are actually used. */
-    MVMuint8 *deopt_used = MVM_spesh_alloc(tc, g, g->num_deopt_addrs);
+    uint8_t *deopt_used = MVM_spesh_alloc(tc, g, g->num_deopt_addrs);
     MVMSpeshBB *bb = g->entry;
     while (bb) {
         MVMSpeshIns *ins = bb->first_ins;
@@ -487,15 +487,15 @@ void MVM_spesh_usages_check(MVMThreadContext *tc, MVMSpeshGraph *g) {
     while (cur_bb) {
         MVMSpeshIns *cur_ins = cur_bb->first_ins;
         while (cur_ins) {
-            MVMint16 opcode = cur_ins->info->opcode;
-            MVMuint8 is_phi = opcode == MVM_SSA_PHI;
-            MVMuint8 is_inc_dec = MVM_spesh_is_inc_dec_op(opcode);
+            int16_t opcode = cur_ins->info->opcode;
+            uint8_t is_phi = opcode == MVM_SSA_PHI;
+            uint8_t is_inc_dec = MVM_spesh_is_inc_dec_op(opcode);
             uint32_t i;
             for (i = 0; i < cur_ins->info->num_operands; i++) {
                 if ((is_phi && i > 0) || is_inc_dec ||
                         (!is_phi && (cur_ins->info->operands[i] & MVM_operand_rw_mask) == MVM_operand_read_reg)) {
                     /* It's a read. */
-                    MVMuint16 version = is_inc_dec ? cur_ins->operands[i].reg.i - 1 : cur_ins->operands[i].reg.i;
+                    uint16_t version = is_inc_dec ? cur_ins->operands[i].reg.i - 1 : cur_ins->operands[i].reg.i;
                     MVMSpeshFacts *facts = &(g->facts[cur_ins->operands[i].reg.orig][version]);
                     MVMSpeshUseChainEntry *use_entry = facts->usage.users;
                     uint32_t found = 0;
@@ -541,14 +541,14 @@ void MVM_spesh_usages_check(MVMThreadContext *tc, MVMSpeshGraph *g) {
             MVMSpeshUseChainEntry *use_entry = facts->usage.users;
             if (use_entry && j > 0 && !facts->dead_writer && !facts->usage.writer_seen_in_graph) {
                 MVMSpeshIns *writer = facts->writer;
-                MVMuint8 is_phi = writer && writer->info->opcode == MVM_SSA_PHI;
+                uint8_t is_phi = writer && writer->info->opcode == MVM_SSA_PHI;
                 MVM_oops(tc, "Malformed DU chain: writer %s of %d(%d) not in graph\n%s",
                     is_phi ? "PHI" : (writer ? writer->info->name : "MISSING WRITER"), i, j,
                     MVM_spesh_dump(tc, g));
             }
             while (use_entry) {
                 if (!use_entry->seen_in_graph) {
-                    MVMuint8 is_phi = use_entry->user->info->opcode == MVM_SSA_PHI;
+                    uint8_t is_phi = use_entry->user->info->opcode == MVM_SSA_PHI;
                     MVM_oops(tc, "Malformed DU chain: reading %s of %d(%d) not in graph\n%s",
                         is_phi ? "PHI" : use_entry->user->info->name, i, j,
                         MVM_spesh_dump(tc, g));

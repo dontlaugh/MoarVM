@@ -50,7 +50,7 @@ int MVM_ext_load(MVMThreadContext *tc, MVMString *lib, MVMString *ext) {
 }
 
 int MVM_ext_register_extop(MVMThreadContext *tc, const char *cname,
-        MVMExtOpFunc func, MVMuint8 num_operands, MVMuint8 operands[],
+        MVMExtOpFunc func, uint8_t num_operands, uint8_t operands[],
         MVMExtOpSpesh *spesh, MVMExtOpFactDiscover *discover, uint32_t flags) {
     /* This MVMString ends up being permarooted, so if we create it in gen2 we
      * save some GC work */
@@ -83,10 +83,10 @@ int MVM_ext_register_extop(MVMThreadContext *tc, const char *cname,
                 MVM_MAX_OPERANDS);
     }
     {
-        MVMuint8 i = 0;
+        uint8_t i = 0;
 
         for(; i < num_operands; i++) {
-            MVMuint8 flags = operands[i];
+            uint8_t flags = operands[i];
 
             switch (flags & MVM_operand_rw_mask) {
                 case MVM_operand_literal:
@@ -151,7 +151,7 @@ int MVM_ext_register_extop(MVMThreadContext *tc, const char *cname,
     entry = MVM_fixkey_hash_insert_nocheck(tc, &tc->instance->extop_registry, name);
     entry->func              = func;
     entry->info.name         = cname;
-    entry->info.opcode       = (MVMuint16)-1;
+    entry->info.opcode       = (uint16_t)-1;
     entry->info.num_operands = num_operands;
     entry->info.pure         = flags & MVM_EXTOP_PURE;
     entry->info.deopt_point  = 0;
@@ -213,8 +213,8 @@ const MVMOpInfo * MVM_ext_resolve_extop_record(MVMThreadContext *tc,
 }
 
 const MVMOpInfo * MVM_ext_resolve_extop_record_in_cu(MVMThreadContext *tc, MVMCompUnit *cu,
-        MVMuint16 opcode) {
-    MVMuint16       index  = opcode - MVM_OP_EXT_BASE;
+        uint16_t opcode) {
+    uint16_t       index  = opcode - MVM_OP_EXT_BASE;
     MVMExtOpRecord *record = &cu->body.extops[index];
     return MVM_ext_resolve_extop_record(tc, record);
 }

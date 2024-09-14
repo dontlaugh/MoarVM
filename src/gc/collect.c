@@ -14,7 +14,7 @@ typedef struct {
 } WorkToPass;
 
 /* Forward decls. */
-static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, WorkToPass *wtp, MVMuint8 gen);
+static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, WorkToPass *wtp, uint8_t gen);
 static void pass_work_item(MVMThreadContext *tc, WorkToPass *wtp, MVMCollectable **item_ptr);
 static void pass_leftover_work(MVMThreadContext *tc, WorkToPass *wtp);
 static void add_in_tray_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist);
@@ -49,7 +49,7 @@ uint32_t MVM_gc_new_thread_nursery_size(MVMInstance *i) {
  *
  * Note that it adds the roots and processes them in phases, to try to avoid
  * building up a huge worklist. */
-void MVM_gc_collect(MVMThreadContext *tc, MVMuint8 what_to_do, MVMuint8 gen) {
+void MVM_gc_collect(MVMThreadContext *tc, uint8_t what_to_do, uint8_t gen) {
     /* Create a GC worklist. */
     MVMGCWorklist *worklist = MVM_gc_worklist_create(tc, gen != MVMGCGenerations_Nursery);
 
@@ -161,7 +161,7 @@ void MVM_gc_collect(MVMThreadContext *tc, MVMuint8 what_to_do, MVMuint8 gen) {
 }
 
 /* Processes the current worklist. */
-static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, WorkToPass *wtp, MVMuint8 gen) {
+static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, WorkToPass *wtp, uint8_t gen) {
     MVMGen2Allocator  *gen2;
     MVMCollectable   **item_ptr;
     MVMCollectable    *new_addr;
@@ -174,8 +174,8 @@ static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, Work
     while ((item_ptr = MVM_gc_worklist_get(tc, worklist))) {
         /* Dereference the object we're considering. */
         MVMCollectable *item = *item_ptr;
-        MVMuint8 item_gen2;
-        MVMuint8 to_gen2 = 0;
+        uint8_t item_gen2;
+        uint8_t to_gen2 = 0;
 
         /* If the item is NULL, that's fine - it's just a null reference and
          * thus we've no object to consider. */
@@ -282,7 +282,7 @@ static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, Work
                 else if (!(new_addr->flags1 & (MVM_CF_TYPE_OBJECT | MVM_CF_STABLE))) {
                     MVMObject *new_obj_addr = (MVMObject *)new_addr;
                     if (REPR(new_obj_addr)->unmanaged_size) {
-                        MVMuint64 unmanaged_size =  REPR(new_obj_addr)->unmanaged_size(tc,
+                        uint64_t unmanaged_size =  REPR(new_obj_addr)->unmanaged_size(tc,
                             STABLE(new_obj_addr), OBJECT_BODY(new_obj_addr));
                         tc->gc_promoted_bytes += unmanaged_size;
                         if (tc->instance->profiling)
@@ -347,7 +347,7 @@ static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, Work
 
 /* Marks a collectable item (object, type object, STable). */
 void MVM_gc_mark_collectable(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMCollectable *new_addr) {
-    MVMuint16 i;
+    uint16_t i;
     uint32_t sc_idx;
 
     assert(!(new_addr->flags2 & MVM_CF_FORWARDER_VALID));
@@ -547,7 +547,7 @@ void MVM_gc_collect_free_nursery_uncopied(MVMThreadContext *executing_thread, MV
      * the end of the area allocated in it. */
     void *scan = tc->nursery_fromspace;
 
-    MVMuint8 do_prof_log = 0;
+    uint8_t do_prof_log = 0;
 
     if (executing_thread->prof_data)
         do_prof_log = 1;
@@ -556,7 +556,7 @@ void MVM_gc_collect_free_nursery_uncopied(MVMThreadContext *executing_thread, MV
         /* The object here is dead if it never got a forwarding pointer
          * written in to it. */
         MVMCollectable *item = (MVMCollectable *)scan;
-        MVMuint8 dead = !(item->flags2 & MVM_CF_FORWARDER_VALID);
+        uint8_t dead = !(item->flags2 & MVM_CF_FORWARDER_VALID);
 
         if (!dead)
             assert(item->sc_forward_u.forwarder != NULL);
@@ -633,7 +633,7 @@ void MVM_gc_collect_free_gen2_unmarked(MVMThreadContext *executing_thread, MVMTh
     /* Visit each of the size class bins. */
     MVMGen2Allocator *gen2 = tc->gen2;
     uint32_t bin, obj_size, page, i;
-    MVMuint8 do_prof_log = 0;
+    uint8_t do_prof_log = 0;
 
     char ***freelist_insert_pos;
 

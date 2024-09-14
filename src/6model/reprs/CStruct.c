@@ -158,10 +158,10 @@ static void compute_allocation_strategy(MVMThreadContext *tc, MVMObject *repr_in
             MVMObject *attr  = MVM_repr_at_pos_o(tc, flat_list, i);
             MVMObject *type  = MVM_repr_at_key_o(tc, attr, tc->instance->str_consts.type);
             MVMObject *inlined_val = MVM_repr_at_key_o(tc, attr, tc->instance->str_consts.inlined);
-            MVMint64 inlined = !MVM_is_null(tc, inlined_val) && MVM_repr_get_int(tc, inlined_val);
+            int64_t inlined = !MVM_is_null(tc, inlined_val) && MVM_repr_get_int(tc, inlined_val);
             MVMObject *dimensions         = MVM_repr_at_key_o(tc, attr, tc->instance->str_consts.dimensions);
             MVMP6opaqueREPRData *dim_repr = (MVMP6opaqueREPRData *)STABLE(dimensions)->REPR_data;
-            MVMint64 num_dimensions       = dim_repr && dim_repr->pos_del_slot >= 0
+            int64_t num_dimensions       = dim_repr && dim_repr->pos_del_slot >= 0
                                           ? MVM_repr_elems(tc, dimensions)
                                           : 0;
             int32_t   bits  = sizeof(void *) * 8;
@@ -230,7 +230,7 @@ static void compute_allocation_strategy(MVMThreadContext *tc, MVMObject *repr_in
                         repr_data->attribute_locations[i]  |= MVM_CSTRUCT_ATTR_INLINED;
 
                         if (num_dimensions > 0) {
-                            MVMint64 dim_one     =  MVM_repr_at_pos_i(tc, dimensions, 0);
+                            int64_t dim_one     =  MVM_repr_at_pos_i(tc, dimensions, 0);
                             MVMObject *elem_type = carray_repr_data->elem_type;
 
                             // How do we distinguish between these members:
@@ -462,11 +462,11 @@ static void die_no_attrs(MVMThreadContext *tc) {
 }
 
 static void get_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-        void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint,
-        MVMRegister *result_reg, MVMuint16 kind) {
+        void *data, MVMObject *class_handle, MVMString *name, int64_t hint,
+        MVMRegister *result_reg, uint16_t kind) {
     MVMCStructREPRData *repr_data = (MVMCStructREPRData *)st->REPR_data;
     MVMCStructBody *body = (MVMCStructBody *)data;
-    MVMint64 slot;
+    int64_t slot;
 
     if (!repr_data)
         MVM_exception_throw_adhoc(tc, "CStruct: must compose before using get_attribute");
@@ -591,11 +591,11 @@ static void get_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
 
 /* Binds the given value to the specified attribute. */
 static void bind_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-        void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint,
-        MVMRegister value_reg, MVMuint16 kind) {
+        void *data, MVMObject *class_handle, MVMString *name, int64_t hint,
+        MVMRegister value_reg, uint16_t kind) {
     MVMCStructREPRData *repr_data = (MVMCStructREPRData *)st->REPR_data;
     MVMCStructBody *body = (MVMCStructBody *)data;
-    MVMint64 slot;
+    int64_t slot;
 
     if (!repr_data)
         MVM_exception_throw_adhoc(tc, "CStruct: must compose before using bind_attribute");
@@ -720,12 +720,12 @@ static void bind_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
 
 
 /* Checks if an attribute has been initialized. */
-static MVMint64 is_attribute_initialized(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint) {
+static int64_t is_attribute_initialized(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, int64_t hint) {
     die_no_attrs(tc);
 }
 
 /* Gets the hint for the given attribute ID. */
-static MVMint64 hint_for(MVMThreadContext *tc, MVMSTable *st, MVMObject *class_handle, MVMString *name) {
+static int64_t hint_for(MVMThreadContext *tc, MVMSTable *st, MVMObject *class_handle, MVMString *name) {
     return MVM_NO_HINT;
 }
 
@@ -814,11 +814,11 @@ static const MVMStorageSpec storage_spec = {
     0,                          /* is_unsigned */
 };
 
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     /* The CStruct data body itself is unmanaged, though it doesn't
      * necessarily come from regular malloced heap memory */
     MVMCStructREPRData *repr_data = (MVMCStructREPRData *)st->REPR_data;
-    MVMuint64 result = 0;
+    uint64_t result = 0;
 
     /* The allocated (or just-pointed-at) memory block */
     /* TODO make sure when structs properly track "ownership" to
@@ -977,9 +977,9 @@ static void make_deref_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb
 }
 static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMCStructREPRData *repr_data = (MVMCStructREPRData *)st->REPR_data;
-    MVMuint16             opcode    = ins->info->opcode;
+    uint16_t             opcode    = ins->info->opcode;
     /* Can only use sp_get_i64 to deref a pointer if we're on 64bit */
-    if (sizeof(MVMObject *) != sizeof(MVMuint64))
+    if (sizeof(MVMObject *) != sizeof(uint64_t))
         return;
     if (!repr_data)
         return;
@@ -991,7 +991,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
         MVMString     *name     = spesh_attr_name(tc, g, ins->operands[3], opcode == MVM_OP_getattrs_i);
         if (name && ch_facts->flags & MVM_SPESH_FACT_KNOWN_TYPE && ch_facts->type
             && obj_facts->flags & MVM_SPESH_FACT_CONCRETE) {
-            MVMint64 slot = try_get_slot(tc, repr_data, ch_facts->type, name);
+            int64_t slot = try_get_slot(tc, repr_data, ch_facts->type, name);
             if (slot >= 0 && repr_data->flattened_stables[slot]) {
                 MVMSTable      *flat_st = repr_data->flattened_stables[slot];
                 const MVMStorageSpec *flat_ss = flat_st->REPR->get_storage_spec(tc, flat_st);
@@ -1030,7 +1030,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
         MVMString     *name     = spesh_attr_name(tc, g, ins->operands[2], opcode == MVM_OP_getattrs_i);
         if (name && ch_facts->flags & MVM_SPESH_FACT_KNOWN_TYPE && ch_facts->type
             && obj_facts->flags & MVM_SPESH_FACT_CONCRETE) {
-            MVMint64 slot = try_get_slot(tc, repr_data, ch_facts->type, name);
+            int64_t slot = try_get_slot(tc, repr_data, ch_facts->type, name);
             if (slot >= 0 && repr_data->flattened_stables[slot]) {
                 MVMSTable      *flat_st = repr_data->flattened_stables[slot];
                 const MVMStorageSpec *flat_ss = flat_st->REPR->get_storage_spec(tc, flat_st);

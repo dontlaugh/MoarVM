@@ -150,7 +150,7 @@ static void find_method(MVMThreadContext *tc, MVMArgs arg_info) {
 static void compose(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *self, *type_obj, *attributes, *BOOTArray, *BOOTHash,
               *repr_info_hash, *repr_info, *type_info, *attr_info_list, *parent_info;
-    MVMuint64   num_attrs, i;
+    uint64_t   num_attrs, i;
     MVMInstance *instance = tc->instance;
 
     /* Get arguments. */
@@ -417,7 +417,7 @@ static void attr_type(MVMThreadContext *tc, MVMArgs arg_info) {
 /* Introspects the attribute's box target flag. */
 static void attr_box_target(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *self;
-    MVMint64   box_target;
+    int64_t   box_target;
     MVMArgProcContext arg_ctx;
     MVM_args_proc_setup(tc, &arg_ctx, arg_info);
     MVM_args_checkarity(tc, &arg_ctx, 1, 1);

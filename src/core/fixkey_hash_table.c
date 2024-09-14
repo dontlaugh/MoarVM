@@ -18,8 +18,8 @@ void MVM_fixkey_hash_demolish(MVMThreadContext *tc, MVMFixKeyHashTable *hashtabl
         return;
 
     uint32_t entries_in_use = MVM_fixkey_hash_kompromat(control);
-    MVMuint8 *entry_raw = MVM_fixkey_hash_entries(control);
-    MVMuint8 *metadata = MVM_fixkey_hash_metadata(control);
+    uint8_t *entry_raw = MVM_fixkey_hash_entries(control);
+    uint8_t *metadata = MVM_fixkey_hash_metadata(control);
     uint32_t bucket = 0;
     if (control->entry_size) {
         while (bucket < entries_in_use) {
@@ -40,11 +40,11 @@ void MVM_fixkey_hash_demolish(MVMThreadContext *tc, MVMFixKeyHashTable *hashtabl
 
 
 MVM_STATIC_INLINE struct MVMFixKeyHashTableControl *hash_allocate_common(MVMThreadContext *tc,
-                                                                         MVMuint16 entry_size,
-                                                                         MVMuint8 official_size_log2) {
+                                                                         uint16_t entry_size,
+                                                                         uint8_t official_size_log2) {
     uint32_t official_size = 1 << (uint32_t)official_size_log2;
     uint32_t max_items = official_size * MVM_FIXKEY_HASH_LOAD_FACTOR;
-    MVMuint8 max_probe_distance_limit;
+    uint8_t max_probe_distance_limit;
     if (MVM_HASH_MAX_PROBE_DISTANCE  < max_items) {
         max_probe_distance_limit = MVM_HASH_MAX_PROBE_DISTANCE;
     } else {
@@ -65,14 +65,14 @@ MVM_STATIC_INLINE struct MVMFixKeyHashTableControl *hash_allocate_common(MVMThre
     control->cur_items = 0;
     control->metadata_hash_bits = MVM_HASH_INITIAL_BITS_IN_METADATA;
     /* As MVM_HASH_INITIAL_BITS_IN_METADATA is 5, this evaluates to 7: */
-    MVMuint8 initial_probe_distance = (1 << (8 - MVM_HASH_INITIAL_BITS_IN_METADATA)) - 1;
+    uint8_t initial_probe_distance = (1 << (8 - MVM_HASH_INITIAL_BITS_IN_METADATA)) - 1;
     control->max_probe_distance = max_probe_distance_limit > initial_probe_distance ? initial_probe_distance : max_probe_distance_limit;
     control->max_probe_distance_limit = max_probe_distance_limit;
-    MVMuint8 bucket_right_shift = 8 * sizeof(MVMuint64) - official_size_log2;
+    uint8_t bucket_right_shift = 8 * sizeof(uint64_t) - official_size_log2;
     control->key_right_shift = bucket_right_shift - control->metadata_hash_bits;
     control->entry_size = entry_size;
 
-    MVMuint8 *metadata = (MVMuint8 *)(control + 1);
+    uint8_t *metadata = (uint8_t *)(control + 1);
     memset(metadata, 0, metadata_size);
 
     return control;
@@ -113,8 +113,8 @@ MVM_STATIC_INLINE MVMString ***hash_insert_internal(MVMThreadContext *tc,
                    all the following elements have probe distances in order, we
                    can maintain the invariant just as well by moving everything
                    along by one. */
-                MVMuint8 *find_me_a_gap = ls.metadata;
-                MVMuint8 old_probe_distance = *ls.metadata;
+                uint8_t *find_me_a_gap = ls.metadata;
+                uint8_t old_probe_distance = *ls.metadata;
                 do {
                     uint32_t new_probe_distance = ls.metadata_increment + old_probe_distance;
                     if (new_probe_distance >> ls.probe_distance_shift == ls.max_probe_distance) {
@@ -140,7 +140,7 @@ MVM_STATIC_INLINE MVMString ***hash_insert_internal(MVMThreadContext *tc,
                  * `entry_raw` is still a pointer to where we want to make free
                  * space, but what want to do now is move everything at it and
                  * *before* it downwards. */
-                MVMuint8 *dest = ls.entry_raw - size_to_move;
+                uint8_t *dest = ls.entry_raw - size_to_move;
                 memmove(dest, dest + ls.entry_size, size_to_move);
             }
 
@@ -196,7 +196,7 @@ MVM_STATIC_INLINE MVMString ***hash_insert_internal(MVMThreadContext *tc,
 }
 
 /* Oh, fsck, I needed to implement this: */
-MVMuint64 MVM_fixkey_hash_fsck(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t mode);
+uint64_t MVM_fixkey_hash_fsck(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t mode);
 
 static struct MVMFixKeyHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
                                                          struct MVMFixKeyHashTableControl *control,
@@ -220,7 +220,7 @@ static struct MVMFixKeyHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
             new_probe_distance = max_probe_distance_limit;
         }
 
-        MVMuint8 *metadata = MVM_fixkey_hash_metadata(control);
+        uint8_t *metadata = MVM_fixkey_hash_metadata(control);
         uint32_t in_use_items = MVM_fixkey_hash_official_size(control) + max_probe_distance;
         /* not `in_use_items + 1` because because we don't need to shift the
          * sentinel. */
@@ -248,8 +248,8 @@ static struct MVMFixKeyHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
     }
 
     uint32_t entries_in_use = MVM_fixkey_hash_kompromat(control);
-    MVMuint8 *entry_raw_orig = MVM_fixkey_hash_entries(control);
-    MVMuint8 *metadata_orig = MVM_fixkey_hash_metadata(control);
+    uint8_t *entry_raw_orig = MVM_fixkey_hash_entries(control);
+    uint8_t *metadata_orig = MVM_fixkey_hash_metadata(control);
 
     struct MVMFixKeyHashTableControl *control_orig = control;
 
@@ -257,8 +257,8 @@ static struct MVMFixKeyHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
                                    control_orig->entry_size,
                                    control_orig->official_size_log2 + 1);
 
-    MVMuint8 *entry_raw = entry_raw_orig;
-    MVMuint8 *metadata = metadata_orig;
+    uint8_t *entry_raw = entry_raw_orig;
+    uint8_t *metadata = metadata_orig;
     MVMHashNumItems bucket = 0;
     while (bucket < entries_in_use) {
         if (*metadata) {
@@ -368,23 +368,23 @@ void *MVM_fixkey_hash_insert_nocheck(MVMThreadContext *tc,
 /* This is not part of the public API, and subject to change at any point.
    (possibly in ways that are actually incompatible but won't generate compiler
    warnings.) */
-MVMuint64 MVM_fixkey_hash_fsck(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t mode) {
+uint64_t MVM_fixkey_hash_fsck(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t mode) {
     struct MVMFixKeyHashTableControl *control = hashtable->table;
     const char *prefix_hashes = mode & 1 ? "# " : "";
     uint32_t display = (mode >> 1) & 3;
-    MVMuint64 errors = 0;
-    MVMuint64 seen = 0;
+    uint64_t errors = 0;
+    uint64_t seen = 0;
 
     if (MVM_fixkey_hash_entries(control) == NULL) {
         return 0;
     }
 
     uint32_t entries_in_use = MVM_fixkey_hash_kompromat(control);
-    MVMuint8 *entry_raw = MVM_fixkey_hash_entries(control);
-    MVMuint8 *metadata = MVM_fixkey_hash_metadata(control);
+    uint8_t *entry_raw = MVM_fixkey_hash_entries(control);
+    uint8_t *metadata = MVM_fixkey_hash_metadata(control);
     uint32_t bucket = 0;
-    MVMint64 prev_offset = 0;
-    MVMuint8 bucket_right_shift
+    int64_t prev_offset = 0;
+    uint8_t bucket_right_shift
         = control->key_right_shift + control->metadata_hash_bits;
 
     while (bucket < entries_in_use) {
@@ -407,14 +407,14 @@ MVMuint64 MVM_fixkey_hash_fsck(MVMThreadContext *tc, MVMFixKeyHashTable *hashtab
                     ++errors;
                     fprintf(stderr, "%s%3X!!\n", prefix_hashes, bucket);
                 } else {
-                    MVMuint64 hash_val = MVM_string_hash_code(tc, *entry);
+                    uint64_t hash_val = MVM_string_hash_code(tc, *entry);
                     uint32_t ideal_bucket = hash_val >> bucket_right_shift;
-                    MVMint64 offset = 1 + bucket - ideal_bucket;
+                    int64_t offset = 1 + bucket - ideal_bucket;
                     int wrong_bucket = offset != *metadata;
                     int wrong_order = offset < 1 || offset > prev_offset + 1;
 
                     if (display == 2 || wrong_bucket || wrong_order) {
-                        MVMuint64 len = MVM_string_graphs(tc, *entry);
+                        uint64_t len = MVM_string_graphs(tc, *entry);
                         char *key = MVM_string_utf8_encode_C_string(tc, *entry);
                         fprintf(stderr, "%s%3X%c%3"PRIx64"%c%0"PRIx64" (%"PRIu64") %s\n", prefix_hashes,
                                 bucket, wrong_bucket ? '!' : ' ', offset,

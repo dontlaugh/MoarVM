@@ -29,7 +29,7 @@ MVM_STATIC_INLINE void MVM_gc_root_temp_push(MVMThreadContext *tc, MVMCollectabl
 }
 
 /* Special forms of root pushing only needed for the MVMROOT macros */
-static MVMuint8 __MVM_gc_root_temp_push_ensure_space_slow(MVMThreadContext *tc, MVMuint8 amount) {
+static uint8_t __MVM_gc_root_temp_push_ensure_space_slow(MVMThreadContext *tc, uint8_t amount) {
     if (tc->num_temproots + amount > tc->alloc_temproots) {
         tc->alloc_temproots *= 2;
         tc->temproots = MVM_realloc(tc->temproots,
@@ -37,7 +37,7 @@ static MVMuint8 __MVM_gc_root_temp_push_ensure_space_slow(MVMThreadContext *tc, 
     }
     return 1;
 }
-MVM_STATIC_INLINE MVMuint8 __MVM_gc_root_temp_push_ensure_space(MVMThreadContext *tc, MVMuint8 amount) {
+MVM_STATIC_INLINE uint8_t __MVM_gc_root_temp_push_ensure_space(MVMThreadContext *tc, uint8_t amount) {
     /* If less than the number of always-allocated roots, we are happy */
     if (MVM_LIKELY(tc->num_temproots + amount < MVM_TEMP_ROOT_BASE_ALLOC)) {
         return 1;
@@ -50,7 +50,7 @@ MVM_STATIC_INLINE MVMuint8 __MVM_gc_root_temp_push_ensure_space(MVMThreadContext
     }
 }
 /* We only use this after having manually assured that there is space. */
-MVM_STATIC_INLINE MVMuint8 __MVM_gc_root_temp_push_nonvoid_noslow(MVMThreadContext *tc, MVMCollectable **obj_ref, MVMuint8 chain_in) {
+MVM_STATIC_INLINE uint8_t __MVM_gc_root_temp_push_nonvoid_noslow(MVMThreadContext *tc, MVMCollectable **obj_ref, uint8_t chain_in) {
     /* If debugging, ensure the root is not null. */
 #if MVM_TEMP_ROOT_DEBUG
     if (obj_ref == NULL)
@@ -63,7 +63,7 @@ MVM_STATIC_INLINE MVMuint8 __MVM_gc_root_temp_push_nonvoid_noslow(MVMThreadConte
 }
 /* Special version of gc_root_temp_push that returns a value so it is
  * allowed to be chained together without the compiler complaining. */
-MVM_STATIC_INLINE MVMuint8 __MVM_gc_root_temp_push_nonvoid(MVMThreadContext *tc, MVMCollectable **obj_ref, MVMuint8 chain_in) {
+MVM_STATIC_INLINE uint8_t __MVM_gc_root_temp_push_nonvoid(MVMThreadContext *tc, MVMCollectable **obj_ref, uint8_t chain_in) {
     MVM_gc_root_temp_push(tc, obj_ref);
     return 1;
 }
@@ -132,13 +132,13 @@ void MVM_gc_root_add_frame_registers_to_worklist(MVMThreadContext *tc, MVMGCWork
 #define __MVMROOT_PUSH(tc, obj_ref, chain) __MVM_gc_root_temp_push_nonvoid_noslow(tc, (MVMCollectable **)&(obj_ref), chain)
 
 #define MVMROOT(tc, obj_ref1)  /* If you get "passed 3 arguments, but takes just 2" error, if you want to keep compatibility with older moar versions, write explicit MVM_gc_root_temp_push and _pop calls, otherwise move the curly braces outside the MVMROOT parenthesis. */ \
-    for (MVMuint8 __MVMROOT_VAR_NAME = __MVM_gc_root_temp_push_nonvoid(tc, (MVMCollectable **)&(obj_ref1), 0); \
+    for (uint8_t __MVMROOT_VAR_NAME = __MVM_gc_root_temp_push_nonvoid(tc, (MVMCollectable **)&(obj_ref1), 0); \
         __MVMROOT_VAR_NAME != 0; \
         MVM_gc_root_temp_pop(tc), \
             __MVMROOT_VAR_NAME = 0)
 
 #define MVMROOT2(tc, obj_ref1, obj_ref2)  /* If you get "passed 4 arguments, but takes just 3" error, if you want to keep compatibility with older moar versions, write explicit MVM_gc_root_temp_push and _pop calls, otherwise move the curly braces outside the MVMROOT parenthesis. */ \
-    for (MVMuint8 __MVMROOT_VAR_NAME = \
+    for (uint8_t __MVMROOT_VAR_NAME = \
             __MVMROOT_PUSH(tc, obj_ref1, \
             __MVMROOT_PUSH(tc, obj_ref2, \
             __MVM_gc_root_temp_push_ensure_space(tc, 2))); \
@@ -147,7 +147,7 @@ void MVM_gc_root_add_frame_registers_to_worklist(MVMThreadContext *tc, MVMGCWork
     MVM_gc_root_temp_pop_n(tc, 2), __MVMROOT_VAR_NAME = 0)
 
 #define MVMROOT3(tc, obj_ref1, obj_ref2, obj_ref3)  /* If you get "passed 5 arguments, but takes just 4" error, if you want to keep compatibility with older moar versions, write explicit MVM_gc_root_temp_push and _pop calls, otherwise move the curly braces outside the MVMROOT parenthesis. */ \
-    for (MVMuint8 __MVMROOT_VAR_NAME = \
+    for (uint8_t __MVMROOT_VAR_NAME = \
             __MVMROOT_PUSH(tc, obj_ref1, \
             __MVMROOT_PUSH(tc, obj_ref2, \
             __MVMROOT_PUSH(tc, obj_ref3, \
@@ -157,7 +157,7 @@ void MVM_gc_root_add_frame_registers_to_worklist(MVMThreadContext *tc, MVMGCWork
     MVM_gc_root_temp_pop_n(tc, 3), __MVMROOT_VAR_NAME = 0)
 
 #define MVMROOT4(tc, obj_ref1, obj_ref2, obj_ref3, obj_ref4)  /* If you get "passed 6 arguments, but takes just 5" error, if you want to keep compatibility with older moar versions, write explicit MVM_gc_root_temp_push and _pop calls, otherwise move the curly braces outside the MVMROOT parenthesis. */ \
-    for (MVMuint8 __MVMROOT_VAR_NAME = \
+    for (uint8_t __MVMROOT_VAR_NAME = \
             __MVMROOT_PUSH(tc, obj_ref1, \
             __MVMROOT_PUSH(tc, obj_ref2, \
             __MVMROOT_PUSH(tc, obj_ref3, \
@@ -168,7 +168,7 @@ void MVM_gc_root_add_frame_registers_to_worklist(MVMThreadContext *tc, MVMGCWork
     MVM_gc_root_temp_pop_n(tc, 4), __MVMROOT_VAR_NAME = 0)
 
 #define MVMROOT5(tc, obj_ref1, obj_ref2, obj_ref3, obj_ref4, obj_ref5)  /* If you get "passed 7 arguments, but takes just 6" error, if you want to keep compatibility with older moar versions, write explicit MVM_gc_root_temp_push and _pop calls, otherwise move the curly braces outside the MVMROOT parenthesis. */ \
-    for (MVMuint8 __MVMROOT_VAR_NAME = \
+    for (uint8_t __MVMROOT_VAR_NAME = \
             __MVMROOT_PUSH(tc, obj_ref1, \
             __MVMROOT_PUSH(tc, obj_ref2, \
             __MVMROOT_PUSH(tc, obj_ref3, \
@@ -180,7 +180,7 @@ void MVM_gc_root_add_frame_registers_to_worklist(MVMThreadContext *tc, MVMGCWork
     MVM_gc_root_temp_pop_n(tc, 5), __MVMROOT_VAR_NAME = 0)
 
 #define MVMROOT6(tc, obj_ref1, obj_ref2, obj_ref3, obj_ref4, obj_ref5, obj_ref6)  /* If you get "passed 8 arguments, but takes just 7" error, if you want to keep compatibility with older moar versions, write explicit MVM_gc_root_temp_push and _pop calls, otherwise move the curly braces outside the MVMROOT parenthesis. */ \
-    for (MVMuint8 __MVMROOT_VAR_NAME = \
+    for (uint8_t __MVMROOT_VAR_NAME = \
             __MVMROOT_PUSH(tc, obj_ref1, \
             __MVMROOT_PUSH(tc, obj_ref2, \
             __MVMROOT_PUSH(tc, obj_ref3, \

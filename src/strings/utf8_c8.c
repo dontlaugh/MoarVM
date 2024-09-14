@@ -86,35 +86,35 @@ static unsigned classify(MVMCodepoint cp) {
     return 0;
 }
 
-static uint32_t utf8_encode(MVMuint8 *bp, MVMCodepoint cp) {
+static uint32_t utf8_encode(uint8_t *bp, MVMCodepoint cp) {
     unsigned cc = classify(cp);
 
     if (!(cc & (CP_CHAR | CP_NONCHAR)))
         return 0;
 
     if (cc & U8_SINGLE) {
-        bp[0] = (MVMuint8)cp;
+        bp[0] = (uint8_t)cp;
         return 1;
     }
 
     if (cc & U8_DOUBLE) {
-        bp[0] = (MVMuint8)(( 6 << 5) |  (cp >> 6));
-        bp[1] = (MVMuint8)(( 2 << 6) |  (cp &  0x3F));
+        bp[0] = (uint8_t)(( 6 << 5) |  (cp >> 6));
+        bp[1] = (uint8_t)(( 2 << 6) |  (cp &  0x3F));
         return 2;
     }
 
     if (cc & U8_TRIPLE) {
-        bp[0] = (MVMuint8)((14 << 4) |  (cp >> 12));
-        bp[1] = (MVMuint8)(( 2 << 6) | ((cp >> 6) & 0x3F));
-        bp[2] = (MVMuint8)(( 2 << 6) | ( cp       & 0x3F));
+        bp[0] = (uint8_t)((14 << 4) |  (cp >> 12));
+        bp[1] = (uint8_t)(( 2 << 6) | ((cp >> 6) & 0x3F));
+        bp[2] = (uint8_t)(( 2 << 6) | ( cp       & 0x3F));
         return 3;
     }
 
     if (cc & U8_QUAD) {
-        bp[0] = (MVMuint8)((30 << 3) |  (cp >> 18));
-        bp[1] = (MVMuint8)(( 2 << 6) | ((cp >> 12) & 0x3F));
-        bp[2] = (MVMuint8)(( 2 << 6) | ((cp >>  6) & 0x3F));
-        bp[3] = (MVMuint8)(( 2 << 6) | ( cp        & 0x3F));
+        bp[0] = (uint8_t)((30 << 3) |  (cp >> 18));
+        bp[1] = (uint8_t)(( 2 << 6) | ((cp >> 12) & 0x3F));
+        bp[2] = (uint8_t)(( 2 << 6) | ((cp >>  6) & 0x3F));
+        bp[3] = (uint8_t)(( 2 << 6) | ( cp        & 0x3F));
         return 4;
     }
 
@@ -125,13 +125,13 @@ static uint32_t utf8_encode(MVMuint8 *bp, MVMCodepoint cp) {
 
 #define UTF8_MAXINC (32 * 1024 * 1024)
 
-static const MVMuint8 hex_chars[] = { '0', '1', '2', '3', '4', '5', '6', '7',
+static const uint8_t hex_chars[] = { '0', '1', '2', '3', '4', '5', '6', '7',
                                       '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-static MVMGrapheme32 synthetic_for(MVMThreadContext *tc, MVMuint8 invalid) {
+static MVMGrapheme32 synthetic_for(MVMThreadContext *tc, uint8_t invalid) {
     if (invalid > 0x7F) {
         /* A real invalid. */
-        MVMuint8 high = invalid >> 4;
-        MVMuint8 low = invalid & 0x0F;
+        uint8_t high = invalid >> 4;
+        uint8_t low = invalid & 0x0F;
         MVMCodepoint cps[] = { 0x10FFFD, 'x', hex_chars[high], hex_chars[low] };
         return MVM_nfg_codes_to_grapheme_utf8_c8(tc, cps, 4);
     }
@@ -151,7 +151,7 @@ typedef enum {
 /* Decode state for the UTF8-C8 decoder. */
 typedef struct {
     /* The UTF-8 we're decoding. */
-    const MVMuint8 *utf8;
+    const uint8_t *utf8;
 
     /* The index of the current byte we're decoding. */
     size_t cur_byte;
@@ -186,7 +186,7 @@ typedef struct {
     MVMNormalizer norm;
 
     /* Bad bytes from an earlier buffer, for the sake of streaming decode. */
-    MVMuint8 prev_bad_bytes[4];
+    uint8_t prev_bad_bytes[4];
     uint32_t num_prev_bad_bytes;
 } DecodeState;
 
@@ -233,7 +233,7 @@ static int append_grapheme(MVMThreadContext *tc, DecodeState *state, MVMGrapheme
         size_t i, j;
         for (i = state->orig_codes_unnormalized; i < state->orig_codes_pos; i++) {
             MVMCodepoint to_encode = state->orig_codes[i];
-            MVMuint8 encoded[4];
+            uint8_t encoded[4];
             uint32_t bytes = utf8_encode(encoded, to_encode);
             for (j = 0; j < bytes; j++)
                 state->result[state->result_pos++] = synthetic_for(tc, encoded[j]);
@@ -323,7 +323,7 @@ MVMString * MVM_string_utf8_c8_decode(MVMThreadContext *tc, const MVMObject *res
     /* Decoding state, in a struct to easily pass to utility routines.
      * Result buffer is a maximum estimate to avoid realloc; we can shrink
      * it at the end. */
-    state.utf8 = (MVMuint8 *)utf8;
+    state.utf8 = (uint8_t *)utf8;
     state.cur_byte = 0;
     state.unaccepted_start = 0;
     state.expecting = EXPECT_START;
@@ -337,7 +337,7 @@ MVMString * MVM_string_utf8_c8_decode(MVMThreadContext *tc, const MVMObject *res
     MVM_unicode_normalizer_init(tc, &(state.norm), MVM_NORMALIZE_NFG);
 
     while (state.cur_byte < bytes) {
-        MVMuint8 decode_byte = utf8[state.cur_byte];
+        uint8_t decode_byte = utf8[state.cur_byte];
         switch (state.expecting) {
             case EXPECT_START:
                 if ((decode_byte & 0x80) == 0) {
@@ -464,14 +464,14 @@ uint32_t MVM_string_utf8_c8_decodestream(MVMThreadContext *tc, MVMDecodeStream *
         state.orig_codes = MVM_realloc(state.orig_codes,
             sizeof(MVMCodepoint) * (state.orig_codes_pos + bytes));
         state.result_pos = 0;
-        state.utf8 = (const MVMuint8*)cur_bytes->bytes;
+        state.utf8 = (const uint8_t*)cur_bytes->bytes;
         state.cur_byte = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
         state.unaccepted_start = state.cur_byte;
 
         /* Process this buffer. */
         while (state.cur_byte < bytes) {
             /* Process a byte. */
-            MVMuint8 decode_byte = state.utf8[state.cur_byte];
+            uint8_t decode_byte = state.utf8[state.cur_byte];
             int32_t maybe_new_graph = 0;
             switch (state.expecting) {
                 case EXPECT_START:
@@ -601,9 +601,9 @@ uint32_t MVM_string_utf8_c8_decodestream(MVMThreadContext *tc, MVMDecodeStream *
 }
 
 /* Encodes the specified string to UTF-8. */
-static void emit_cp(MVMThreadContext *tc, MVMCodepoint cp, MVMuint8 **result,
+static void emit_cp(MVMThreadContext *tc, MVMCodepoint cp, uint8_t **result,
                     size_t *result_pos, size_t *result_limit,
-                    MVMuint8 *repl_bytes, MVMuint64 repl_length) {
+                    uint8_t *repl_bytes, uint64_t repl_length) {
     uint32_t bytes;
     if (*result_pos >= *result_limit) {
         *result_limit *= 2;
@@ -635,13 +635,13 @@ static int hex2int(MVMThreadContext *tc, MVMCodepoint cp) {
         MVM_exception_throw_adhoc(tc, "UTF-8 C-8 encoding encountered corrupt synthetic (%"PRId32")", cp);
 }
 char * MVM_string_utf8_c8_encode_substr(MVMThreadContext *tc,
-        MVMString *str, MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement) {
-    MVMuint8        *result;
+        MVMString *str, uint64_t *output_size, int64_t start, int64_t length, MVMString *replacement) {
+    uint8_t        *result;
     size_t           result_pos, result_limit;
     MVMGraphemeIter  gi;
     MVMStringIndex   strgraphs = MVM_string_graphs(tc, str);
-    MVMuint8        *repl_bytes = NULL;
-    MVMuint64        repl_length;
+    uint8_t        *repl_bytes = NULL;
+    uint64_t        repl_length;
 
     if (start < 0 || start > strgraphs)
         MVM_exception_throw_adhoc(tc, "start (%"PRId64") out of range (0..%"PRIu32")", start, strgraphs);
@@ -651,7 +651,7 @@ char * MVM_string_utf8_c8_encode_substr(MVMThreadContext *tc,
         MVM_exception_throw_adhoc(tc, "length (%"PRId64") out of range (0..%"PRIu32")", length, strgraphs);
 
     if (replacement)
-        repl_bytes = (MVMuint8 *) MVM_string_utf8_c8_encode_substr(tc, replacement, &repl_length, 0, -1, NULL);
+        repl_bytes = (uint8_t *) MVM_string_utf8_c8_encode_substr(tc, replacement, &repl_length, 0, -1, NULL);
 
     /* Guesstimate that we'll be within 2 bytes for most chars most of the
      * time, and give ourselves 4 bytes breathing space. */
@@ -688,20 +688,20 @@ char * MVM_string_utf8_c8_encode_substr(MVMThreadContext *tc,
     }
 
     if (output_size)
-        *output_size = (MVMuint64)result_pos;
+        *output_size = (uint64_t)result_pos;
     MVM_free(repl_bytes);
     return (char *)result;
 }
 
 /* Encodes the specified string to UTF-8 C-8. */
-char * MVM_string_utf8_c8_encode(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size) {
+char * MVM_string_utf8_c8_encode(MVMThreadContext *tc, MVMString *str, uint64_t *output_size) {
     return MVM_string_utf8_c8_encode_substr(tc, str, output_size, 0,
         MVM_string_graphs(tc, str), NULL);
 }
 
 /* Encodes the specified string to a UTF-8 C-8 C string. */
 char * MVM_string_utf8_c8_encode_C_string(MVMThreadContext *tc, MVMString *str) {
-    MVMuint64 output_size;
+    uint64_t output_size;
     char * utf8_string = MVM_string_utf8_c8_encode(tc, str, &output_size);
     utf8_string = MVM_realloc(utf8_string, output_size + 1);
     utf8_string[output_size] = (char)0;

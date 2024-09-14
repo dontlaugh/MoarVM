@@ -110,9 +110,9 @@ void MVM_sc_set_description(MVMThreadContext *tc, MVMSerializationContext *sc, M
 }
 
 /* Given an SC, looks up the index of an object that is in its root set. */
-MVMint64 MVM_sc_find_object_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *obj) {
+int64_t MVM_sc_find_object_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *obj) {
     MVMObject **roots;
-    MVMint64    i, count;
+    int64_t    i, count;
     uint32_t   cached = MVM_sc_get_idx_in_sc(&obj->header);
     if (cached != ~(unsigned)0 && MVM_sc_get_collectable_sc(tc, &obj->header) == sc)
         return cached;
@@ -126,7 +126,7 @@ MVMint64 MVM_sc_find_object_idx(MVMThreadContext *tc, MVMSerializationContext *s
 }
 
 /* Calls MVM_sc_find_object_idx, but first checks if the sc is actually an SCRef. */
-MVMint64 MVM_sc_find_object_idx_jit(MVMThreadContext *tc, MVMObject *sc, MVMObject *obj) {
+int64_t MVM_sc_find_object_idx_jit(MVMThreadContext *tc, MVMObject *sc, MVMObject *obj) {
     if (REPR(sc)->ID != MVM_REPR_ID_SCRef)
         MVM_exception_throw_adhoc(tc,
             "Must provide an SCRef operand to scgetobjidx");
@@ -134,8 +134,8 @@ MVMint64 MVM_sc_find_object_idx_jit(MVMThreadContext *tc, MVMObject *sc, MVMObje
 }
 
 /* Given an SC, looks up the index of an STable that is in its root set. */
-MVMint64 MVM_sc_find_stable_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMSTable *st) {
-    MVMuint64 i;
+int64_t MVM_sc_find_stable_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMSTable *st) {
+    uint64_t i;
     uint32_t cached = MVM_sc_get_idx_in_sc(&st->header);
     if (cached != ~(unsigned)0 && MVM_sc_get_collectable_sc(tc, &st->header) == sc)
         return cached;
@@ -147,9 +147,9 @@ MVMint64 MVM_sc_find_stable_idx(MVMThreadContext *tc, MVMSerializationContext *s
 }
 
 /* Given an SC, looks up the index of a code ref that is in its root set. */
-MVMint64 MVM_sc_find_code_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *obj) {
+int64_t MVM_sc_find_code_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *obj) {
     MVMObject *roots;
-    MVMint64   i, count;
+    int64_t   i, count;
     uint32_t cached = MVM_sc_get_idx_in_sc(&obj->header);
     if (cached != ~(unsigned)0 && MVM_sc_get_collectable_sc(tc, &obj->header) == sc)
         return cached;
@@ -179,7 +179,7 @@ MVMint64 MVM_sc_find_code_idx(MVMThreadContext *tc, MVMSerializationContext *sc,
 
 /* Given a compilation unit and dependency index, returns that SC. Slow path
  * for when the SC may be NULL. */
-MVMSerializationContext * MVM_sc_get_sc_slow(MVMThreadContext *tc, MVMCompUnit *cu, MVMint16 dep) {
+MVMSerializationContext * MVM_sc_get_sc_slow(MVMThreadContext *tc, MVMCompUnit *cu, int16_t dep) {
     MVMSerializationContext *sc = cu->body.scs[dep];
     if (sc == NULL) {
         MVMSerializationContextBody *scb = cu->body.scs_to_resolve[dep];
@@ -196,14 +196,14 @@ MVMSerializationContext * MVM_sc_get_sc_slow(MVMThreadContext *tc, MVMCompUnit *
 }
 
 /* Checks if an SC is currently in the process of doing deserialization work. */
-MVM_STATIC_INLINE MVMint64 sc_working(MVMSerializationContext *sc) {
+MVM_STATIC_INLINE int64_t sc_working(MVMSerializationContext *sc) {
     MVMSerializationReader *sr = sc->body->sr;
     return sr && MVM_load(&sr->working);
 }
 
-MVMuint8 MVM_sc_is_object_immediately_available(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx) {
+uint8_t MVM_sc_is_object_immediately_available(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx) {
     MVMObject **roots = sc->body->root_objects;
-    MVMint64    count = sc->body->num_objects;
+    int64_t    count = sc->body->num_objects;
     if (idx >= 0 && idx < count) {
         if (roots[idx] && !sc_working(sc)) {
             return 1;
@@ -213,9 +213,9 @@ MVMuint8 MVM_sc_is_object_immediately_available(MVMThreadContext *tc, MVMSeriali
 }
 
 /* Given an SC and an index, fetch the object stored there. */
-MVMObject * MVM_sc_get_object(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx) {
+MVMObject * MVM_sc_get_object(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx) {
     MVMObject **roots = sc->body->root_objects;
-    MVMint64    count = sc->body->num_objects;
+    int64_t    count = sc->body->num_objects;
     if (MVM_LIKELY(idx >= 0 && idx < count))
         return roots[idx] && !sc_working(sc)
             ? roots[idx]
@@ -231,9 +231,9 @@ MVMObject * MVM_sc_get_object(MVMThreadContext *tc, MVMSerializationContext *sc,
 
 /* Given an SC and an index, fetch the object stored there, or return NULL if
  * there is none. Does not cause lazy deserialization. */
-MVMObject * MVM_sc_try_get_object(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx) {
+MVMObject * MVM_sc_try_get_object(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx) {
     MVMObject **roots = sc->body->root_objects;
-    MVMint64    count = sc->body->num_objects;
+    int64_t    count = sc->body->num_objects;
     if (idx > 0 && idx < count && !sc_working(sc))
         return roots[idx];
     else
@@ -242,7 +242,7 @@ MVMObject * MVM_sc_try_get_object(MVMThreadContext *tc, MVMSerializationContext 
 
 /* Given an SC, an index, and an object, store the object at that index and update
  * its SC index to match. */
-void MVM_sc_set_object_op(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx, MVMObject *obj) {
+void MVM_sc_set_object_op(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx, MVMObject *obj) {
     if (REPR(sc)->ID != MVM_REPR_ID_SCRef)
         MVM_exception_throw_adhoc(tc,
             "Must provide an SCRef operand to scsetobj");
@@ -257,25 +257,25 @@ void MVM_sc_set_object_op(MVMThreadContext *tc, MVMSerializationContext *sc, MVM
 
 /* Given an SC, an index, and an object, store the object at that index and update
  * its SC index to match. */
-void MVM_sc_set_object(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx, MVMObject *obj) {
+void MVM_sc_set_object(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx, MVMObject *obj) {
     MVM_sc_set_object_no_update(tc, sc, idx, obj);
     MVM_sc_set_idx_in_sc(&obj->header, idx);
 }
 
 /* Given an SC, an index, and an object, store the object at that index. Do
  * not update the object's own SC index, however. */
-void MVM_sc_set_object_no_update(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx, MVMObject *obj) {
+void MVM_sc_set_object_no_update(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx, MVMObject *obj) {
     if (idx < 0)
         MVM_exception_throw_adhoc(tc, "Invalid (negative) object root index %"PRId64"", idx);
-    if ((MVMuint64)idx < sc->body->num_objects) {
+    if ((uint64_t)idx < sc->body->num_objects) {
         /* Just updating an existing one. */
         MVM_ASSIGN_REF(tc, &(sc->common.header), sc->body->root_objects[idx], obj);
     }
     else {
-        if ((MVMuint64)idx >= sc->body->alloc_objects) {
-            MVMint64 orig_size = sc->body->alloc_objects;
+        if ((uint64_t)idx >= sc->body->alloc_objects) {
+            int64_t orig_size = sc->body->alloc_objects;
             sc->body->alloc_objects *= 2;
-            if (sc->body->alloc_objects < (MVMuint64)idx + 1)
+            if (sc->body->alloc_objects < (uint64_t)idx + 1)
                 sc->body->alloc_objects = idx + 1;
             sc->body->root_objects = MVM_recalloc(sc->body->root_objects,
                 orig_size * sizeof(MVMObject *), sc->body->alloc_objects * sizeof(MVMObject *));
@@ -286,8 +286,8 @@ void MVM_sc_set_object_no_update(MVMThreadContext *tc, MVMSerializationContext *
 }
 
 /* Given an SC and an index, fetch the STable stored there. */
-MVMSTable * MVM_sc_get_stable(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx) {
-    if (MVM_LIKELY(idx >= 0 && (MVMuint64)idx < sc->body->num_stables)) {
+MVMSTable * MVM_sc_get_stable(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx) {
+    if (MVM_LIKELY(idx >= 0 && (uint64_t)idx < sc->body->num_stables)) {
         MVMSTable *got = sc->body->root_stables[idx];
         return got && !sc_working(sc) ? got : MVM_serialization_demand_stable(tc, sc, idx);
     }
@@ -302,8 +302,8 @@ MVMSTable * MVM_sc_get_stable(MVMThreadContext *tc, MVMSerializationContext *sc,
 
 /* Given an SC and an index, fetch the STable stored there, or return NULL if there
  * is none. Does not cause lazy deserialization. */
-MVMSTable * MVM_sc_try_get_stable(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx) {
-    if (idx >= 0 && (MVMuint64)idx < sc->body->num_stables)
+MVMSTable * MVM_sc_try_get_stable(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx) {
+    if (idx >= 0 && (uint64_t)idx < sc->body->num_stables)
         return sc->body->root_stables[idx];
     else
         return NULL;
@@ -311,19 +311,19 @@ MVMSTable * MVM_sc_try_get_stable(MVMThreadContext *tc, MVMSerializationContext 
 
 /* Given an SC, an index, and an STable, store the STable at the index. Does not
  * modify the SC marked on the STable itself. */
-void MVM_sc_set_stable(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx, MVMSTable *st) {
+void MVM_sc_set_stable(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx, MVMSTable *st) {
     if (MVM_UNLIKELY(idx < 0))
         MVM_exception_throw_adhoc(tc,
             "Invalid (negative) STable index %"PRId64, idx);
-    if ((MVMuint64)idx < sc->body->num_stables) {
+    if ((uint64_t)idx < sc->body->num_stables) {
         /* Just updating an existing one. */
         MVM_ASSIGN_REF(tc, &(sc->common.header), sc->body->root_stables[idx], st);
     }
     else {
-        if ((MVMuint64)idx >= sc->body->alloc_stables) {
-            MVMint64 orig_size = sc->body->alloc_stables;
+        if ((uint64_t)idx >= sc->body->alloc_stables) {
+            int64_t orig_size = sc->body->alloc_stables;
             sc->body->alloc_stables += 32;
-            if (sc->body->alloc_stables < (MVMuint64)idx + 1)
+            if (sc->body->alloc_stables < (uint64_t)idx + 1)
                 sc->body->alloc_stables = idx + 1;
             sc->body->root_stables = MVM_recalloc(sc->body->root_stables, orig_size,
                 sc->body->alloc_stables * sizeof(MVMSTable *));
@@ -336,8 +336,8 @@ void MVM_sc_set_stable(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint
 
 /* Given an SC and an STable, pushes the STable to the end of the root list. */
 void MVM_sc_push_stable(MVMThreadContext *tc, MVMSerializationContext *sc, MVMSTable *st) {
-    MVMint64 idx = sc->body->num_stables;
-    if ((MVMuint64)idx == sc->body->alloc_stables) {
+    int64_t idx = sc->body->num_stables;
+    if ((uint64_t)idx == sc->body->alloc_stables) {
         sc->body->alloc_stables += 16;
         sc->body->root_stables = MVM_realloc(sc->body->root_stables,
             sc->body->alloc_stables * sizeof(MVMSTable *));
@@ -347,10 +347,10 @@ void MVM_sc_push_stable(MVMThreadContext *tc, MVMSerializationContext *sc, MVMST
 }
 
 /* Given an SC and an index, fetch the code ref stored there. */
-MVMObject * MVM_sc_get_code(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx) {
+MVMObject * MVM_sc_get_code(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx) {
     MVMObject *roots = sc->body->root_codes;
-    MVMuint64   count = MVM_repr_elems(tc, roots);
-    if ((MVMuint64)idx < count) {
+    uint64_t   count = MVM_repr_elems(tc, roots);
+    if ((uint64_t)idx < count) {
         MVMObject *found = MVM_repr_at_pos_o(tc, roots, idx);
         return MVM_is_null(tc, found) || sc_working(sc)
             ? MVM_serialization_demand_code(tc, sc, idx)
@@ -366,7 +366,7 @@ MVMObject * MVM_sc_get_code(MVMThreadContext *tc, MVMSerializationContext *sc, M
 }
 
 /* Given an SC, an index and a code ref, store it and the index. */
-void MVM_sc_set_code_op(MVMThreadContext *tc, MVMSerializationContext *sc, MVMint64 idx, MVMObject *code) {
+void MVM_sc_set_code_op(MVMThreadContext *tc, MVMSerializationContext *sc, int64_t idx, MVMObject *code) {
     if (REPR(sc)->ID != MVM_REPR_ID_SCRef)
         MVM_exception_throw_adhoc(tc,
             "Must provide an SCRef operand to scsetcode");
@@ -386,7 +386,7 @@ MVMSerializationContext * MVM_sc_find_by_handle(MVMThreadContext *tc, MVMString 
 void MVM_sc_disclaim(MVMThreadContext *tc, MVMSerializationContext *sc) {
     MVMObject **root_objects, *root_codes, *obj;
     MVMSTable **root_stables, *stable;
-    MVMint64 i, count;
+    int64_t i, count;
     MVMCollectable *col;
     if (REPR(sc)->ID != MVM_REPR_ID_SCRef)
         MVM_exception_throw_adhoc(tc,
@@ -460,16 +460,16 @@ void MVM_sc_wb_hit_obj(MVMThreadContext *tc, MVMObject *obj) {
     comp_sc = (MVMSerializationContext *)MVM_repr_at_pos_o(tc, tc->compiling_scs, 0);
     if (MVM_sc_get_obj_sc(tc, obj) != comp_sc) {
         /* Get new slot ID. */
-        MVMint64 new_slot = comp_sc->body->num_objects;
+        int64_t new_slot = comp_sc->body->num_objects;
 
         /* See if the object is actually owned by another, and it's the
          * owner we need to repossess. */
         if (obj->st->WHAT == tc->instance->boot_types.BOOTArray ||
             obj->st->WHAT == tc->instance->boot_types.BOOTHash) {
             MVMObject *owned_objects = MVM_sc_get_obj_sc(tc, obj)->body->owned_objects;
-            MVMint64 n = MVM_repr_elems(tc, owned_objects);
-            MVMint64 found = 0;
-            MVMint64 i;
+            int64_t n = MVM_repr_elems(tc, owned_objects);
+            int64_t found = 0;
+            int64_t i;
             for (i = 0; i < n; i += 2) {
                 if (MVM_repr_at_pos_o(tc, owned_objects, i) == obj) {
                     MVMSerializationContext *real_sc;
@@ -520,7 +520,7 @@ void MVM_sc_wb_hit_st(MVMThreadContext *tc, MVMSTable *st) {
     comp_sc = (MVMSerializationContext *)MVM_repr_at_pos_o(tc, tc->compiling_scs, 0);
     if (MVM_sc_get_stable_sc(tc, st) != comp_sc) {
         /* Add to root set. */
-        MVMint64 new_slot = comp_sc->body->num_stables;
+        int64_t new_slot = comp_sc->body->num_stables;
         MVM_sc_push_stable(tc, comp_sc, st);
 
         /* Add repossession entry. */

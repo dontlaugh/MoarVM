@@ -57,24 +57,24 @@
  * the object. */
 struct MVMStorageSpec {
     /* 0 if this is to be referenced, anything else otherwise. */
-    MVMuint16 inlineable;
+    uint16_t inlineable;
 
     /* For things that want to be inlined, the number of bits of
      * storage they need and what kind of byte-boundary they want to
      * be aligned to. Ignored otherwise. */
-    MVMuint16 bits;
-    MVMuint16 align;
+    uint16_t bits;
+    uint16_t align;
 
     /* For things that are inlined, if they are just storage of a
      * primitive type and can unbox, this says what primitive type
      * that they unbox to. */
-    MVMuint16 boxed_primitive;
+    uint16_t boxed_primitive;
 
     /* The types that this one can box/unbox to. */
-    MVMuint16 can_box;
+    uint16_t can_box;
 
     /* For ints, whether it's an unsigned value. */
-    MVMuint8 is_unsigned;
+    uint8_t is_unsigned;
 };
 
 /* Inlined or not. */
@@ -189,8 +189,8 @@ struct MVMCollectable {
          * any, and then location within that. */
 #ifdef MVM_USE_OVERFLOW_SERIALIZATION_INDEX
         struct {
-            MVMuint16 sc_idx;
-            MVMuint16 idx;
+            uint16_t sc_idx;
+            uint16_t idx;
         } sc;
         struct MVMSerializationIndex *sci;
 #else
@@ -208,11 +208,11 @@ struct MVMCollectable {
     uint32_t owner;
 
     /* Collectable flags (see MVMCollectableFlags). */
-    MVMuint8 flags1;
-    MVMuint8 flags2;
+    uint8_t flags1;
+    uint8_t flags2;
 
     /* Object size, in bytes. */
-    MVMuint16 size;
+    uint16_t size;
 };
 #ifdef MVM_USE_OVERFLOW_SERIALIZATION_INDEX
 #  define MVM_DIRECT_SC_IDX_SENTINEL 0xFFFF
@@ -245,7 +245,7 @@ struct MVMObjectStooge {
 struct MVMAttributeIdentifier {
     MVMObject         *class_handle;   /* Class handle */
     MVMString         *attr_name;      /* Name of the attribute. */
-    MVMint64           hint;           /* Hint for use in static/gradual typing. */
+    int64_t           hint;           /* Hint for use in static/gradual typing. */
 };
 
 /* How do we turn something of this type into a boolean? */
@@ -277,11 +277,11 @@ struct MVMSTable {
     uint32_t size;
 
     /* The length of the type check cache. */
-    MVMuint16 type_check_cache_length;
+    uint16_t type_check_cache_length;
 
     /* The type checking mode and method cache mode (see flags for this
      * above). */
-    MVMuint16 mode_flags;
+    uint16_t mode_flags;
 
     /* Array of type objects. If this is set, then it is expected to contain
      * the type objects of all types that this type is equivalent to (e.g.
@@ -292,7 +292,7 @@ struct MVMSTable {
      * should never, ever be serialized and you should NEVER make a
      * type directory based upon this ID. Otherwise you'll create memory
      * leaks for anonymous types, and other such screwups. */
-    MVMuint64 type_cache_id;
+    uint64_t type_cache_id;
 
     /* If this is a container, then this contains information needed in
      * order to fetch the value in it. If not, it'll be null, which can
@@ -311,7 +311,7 @@ struct MVMSTable {
     MVMHLLConfig *hll_owner;
 
     /* The role that the type plays in the HLL, if any. */
-    MVMint64 hll_role;
+    int64_t hll_role;
 
     /* The type-object. */
     MVMObject *WHAT;
@@ -353,11 +353,11 @@ struct MVMSTable {
 
     /* If this STable is currently in the process of being repossessed. Used
      * to trigger clearup of memory pre-repossession. */
-    MVMuint8 being_repossessed;
+    uint8_t being_repossessed;
 
     /* If this STable represents a type that can be the target of a
      * change_type - that is to say, it's been mixed in to. */
-    MVMuint8 is_mixin_type;
+    uint8_t is_mixin_type;
 };
 
 /* The representation operations table. Note that representations are not
@@ -371,49 +371,49 @@ struct MVMREPROps_Attribute {
      * that matches the kind of the attribute that is being fetched. */
     void (*get_attribute) (MVMThreadContext *tc, MVMSTable *st,
         MVMObject *root, void *data, MVMObject *class_handle, MVMString *name,
-        MVMint64 hint, MVMRegister *result, MVMuint16 kind);
+        int64_t hint, MVMRegister *result, uint16_t kind);
 
     /* Binds the given object or value to the specified attribute. The
      * kind flag specifies the type of value being passed to be bound.*/
     void (*bind_attribute) (MVMThreadContext *tc, MVMSTable *st,
         MVMObject *root, void *data, MVMObject *class_handle, MVMString *name,
-        MVMint64 hint, MVMRegister value, MVMuint16 kind);
+        int64_t hint, MVMRegister value, uint16_t kind);
 
     /* Gets the hint for the given attribute ID. */
-    MVMint64 (*hint_for) (MVMThreadContext *tc, MVMSTable *st,
+    int64_t (*hint_for) (MVMThreadContext *tc, MVMSTable *st,
         MVMObject *class_handle, MVMString *name);
 
     /* Checks if an attribute has been initialized. */
-    MVMint64 (*is_attribute_initialized) (MVMThreadContext *tc, MVMSTable *st,
+    int64_t (*is_attribute_initialized) (MVMThreadContext *tc, MVMSTable *st,
         void *data, MVMObject *class_handle, MVMString *name,
-        MVMint64 hint);
+        int64_t hint);
 
     /* Provided the attribute is a native integer of the architecture's atomic
      * size or an object pointer, returns an AO_t * referencing it. This is only
      * valid until the next safepoint. If rebless is called on the object,
      * updates may be lost although memory safety must not be violated. */
     AO_t * (*attribute_as_atomic) (MVMThreadContext *tc, MVMSTable *st,
-        void *data, MVMObject *class_handle, MVMString *name, MVMuint16 kind);
+        void *data, MVMObject *class_handle, MVMString *name, uint16_t kind);
 };
 struct MVMREPROps_Boxing {
     /* Used with boxing. Sets an integer value, for representations that
      * can hold one. */
     void (*set_int) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMint64 value);
+        MVMObject *root, void *data, int64_t value);
 
     /* Used with boxing. Gets an integer value, for representations that
      * can hold one. */
-    MVMint64 (*get_int) (MVMThreadContext *tc, MVMSTable *st,
+    int64_t (*get_int) (MVMThreadContext *tc, MVMSTable *st,
         MVMObject *root, void *data);
 
     /* Used with boxing. Sets a floating point value, for representations that
      * can hold one. */
     void (*set_num) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMnum64 value);
+        MVMObject *root, void *data, double value);
 
     /* Used with boxing. Gets a floating point value, for representations that
      * can hold one. */
-    MVMnum64 (*get_num) (MVMThreadContext *tc, MVMSTable *st,
+    double (*get_num) (MVMThreadContext *tc, MVMSTable *st,
         MVMObject *root, void *data);
 
     /* Used with boxing. Sets a string value, for representations that
@@ -429,11 +429,11 @@ struct MVMREPROps_Boxing {
     /* Used with boxing. Sets an unsinged integer value, for representations
      *  that can hold one. */
     void (*set_uint) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMuint64 value);
+        MVMObject *root, void *data, uint64_t value);
 
     /* Used with boxing. Gets an unsigned integer value, for representations
      * that can hold one. */
-    MVMuint64 (*get_uint) (MVMThreadContext *tc, MVMSTable *st,
+    uint64_t (*get_uint) (MVMThreadContext *tc, MVMSTable *st,
         MVMObject *root, void *data);
 
     /* Some objects serve primarily as boxes of others, inlining them. This gets
@@ -447,73 +447,73 @@ struct MVMREPROps_Positional {
      * location (specified as a register). Expects to be passed a kind flag
      * that matches the kind of the attribute that is being fetched. */
     void (*at_pos) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMint64 index,
-        MVMRegister *result, MVMuint16 kind);
+        MVMObject *root, void *data, int64_t index,
+        MVMRegister *result, uint16_t kind);
 
     /* Binds the given object or value to the specified index. The
      * kind flag specifies the type of value being passed to be bound.*/
     void (*bind_pos) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMint64 index,
-        MVMRegister value, MVMuint16 kind);
+        MVMObject *root, void *data, int64_t index,
+        MVMRegister value, uint16_t kind);
 
     /* Sets the element count of the array, expanding or shrinking
      * it as needed. */
     void (*set_elems) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMuint64 count);
+        MVMObject *root, void *data, uint64_t count);
 
     /* Pushes the specified value onto the array. */
     void (*push) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMRegister value, MVMuint16 kind);
+        MVMObject *root, void *data, MVMRegister value, uint16_t kind);
 
     /* Pops the value at the end of the array off it. */
     void (*pop) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMRegister *value, MVMuint16 kind);
+        MVMObject *root, void *data, MVMRegister *value, uint16_t kind);
 
     /* Unshifts the value onto the array. */
     void (*unshift) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMRegister value, MVMuint16 kind);
+        MVMObject *root, void *data, MVMRegister value, uint16_t kind);
 
     /* Gets the value at the start of the array, and moves the starting point of
      * the array so that the next element is element zero. */
     void (*shift) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMRegister *value, MVMuint16 kind);
+        MVMObject *root, void *data, MVMRegister *value, uint16_t kind);
 
     /* Creates a slice of the source array (from start to end) and stores it
      * within the destination array. If start or end is "-n", it will be
      * translated into the nth position relative to the end of the array. */
     void (*slice) (MVMThreadContext *tc, MVMSTable *st,
         MVMObject *src, void *data, MVMObject *dest,
-        MVMint64 start, MVMint64 end);
+        int64_t start, int64_t end);
 
     /* Splices the specified array into this one. Representations may optimize if
      * they know the type of the passed array, otherwise they should use the REPR
      * API. */
     void (*splice) (MVMThreadContext *tc, MVMSTable *st,
         MVMObject *root, void *data, MVMObject *from,
-        MVMint64 offset, MVMuint64 elems);
+        int64_t offset, uint64_t elems);
 
     /* Multi-dimensional array read. */
     void (*at_pos_multidim) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMint64 num_indices,
-        MVMint64 *indices, MVMRegister *result, MVMuint16 kind);
+        MVMObject *root, void *data, int64_t num_indices,
+        int64_t *indices, MVMRegister *result, uint16_t kind);
 
     /* Multi-dimensional array write. */
     void (*bind_pos_multidim) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMint64 num_indices,
-        MVMint64 *indices, MVMRegister value, MVMuint16 kind);
+        MVMObject *root, void *data, int64_t num_indices,
+        int64_t *indices, MVMRegister value, uint16_t kind);
 
     /* Gets the number of dimensions along with a C-level array of them. The
      * second two parameters are "out"s. The caller must not mutate dimensions,
      * nor persist it such that it lasts longer than the next VM safepoint. */
     void (*dimensions) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMint64 *num_dimensions,
-        MVMint64 **dimensions);
+        MVMObject *root, void *data, int64_t *num_dimensions,
+        int64_t **dimensions);
 
     /* Sets the number of dimensions. The caller is responsible for freeing
      * the array passed in dimensions. */
     void (*set_dimensions) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMint64 num_dimensions,
-        MVMint64 *dimensions);
+        MVMObject *root, void *data, int64_t num_dimensions,
+        int64_t *dimensions);
 
     /* Gets the STable representing the declared element type. */
     MVMStorageSpec (*get_elem_storage_spec) (MVMThreadContext *tc, MVMSTable *st);
@@ -522,33 +522,33 @@ struct MVMREPROps_Positional {
      * size, gets an AO_t * pointing to that element and valid until the next
      * safepoint. */
     AO_t * (*pos_as_atomic) (MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-        void *data, MVMint64 index);
+        void *data, int64_t index);
 
     /* Multi-dim version of as_atomic. */
     AO_t * (*pos_as_atomic_multidim) (MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-        void *data, MVMint64 num_indices, MVMint64 *indices);
+        void *data, int64_t num_indices, int64_t *indices);
 
     void (*write_buf) (MVMThreadContext *tc, MVMSTable *st,
         MVMObject *root, void *data, char *from,
-        MVMint64 offset, MVMuint64 elems);
+        int64_t offset, uint64_t elems);
 
-    MVMint64 (*read_buf) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMint64 offset, MVMuint64 elems);
+    int64_t (*read_buf) (MVMThreadContext *tc, MVMSTable *st,
+        MVMObject *root, void *data, int64_t offset, uint64_t elems);
 };
 struct MVMREPROps_Associative {
     /* Gets the value at the specified key and places it in the passed
      * location (specified as a register). Expects to be passed a kind flag
      * that matches the kind of the attribute that is being fetched. */
     void (*at_key) (MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data,
-        MVMObject *key, MVMRegister *result, MVMuint16 kind);
+        MVMObject *key, MVMRegister *result, uint16_t kind);
 
     /* Binds the object at the specified address into the hash at the specified
      * key. */
     void (*bind_key) (MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-        void *data, MVMObject *key, MVMRegister value, MVMuint16 kind);
+        void *data, MVMObject *key, MVMRegister value, uint16_t kind);
 
     /* Returns a true value of the key exists, and a false one if not. */
-    MVMint64 (*exists_key) (MVMThreadContext *tc, MVMSTable *st,
+    int64_t (*exists_key) (MVMThreadContext *tc, MVMSTable *st,
         MVMObject *root, void *data, MVMObject *key);
 
     /* Deletes the specified key. */
@@ -594,7 +594,7 @@ struct MVMREPROps {
     MVMREPROps_Associative ass_funcs;
 
     /* Gets the number of elements, for any aggregate types. */
-    MVMuint64 (*elems) (MVMThreadContext *tc, MVMSTable *st,
+    uint64_t (*elems) (MVMThreadContext *tc, MVMSTable *st,
         MVMObject *root, void *data);
 
     /* Gets the storage specification for this representation. */
@@ -663,7 +663,7 @@ struct MVMREPROps {
 
     /* Optional API, for representations that allocate additonal memory and
      * want to report its size for debugging purposes. */
-    MVMuint64 (*unmanaged_size) (MVMThreadContext *tc, MVMSTable *st, void *data);
+    uint64_t (*unmanaged_size) (MVMThreadContext *tc, MVMSTable *st, void *data);
 
     /* Optional API to describe references to other Collectables either by
      * index or by name, i.E. names of attributes or lexicals. */
@@ -681,9 +681,9 @@ struct MVMREPROps {
 /* Some functions related to 6model core functionality. */
 MVM_PUBLIC MVMObject * MVM_6model_get_how(MVMThreadContext *tc, MVMSTable *st);
 MVM_PUBLIC MVMObject * MVM_6model_get_how_obj(MVMThreadContext *tc, MVMObject *obj);
-MVMint64 MVM_6model_try_cache_type_check(MVMThreadContext *tc, MVMObject *obj, MVMObject *type, MVMint64 *result);
+int64_t MVM_6model_try_cache_type_check(MVMThreadContext *tc, MVMObject *obj, MVMObject *type, int64_t *result);
 void MVM_6model_stable_gc_free(MVMThreadContext *tc, MVMSTable *st);
-MVMuint64 MVM_6model_next_type_cache_id(MVMThreadContext *tc);
+uint64_t MVM_6model_next_type_cache_id(MVMThreadContext *tc);
 void MVM_6model_never_repossess(MVMThreadContext *tc, MVMObject *obj);
 
 MVM_STATIC_INLINE char *MVM_6model_get_debug_name(MVMThreadContext *tc, MVMObject *obj) {

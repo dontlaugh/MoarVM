@@ -62,7 +62,7 @@ static void uninline(MVMThreadContext *tc, MVMFrame *f, MVMSpeshCandidate *cand,
                     if (dri->dpr->init_values) {
                         /* Complex init values; make sure only to copy args
                          * and temporaries. */
-                        MVMuint16 k;
+                        uint16_t k;
                         for (k = 0; k < dri->dpr->init_callsite->flag_count; k++) {
                             switch (dri->dpr->init_values[k].source) {
                                 case MVM_DISP_RESUME_INIT_ARG:
@@ -77,7 +77,7 @@ static void uninline(MVMThreadContext *tc, MVMFrame *f, MVMSpeshCandidate *cand,
                     }
                     else {
                         /* Just the plain args, so we find them linearly in. */
-                        MVMuint16 k;
+                        uint16_t k;
                         for (k = 0; k < dri->dpr->init_callsite->flag_count; k++)
                             dri->args[k] = f->work[ri->init_registers[k]];
                     }
@@ -126,7 +126,7 @@ static void uninline(MVMThreadContext *tc, MVMFrame *f, MVMSpeshCandidate *cand,
              * of arguments. Do enough to make sure we've got clean enough
              * state in the param processing context */
             uf->params.arg_info.callsite = cand->body.inlines[i].cs;
-            uf->params.arg_info.map = (MVMuint16*)(caller->return_address
+            uf->params.arg_info.map = (uint16_t*)(caller->return_address
                 - cand->body.inlines[i].cs->flag_count * 2);
             uf->params.arg_info.source = caller->work;
             uf->params.named_used_size = MVM_callsite_num_nameds(tc, cand->body.inlines[i].cs);
@@ -154,13 +154,13 @@ static void deopt_named_args_used(MVMThreadContext *tc, MVMFrame *f) {
 }
 
 /* Materialize an individual replaced object. */
-static void materialize_object(MVMThreadContext *tc, MVMFrame *f, MVMuint16 **materialized,
-                               MVMuint16 info_idx, MVMuint16 target_reg) {
+static void materialize_object(MVMThreadContext *tc, MVMFrame *f, uint16_t **materialized,
+                               uint16_t info_idx, uint16_t target_reg) {
     MVMSpeshCandidate *cand = f->spesh_cand;
     MVMObject *obj;
 
     if (!*materialized)
-        *materialized = MVM_calloc(MVM_VECTOR_ELEMS(cand->body.deopt_pea.materialize_info), sizeof(MVMuint16));
+        *materialized = MVM_calloc(MVM_VECTOR_ELEMS(cand->body.deopt_pea.materialize_info), sizeof(uint16_t));
 
     if ((*materialized)[info_idx]) {
         /* Register indexes are offset by 1, so 0 can mean "uninitialized" */
@@ -178,7 +178,7 @@ static void materialize_object(MVMThreadContext *tc, MVMFrame *f, MVMuint16 **ma
             uint32_t i;
             for (i = 0; i < num_attrs; i++) {
                 MVMRegister value = f->work[mi->attr_regs[i]];
-                MVMuint16 offset = repr_data->attribute_offsets[i];
+                uint16_t offset = repr_data->attribute_offsets[i];
                 MVMSTable *flattened = repr_data->flattened_stables[i];
                 if (flattened) {
                     const MVMStorageSpec *ss = flattened->REPR->get_storage_spec(tc, flattened);
@@ -219,7 +219,7 @@ static void materialize_replaced_objects(MVMThreadContext *tc, MVMFrame *f, int3
     uint32_t i;
     MVMSpeshCandidate *cand = f->spesh_cand;
     uint32_t num_deopt_points = MVM_VECTOR_ELEMS(cand->body.deopt_pea.deopt_point);
-    MVMuint16 *materialized = NULL;
+    uint16_t *materialized = NULL;
     MVMROOT2(tc, f, cand) {
         for (i = 0; i < num_deopt_points; i++) {
             MVMSpeshPEADeoptPoint *dp = &(cand->body.deopt_pea.deopt_point[i]);

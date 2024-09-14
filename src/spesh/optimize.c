@@ -110,9 +110,9 @@ static void MVM_spesh_turn_into_set(MVMThreadContext *tc, MVMSpeshGraph *g, MVMS
 
 /* Adds a value into a spesh slot and returns its index.
  * If a spesh slot already holds this value, return that instead. */
-MVMint16 MVM_spesh_add_spesh_slot_try_reuse(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c) {
-    MVMint16 prev_slot;
-    for (prev_slot = 0; (MVMuint16)prev_slot < g->num_spesh_slots; prev_slot++) {
+int16_t MVM_spesh_add_spesh_slot_try_reuse(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c) {
+    int16_t prev_slot;
+    for (prev_slot = 0; (uint16_t)prev_slot < g->num_spesh_slots; prev_slot++) {
         if (g->spesh_slots[prev_slot] == c)
             return prev_slot;
     }
@@ -120,7 +120,7 @@ MVMint16 MVM_spesh_add_spesh_slot_try_reuse(MVMThreadContext *tc, MVMSpeshGraph 
 }
 
 /* Adds a value into a spesh slot and returns its index. */
-MVMint16 MVM_spesh_add_spesh_slot(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c) {
+int16_t MVM_spesh_add_spesh_slot(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c) {
     if (g->num_spesh_slots >= g->alloc_spesh_slots) {
         g->alloc_spesh_slots += 8;
         if (g->spesh_slots)
@@ -172,7 +172,7 @@ static void optimize_istype(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
     MVMSpeshFacts *result_facts;
     if (type_facts->flags & MVM_SPESH_FACT_KNOWN_TYPE &&
          obj_facts->flags & MVM_SPESH_FACT_KNOWN_TYPE) {
-        MVMint64 result;
+        int64_t result;
         if (MVM_6model_try_cache_type_check(tc, obj_facts->type, type_facts->type, &result)) {
             /* Yes; turn it into a constant. */
             ins->info = MVM_op_get_op(MVM_OP_const_i64_16);
@@ -218,7 +218,7 @@ static void optimize_istype(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
 static void optimize_eqaddr(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMSpeshFacts *obj_a_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     MVMSpeshFacts *obj_b_facts = MVM_spesh_get_facts(tc, g, ins->operands[2]);
-    MVMint16 known_result = -1;
+    int16_t known_result = -1;
     if (obj_a_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE &&
             obj_b_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE &&
             obj_a_facts->value.o == obj_b_facts->value.o)
@@ -245,7 +245,7 @@ static void optimize_eqaddr(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
 static void optimize_is_reprid(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMSpeshFacts *obj_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     uint32_t wanted_repr_id;
-    MVMuint64 result_value;
+    uint64_t result_value;
 
     if (!(obj_facts->flags & MVM_SPESH_FACT_KNOWN_TYPE)) {
         return;
@@ -286,7 +286,7 @@ static void optimize_gethow(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
     if (how_obj) {
         MVMSpeshFacts *how_facts;
         /* Transform gethow lookup to spesh slot lookup */
-        MVMint16 spesh_slot = MVM_spesh_add_spesh_slot_try_reuse(tc, g, (MVMCollectable*)how_obj);
+        int16_t spesh_slot = MVM_spesh_add_spesh_slot_try_reuse(tc, g, (MVMCollectable*)how_obj);
         MVM_spesh_usages_delete_by_reg(tc, g, ins->operands[1], ins);
         ins->info = MVM_op_get_op(MVM_OP_sp_getspeshslot);
         ins->operands[1].lit_i16 = spesh_slot;
@@ -318,7 +318,7 @@ static void optimize_isconcrete(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpesh
 }
 
 static void optimize_exception_ops(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
-    MVMuint16 op = ins->info->opcode;
+    uint16_t op = ins->info->opcode;
 
     if (op == MVM_OP_newexception) {
         MVMSpeshOperand target   = ins->operands[0];
@@ -416,8 +416,8 @@ static void optimize_exception_ops(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSp
  * or be dropped. */
 static void optimize_iffy(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins, MVMSpeshBB *bb) {
     MVMSpeshFacts *flag_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
-    MVMuint8 negated_op;
-    MVMint8 truthvalue = -1;
+    uint8_t negated_op;
+    int8_t truthvalue = -1;
 
     switch (ins->info->opcode) {
         case MVM_OP_if_i:
@@ -487,8 +487,8 @@ static void optimize_not_i(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *
     MVMSpeshFacts *src_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     if (src_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
         /* Do the not_i. */
-        MVMint64 value = src_facts->value.i;
-        MVMint16 result = value ? 0 : 1;
+        int64_t value = src_facts->value.i;
+        int16_t result = value ? 0 : 1;
 
         /* Turn the op into a constant and set result facts. */
         MVMSpeshFacts *dest_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
@@ -510,9 +510,9 @@ static void optimize_bitwise_int_math(MVMThreadContext *tc, MVMSpeshGraph *g, MV
     MVMSpeshFacts *lhs_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     MVMSpeshFacts *rhs_facts = MVM_spesh_get_facts(tc, g, ins->operands[2]);
     if ((lhs_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) && (rhs_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE)) {
-        MVMint64 lhs_v = lhs_facts->value.i;
-        MVMint64 rhs_v = rhs_facts->value.i;
-        MVMint64 result_v;
+        int64_t lhs_v = lhs_facts->value.i;
+        int64_t rhs_v = rhs_facts->value.i;
+        int64_t result_v;
         const char *opname = ins->info->name;
 
         switch (ins->info->opcode) {
@@ -634,8 +634,8 @@ static void optimize_decont(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
                 MVMNativeRefREPRData *repr_data = (MVMNativeRefREPRData *)stable->REPR_data;
                 MVMHLLConfig *hll = stable->hll_owner;
                 MVMObject *out_type = NULL;
-                MVMuint16 primitive_type = repr_data->primitive_type;
-                MVMuint16 register_type = 0;
+                uint16_t primitive_type = repr_data->primitive_type;
+                uint16_t register_type = 0;
                 uint32_t box_op;
                 uint32_t unbox_op;
 
@@ -848,16 +848,16 @@ static void optimize_bindcomplete(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 static void optimize_guard(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                       MVMSpeshIns *ins) {
-    MVMuint16 opcode = ins->info->opcode;
+    uint16_t opcode = ins->info->opcode;
 
-    MVMuint8 can_drop_type_guard = 0;
-    MVMuint8 can_drop_concrete_guard = 0;
-    MVMuint8 can_drop_typeobj_guard = 0;
-    MVMuint8 turn_into_set = 0;
+    uint8_t can_drop_type_guard = 0;
+    uint8_t can_drop_concrete_guard = 0;
+    uint8_t can_drop_typeobj_guard = 0;
+    uint8_t turn_into_set = 0;
 
     /* The sslot is always the second-to-last parameter, except for
      * justconc and justtype, which don't have a spesh slot. */
-    MVMuint16 sslot = ins->operands[ins->info->num_operands - 2].lit_i16;
+    uint16_t sslot = ins->operands[ins->info->num_operands - 2].lit_i16;
 
     MVMSpeshFacts *facts    = &g->facts[ins->operands[1].reg.orig][ins->operands[1].reg.i];
 
@@ -921,7 +921,7 @@ static void optimize_coerce(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
 
     if (facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
         MVMSpeshFacts *result_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
-        MVMnum64 result = facts->value.i;
+        double result = facts->value.i;
 
         MVM_spesh_use_facts(tc, g, facts);
         MVM_spesh_usages_delete(tc, g, facts, ins);
@@ -959,7 +959,7 @@ static void optimize_repr_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB 
 static void optimize_string_equality(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMSpeshFacts *a_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     MVMSpeshFacts *b_facts = MVM_spesh_get_facts(tc, g, ins->operands[2]);
-    MVMuint8 was_eq = 0;
+    uint8_t was_eq = 0;
 
     if (ins->info->opcode == MVM_OP_eq_s)
         was_eq = 1;
@@ -1030,9 +1030,9 @@ static void optimize_hllbool(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns
 }
 
 /* Gets the kind of register a lexical lookup targets. */
-static MVMuint16 get_lexical_kind(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
-    MVMuint16 *lexical_types;
-    MVMuint16 i;
+static uint16_t get_lexical_kind(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o) {
+    uint16_t *lexical_types;
+    uint16_t i;
     MVMStaticFrame *sf = g->sf;
     for (i = 0; i < o.lex.outers; i++)
         sf = sf->body.outer;
@@ -1053,7 +1053,7 @@ static void optimize_getlex(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
 /* Turns a bindlex instruction into sp_bindlex_in or sp_bindlex_os depending
  * on type; these get rid of checks whether we need the write barrier. */
 static void optimize_bindlex(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
-    MVMuint16 kind = get_lexical_kind(tc, g, ins->operands[0]);
+    uint16_t kind = get_lexical_kind(tc, g, ins->operands[0]);
     ins->info = MVM_op_get_op(kind == MVM_reg_obj || kind == MVM_reg_str
         ? MVM_OP_sp_bindlex_os
         : MVM_OP_sp_bindlex_in);
@@ -1065,7 +1065,7 @@ static void lex_to_constant(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
     MVMSpeshFacts *facts;
 
     /* Place in a spesh slot. */
-    MVMuint16 ss = MVM_spesh_add_spesh_slot_try_reuse(tc, g,
+    uint16_t ss = MVM_spesh_add_spesh_slot_try_reuse(tc, g,
         (MVMCollectable *)log_obj);
 
     if (MVM_spesh_debug_enabled(tc)) {
@@ -1516,9 +1516,9 @@ static void optimize_runbytecode(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
         type_tuple_from_facts = 0;
     }
     else {
-        MVMuint16 flags = cs->flag_count;
+        uint16_t flags = cs->flag_count;
         stable_type_tuple = MVM_spesh_alloc(tc, g, flags * sizeof(MVMSpeshStatsType));
-        MVMuint16 i;
+        uint16_t i;
         for (i = 0; i < flags; i++) {
             if (cs->arg_flags[i] & MVM_CALLSITE_ARG_OBJ) {
                 MVMSpeshFacts *facts = MVM_spesh_get_and_use_facts(tc, g, args[i]);
@@ -1540,7 +1540,7 @@ static void optimize_runbytecode(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
 
     /* Try to find a specialization. */
     MVMSpeshArgGuard *ag = target_sf->body.spesh->body.spesh_arg_guard;
-    MVMint16 spesh_cand = MVM_spesh_arg_guard_run_types(tc, ag, cs, stable_type_tuple);
+    int16_t spesh_cand = MVM_spesh_arg_guard_run_types(tc, ag, cs, stable_type_tuple);
    if (spesh_cand >= 0) {
        /* Found a candidate. Stack up any required guards. */
        if (need_guardsf)
@@ -1574,7 +1574,7 @@ static void optimize_runbytecode(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
             MVM_spesh_usages_add_unconditional_deopt_usage_by_reg(tc, g, coderef_reg);
             MVM_spesh_inline(tc, g, cs, args, bb, ins, inline_graph, target_sf,
                 coderef_reg, resume_init,
-                (MVMuint16)target_sf->body.spesh->body.spesh_candidates[spesh_cand]->body.bytecode_size);
+                (uint16_t)target_sf->body.spesh->body.spesh_candidates[spesh_cand]->body.bytecode_size);
             optimize_bb(tc, g, optimize_from_bb, NULL);
 
             /* In debug mode, annotate what we inlined. */
@@ -1664,8 +1664,8 @@ static void optimize_coverage_log(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpe
 /* Optimizes an extension op. */
 static void optimize_extop(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     MVMExtOpRecord *extops     = g->sf->body.cu->body.extops;
-    MVMuint16       num_extops = g->sf->body.cu->body.num_extops;
-    MVMuint16       i;
+    uint16_t       num_extops = g->sf->body.cu->body.num_extops;
+    uint16_t       i;
     for (i = 0; i < num_extops; i++) {
         if (extops[i].info == ins->info) {
             /* Found op; call its spesh function, if any. */
@@ -1682,7 +1682,7 @@ static void optimize_uniprop_ops(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
     if (arg1_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
         if (ins->info->opcode == MVM_OP_unipropcode) {
             result_facts->flags |= MVM_SPESH_FACT_KNOWN_VALUE;
-            result_facts->value.i = (MVMint64)MVM_unicode_name_to_property_code(tc, arg1_facts->value.s);
+            result_facts->value.i = (int64_t)MVM_unicode_name_to_property_code(tc, arg1_facts->value.s);
             ins->info = MVM_op_get_op(MVM_OP_const_i64);
             ins->operands[1].lit_i64 = result_facts->value.i;
             MVM_spesh_usages_delete(tc, g, arg1_facts, ins);
@@ -1691,7 +1691,7 @@ static void optimize_uniprop_ops(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
 
             if (arg2_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
                 result_facts->flags |= MVM_SPESH_FACT_KNOWN_VALUE;
-                result_facts->value.i = (MVMint64)MVM_unicode_name_to_property_value_code(tc, arg1_facts->value.i, arg2_facts->value.s);
+                result_facts->value.i = (int64_t)MVM_unicode_name_to_property_value_code(tc, arg1_facts->value.i, arg2_facts->value.s);
                 ins->info = MVM_op_get_op(MVM_OP_const_i64);
                 ins->operands[1].lit_i64 = result_facts->value.i;
                 MVM_spesh_usages_delete(tc, g, arg1_facts, ins);
@@ -1831,7 +1831,7 @@ static void optimize_wval(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *i
 /* Replaces atomic ops with a version that needs no checking of the target's
  * container spec and concreteness, when we have the facts to hand. */
 static void optimize_container_atomic(MVMThreadContext *tc, MVMSpeshGraph *g,
-                                      MVMSpeshIns *ins, MVMuint16 target_reg) {
+                                      MVMSpeshIns *ins, uint16_t target_reg) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, ins->operands[target_reg]);
     if ((facts->flags & MVM_SPESH_FACT_CONCRETE) && (facts->flags & MVM_SPESH_FACT_KNOWN_TYPE)) {
         MVMContainerSpec const *cs = facts->type->st->container_spec;
@@ -1881,8 +1881,8 @@ static void optimize_bigint_binary_op(MVMThreadContext *tc, MVMSpeshGraph *g, MV
         }
     }
     if (common_type && REPR(common_type)->ID == MVM_REPR_ID_P6opaque) {
-        MVMuint16 offset = MVM_p6opaque_get_bigint_offset(tc, common_type->st);
-        MVMint16 cache_type_index = MVM_intcache_type_index(tc, common_type->st->WHAT);
+        uint16_t offset = MVM_p6opaque_get_bigint_offset(tc, common_type->st);
+        int16_t cache_type_index = MVM_intcache_type_index(tc, common_type->st->WHAT);
         if (offset && cache_type_index >= 0) {
             /* Lower the op. */
             MVMSpeshOperand *orig_operands = ins->operands;
@@ -1923,7 +1923,7 @@ static void optimize_bigint_bool_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMS
     }
 
     if (type && REPR(type)->ID == MVM_REPR_ID_P6opaque) {
-        MVMuint16 offset = MVM_p6opaque_get_bigint_offset(tc, type->st);
+        uint16_t offset = MVM_p6opaque_get_bigint_offset(tc, type->st);
         if (offset) {
             MVMSpeshOperand input = ins->operands[1];
             MVMSpeshOperand output = ins->operands[0];
@@ -2376,7 +2376,7 @@ static void optimize_bb_switch(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshB
             optimize_coverage_log(tc, g, bb, ins);
             break;
         default:
-            if (ins->info->opcode == (MVMuint16)-1)
+            if (ins->info->opcode == (uint16_t)-1)
                 optimize_extop(tc, g, bb, ins);
         }
         ins = next_ins;
@@ -2386,7 +2386,7 @@ static void optimize_bb_switch(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshB
 /* Visits the blocks in dominator tree order, recursively. */
 static void optimize_bb(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                         MVMSpeshPlanned *p) {
-    MVMint64 i = 0;
+    int64_t i = 0;
     /* Because optimize_bb() can be deeply recursive, separate as much code
      * as possible into a separate function optimize_bb_switch(), so we don't
      * trash the stack. (needed on musl) */
@@ -2444,7 +2444,7 @@ static MVMSpeshBB * find_bb_with_instruction_linearly_after(MVMThreadContext *tc
     return NULL;
 }
 static uint32_t conflict_free(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
-        MVMSpeshIns *from, MVMSpeshIns *to, MVMuint16 reg, MVMuint16 allow_reads) {
+        MVMSpeshIns *from, MVMSpeshIns *to, uint16_t reg, uint16_t allow_reads) {
     /* A conflict over reg exists if either from and to are a non-linear BB
      * sequence or if another version of reg is written between from and to. */
     MVMSpeshBB *start_bb = find_bb_with_instruction_linearly_after(tc, g, bb, to);
@@ -2460,7 +2460,7 @@ static uint32_t conflict_free(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB
 
             /* Make sure there's no conflicting register use. */
             for (i = 0; i < check->info->num_operands; i++) {
-                MVMuint16 rw_mode = check->info->operands[i] & MVM_operand_rw_mask;
+                uint16_t rw_mode = check->info->operands[i] & MVM_operand_rw_mask;
                 if (rw_mode == MVM_operand_write_reg || (!allow_reads && rw_mode == MVM_operand_read_reg))
                     if (check->operands[i].reg.orig == reg)
                         return 0;
@@ -2551,7 +2551,7 @@ static void try_eliminate_one_box_unbox(MVMThreadContext *tc, MVMSpeshGraph *g, 
     }
 }
 static void walk_set_looking_for_unbox(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
-                                       MVMSpeshIns *box_ins, MVMuint16 unbox_op, MVMuint16 decont_op,
+                                       MVMSpeshIns *box_ins, uint16_t unbox_op, uint16_t decont_op,
                                        MVMSpeshIns *set_ins) {
     MVMSpeshUseChainEntry *user_entry = MVM_spesh_get_facts(tc, g, set_ins->operands[0])->usage.users;
     while (user_entry) {
@@ -2564,7 +2564,7 @@ static void walk_set_looking_for_unbox(MVMThreadContext *tc, MVMSpeshGraph *g, M
     }
 }
 static void try_eliminate_box_unbox_pair(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
-                                         MVMSpeshIns *ins, MVMuint16 unbox_op, MVMuint16 decont_op,
+                                         MVMSpeshIns *ins, uint16_t unbox_op, uint16_t decont_op,
                                          PostInlinePassState *pips) {
     MVMSpeshUseChainEntry *user_entry = MVM_spesh_get_facts(tc, g, ins->operands[0])->usage.users;
     while (user_entry) {
@@ -2591,7 +2591,7 @@ static void walk_set_looking_for_unbool(MVMThreadContext *tc, MVMSpeshGraph *g, 
     while (user_entry) {
         MVMSpeshIns *user = user_entry->user;
         const MVMOpInfo *opinfo = user->info;
-        MVMuint16 opcode = opinfo->opcode;
+        uint16_t opcode = opinfo->opcode;
 
         if (opcode == MVM_OP_sp_runcfunc_i || opcode == MVM_OP_sp_runcfunc_u) {
             MVMSpeshFacts *dispatch_facts = MVM_spesh_get_facts(tc, g, user->operands[1]);
@@ -2610,7 +2610,7 @@ static void try_eliminate_bool_unbool_pair(MVMThreadContext *tc, MVMSpeshGraph *
     while (user_entry) {
         MVMSpeshIns *user = user_entry->user;
         const MVMOpInfo *opinfo = user->info;
-        MVMuint16 opcode = opinfo->opcode;
+        uint16_t opcode = opinfo->opcode;
 
         if (opcode == MVM_OP_sp_runcfunc_i || opcode == MVM_OP_sp_runcfunc_u) {
             MVMSpeshFacts *dispatch_facts = MVM_spesh_get_facts(tc, g, user->operands[1]);

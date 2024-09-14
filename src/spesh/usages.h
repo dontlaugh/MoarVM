@@ -11,14 +11,14 @@ struct MVMSpeshUsages {
 
     /* Does the instruction need to be preserved as it is setting an exception
      * handler block register? */
-    MVMuint8 handler_required;
+    uint8_t handler_required;
 
     /* Has the writer been processed while doing deopt use analysis? */
-    MVMuint8 deopt_write_processed;
+    uint8_t deopt_write_processed;
 
 #if MVM_SPESH_CHECK_DU
     /* Is the writer in the graph? */
-    MVMuint8 writer_seen_in_graph;
+    uint8_t writer_seen_in_graph;
 #endif
 };
 
@@ -31,11 +31,11 @@ struct MVMSpeshUseChainEntry {
     MVMSpeshUseChainEntry *next;
 
     /* Has this read been processed while doing deopt use analysis? */
-    MVMuint8 deopt_read_processed;
+    uint8_t deopt_read_processed;
 
 #if MVM_SPESH_CHECK_DU
     /* Used in debugging. */
-    MVMuint8 seen_in_graph;
+    uint8_t seen_in_graph;
 #endif
 };
 

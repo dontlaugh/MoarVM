@@ -4,28 +4,28 @@
 static const MVMREPROps MultiDimArray_this_repr;
 
 /* Computes the flat number of elements from the given dimension list. */
-static MVMint64 flat_elements(MVMint64 num_dimensions, MVMint64 *dimensions) {
-    MVMint64 result = dimensions[0];
-    MVMint64 i;
+static int64_t flat_elements(int64_t num_dimensions, int64_t *dimensions) {
+    int64_t result = dimensions[0];
+    int64_t i;
     for (i = 1; i < num_dimensions; i++)
         result *= dimensions[i];
     return result;
 }
 
 /* Computes the flat size from representation data. */
-static size_t flat_size(MVMMultiDimArrayREPRData *repr_data, MVMint64 *dimensions) {
+static size_t flat_size(MVMMultiDimArrayREPRData *repr_data, int64_t *dimensions) {
     return repr_data->elem_size * flat_elements(repr_data->num_dimensions, dimensions);
 }
 
 /* Takes a number of dimensions, indices we were passed, and dimension sizes.
  * Computes the offset into flat space. */
-MVM_STATIC_INLINE size_t indices_to_flat_index(MVMThreadContext *tc, MVMint64 num_dimensions, MVMint64 *dimensions, MVMint64 *indices) {
-    MVMint64 multiplier = 1;
+MVM_STATIC_INLINE size_t indices_to_flat_index(MVMThreadContext *tc, int64_t num_dimensions, int64_t *dimensions, int64_t *indices) {
+    int64_t multiplier = 1;
     size_t   result     = 0;
-    MVMint64 i;
+    int64_t i;
     for (i = num_dimensions - 1; i >= 0; i--) {
-        MVMint64  dim_size = dimensions[i];
-        MVMint64  index    = indices[i];
+        int64_t  dim_size = dimensions[i];
+        int64_t  index    = indices[i];
         if (index >= 0 && index < dim_size) {
             result += index * multiplier;
             multiplier *= dim_size;
@@ -59,7 +59,7 @@ static MVMObject * allocate(MVMThreadContext *tc, MVMSTable *st) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (repr_data) {
         MVMObject *obj = MVM_gc_allocate_object(tc, st);
-        ((MVMMultiDimArray *)obj)->body.dimensions = MVM_calloc(repr_data->num_dimensions, sizeof(MVMint64));
+        ((MVMMultiDimArray *)obj)->body.dimensions = MVM_calloc(repr_data->num_dimensions, sizeof(int64_t));
         return obj;
     }
     else {
@@ -76,7 +76,7 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMMultiDimArrayREPRData *re
                 switch (spec->bits) {
                     case 64:
                         repr_data->slot_type = MVM_ARRAY_U64;
-                        repr_data->elem_size = sizeof(MVMuint64);
+                        repr_data->elem_size = sizeof(uint64_t);
                         break;
                     case 32:
                         repr_data->slot_type = MVM_ARRAY_U32;
@@ -84,11 +84,11 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMMultiDimArrayREPRData *re
                         break;
                     case 16:
                         repr_data->slot_type = MVM_ARRAY_U16;
-                        repr_data->elem_size = sizeof(MVMuint16);
+                        repr_data->elem_size = sizeof(uint16_t);
                         break;
                     case 8:
                         repr_data->slot_type = MVM_ARRAY_U8;
-                        repr_data->elem_size = sizeof(MVMuint8);
+                        repr_data->elem_size = sizeof(uint8_t);
                         break;
                     case 4:
                         repr_data->slot_type = MVM_ARRAY_U4;
@@ -111,7 +111,7 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMMultiDimArrayREPRData *re
                 switch (spec->bits) {
                     case 64:
                         repr_data->slot_type = MVM_ARRAY_I64;
-                        repr_data->elem_size = sizeof(MVMint64);
+                        repr_data->elem_size = sizeof(int64_t);
                         break;
                     case 32:
                         repr_data->slot_type = MVM_ARRAY_I32;
@@ -119,11 +119,11 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMMultiDimArrayREPRData *re
                         break;
                     case 16:
                         repr_data->slot_type = MVM_ARRAY_I16;
-                        repr_data->elem_size = sizeof(MVMint16);
+                        repr_data->elem_size = sizeof(int16_t);
                         break;
                     case 8:
                         repr_data->slot_type = MVM_ARRAY_I8;
-                        repr_data->elem_size = sizeof(MVMint8);
+                        repr_data->elem_size = sizeof(int8_t);
                         break;
                     case 4:
                         repr_data->slot_type = MVM_ARRAY_I4;
@@ -147,7 +147,7 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMMultiDimArrayREPRData *re
             switch (spec->bits) {
                 case 64:
                     repr_data->slot_type = MVM_ARRAY_U64;
-                    repr_data->elem_size = sizeof(MVMuint64);
+                    repr_data->elem_size = sizeof(uint64_t);
                     break;
                 case 32:
                     repr_data->slot_type = MVM_ARRAY_U32;
@@ -155,11 +155,11 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMMultiDimArrayREPRData *re
                     break;
                 case 16:
                     repr_data->slot_type = MVM_ARRAY_U16;
-                    repr_data->elem_size = sizeof(MVMuint16);
+                    repr_data->elem_size = sizeof(uint16_t);
                     break;
                 case 8:
                     repr_data->slot_type = MVM_ARRAY_U8;
-                    repr_data->elem_size = sizeof(MVMuint8);
+                    repr_data->elem_size = sizeof(uint8_t);
                     break;
                 case 4:
                     repr_data->slot_type = MVM_ARRAY_U4;
@@ -182,11 +182,11 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMMultiDimArrayREPRData *re
             switch (spec->bits) {
                 case 64:
                     repr_data->slot_type = MVM_ARRAY_N64;
-                    repr_data->elem_size = sizeof(MVMnum64);
+                    repr_data->elem_size = sizeof(double);
                     break;
                 case 32:
                     repr_data->slot_type = MVM_ARRAY_N32;
-                    repr_data->elem_size = sizeof(MVMnum32);
+                    repr_data->elem_size = sizeof(float);
                     break;
                 default:
                     MVM_exception_throw_adhoc(tc,
@@ -210,7 +210,7 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *repr_info) {
     if (!MVM_is_null(tc, info)) {
         MVMObject *dims = MVM_repr_at_key_o(tc, info, str_consts->dimensions);
         MVMObject *type = MVM_repr_at_key_o(tc, info, str_consts->type);
-        MVMint64 dimensions;
+        int64_t dimensions;
         if (!MVM_is_null(tc, dims)) {
             dimensions = MVM_repr_get_int(tc, dims);
             if (dimensions < 1)
@@ -246,7 +246,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
     MVMMultiDimArrayBody     *src_body  = (MVMMultiDimArrayBody *)src;
     MVMMultiDimArrayBody     *dest_body = (MVMMultiDimArrayBody *)dest;
     if (src_body->slots.any) {
-        size_t dim_size  = repr_data->num_dimensions * sizeof(MVMint64);
+        size_t dim_size  = repr_data->num_dimensions * sizeof(int64_t);
         size_t data_size = flat_size(repr_data, src_body->dimensions);
         dest_body->dimensions = MVM_malloc(dim_size);
         dest_body->slots.any  = MVM_malloc(data_size);
@@ -260,8 +260,8 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
     MVMMultiDimArrayBody *body = (MVMMultiDimArrayBody *)data;
     if (body->slots.any) {
         MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
-        MVMint64 flat_elems = flat_elements(repr_data->num_dimensions, body->dimensions);
-        MVMint64 i;
+        int64_t flat_elems = flat_elements(repr_data->num_dimensions, body->dimensions);
+        int64_t i;
         switch (repr_data->slot_type) {
             case MVM_ARRAY_OBJ: {
                 MVMObject **slots = body->slots.o;
@@ -317,7 +317,7 @@ static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *
 static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     MVMMultiDimArrayBody     *body      = (MVMMultiDimArrayBody *)data;
-    MVMint64 i, flat_elems;
+    int64_t i, flat_elems;
 
     /* Write out dimensions. */
     for (i = 0; i < repr_data->num_dimensions; i++)
@@ -334,34 +334,34 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
                 MVM_serialization_write_str(tc, writer, body->slots.s[i]);
                 break;
             case MVM_ARRAY_I64:
-                MVM_serialization_write_int(tc, writer, (MVMint64)body->slots.i64[i]);
+                MVM_serialization_write_int(tc, writer, (int64_t)body->slots.i64[i]);
                 break;
             case MVM_ARRAY_I32:
-                MVM_serialization_write_int(tc, writer, (MVMint64)body->slots.i32[i]);
+                MVM_serialization_write_int(tc, writer, (int64_t)body->slots.i32[i]);
                 break;
             case MVM_ARRAY_I16:
-                MVM_serialization_write_int(tc, writer, (MVMint64)body->slots.i16[i]);
+                MVM_serialization_write_int(tc, writer, (int64_t)body->slots.i16[i]);
                 break;
             case MVM_ARRAY_I8:
-                MVM_serialization_write_int(tc, writer, (MVMint64)body->slots.i8[i]);
+                MVM_serialization_write_int(tc, writer, (int64_t)body->slots.i8[i]);
                 break;
             case MVM_ARRAY_U64:
-                MVM_serialization_write_int(tc, writer, (MVMint64)body->slots.u64[i]);
+                MVM_serialization_write_int(tc, writer, (int64_t)body->slots.u64[i]);
                 break;
             case MVM_ARRAY_U32:
-                MVM_serialization_write_int(tc, writer, (MVMint64)body->slots.u32[i]);
+                MVM_serialization_write_int(tc, writer, (int64_t)body->slots.u32[i]);
                 break;
             case MVM_ARRAY_U16:
-                MVM_serialization_write_int(tc, writer, (MVMint64)body->slots.u16[i]);
+                MVM_serialization_write_int(tc, writer, (int64_t)body->slots.u16[i]);
                 break;
             case MVM_ARRAY_U8:
-                MVM_serialization_write_int(tc, writer, (MVMint64)body->slots.u8[i]);
+                MVM_serialization_write_int(tc, writer, (int64_t)body->slots.u8[i]);
                 break;
             case MVM_ARRAY_N64:
-                MVM_serialization_write_num(tc, writer, (MVMnum64)body->slots.n64[i]);
+                MVM_serialization_write_num(tc, writer, (double)body->slots.n64[i]);
                 break;
             case MVM_ARRAY_N32:
-                MVM_serialization_write_num(tc, writer, (MVMnum64)body->slots.n32[i]);
+                MVM_serialization_write_num(tc, writer, (double)body->slots.n32[i]);
                 break;
             default:
                 MVM_exception_throw_adhoc(tc, "MVMMultiDimArray: Unhandled slot type");
@@ -373,7 +373,7 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
 static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     MVMMultiDimArrayBody     *body      = (MVMMultiDimArrayBody *)data;
-    MVMint64 i, flat_elems;
+    int64_t i, flat_elems;
 
     /* Read in dimensions. */
     for (i = 0; i < repr_data->num_dimensions; i++)
@@ -399,10 +399,10 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
                 body->slots.i32[i] = (int32_t)MVM_serialization_read_int(tc, reader);
                 break;
             case MVM_ARRAY_I16:
-                body->slots.i16[i] = (MVMint16)MVM_serialization_read_int(tc, reader);
+                body->slots.i16[i] = (int16_t)MVM_serialization_read_int(tc, reader);
                 break;
             case MVM_ARRAY_I8:
-                body->slots.i8[i] = (MVMint8)MVM_serialization_read_int(tc, reader);
+                body->slots.i8[i] = (int8_t)MVM_serialization_read_int(tc, reader);
                 break;
             case MVM_ARRAY_U64:
                 body->slots.i64[i] = MVM_serialization_read_int(tc, reader);
@@ -411,16 +411,16 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
                 body->slots.i32[i] = (uint32_t)MVM_serialization_read_int(tc, reader);
                 break;
             case MVM_ARRAY_U16:
-                body->slots.i16[i] = (MVMuint16)MVM_serialization_read_int(tc, reader);
+                body->slots.i16[i] = (uint16_t)MVM_serialization_read_int(tc, reader);
                 break;
             case MVM_ARRAY_U8:
-                body->slots.i8[i] = (MVMuint8)MVM_serialization_read_int(tc, reader);
+                body->slots.i8[i] = (uint8_t)MVM_serialization_read_int(tc, reader);
                 break;
             case MVM_ARRAY_N64:
                 body->slots.n64[i] = MVM_serialization_read_num(tc, reader);
                 break;
             case MVM_ARRAY_N32:
-                body->slots.n32[i] = (MVMnum32)MVM_serialization_read_num(tc, reader);
+                body->slots.n32[i] = (float)MVM_serialization_read_num(tc, reader);
                 break;
             default:
                 MVM_exception_throw_adhoc(tc, "MVMMultiDimArray: Unhandled slot type");
@@ -442,7 +442,7 @@ static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializ
 
 /* Deserializes the REPR data. */
 static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
-    MVMint64 num_dims;
+    int64_t num_dims;
 
     num_dims = MVM_serialization_read_int(tc, reader);
 
@@ -471,26 +471,26 @@ static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSeri
     st->size = sizeof(MVMMultiDimArray);
 }
 
-static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, MVMuint16 kind) {
+static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     MVM_exception_throw_adhoc(tc, "Cannot push onto a fixed dimension array");
 }
-static void pop(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, MVMuint16 kind) {
+static void pop(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     MVM_exception_throw_adhoc(tc, "Cannot pop a fixed dimension array");
 }
-static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, MVMuint16 kind) {
+static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     MVM_exception_throw_adhoc(tc, "Cannot unshift onto a fixed dimension array");
 }
-static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, MVMuint16 kind) {
+static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     MVM_exception_throw_adhoc(tc, "Cannot shift a fixed dimension array");
 }
-static void aslice(MVMThreadContext *tc, MVMSTable *st, MVMObject *src, void *data, MVMObject *dest, MVMint64 start, MVMint64 end) {
+static void aslice(MVMThreadContext *tc, MVMSTable *st, MVMObject *src, void *data, MVMObject *dest, int64_t start, int64_t end) {
     MVM_exception_throw_adhoc(tc, "Cannot slice a multidim array");
 }
-static void asplice(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *from, MVMint64 offset, MVMuint64 count) {
+static void asplice(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *from, int64_t offset, uint64_t count) {
     MVM_exception_throw_adhoc(tc, "Cannot splice a fixed dimension array");
 }
 
-static void at_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 num_indices, MVMint64 *indices, MVMRegister *value, MVMuint16 kind) {
+static void at_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_indices, int64_t *indices, MVMRegister *value, uint16_t kind) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (num_indices == repr_data->num_dimensions) {
         MVMMultiDimArrayBody *body = (MVMMultiDimArrayBody *)data;
@@ -513,37 +513,37 @@ static void at_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root
                 break;
             case MVM_ARRAY_I64:
                 if (kind == MVM_reg_int64)
-                    value->i64 = (MVMint64)body->slots.i64[flat_index];
+                    value->i64 = (int64_t)body->slots.i64[flat_index];
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: atpos expected int register");
                 break;
             case MVM_ARRAY_I32:
                 if (kind == MVM_reg_int64)
-                    value->i64 = (MVMint64)body->slots.i32[flat_index];
+                    value->i64 = (int64_t)body->slots.i32[flat_index];
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: atpos expected int register");
                 break;
             case MVM_ARRAY_I16:
                 if (kind == MVM_reg_int64)
-                    value->i64 = (MVMint64)body->slots.i16[flat_index];
+                    value->i64 = (int64_t)body->slots.i16[flat_index];
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: atpos expected int register");
                 break;
             case MVM_ARRAY_I8:
                 if (kind == MVM_reg_int64)
-                    value->i64 = (MVMint64)body->slots.i8[flat_index];
+                    value->i64 = (int64_t)body->slots.i8[flat_index];
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: atpos expected int register");
                 break;
             case MVM_ARRAY_N64:
                 if (kind == MVM_reg_num64)
-                    value->n64 = (MVMnum64)body->slots.n64[flat_index];
+                    value->n64 = (double)body->slots.n64[flat_index];
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: atpos expected num register");
                 break;
             case MVM_ARRAY_N32:
                 if (kind == MVM_reg_num64)
-                    value->n64 = (MVMnum64)body->slots.n32[flat_index];
+                    value->n64 = (double)body->slots.n32[flat_index];
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: atpos expected num register");
                 break;
@@ -555,19 +555,19 @@ static void at_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root
                 break;
             case MVM_ARRAY_U32:
                 if (kind == MVM_reg_uint64)
-                    value->u64 = (MVMuint64)body->slots.u32[flat_index];
+                    value->u64 = (uint64_t)body->slots.u32[flat_index];
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: atpos expected uint register");
                 break;
             case MVM_ARRAY_U16:
                 if (kind == MVM_reg_uint64)
-                    value->u64 = (MVMuint64)body->slots.u16[flat_index];
+                    value->u64 = (uint64_t)body->slots.u16[flat_index];
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: atpos expected uint register");
                 break;
             case MVM_ARRAY_U8:
                 if (kind == MVM_reg_uint64)
-                    value->u64 = (MVMuint64)body->slots.u8[flat_index];
+                    value->u64 = (uint64_t)body->slots.u8[flat_index];
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: atpos expected uint register");
                 break;
@@ -582,7 +582,7 @@ static void at_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root
     }
 }
 
-static void bind_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 num_indices, MVMint64 *indices, MVMRegister value, MVMuint16 kind) {
+static void bind_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_indices, int64_t *indices, MVMRegister value, uint16_t kind) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (num_indices == repr_data->num_dimensions) {
         MVMMultiDimArrayBody *body = (MVMMultiDimArrayBody *)data;
@@ -618,13 +618,13 @@ static void bind_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *ro
                 break;
             case MVM_ARRAY_I16:
                 if (kind == MVM_reg_int64)
-                    body->slots.i16[flat_index] = (MVMint16)value.i64;
+                    body->slots.i16[flat_index] = (int16_t)value.i64;
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: bindpos expected int register");
                 break;
             case MVM_ARRAY_I8:
                 if (kind == MVM_reg_int64)
-                    body->slots.i8[flat_index] = (MVMint8)value.i64;
+                    body->slots.i8[flat_index] = (int8_t)value.i64;
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: bindpos expected int register");
                 break;
@@ -636,7 +636,7 @@ static void bind_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *ro
                 break;
             case MVM_ARRAY_N32:
                 if (kind == MVM_reg_num64)
-                    body->slots.n32[flat_index] = (MVMnum32)value.n64;
+                    body->slots.n32[flat_index] = (float)value.n64;
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: bindpos expected num register");
                 break;
@@ -654,13 +654,13 @@ static void bind_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *ro
                 break;
             case MVM_ARRAY_U16:
                 if (kind == MVM_reg_uint64)
-                    body->slots.u16[flat_index] = (MVMuint16)value.u64;
+                    body->slots.u16[flat_index] = (uint16_t)value.u64;
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: bindpos expected uint register");
                 break;
             case MVM_ARRAY_U8:
                 if (kind == MVM_reg_uint64)
-                    body->slots.u8[flat_index] = (MVMuint8)value.u64;
+                    body->slots.u8[flat_index] = (uint8_t)value.u64;
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: bindpos expected uint register");
                 break;
@@ -675,7 +675,7 @@ static void bind_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *ro
     }
 }
 
-static void dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 *num_dimensions, MVMint64 **dimensions) {
+static void dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t *num_dimensions, int64_t **dimensions) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (repr_data) {
         MVMMultiDimArrayBody *body = (MVMMultiDimArrayBody *)data;
@@ -688,7 +688,7 @@ static void dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
     }
 }
 
-static void set_dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 num_dimensions, MVMint64 *dimensions) {
+static void set_dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t num_dimensions, int64_t *dimensions) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (num_dimensions == repr_data->num_dimensions) {
         /* Note that we use an atomic operation at the point of allocation.
@@ -700,7 +700,7 @@ static void set_dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
         void *storage = MVM_calloc(flat_elements(repr_data->num_dimensions, dimensions), repr_data->elem_size);
         if (MVM_trycas(&(body->slots.any), NULL, storage)) {
             /* Now memory is in place, safe to un-zero dimensions. */
-            memcpy(body->dimensions, dimensions, num_dimensions * sizeof(MVMint64));
+            memcpy(body->dimensions, dimensions, num_dimensions * sizeof(int64_t));
         }
         else {
             MVM_exception_throw_adhoc(tc, "MultiDimArray: can only set dimensions once");
@@ -713,23 +713,23 @@ static void set_dimensions(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
     }
 }
 
-static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister *value, MVMuint16 kind) {
+static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind) {
     at_pos_multidim(tc, st, root, data, 1, &index, value, kind);
 }
 
-static void bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister value, MVMuint16 kind) {
+static void bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister value, uint16_t kind) {
     bind_pos_multidim(tc, st, root, data, 1, &index, value, kind);
 }
 
-static void set_elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMuint64 count) {
-    set_dimensions(tc, st, root, data, 1, (MVMint64 *)&count);
+static void set_elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint64_t count) {
+    set_dimensions(tc, st, root, data, 1, (int64_t *)&count);
 }
 
-static MVMuint64 elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
-    MVMint64  _;
-    MVMint64 *dims;
+static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+    int64_t  _;
+    int64_t *dims;
     dimensions(tc, st, root, data, &_, &dims);
-    return (MVMuint64)dims[0];
+    return (uint64_t)dims[0];
 }
 
 static MVMStorageSpec get_elem_storage_spec(MVMThreadContext *tc, MVMSTable *st) {
@@ -781,7 +781,7 @@ static MVMStorageSpec get_elem_storage_spec(MVMThreadContext *tc, MVMSTable *st)
 
 static AO_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable *st,
                                      MVMObject *root, void *data,
-                                     MVMint64 num_indices, MVMint64 *indices) {
+                                     int64_t num_indices, int64_t *indices) {
     MVMMultiDimArrayREPRData *repr_data = (MVMMultiDimArrayREPRData *)st->REPR_data;
     if (num_indices == repr_data->num_dimensions) {
         MVMMultiDimArrayBody *body = (MVMMultiDimArrayBody *)data;
@@ -804,7 +804,7 @@ static AO_t * pos_as_atomic_multidim(MVMThreadContext *tc, MVMSTable *st,
 }
 
 static AO_t * pos_as_atomic(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-                            void *data, MVMint64 index) {
+                            void *data, int64_t index) {
     return pos_as_atomic_multidim(tc, st, root, data, 1, &index);
 }
 

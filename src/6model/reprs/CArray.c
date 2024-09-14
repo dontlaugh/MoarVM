@@ -215,7 +215,7 @@ static void die_pos_nyi(MVMThreadContext *tc) {
 
 
 static void expand(MVMThreadContext *tc, MVMCArrayREPRData *repr_data, MVMCArrayBody *body, int32_t min_size) {
-    MVMint8 is_complex;
+    int8_t is_complex;
     int32_t next_size = body->allocated? 2 * body->allocated: 4;
 
     if (min_size > next_size)
@@ -264,7 +264,7 @@ static MVMObject * make_wrapper(MVMThreadContext *tc, MVMSTable *st, void *data)
             MVM_exception_throw_adhoc(tc, "Unknown element type in CArray");
     }
 }
-static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister *value, MVMuint16 kind) {
+static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind) {
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
     MVMCArrayBody     *body      = (MVMCArrayBody *)data;
     void              *ptr       = ((char *)body->storage) + index * repr_data->elem_size;
@@ -356,7 +356,7 @@ static void at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *d
 }
 
 static void bind_wrapper_and_ptr(MVMThreadContext *tc, MVMObject *root, MVMCArrayBody *body,
-        MVMint64 index, MVMObject *wrapper, void *cptr) {
+        int64_t index, MVMObject *wrapper, void *cptr) {
     if (index >= body->allocated)
         expand(tc, STABLE(root)->REPR_data, body, index + 1);
     if (index >= body->elems)
@@ -364,7 +364,7 @@ static void bind_wrapper_and_ptr(MVMThreadContext *tc, MVMObject *root, MVMCArra
     MVM_ASSIGN_REF(tc, &(root->header), body->child_objs[index], wrapper);
     ((void **)body->storage)[index] = cptr;
 }
-static void bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister value, MVMuint16 kind) {
+static void bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister value, uint16_t kind) {
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
     MVMCArrayBody     *body      = (MVMCArrayBody *)data;
     void *ptr;
@@ -432,27 +432,27 @@ static void bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
     }
 }
 
-static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, MVMuint16 kind) {
+static void push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     die_pos_nyi(tc);
 }
 
-static void pop(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, MVMuint16 kind) {
+static void pop(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     die_pos_nyi(tc);
 }
 
-static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, MVMuint16 kind) {
+static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister value, uint16_t kind) {
     die_pos_nyi(tc);
 }
 
-static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, MVMuint16 kind) {
+static void shift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMRegister *value, uint16_t kind) {
     die_pos_nyi(tc);
 }
 
-static void aslice(MVMThreadContext *tc, MVMSTable *st, MVMObject *src, void *data, MVMObject *dest, MVMint64 start, MVMint64 end) {
+static void aslice(MVMThreadContext *tc, MVMSTable *st, MVMObject *src, void *data, MVMObject *dest, int64_t start, int64_t end) {
     die_pos_nyi(tc);
 }
 
-static MVMuint64 elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMCArrayBody *body = (MVMCArrayBody *)data;
 
     if (body->managed)
@@ -462,13 +462,13 @@ static MVMuint64 elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, voi
         "Don't know how many elements a C array returned from a library");
 }
 
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
     MVMCArrayBody     *body      = (MVMCArrayBody *)data;
-    MVMuint64 result = 0;
+    uint64_t result = 0;
 
     /* The allocated (or just-pointed-at) memory block */
-    result += (MVMuint64) body->allocated * repr_data->elem_size;
+    result += (uint64_t) body->allocated * repr_data->elem_size;
 
     /* The array we hold wrapper objects in */
     if (body->child_objs)

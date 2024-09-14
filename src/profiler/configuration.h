@@ -22,25 +22,25 @@ struct MVMConfigurationProgramEntryPoint {
 };
 
 struct MVMConfigurationProgram {
-    MVMuint8 *bytecode;
+    uint8_t *bytecode;
 
     MVMObject *string_heap;
 
-    MVMuint8 *reg_types;
-    MVMuint16 reg_count;
+    uint8_t *reg_types;
+    uint16_t reg_count;
 
     uint32_t bytecode_length;
 
-    MVMint16 entrypoints[MVM_PROGRAM_ENTRYPOINT_COUNT];
+    int16_t entrypoints[MVM_PROGRAM_ENTRYPOINT_COUNT];
 
     AO_t return_counts[16];
     AO_t last_return_time[16];
     AO_t invoke_counts[MVM_PROGRAM_ENTRYPOINT_COUNT];
 
-    MVMuint8 debugging_level;
+    uint8_t debugging_level;
 };
 
-MVMuint8 MVM_confprog_has_entrypoint(MVMThreadContext *tc, MVMuint8 entrypoint);
-MVMint64 MVM_confprog_run(MVMThreadContext *tc, void *subject, MVMuint8 entrypoint, MVMint64 initial_feature_value);
+uint8_t MVM_confprog_has_entrypoint(MVMThreadContext *tc, uint8_t entrypoint);
+int64_t MVM_confprog_run(MVMThreadContext *tc, void *subject, uint8_t entrypoint, int64_t initial_feature_value);
 void MVM_confprog_mark(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
 void MVM_confprog_install(MVMThreadContext *tc, MVMObject *bytecode, MVMObject *string_array, MVMObject *entrypoints);

@@ -11,13 +11,13 @@ struct MVMSpeshGraph {
     MVMCallsite *cs;
 
     /* The bytecode we're building the graph out of. */
-    MVMuint8 *bytecode;
+    uint8_t *bytecode;
 
     /* Exception handler map for that bytecode. */
     MVMFrameHandler *handlers;
 
     /* Handlers that have become unreachable due to dead code removal. */
-    MVMint8 *unreachable_handlers;
+    int8_t *unreachable_handlers;
 
     /* The size of the bytecode we're building the graph out of. */
     uint32_t bytecode_size;
@@ -33,7 +33,7 @@ struct MVMSpeshGraph {
     MVMSpeshFacts **facts;
 
     /* Number of fact entries per local. */
-    MVMuint16 *fact_counts;
+    uint16_t *fact_counts;
 
     /* Log-based guards added. */
     MVMSpeshLogGuard *log_guards;
@@ -48,8 +48,8 @@ struct MVMSpeshGraph {
     MVMCollectable **spesh_slots;
 
     /* Number of spesh slots we have used and allocated. */
-    MVMuint16 num_spesh_slots;
-    MVMuint16 alloc_spesh_slots;
+    uint16_t num_spesh_slots;
+    uint16_t alloc_spesh_slots;
 
     /* De-opt indexes, as pairs of integers. The first integer, set when we
      * build the graph, is the return address in the original bytecode. The
@@ -62,7 +62,7 @@ struct MVMSpeshGraph {
 
     /* Bit field of named args used to put in place during deopt, since we
      * don't typically don't update the array in specialized code. */
-    MVMuint64 deopt_named_used_bit_field;
+    uint64_t deopt_named_used_bit_field;
 
     /* Deopt points that are considered to be always in use, even if they
      * are not on a deopting instruction. */
@@ -86,22 +86,22 @@ struct MVMSpeshGraph {
     uint32_t num_bbs;
 
     /* The list of local types (only set up if we do inlines). */
-    MVMuint16 *local_types;
+    uint16_t *local_types;
 
     /* The list of lexical types (only set up if we do inlines). */
-    MVMuint16 *lexical_types;
+    uint16_t *lexical_types;
 
     /* The total number of locals, accounting for any inlining done and
      * added temporaries. */
-    MVMuint16 num_locals;
+    uint16_t num_locals;
 
     /* The total number of lexicals, accounting for any inlining done. */
-    MVMuint16 num_lexicals;
+    uint16_t num_lexicals;
 
     /* Temporary local registers added to aid transformations, along with a
      * count of the number we have and have allocated space for so far. */
-    MVMuint16          num_temps;
-    MVMuint16          alloc_temps;
+    uint16_t          num_temps;
+    uint16_t          alloc_temps;
     MVMSpeshTemporary *temps;
 
     /* We need to create new MVMOpInfo structs for each number of
@@ -115,7 +115,7 @@ struct MVMSpeshGraph {
     MVMSpeshCandidate *cand;
 
     /* Did we specialize on the invocant type? */
-    MVMuint8 specialized_on_invocant;
+    uint8_t specialized_on_invocant;
 
     /* Stored in comment annotations to give an ordering of comments */
     uint32_t next_annotation_idx;
@@ -124,17 +124,17 @@ struct MVMSpeshGraph {
 /* A temporary register, added to support transformations. */
 struct MVMSpeshTemporary {
     /* The number of the local along with the current SSA index. */
-    MVMuint16 orig;
-    MVMuint16 i;
+    uint16_t orig;
+    uint16_t i;
 
     /* The SSA index currently loaned out. */
-    MVMuint16 used_i;
+    uint16_t used_i;
 
     /* What kind of register is it? */
-    MVMuint16 kind;
+    uint16_t kind;
 
     /* Is it currently in use? */
-    MVMuint16 in_use;
+    uint16_t in_use;
 };
 
 /* A basic block in the graph (sequences of instructions where control will
@@ -160,11 +160,11 @@ struct MVMSpeshBB {
     MVMSpeshBB **handler_succ;
 
     /* Counts for the above, grouped together to avoid alignment holes. */
-    MVMuint16    num_succ;
-    MVMuint16    num_pred;
-    MVMuint16    num_children;
-    MVMuint16    num_df;
-    MVMuint16    num_handler_succ;
+    uint16_t    num_succ;
+    uint16_t    num_pred;
+    uint16_t    num_children;
+    uint16_t    num_df;
+    uint16_t    num_handler_succ;
 
     /* The next basic block in original linear code order. */
     MVMSpeshBB *linear_next;
@@ -182,13 +182,13 @@ struct MVMSpeshBB {
     uint32_t initial_pc;
 
     /* Is this block an inlining of another one? */
-    MVMint8 inlined;
+    int8_t inlined;
 
     /* Is this basic block part of a jump list? */
-    MVMint8 jumplist;
+    int8_t jumplist;
 
     /* Is this basic block dead (removed due to being unreachable)? */
-    MVMint8 dead;
+    int8_t dead;
 };
 
 /* The SSA phi instruction. */
@@ -213,27 +213,27 @@ struct MVMSpeshIns {
 /* Union type of operands in a spesh instruction; the op info and phase of the
  * optimizer we're in determines which of these we look at. */
 union MVMSpeshOperand {
-    MVMint64     lit_i64;
-    MVMint64     lit_ui64;
+    int64_t     lit_i64;
+    int64_t     lit_ui64;
     int32_t     lit_i32;
     uint32_t    lit_ui32;
-    MVMint16     lit_i16;
-    MVMuint16    lit_ui16;
-    MVMint8      lit_i8;
-    MVMnum64     lit_n64;
-    MVMnum32     lit_n32;
+    int16_t     lit_i16;
+    uint16_t    lit_ui16;
+    int8_t      lit_i8;
+    double     lit_n64;
+    float     lit_n32;
     uint32_t    lit_str_idx;
-    MVMuint16    callsite_idx;
-    MVMuint16    coderef_idx;
+    uint16_t    callsite_idx;
+    uint16_t    coderef_idx;
     uint32_t    ins_offset;
     MVMSpeshBB  *ins_bb;
     struct {
-        MVMuint16 idx;
-        MVMuint16 outers;
+        uint16_t idx;
+        uint16_t outers;
     } lex;
     struct {
         int32_t  i;    /* SSA-computed version. */
-        MVMuint16 orig; /* Original register number. */
+        uint16_t orig; /* Original register number. */
     } reg;
 };
 
@@ -299,12 +299,12 @@ void MVM_spesh_graph_describe(MVMThreadContext *tc, MVMSpeshGraph *g, MVMHeapSna
 void MVM_spesh_graph_destroy(MVMThreadContext *tc, MVMSpeshGraph *g);
 MVM_PUBLIC void * MVM_spesh_alloc(MVMThreadContext *tc, MVMSpeshGraph *g, size_t bytes);
 MVMOpInfo *MVM_spesh_graph_get_phi(MVMThreadContext *tc, MVMSpeshGraph *g, uint32_t nrargs);
-void MVM_spesh_graph_place_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, int32_t n, MVMuint16 var);
+void MVM_spesh_graph_place_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, int32_t n, uint16_t var);
 
 MVM_PUBLIC void MVM_spesh_graph_add_comment(MVMThreadContext *tc, MVMSpeshGraph *g,
     MVMSpeshIns *ins, const char *fmt, ...);
 
-MVM_STATIC_INLINE uint32_t MVM_spesh_is_inc_dec_op(MVMuint16 opcode) {
+MVM_STATIC_INLINE uint32_t MVM_spesh_is_inc_dec_op(uint16_t opcode) {
     return opcode == MVM_OP_inc_i || opcode == MVM_OP_dec_i ||
            opcode == MVM_OP_inc_u || opcode == MVM_OP_dec_u;
 }

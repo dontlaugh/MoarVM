@@ -19,7 +19,7 @@ struct MVMJitCompiler {
     /* For spilling values that don't fit into the register allocator */
     int32_t    spills_base;
     int32_t    spills_free[4];
-    MVM_VECTOR_DECL(struct { MVMint8 reg_type; int32_t next; }, spills);
+    MVM_VECTOR_DECL(struct { int8_t reg_type; int32_t next; }, spills);
 
     void *dasm_globals[MVM_JIT_MAX_GLOBALS];
 };
@@ -35,7 +35,7 @@ void MVM_jit_emit_call_c(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitG
                          MVMJitCallC *call_spec);
 void MVM_jit_emit_branch(MVMThreadContext *tc, MVMJitCompiler *compiler, int32_t label);
 void MVM_jit_emit_conditional_branch(MVMThreadContext *tc, MVMJitCompiler *compiler,
-                                     int32_t cond, int32_t label, MVMuint8 test_type);
+                                     int32_t cond, int32_t label, uint8_t test_type);
 void MVM_jit_emit_block_branch(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
                                MVMJitBranch *branch_spec);
 void MVM_jit_emit_label(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
@@ -49,11 +49,11 @@ void MVM_jit_emit_control(MVMThreadContext *tc, MVMJitCompiler *compiler,
 void MVM_jit_emit_data(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitData *data);
 
 void MVM_jit_emit_load(MVMThreadContext *tc, MVMJitCompiler *compiler,
-                       MVMint8 reg_dst, MVMJitStorageClass mem_cls, int32_t mem_src, int32_t size);
+                       int8_t reg_dst, MVMJitStorageClass mem_cls, int32_t mem_src, int32_t size);
 void MVM_jit_emit_store(MVMThreadContext *tc, MVMJitCompiler *compiler,
-                        MVMJitStorageClass mem_cls, int32_t mem_pos, MVMint8 reg_src, int32_t size);
+                        MVMJitStorageClass mem_cls, int32_t mem_pos, int8_t reg_src, int32_t size);
 void MVM_jit_emit_copy(MVMThreadContext *tc, MVMJitCompiler *compiler,
-                       MVMint8 dst_reg, MVMint8 src_num);
+                       int8_t dst_reg, int8_t src_num);
 void MVM_jit_emit_marker(MVMThreadContext *tc, MVMJitCompiler *compiler, int32_t num);
 void MVM_jit_emit_deopt_check(MVMThreadContext *tc, MVMJitCompiler *compiler);
 void MVM_jit_emit_runbytecode(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitRunByteCode *runcode);
@@ -62,8 +62,8 @@ void MVM_jit_emit_runnativecall(MVMThreadContext *tc, MVMJitCompiler *compiler, 
 void MVM_jit_emit_dispatch(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitDispatch *dispatch);
 void MVM_jit_emit_istype(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitIsType *istype);
 
-uint32_t MVM_jit_spill_memory_select(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMint8 reg_type);
-void MVM_jit_spill_memory_release(MVMThreadContext *tc, MVMJitCompiler *compiler, uint32_t pos, MVMint8 reg_type);
+uint32_t MVM_jit_spill_memory_select(MVMThreadContext *tc, MVMJitCompiler *compiler, int8_t reg_type);
+void MVM_jit_spill_memory_release(MVMThreadContext *tc, MVMJitCompiler *compiler, uint32_t pos, int8_t reg_type);
 
 
 
@@ -109,4 +109,4 @@ extern const MVMBitmap MVM_JIT_REGISTER_CLASS[];
 
 #define MVM_ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
-const char * MVM_register_type(MVMint8 reg_type);
+const char * MVM_register_type(int8_t reg_type);

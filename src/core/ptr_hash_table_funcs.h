@@ -22,11 +22,11 @@ MVM_STATIC_INLINE uint32_t MVM_ptr_hash_allocated_items(const struct MVMPtrHashT
 MVM_STATIC_INLINE uint32_t MVM_ptr_hash_max_items(const struct MVMPtrHashTableControl *control) {
     return MVM_ptr_hash_official_size(control) * MVM_PTR_HASH_LOAD_FACTOR;
 }
-MVM_STATIC_INLINE MVMuint8 *MVM_ptr_hash_metadata(const struct MVMPtrHashTableControl *control) {
-    return (MVMuint8 *) control + sizeof(struct MVMPtrHashTableControl);
+MVM_STATIC_INLINE uint8_t *MVM_ptr_hash_metadata(const struct MVMPtrHashTableControl *control) {
+    return (uint8_t *) control + sizeof(struct MVMPtrHashTableControl);
 }
-MVM_STATIC_INLINE MVMuint8 *MVM_ptr_hash_entries(const struct MVMPtrHashTableControl *control) {
-    return (MVMuint8 *) control - sizeof(struct MVMPtrHashEntry);
+MVM_STATIC_INLINE uint8_t *MVM_ptr_hash_entries(const struct MVMPtrHashTableControl *control) {
+    return (uint8_t *) control - sizeof(struct MVMPtrHashEntry);
 }
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,
@@ -65,7 +65,7 @@ MVM_STATIC_INLINE int MVM_ptr_hash_is_empty(MVMThreadContext *tc,
  * max_hashv / phi = 11400714819323198485 */
 
 #if 8 <= MVM_PTR_SIZE
-MVM_STATIC_INLINE MVMuint64 MVM_ptr_hash_code(const void *ptr) {
+MVM_STATIC_INLINE uint64_t MVM_ptr_hash_code(const void *ptr) {
     return ((uintptr_t)ptr) * UINT64_C(11400714819323198485);
 }
 #else

@@ -85,7 +85,7 @@ MVMObject * MVM_gc_allocate_object(MVMThreadContext *tc, MVMSTable *st) {
     MVMObject *obj;
     MVMROOT(tc, st) {
         obj               = MVM_gc_allocate_zeroed(tc, st->size);
-        obj->header.size  = (MVMuint16)st->size;
+        obj->header.size  = (uint16_t)st->size;
         obj->header.owner = tc->thread_id;
         MVM_ASSIGN_REF(tc, &(obj->header), obj->st, st);
         if (st->mode_flags & MVM_FINALIZE_TYPE)

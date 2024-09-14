@@ -34,10 +34,10 @@ static char * UnicodeToUTF8(const wchar_t *str)
      return result;
 }
 
-static int mkdir_p(MVMThreadContext *tc, wchar_t *pathname, MVMint64 mode) {
+static int mkdir_p(MVMThreadContext *tc, wchar_t *pathname, int64_t mode) {
     wchar_t *p = pathname, ch;
 #else
-static int mkdir_p(MVMThreadContext *tc, char *pathname, MVMint64 mode) {
+static int mkdir_p(MVMThreadContext *tc, char *pathname, int64_t mode) {
     char *p = pathname, ch;
     uv_fs_t req;
     int mkdir_error = 0;
@@ -68,7 +68,7 @@ static int mkdir_p(MVMThreadContext *tc, char *pathname, MVMint64 mode) {
 }
 
 /* Create a directory recursively. */
-void MVM_dir_mkdir(MVMThreadContext *tc, MVMString *path, MVMint64 mode) {
+void MVM_dir_mkdir(MVMThreadContext *tc, MVMString *path, int64_t mode) {
     char * const pathname = MVM_string_utf8_c8_encode_C_string(tc, path);
 
 #ifdef _WIN32

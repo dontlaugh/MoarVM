@@ -8,11 +8,11 @@
 
 /* Macros for getting things from the bytecode stream. */
 /* GET_REG is defined differently here from interp.c */
-#define GET_REG(pc, idx)    *((MVMuint16 *)(pc + idx))
-#define GET_I16(pc, idx)    *((MVMint16 *)(pc + idx))
-#define GET_UI16(pc, idx)   *((MVMuint16 *)(pc + idx))
+#define GET_REG(pc, idx)    *((uint16_t *)(pc + idx))
+#define GET_I16(pc, idx)    *((int16_t *)(pc + idx))
+#define GET_UI16(pc, idx)   *((uint16_t *)(pc + idx))
 
-MVM_STATIC_INLINE uint32_t GET_UI32(const MVMuint8 *pc, int32_t idx) {
+MVM_STATIC_INLINE uint32_t GET_UI32(const uint8_t *pc, int32_t idx) {
     uint32_t retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
@@ -33,24 +33,24 @@ typedef struct {
     MVMCompUnit      *cu;
     MVMStaticFrame   *frame;
     uint32_t         loc_count;
-    MVMuint16        *loc_types;
+    uint16_t        *loc_types;
     uint32_t         bc_size;
-    MVMuint8         *bc_start;
-    MVMuint8         *bc_end;
-    MVMuint8         *src_cur_op;
-    MVMuint8         *src_bc_end;
-    MVMuint8         *labels;
-    MVMuint8         *cur_op;
+    uint8_t         *bc_start;
+    uint8_t         *bc_end;
+    uint8_t         *src_cur_op;
+    uint8_t         *src_bc_end;
+    uint8_t         *labels;
+    uint8_t         *cur_op;
     const MVMOpInfo  *cur_info;
     const char       *cur_mark;
     uint32_t         cur_instr;
     MVMCallsite      *cur_call;
-    MVMuint16         cur_arg;
+    uint16_t         cur_arg;
     int32_t          acceptable_max_arity;
-    MVMint16          checkarity_seen;
+    int16_t          checkarity_seen;
     MVMCallsiteEntry  expected_named_arg;
-    MVMuint16         remaining_args;
-    MVMuint16         remaining_positionals;
+    uint16_t         remaining_args;
+    uint16_t         remaining_positionals;
     uint32_t         remaining_jumplabels;
     uint32_t         reg_type_var;
 } Validator;
@@ -80,7 +80,7 @@ static void ensure_bytes(Validator *val, uint32_t count) {
 #ifdef MVM_BIGENDIAN
     /* Endian swap equivalent of memcpy(val->cur_op, val->src_cur_op, count); */
     {
-        MVMuint8 *d = val->cur_op + count;
+        uint8_t *d = val->cur_op + count;
         while (count--) {
             *--d = *val->src_cur_op++;
         }
@@ -91,7 +91,7 @@ static void ensure_bytes(Validator *val, uint32_t count) {
 }
 
 
-static void ensure_op(Validator *val, MVMuint16 opcode) {
+static void ensure_op(Validator *val, uint16_t opcode) {
     if (val->cur_info->opcode != opcode) {
         fail(val, MSG(val, "expected op %s but got %s"),
                 MVM_op_get_op(opcode)->name, val->cur_info->name);
@@ -120,7 +120,7 @@ static void ensure_no_remaining_args(Validator *val) {
 }
 
 
-MVM_STATIC_INLINE const MVMOpInfo * get_info(Validator *val, MVMuint16 opcode) {
+MVM_STATIC_INLINE const MVMOpInfo * get_info(Validator *val, uint16_t opcode) {
     const MVMOpInfo *info;
 
     if (opcode < MVM_OP_EXT_BASE) {
@@ -129,7 +129,7 @@ MVM_STATIC_INLINE const MVMOpInfo * get_info(Validator *val, MVMuint16 opcode) {
             fail(val, MSG(val, "invalid opcode %u"), opcode);
     }
     else {
-        MVMuint16 index = opcode - MVM_OP_EXT_BASE;
+        uint16_t index = opcode - MVM_OP_EXT_BASE;
         MVMExtOpRecord *record;
 
         if (index >= val->cu->body.num_extops)
@@ -149,13 +149,13 @@ MVM_STATIC_INLINE const MVMOpInfo * get_info(Validator *val, MVMuint16 opcode) {
 
 
 MVM_STATIC_INLINE void read_op(Validator *val) {
-    MVMuint16  opcode;
+    uint16_t  opcode;
     const MVMOpInfo *info;
     uint32_t  pos;
 
     ensure_bytes(val, 2);
 
-    opcode = *(MVMuint16 *)val->cur_op;
+    opcode = *(uint16_t *)val->cur_op;
     info   = get_info(val, opcode);
     pos    = val->cur_op - val->bc_start;
 
@@ -229,7 +229,7 @@ static void validate_literal_operand(Validator *val, uint32_t flags) {
 
     switch (type) {
         case MVM_operand_callsite: {
-            MVMuint16 index = GET_UI16(val->cur_op, 0);
+            uint16_t index = GET_UI16(val->cur_op, 0);
             uint32_t count = val->cu->body.orig_callsites;
             if (index >= count)
                 fail(val, MSG(val, "callsite index %" PRIu16
@@ -238,7 +238,7 @@ static void validate_literal_operand(Validator *val, uint32_t flags) {
         }
 
         case MVM_operand_coderef: {
-            MVMuint16 index = GET_UI16(val->cur_op, 0);
+            uint16_t index = GET_UI16(val->cur_op, 0);
             uint32_t count = val->cu->body.orig_frames;
             if (index >= count)
                 fail(val, MSG(val, "coderef index %" PRIu16
@@ -271,7 +271,7 @@ static void validate_literal_operand(Validator *val, uint32_t flags) {
 static void validate_reg_operand(Validator *val, uint32_t flags) {
     uint32_t operand_type = flags & MVM_operand_type_mask;
     uint32_t reg_type;
-    MVMuint16 reg;
+    uint16_t reg;
 
     ensure_bytes(val, 2);
 
@@ -302,7 +302,7 @@ next_operand:
 
 static void validate_lex_operand(Validator *val, uint32_t flags) {
     uint32_t operand_type = flags & MVM_operand_type_mask;
-    MVMuint16 lex_index, frame_index, i;
+    uint16_t lex_index, frame_index, i;
     uint32_t lex_count, lex_type;
     MVMStaticFrame *frame = val->frame;
 
@@ -375,9 +375,9 @@ static void validate_operand(Validator *val, uint32_t flags) {
 }
 
 static void validate_dispatch_args(Validator *val, MVMCallsite *cs) {
-    MVMuint16 i;
+    uint16_t i;
     for (i = 0; i < cs->flag_count; i++) {
-        MVMuint8 arg_type = cs->arg_flags[i] & MVM_CALLSITE_ARG_TYPE_MASK;
+        uint8_t arg_type = cs->arg_flags[i] & MVM_CALLSITE_ARG_TYPE_MASK;
         switch (arg_type) {
             case MVM_CALLSITE_ARG_OBJ:
                 validate_reg_operand(val, MVM_operand_obj);
@@ -401,13 +401,13 @@ static void validate_dispatch_args(Validator *val, MVMCallsite *cs) {
 }
 
 static void validate_operands(Validator *val) {
-    const MVMuint8 *operands = val->cur_info->operands;
+    const uint8_t *operands = val->cur_info->operands;
 
     val->reg_type_var = 0;
 
     switch (val->cur_info->opcode) {
         case MVM_OP_jumplist: {
-            MVMint64 count;
+            int64_t count;
 
             validate_literal_operand(val, operands[0]);
             count = MVM_BC_get_I64(val->cur_op, -8);
@@ -455,7 +455,7 @@ static void validate_operands(Validator *val) {
 
                     /* This is the argument we want to check */
                     if (i == 1) {
-                        MVMint16 value = GET_UI16(val->cur_op, -2);
+                        int16_t value = GET_UI16(val->cur_op, -2);
                         if (value > val->acceptable_max_arity) {
                             fail(val, MSG(val, "tried to take arg number %d after checkarity with %d"), value, val->acceptable_max_arity);
                         }

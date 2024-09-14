@@ -20,7 +20,7 @@ static void init_common(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame 
     MVM_gc_root_temp_push(tc, (MVMCollectable **)&(fw->cur_outer_frame));
 }
 void MVM_spesh_frame_walker_init(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame *start,
-                                 MVMuint8 visit_outers) {
+                                 uint8_t visit_outers) {
     init_common(tc, fw, start);
     fw->visit_outers = visit_outers;
     fw->visit_callers = 1;
@@ -222,7 +222,7 @@ static void find_lex_info(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFram
  * trigger vivification of the lexical if needed. */
 uint32_t MVM_spesh_frame_walker_get_lex(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
                                          MVMString *name, MVMRegister **found_out,
-                                         MVMuint16 *found_kind_out, uint32_t vivify,
+                                         uint16_t *found_kind_out, uint32_t vivify,
                                          MVMFrame **found_frame) {
     MVMFrame *cur_frame;
     MVMStaticFrame *sf;
@@ -232,7 +232,7 @@ uint32_t MVM_spesh_frame_walker_get_lex(MVMThreadContext *tc, MVMSpeshFrameWalke
     if (idx != MVM_INDEX_HASH_NOT_FOUND) {
         int32_t index = base_index + idx;
         MVMRegister *result = &cur_frame->env[index];
-        MVMuint16 kind = sf->body.lexical_types[idx];
+        uint16_t kind = sf->body.lexical_types[idx];
         *found_out = result;
         *found_kind_out = kind;
         if (vivify && kind == MVM_reg_obj && !result->o) {
@@ -331,7 +331,7 @@ MVMObject * MVM_spesh_frame_walker_get_lexicals_hash(MVMThreadContext *tc, MVMSp
         MVMString **lexnames = sf->body.lexical_names_list;
         uint32_t i;
         for (i = 0; i < sf->body.num_lexicals; i++) {
-            MVMuint16 type = sf->body.lexical_types[i];
+            uint16_t type = sf->body.lexical_types[i];
             uint32_t idx = base_index + i;
             switch (type) {
                 case MVM_reg_obj: {
@@ -419,7 +419,7 @@ MVMObject * MVM_spesh_frame_walker_get_lexicals_hash(MVMThreadContext *tc, MVMSp
 
 /* Get the kind of lexical with the given name at the frame walker's current
  * location. Returns -1 if there is no such lexical. */
-MVMint64 MVM_spesh_frame_walker_get_lexical_primspec(MVMThreadContext *tc,
+int64_t MVM_spesh_frame_walker_get_lexical_primspec(MVMThreadContext *tc,
                                                      MVMSpeshFrameWalker *fw, MVMString *name) {
     MVMFrame *cur_frame;
     MVMStaticFrame *sf;
@@ -445,7 +445,7 @@ MVMObject * MVM_spesh_frame_walker_get_code(MVMThreadContext *tc, MVMSpeshFrameW
 
 /* Gets a count of the number of lexicals in the frame walker's current
  * location. */
-MVMuint64 MVM_spesh_frame_walker_get_lexical_count(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+uint64_t MVM_spesh_frame_walker_get_lexical_count(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     MVMFrame *cur_frame;
     MVMStaticFrame *sf;
     uint32_t base_index;

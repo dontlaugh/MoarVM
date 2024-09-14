@@ -296,10 +296,10 @@ static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
                 break;
             default:
                 /* See if it's an allocating extop. */
-                if (ins->info->opcode == (MVMuint16)-1) {
+                if (ins->info->opcode == (uint16_t)-1) {
                     MVMExtOpRecord *extops     = g->sf->body.cu->body.extops;
-                    MVMuint16       num_extops = g->sf->body.cu->body.num_extops;
-                    MVMuint16       i;
+                    uint16_t       num_extops = g->sf->body.cu->body.num_extops;
+                    uint16_t       i;
                     for (i = 0; i < num_extops; i++) {
                         if (extops[i].info == ins->info) {
                             if (extops[i].allocating && extops[i].info->num_operands >= 1)
@@ -383,7 +383,7 @@ static MVMObject * new_array(MVMThreadContext *tc) {
 static MVMObject * new_hash(MVMThreadContext *tc) {
     return MVM_repr_alloc_init(tc, MVM_hll_current(tc)->slurpy_hash_type);
 }
-static MVMObject * box_i(MVMThreadContext *tc, MVMint64 i) {
+static MVMObject * box_i(MVMThreadContext *tc, int64_t i) {
     return MVM_repr_box_int(tc, MVM_hll_current(tc)->int_box_type, i);
 }
 static MVMObject * box_s(MVMThreadContext *tc, MVMString *s) {
@@ -453,8 +453,8 @@ typedef struct {
     MVMObject *types_array;
 } ProfTcPdsStruct;
 
-static MVMObject * insert_if_not_exists(MVMThreadContext *tc, ProfDumpStrs *pds, MVMObject *storage, MVMint64 key) {
-    MVMuint64 index;
+static MVMObject * insert_if_not_exists(MVMThreadContext *tc, ProfDumpStrs *pds, MVMObject *storage, int64_t key) {
+    uint64_t index;
     MVMObject *result;
     MVMObject *type_info_hash;
 
@@ -484,8 +484,8 @@ static void bind_extra_info(MVMThreadContext *tc, MVMObject *storage, MVMString 
 static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds, const MVMProfileCallNode *pcn, MVMObject *types_array);
 static MVMObject * dump_call_graph_node_loop(ProfTcPdsStruct *tcpds, const MVMProfileCallNode *pcn) {
     uint32_t i;
-    MVMuint64 exclusive_time = pcn->total_time;
-    MVMuint64 overhead       = pcn->total_entries * tcpds->tc->instance->profiling_overhead;
+    uint64_t exclusive_time = pcn->total_time;
+    uint64_t overhead       = pcn->total_entries * tcpds->tc->instance->profiling_overhead;
     MVMObject *node_hash;
 
     /* Subtract profiling overhead, unless that would underflow, in which case just clamp to 0. */
@@ -501,8 +501,8 @@ static MVMObject * dump_call_graph_node_loop(ProfTcPdsStruct *tcpds, const MVMPr
     if (pcn->num_succ) {
         MVMObject *callees = new_array(tcpds->tc);
         for (i = 0; i < pcn->num_succ; i++) {
-            MVMuint64 succ_exclusive_time = pcn->succ[i]->total_time;
-            MVMuint64 succ_overhead       = pcn->succ[i]->total_entries * tcpds->tc->instance->profiling_overhead;
+            uint64_t succ_exclusive_time = pcn->succ[i]->total_time;
+            uint64_t succ_overhead       = pcn->succ[i]->total_entries * tcpds->tc->instance->profiling_overhead;
 
             MVM_repr_push_o(tcpds->tc, callees,
                 dump_call_graph_node_loop(tcpds, pcn->succ[i]));
@@ -532,7 +532,7 @@ static MVMObject * dump_call_graph_node_loop(ProfTcPdsStruct *tcpds, const MVMPr
 }
 
 static void add_type_to_types_array(MVMThreadContext *tc, ProfDumpStrs *pds, MVMObject *type, MVMObject *types_array) {
-    MVMObject *type_info  = insert_if_not_exists(tc, pds, types_array, (MVMint64)(uintptr_t)type);
+    MVMObject *type_info  = insert_if_not_exists(tc, pds, types_array, (int64_t)(uintptr_t)type);
 
     if (type_info) {
         bind_extra_info(tc, type_info, pds->managed_size, box_i(tc, STABLE(type)->size));
@@ -548,7 +548,7 @@ static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
                                         const MVMProfileCallNode *pcn, MVMObject *types_array) {
     MVMObject *node_hash  = new_hash(tc);
     uint32_t  i;
-    MVMuint64 absolute_start_time;
+    uint64_t absolute_start_time;
 
     /* Let's see if we're dealing with a native call or a regular moar call */
     if (tc->prof_data->staticframe_array[pcn->sf_idx]) {
@@ -578,7 +578,7 @@ static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
 
         /* Use static frame memory address to get a unique ID. */
         MVM_repr_bind_key_o(tc, node_hash, pds->id,
-            box_i(tc, (MVMint64)(uintptr_t)sf));
+            box_i(tc, (int64_t)(uintptr_t)sf));
 
         /* Add data about cache entries. */
         MVMDispInlineCache *ic = &(sf->body.inline_cache);
@@ -634,7 +634,7 @@ static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
 
         /* Use the address of the name string as unique ID. a hack, but oh well. */
         MVM_repr_bind_key_o(tc, node_hash, pds->id,
-            box_i(tc, (MVMint64)(uintptr_t)pcn->native_target_name));
+            box_i(tc, (int64_t)(uintptr_t)pcn->native_target_name));
     }
     else {
         MVM_repr_bind_key_o(tc, node_hash, pds->name,
@@ -646,7 +646,7 @@ static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
             box_i(tc, -10));
 
         MVM_repr_bind_key_o(tc, node_hash, pds->id,
-            box_i(tc, (MVMint64)(uintptr_t)pcn));
+            box_i(tc, (int64_t)(uintptr_t)pcn));
     }
 
     /* Entry counts. */
@@ -697,7 +697,7 @@ static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
 
             add_type_to_types_array(tc, pds, type, types_array);
 
-            MVM_repr_bind_key_o(tc, alloc_info, pds->id, box_i(tc, (MVMint64)(uintptr_t)type));
+            MVM_repr_bind_key_o(tc, alloc_info, pds->id, box_i(tc, (int64_t)(uintptr_t)type));
             if (alloc->allocations_spesh)
                 MVM_repr_bind_key_o(tc, alloc_info, pds->spesh,
                     box_i(tc, alloc->allocations_spesh));
@@ -725,7 +725,7 @@ static MVMObject * dump_thread_data(MVMThreadContext *tc, ProfDumpStrs *pds,
                                     MVMObject *types_data) {
     MVMObject *thread_hash = new_hash(tc);
     MVMObject *thread_gcs  = new_array(tc);
-    MVMuint64 absolute_start_time;
+    uint64_t absolute_start_time;
     uint32_t  i;
 
     ProfTcPdsStruct tcpds;
@@ -803,7 +803,7 @@ static MVMObject * dump_thread_data(MVMThreadContext *tc, ProfDumpStrs *pds,
 
                 add_type_to_types_array(tc, pds, dealloc->type, types_data);
 
-                MVM_repr_bind_key_o(tc, type_hash, pds->id, box_i(tc, (MVMint64)(uintptr_t)(dealloc->type)));
+                MVM_repr_bind_key_o(tc, type_hash, pds->id, box_i(tc, (int64_t)(uintptr_t)(dealloc->type)));
 
                 MVM_repr_push_o(tc, deallocs_array, type_hash);
             }
@@ -1036,8 +1036,8 @@ void MVM_profile_instrumented_free_data(MVMThreadContext *tc) {
     }
 }
 
-static void dump_callgraph_node(MVMThreadContext *tc, MVMProfileCallNode *n, MVMuint16 depth) {
-    MVMuint16 dc = depth;
+static void dump_callgraph_node(MVMThreadContext *tc, MVMProfileCallNode *n, uint16_t depth) {
+    uint16_t dc = depth;
     uint32_t idx;
     char *name = NULL;
 

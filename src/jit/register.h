@@ -27,4 +27,4 @@ void MVM_jit_linear_scan_allocate(MVMThreadContext *tc, MVMJitCompiler *compiler
 void MVM_jit_arch_storage_for_arglist(MVMThreadContext *tc, MVMJitCompiler *compiler,
                                       MVMJitExprTree *tree, int32_t arglist_node,
                                       MVMJitStorageRef *storage);
-MVMJitStorageClass MVM_jit_arch_register_class(MVMuint8 register_id);
+MVMJitStorageClass MVM_jit_arch_register_class(uint8_t register_id);

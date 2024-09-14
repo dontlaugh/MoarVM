@@ -9,11 +9,11 @@ struct MVMNativeCallBody {
     ffi_type  **ffi_arg_types;
     ffi_type   *ffi_ret_type;
 #else
-    MVMint16    convention;
+    int16_t    convention;
 #endif
-    MVMint16    num_args;
-    MVMint16    ret_type;
-    MVMint16   *arg_types;
+    int16_t    num_args;
+    int16_t    ret_type;
+    int16_t   *arg_types;
     MVMObject **arg_info;
     MVMCode    *resolve_lib_name;
     MVMObject  *resolve_lib_name_arg;

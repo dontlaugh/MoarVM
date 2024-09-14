@@ -55,11 +55,11 @@ uint32_t stored = 0;
 } while (0)
 #define MVMGrapheme32 int32_t
 #define int32_t int32_t
-#define MVMuint64 uint64_t
-#define MVMuint8 uint8_t
+#define uint64_t uint64_t
+#define uint8_t uint8_t
 typedef union {
 	int32_t graphs[2];
-	MVMuint8 bytes[4];
+	uint8_t bytes[4];
 	uint64_t u64;
 } MVMJenHashGraphemeView;
 int testmvm (void) {
@@ -77,7 +77,7 @@ int testmvm (void) {
 		for (rep_count = 0; rep_count < REPEATS; rep_count++) {
 			/* Using siphashfinish */
 			siphash sh;
-			MVMuint64 hash;
+			uint64_t hash;
 			MVMJenHashGraphemeView gv;
 			siphashinit(&sh, s_len * sizeof(MVMGrapheme32), (uint64_t*)key);
 			for (i = 0; i + 1 < s_len;) {
@@ -101,7 +101,7 @@ int testmvm (void) {
 		for (rep_count = 0; rep_count < REPEATS; rep_count++) {
 			/* Using siphashfinish_32bits */
 			siphash sh;
-			MVMuint64 hash;
+			uint64_t hash;
 			MVMJenHashGraphemeView gv;
 			siphashinit(&sh, s_len * sizeof(MVMGrapheme32), (uint64_t*)key);
 			for (i = 0; i + 1 < s_len;) {

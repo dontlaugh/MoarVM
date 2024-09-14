@@ -19,7 +19,7 @@ static wchar_t * UTF8ToUnicode(const char *str)
      return result;
 }
 
-MVMint64 MVM_platform_lseek(int fd, MVMint64 offset, int origin)
+int64_t MVM_platform_lseek(int fd, int64_t offset, int origin)
 {
     HANDLE hf;
     LARGE_INTEGER li;

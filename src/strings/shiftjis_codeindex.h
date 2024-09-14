@@ -1,7 +1,7 @@
 #define SHIFTJIS_NULL -1
 struct shiftjis_offset {
-    MVMuint16 location;
-    MVMuint16 offset;
+    uint16_t location;
+    uint16_t offset;
 };
 /* Start code generated from ./tools/generate_encoding_codetables.raku */
 #define SHIFTJIS_OFFSET_VALUES_ELEMS 21
@@ -30,7 +30,7 @@ static struct shiftjis_offset shiftjis_offset_values[21] = {
     {4374,   43},
     {7807, 2908}
 };
-static MVMuint16 shiftjis_index_to_cp_codepoints[7350] = {
+static uint16_t shiftjis_index_to_cp_codepoints[7350] = {
 12288,12289,12290,65292,65294,12539,65306,65307,65311,65281,12443,12444,180,
 65344,168,65342,65507,65343,12541,12542,12445,12446,12291,20189,12293,12294,
 12295,12540,8213,8208,65295,65340,65374,8741,65372,8230,8229,8216,8217,8220,
@@ -593,7 +593,7 @@ static MVMuint16 shiftjis_index_to_cp_codepoints[7350] = {
 38737,38741,38999,39013,64042,64043,39207,64044,39326,39502,39641,39644,39797,
 39794,39823,39857,39867,39936,40304,40299,64045,40473,40657};
 
-static MVMint16 shift_jis_cp_to_index (MVMThreadContext *tc, MVMGrapheme32 codepoint) {
+static int16_t shift_jis_cp_to_index (MVMThreadContext *tc, MVMGrapheme32 codepoint) {
     switch (codepoint) {
         case 0xA7: return 87;
         case 0xA8: return 14;

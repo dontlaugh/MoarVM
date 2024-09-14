@@ -25,7 +25,7 @@ struct MVMGCWorklist {
     uint32_t alloc;
 
     /* Whether we should include gen2 entries. */
-    MVMuint8 include_gen2;
+    uint8_t include_gen2;
 };
 
 /* Some macros for doing stuff fast with worklists, defined to look like
@@ -108,7 +108,7 @@ do { \
         NULL)
 
 /* Various functions for worklist manipulation. */
-MVMGCWorklist * MVM_gc_worklist_create(MVMThreadContext *tc, MVMuint8 include_gen2);
+MVMGCWorklist * MVM_gc_worklist_create(MVMThreadContext *tc, uint8_t include_gen2);
 MVM_PUBLIC void MVM_gc_worklist_add_slow(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMCollectable **item);
 void MVM_gc_worklist_presize_for(MVMThreadContext *tc, MVMGCWorklist *worklist, int32_t items);
 void MVM_gc_worklist_destroy(MVMThreadContext *tc, MVMGCWorklist *worklist);

@@ -66,8 +66,8 @@ static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
 }
 
 static void get_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-        void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint,
-        MVMRegister *result_reg, MVMuint16 kind) {
+        void *data, MVMObject *class_handle, MVMString *name, int64_t hint,
+        MVMRegister *result_reg, uint16_t kind) {
     MVMHashAttrStoreBody *body = (MVMHashAttrStoreBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
 
@@ -80,8 +80,8 @@ static void get_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
 }
 
 static void bind_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
-        void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint,
-        MVMRegister value_reg, MVMuint16 kind) {
+        void *data, MVMObject *class_handle, MVMString *name, int64_t hint,
+        MVMRegister value_reg, uint16_t kind) {
     MVMHashAttrStoreBody *body = (MVMHashAttrStoreBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
 
@@ -104,14 +104,14 @@ static void bind_attribute(MVMThreadContext *tc, MVMSTable *st, MVMObject *root,
     }
 }
 
-static MVMint64 is_attribute_initialized(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, MVMint64 hint) {
+static int64_t is_attribute_initialized(MVMThreadContext *tc, MVMSTable *st, void *data, MVMObject *class_handle, MVMString *name, int64_t hint) {
     MVMHashAttrStoreBody *body = (MVMHashAttrStoreBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
     MVMHashEntry *entry = MVM_str_hash_fetch(tc, hashtable, name);
     return entry != NULL;
 }
 
-static MVMint64 hint_for(MVMThreadContext *tc, MVMSTable *st, MVMObject *class_handle, MVMString *name) {
+static int64_t hint_for(MVMThreadContext *tc, MVMSTable *st, MVMObject *class_handle, MVMString *name) {
     return MVM_NO_HINT;
 }
 
@@ -141,7 +141,7 @@ static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSeri
     st->size = sizeof(MVMHashAttrStore);
 }
 
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMHashBody *body = (MVMHashBody *)data;
 
     return MVM_str_hash_allocated_size(tc, &(body->hashtable));

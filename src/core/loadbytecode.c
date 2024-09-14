@@ -36,7 +36,7 @@ static void run_comp_unit(MVMThreadContext *tc, MVMCompUnit *cu) {
 }
 void MVM_load_bytecode_buffer(MVMThreadContext *tc, MVMObject *buf) {
     MVMCompUnit *cu;
-    MVMuint8    *data_start;
+    uint8_t    *data_start;
     uint32_t    data_size;
 
     /* Ensure the source is in the correct form. */
@@ -53,14 +53,14 @@ void MVM_load_bytecode_buffer(MVMThreadContext *tc, MVMObject *buf) {
     /* MVMCompUnit expects the data to be non-GC managed as it usually comes straight from a file */
     data_size = ((MVMArray *)buf)->body.elems;
     data_start = MVM_malloc(data_size);
-    memcpy(data_start, (MVMuint8 *)(((MVMArray *)buf)->body.slots.i8 + ((MVMArray *)buf)->body.start), data_size);
+    memcpy(data_start, (uint8_t *)(((MVMArray *)buf)->body.slots.i8 + ((MVMArray *)buf)->body.start), data_size);
 
     cu = MVM_cu_from_bytes(tc, data_start, data_size);
     run_comp_unit(tc, cu);
 }
 void MVM_load_bytecode_buffer_to_cu(MVMThreadContext *tc, MVMObject *buf, MVMRegister *res) {
     MVMCompUnit *cu;
-    MVMuint8    *data_start;
+    uint8_t    *data_start;
     uint32_t    data_size;
 
     /* Ensure the source is in the correct form. */
@@ -77,7 +77,7 @@ void MVM_load_bytecode_buffer_to_cu(MVMThreadContext *tc, MVMObject *buf, MVMReg
     /* MVMCompUnit expects the data to be non-GC managed as it usually comes straight from a file */
     data_size = ((MVMArray *)buf)->body.elems;
     data_start = MVM_malloc(data_size);
-    memcpy(data_start, (MVMuint8 *)(((MVMArray *)buf)->body.slots.i8 + ((MVMArray *)buf)->body.start), data_size);
+    memcpy(data_start, (uint8_t *)(((MVMArray *)buf)->body.slots.i8 + ((MVMArray *)buf)->body.start), data_size);
 
     cu = MVM_cu_from_bytes(tc, data_start, data_size);
     cu->body.deallocate = MVM_DEALLOCATE_FREE;
@@ -135,7 +135,7 @@ void MVM_load_bytecode_fh(MVMThreadContext *tc, MVMObject *oshandle, MVMString *
         MVM_exception_throw_adhoc(tc, "loadbytecodefh requires an object with REPR MVMOSHandle");
 
     MVMROOT(tc, filename) {
-        MVMuint64 pos = MVM_io_tell(tc, oshandle);
+        uint64_t pos = MVM_io_tell(tc, oshandle);
         cu = MVM_cu_map_from_file_handle(tc, MVM_io_fileno(tc, oshandle), pos);
         cu->body.filename = filename;
         MVM_gc_write_barrier_hit(tc, (MVMCollectable *)cu);

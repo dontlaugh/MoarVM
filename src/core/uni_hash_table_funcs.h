@@ -21,11 +21,11 @@ MVM_STATIC_INLINE uint32_t MVM_uni_hash_allocated_items(const struct MVMUniHashT
 MVM_STATIC_INLINE uint32_t MVM_uni_hash_max_items(const struct MVMUniHashTableControl *control) {
     return MVM_uni_hash_official_size(control) * MVM_UNI_HASH_LOAD_FACTOR;
 }
-MVM_STATIC_INLINE MVMuint8 *MVM_uni_hash_metadata(const struct MVMUniHashTableControl *control) {
-    return (MVMuint8 *) control + sizeof(struct MVMUniHashTableControl);
+MVM_STATIC_INLINE uint8_t *MVM_uni_hash_metadata(const struct MVMUniHashTableControl *control) {
+    return (uint8_t *) control + sizeof(struct MVMUniHashTableControl);
 }
-MVM_STATIC_INLINE MVMuint8 *MVM_uni_hash_entries(const struct MVMUniHashTableControl *control) {
-    return (MVMuint8 *) control - sizeof(struct MVMUniHashEntry);
+MVM_STATIC_INLINE uint8_t *MVM_uni_hash_entries(const struct MVMUniHashTableControl *control) {
+    return (uint8_t *) control - sizeof(struct MVMUniHashEntry);
 }
 
 /* Frees the entire contents of the hash, leaving you just the hashtable itself,

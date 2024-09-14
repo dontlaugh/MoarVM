@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "sys.h"
 
-MVMint64 MVM_platform_cpu_count(void) {
+int64_t MVM_platform_cpu_count(void) {
     int            count;
     uv_cpu_info_t *info;
     int            e;
@@ -13,11 +13,11 @@ MVMint64 MVM_platform_cpu_count(void) {
     return count;
 }
 
-MVMint64 MVM_platform_free_memory(void) {
+int64_t MVM_platform_free_memory(void) {
     return uv_get_free_memory();
 }
 
-MVMint64 MVM_platform_total_memory(void) {
+int64_t MVM_platform_total_memory(void) {
     return uv_get_total_memory();
 }
 

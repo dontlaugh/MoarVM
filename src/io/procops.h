@@ -15,18 +15,18 @@
 MVMObject * MVM_proc_getenvhash(MVMThreadContext *tc);
 MVMObject * MVM_proc_spawn_async(MVMThreadContext *tc, MVMObject *queue, MVMString *prog,
          MVMObject *args, MVMString *cwd, MVMObject *env, MVMObject *callbacks);
-void MVM_proc_kill_async(MVMThreadContext *tc, MVMObject *handle, MVMint64 signal);
-MVMint64 MVM_proc_getpid(MVMThreadContext *tc);
-MVMint64 MVM_proc_getppid(MVMThreadContext *tc);
-MVMint64 MVM_proc_rand_i(MVMThreadContext *tc);
-MVMnum64 MVM_proc_rand_n(MVMThreadContext *tc);
-MVMnum64 MVM_proc_randscale_n(MVMThreadContext *tc, MVMnum64 scale);
-void MVM_proc_seed(MVMThreadContext *tc, MVMint64 seed);
-MVMuint64 MVM_proc_time(MVMThreadContext *tc);
+void MVM_proc_kill_async(MVMThreadContext *tc, MVMObject *handle, int64_t signal);
+int64_t MVM_proc_getpid(MVMThreadContext *tc);
+int64_t MVM_proc_getppid(MVMThreadContext *tc);
+int64_t MVM_proc_rand_i(MVMThreadContext *tc);
+double MVM_proc_rand_n(MVMThreadContext *tc);
+double MVM_proc_randscale_n(MVMThreadContext *tc, double scale);
+void MVM_proc_seed(MVMThreadContext *tc, int64_t seed);
+uint64_t MVM_proc_time(MVMThreadContext *tc);
 MVMObject * MVM_proc_clargs(MVMThreadContext *tc);
 MVMString * MVM_executable_name(MVMThreadContext *tc);
 void MVM_proc_getrusage(MVMThreadContext *tc, MVMObject *result);
-MVMint64 MVM_proc_fork(MVMThreadContext *tc);
+int64_t MVM_proc_fork(MVMThreadContext *tc);
 
 #ifdef _WIN32
 #include <wchar.h>

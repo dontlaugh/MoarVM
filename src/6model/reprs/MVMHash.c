@@ -51,7 +51,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 static void MVMHash_gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMHashBody     *body = (MVMHashBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
-    MVMuint64            elems = MVM_str_hash_count(tc, hashtable);
+    uint64_t            elems = MVM_str_hash_count(tc, hashtable);
 
     /* Aren't holding anything, nothing to do. */
     if (elems == 0)
@@ -87,7 +87,7 @@ static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
     MVM_str_hash_demolish(tc, hashtable);
 }
 
-void MVMHash_at_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj, MVMRegister *result, MVMuint16 kind) {
+void MVMHash_at_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj, MVMRegister *result, uint16_t kind) {
     MVMHashBody   *body = (MVMHashBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
 
@@ -99,7 +99,7 @@ void MVMHash_at_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
     result->o = entry != NULL ? entry->value : tc->instance->VMNull;
 }
 
-void MVMHash_bind_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj, MVMRegister value, MVMuint16 kind) {
+void MVMHash_bind_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj, MVMRegister value, uint16_t kind) {
     MVMHashBody   *body = (MVMHashBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
 
@@ -122,11 +122,11 @@ void MVMHash_bind_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void
         MVM_gc_write_barrier(tc, &(root->header), &(key->common.header));
     }
 }
-static MVMuint64 elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
+static uint64_t elems(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data) {
     MVMHashBody *body = (MVMHashBody *)data;
     return MVM_str_hash_count(tc, &(body->hashtable));}
 
-static MVMint64 exists_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj) {
+static int64_t exists_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key_obj) {
     MVMHashBody   *body = (MVMHashBody *)data;
     /* key_obj checked in MVM_str_hash_fetch */
     MVMStrHashTable *hashtable = &(body->hashtable);
@@ -186,10 +186,10 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
          * code must be unreachable.] */
         MVM_oops(tc, "deserialize on MVMHash that is already initialized");
     }
-    MVMint64 elems = MVM_serialization_read_int(tc, reader);
+    int64_t elems = MVM_serialization_read_int(tc, reader);
     if (elems) {
         MVM_str_hash_build(tc, hashtable, sizeof(MVMHashEntry), elems);
-        MVMint64 i = 0;
+        int64_t i = 0;
         do {
             MVMString *key = MVM_serialization_read_str(tc, reader);
             if (!MVM_str_hash_key_is_valid(tc, key)) {
@@ -210,9 +210,9 @@ static int cmp_strings(const void *s1, const void *s2) {
 static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMHashBody *body = (MVMHashBody *)data;
     MVMStrHashTable *hashtable = &(body->hashtable);
-    MVMuint64 elems = MVM_str_hash_count(tc, hashtable);
+    uint64_t elems = MVM_str_hash_count(tc, hashtable);
     MVMString **keys = MVM_malloc(sizeof(MVMString *) * elems);
-    MVMuint64 i = 0;
+    uint64_t i = 0;
     MVM_serialization_write_int(tc, writer, elems);
     MVMStrHashIterator iterator = MVM_str_hash_first(tc, hashtable);
     while (!MVM_str_hash_at_end(tc, hashtable, iterator)) {
@@ -259,7 +259,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
     }
 }
 
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMHashBody *body = (MVMHashBody *)data;
 
     return MVM_str_hash_allocated_size(tc, &(body->hashtable));

@@ -8,7 +8,7 @@ static void instrument_graph_with_breakpoints(MVMThreadContext *tc, MVMSpeshGrap
     MVMSpeshBB *bb = g->entry->linear_next;
 
     int32_t last_filename = -1;
-    MVMint64 last_line_number = -1;
+    int64_t last_line_number = -1;
 
     char *filename_buf = NULL;
 
@@ -17,8 +17,8 @@ static void instrument_graph_with_breakpoints(MVMThreadContext *tc, MVMSpeshGrap
         MVMSpeshIns *breakpoint_ins;
 
         MVMBytecodeAnnotation *bbba = MVM_bytecode_resolve_annotation(tc, &g->sf->body, bb->initial_pc);
-        MVMint64 line_number = -1;
-        MVMint64 filename_string_index = -1;
+        int64_t line_number = -1;
+        int64_t filename_string_index = -1;
 
         uint32_t file_bp_idx;
 
@@ -40,7 +40,7 @@ static void instrument_graph_with_breakpoints(MVMThreadContext *tc, MVMSpeshGrap
         /* Jumplists require the target BB to start in the goto op.
          * We must not break this, or we cause the interpreter to derail */
         if (bb->last_ins->info->opcode == MVM_OP_jumplist) {
-            MVMint16 to_skip = bb->num_succ;
+            int16_t to_skip = bb->num_succ;
             for (; to_skip > 0; to_skip--) {
                 bb = bb->linear_next;
             }
@@ -120,12 +120,12 @@ static void instrument_graph_with_breakpoints(MVMThreadContext *tc, MVMSpeshGrap
 
 static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB *bb = g->entry->linear_next;
-    MVMuint16 array_slot = 0;
+    uint16_t array_slot = 0;
 
     int32_t last_line_number = -2;
     int32_t last_filename = -1;
 
-    MVMuint16 allocd_slots  = g->num_bbs * 2;
+    uint16_t allocd_slots  = g->num_bbs * 2;
     char *line_report_store = MVM_calloc(allocd_slots, sizeof(char));
 
     /* Since we don't know the right size for the line report store
@@ -141,8 +141,8 @@ static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
         MVMSpeshIns *log_ins;
 
         MVMBytecodeAnnotation *bbba = MVM_bytecode_resolve_annotation(tc, &g->sf->body, bb->initial_pc);
-        MVMint64 line_number;
-        MVMint64 filename_string_index;
+        int64_t line_number;
+        int64_t filename_string_index;
         if (bbba) {
             line_number = bbba->line_number;
             filename_string_index = bbba->filename_string_heap_index;
@@ -161,7 +161,7 @@ static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
         /* Jumplists require the target BB to start in the goto op.
          * We must not break this, or we cause the interpreter to derail */
         if (bb->last_ins->info->opcode == MVM_OP_jumplist) {
-            MVMint16 to_skip = bb->num_succ;
+            int16_t to_skip = bb->num_succ;
             for (; to_skip > 0; to_skip--) {
                 bb = bb->linear_next;
             }
@@ -255,7 +255,7 @@ static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
 }
 
 /* Adds instrumented version of the unspecialized bytecode. */
-static void add_instrumentation(MVMThreadContext *tc, MVMStaticFrame *sf, MVMuint8 want_coverage) {
+static void add_instrumentation(MVMThreadContext *tc, MVMStaticFrame *sf, uint8_t want_coverage) {
     MVMSpeshCode  *sc;
     MVMStaticFrameInstrumentation *ins;
     MVMSpeshGraph *sg = MVM_spesh_graph_create(tc, sf, 1, 0);
@@ -280,7 +280,7 @@ static void add_instrumentation(MVMThreadContext *tc, MVMStaticFrame *sf, MVMuin
 
 
 /* Instruments code with per-line logging of code coverage */
-static void line_numbers_instrument(MVMThreadContext *tc, MVMStaticFrame *sf, MVMuint8 want_coverage) {
+static void line_numbers_instrument(MVMThreadContext *tc, MVMStaticFrame *sf, uint8_t want_coverage) {
     if (!sf->body.instrumentation || sf->body.bytecode != sf->body.instrumentation->instrumented_bytecode) {
         /* Handle main, non-specialized, bytecode. */
         if (!sf->body.instrumentation || !sf->body.instrumentation->instrumented_bytecode)
@@ -306,7 +306,7 @@ void MVM_breakpoint_instrument(MVMThreadContext *tc, MVMStaticFrame *sf) {
     line_numbers_instrument(tc, sf, 0);
 }
 
-void MVM_line_coverage_report(MVMThreadContext *tc, MVMString *filename, uint32_t line_number, MVMuint16 cache_slot, char *cache) {
+void MVM_line_coverage_report(MVMThreadContext *tc, MVMString *filename, uint32_t line_number, uint16_t cache_slot, char *cache) {
     if (tc->instance->coverage_control == 2 || (!tc->instance->coverage_control && cache[cache_slot] == 0)) {
         char *encoded_filename;
         char composed_line[256];

@@ -78,7 +78,7 @@ struct MVMThreadContext {
     MVMInstance *instance;
 
     /* The number of locks the thread is holding. */
-    MVMint64 num_locks;
+    int64_t num_locks;
 
     /************************************************************************
      * Garbage collection and memory management
@@ -160,10 +160,10 @@ struct MVMThreadContext {
      ************************************************************************/
 
     /* Pointer to where the interpreter's current opcode is stored. */
-    MVMuint8 **interp_cur_op;
+    uint8_t **interp_cur_op;
 
     /* Pointer to where the interpreter's bytecode start pointer is stored. */
-    MVMuint8 **interp_bytecode_start;
+    uint8_t **interp_bytecode_start;
 
     /* Pointer to where the interpreter's base of the current register
      * set is stored. */
@@ -275,7 +275,7 @@ struct MVMThreadContext {
     MVMStrHashTable native_callback_cache;
 
     /* Random number generator state. */
-    MVMuint64 rand_state[4];
+    uint64_t rand_state[4];
 
     /* Temporary big integers for when we need to upgrade operands in order
      * to perform an operation. */
@@ -285,15 +285,15 @@ struct MVMThreadContext {
     uint32_t *nfa_done;
     uint32_t *nfa_curst;
     uint32_t *nfa_nextst;
-    MVMint64   nfa_alloc_states;
-    MVMint64 *nfa_fates;
-    MVMint64  nfa_fates_len;
-    MVMint64 *nfa_longlit;
-    MVMint64  nfa_longlit_len;
+    int64_t   nfa_alloc_states;
+    int64_t *nfa_fates;
+    int64_t  nfa_fates_len;
+    int64_t *nfa_longlit;
+    int64_t  nfa_longlit_len;
 
     /* Memory for doing multi-dim indexing with late-bound dimension counts. */
-    MVMint64 *multi_dim_indices;
-    MVMint64  num_multi_dim_indices;
+    int64_t *multi_dim_indices;
+    int64_t  num_multi_dim_indices;
 
     /* Profiling data collected for this thread, if profiling is on. */
     MVMProfileThreadData *prof_data;
@@ -303,12 +303,12 @@ struct MVMThreadContext {
     MVMFrame *step_mode_frame;
     uint32_t step_mode_file_idx;
     uint32_t step_mode_line_no;
-    MVMuint64 step_message_id;
+    uint64_t step_message_id;
 
     /* Whether the debugserver could request an invocation here.
      * Requires the current op to be marked invokish and do the
      * necessary things to cur_op and such. */
-    MVMuint8  debugserver_can_invoke_here;
+    uint8_t  debugserver_can_invoke_here;
 
     uint32_t cur_file_idx;
     uint32_t cur_line_no;

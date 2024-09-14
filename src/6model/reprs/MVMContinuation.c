@@ -36,7 +36,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
     }
     MVM_gc_worklist_add(tc, worklist, &body->protected_tag);
     if (body->prof_cont) {
-        MVMuint64 i;
+        uint64_t i;
         for (i = 0; i < body->prof_cont->num_sfs; i++)
             MVM_gc_worklist_add(tc, worklist, &(body->prof_cont->sfs[i]));
     }

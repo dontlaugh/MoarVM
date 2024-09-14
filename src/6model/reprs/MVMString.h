@@ -17,8 +17,8 @@
 
 /* Kinds of grapheme we may hold in a string. */
 typedef int32_t MVMGrapheme32;
-typedef MVMint8  MVMGraphemeASCII;
-typedef MVMint8  MVMGrapheme8;       /* Future use */
+typedef int8_t  MVMGraphemeASCII;
+typedef int8_t  MVMGrapheme8;       /* Future use */
 
 /* What kind of data is a string storing? */
 #define MVM_STRING_GRAPHEME_32      0
@@ -46,11 +46,11 @@ struct MVMStringBody {
         MVMStringStrand  *strands;
         MVMGrapheme8     in_situ_8[8];
         MVMGrapheme32    in_situ_32[2];
-        MVMuint64        any;
+        uint64_t        any;
         void             *any_ptr;
     } storage;
-    MVMuint16 storage_type;
-    MVMuint16 num_strands;
+    uint16_t storage_type;
+    uint16_t num_strands;
     uint32_t num_graphs;
     MVMHashv  cached_hash_code;
 };

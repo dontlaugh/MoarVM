@@ -23,7 +23,7 @@ struct MVMP6opaque {
 struct MVMP6opaqueNameMap {
     MVMObject  *class_key;
     MVMString **names;
-    MVMuint16  *slots;
+    uint16_t  *slots;
     uint32_t   num_attrs;
 };
 
@@ -33,36 +33,36 @@ struct MVMP6opaqueNameMap {
 struct MVMP6opaqueREPRData {
     /* The number of attributes we have allocated slots for. Note that
      * slots can vary in size. */
-    MVMuint16 num_attributes;
+    uint16_t num_attributes;
 
     /* Slot containing object to delegate for positional things. */
-    MVMint16 pos_del_slot;
+    int16_t pos_del_slot;
 
     /* Slot containing object to delegate for associative things. */
-    MVMint16 ass_del_slot;
+    int16_t ass_del_slot;
 
     /* Flags if we are MI or not. */
-    MVMuint16 mi;
+    uint16_t mi;
 
     /* Slot to delegate to when we need to unbox to a native integer. */
-    MVMint16 unbox_int_slot;
+    int16_t unbox_int_slot;
 
     /* Slot to delegate to when we need to unbox to a native unsigned integer. */
-    MVMint16 unbox_uint_slot;
+    int16_t unbox_uint_slot;
 
     /* Slot to delegate to when we need to unbox to a native number. */
-    MVMint16 unbox_num_slot;
+    int16_t unbox_num_slot;
 
     /* Slot to delegate to when we need to unbox to a native string. */
-    MVMint16 unbox_str_slot;
+    int16_t unbox_str_slot;
 
     /* Offsets into the object that are eligible for GC marking, and how
      * many of them we have. */
-    MVMuint16 gc_obj_mark_offsets_count;
-    MVMuint16 *gc_obj_mark_offsets;
+    uint16_t gc_obj_mark_offsets_count;
+    uint16_t *gc_obj_mark_offsets;
 
     /* Maps attribute position numbers to the byte offset in the object. */
-    MVMuint16 *attribute_offsets;
+    uint16_t *attribute_offsets;
 
     /* If the attribute was actually flattened in to this object from another
      * representation, this is the s-table of the type of that attribute. NULL
@@ -76,7 +76,7 @@ struct MVMP6opaqueREPRData {
 
     /* If we have any other flattened boxings, this array can be indexed by
      * REPR ID to find the slot in the object where it is embedded. */
-    MVMuint16 *unbox_slots;
+    uint16_t *unbox_slots;
 
     /* A table mapping attribute names to indexes (which can then be looked
      * up in the offset table). Uses a final null entry as a sentinel. */
@@ -84,15 +84,15 @@ struct MVMP6opaqueREPRData {
 
     /* Slots holding flattened objects that need another REPR to initialize
      * them; terminated with -1. */
-    MVMint16 *initialize_slots;
+    int16_t *initialize_slots;
 
     /* Slots holding flattened objects that need another REPR to mark them;
      * terminated with -1. */
-    MVMint16 *gc_mark_slots;
+    int16_t *gc_mark_slots;
 
     /* Slots holding flattened objects that need another REPR to clean them;
      * terminated with -1. */
-    MVMint16 *gc_cleanup_slots;
+    int16_t *gc_cleanup_slots;
 
     /* Hold the storage spec */
     MVMStorageSpec storage_spec;
@@ -118,15 +118,15 @@ MVM_STATIC_INLINE MVMObject * MVM_p6opaque_read_object(MVMThreadContext *tc,
     char *data  = MVM_p6opaque_real_data(tc, OBJECT_BODY(o));
     return *((MVMObject **)(data + offset));
 }
-MVM_STATIC_INLINE MVMint64 MVM_p6opaque_read_int64(MVMThreadContext *tc,
+MVM_STATIC_INLINE int64_t MVM_p6opaque_read_int64(MVMThreadContext *tc,
                                                    MVMObject *o, size_t offset) {
     char *data  = MVM_p6opaque_real_data(tc, OBJECT_BODY(o));
-    return *((MVMint64 *)(data + offset));
+    return *((int64_t *)(data + offset));
 }
-MVM_STATIC_INLINE MVMnum64 MVM_p6opaque_read_num64(MVMThreadContext *tc,
+MVM_STATIC_INLINE double MVM_p6opaque_read_num64(MVMThreadContext *tc,
                                                    MVMObject *o, size_t offset) {
     char *data  = MVM_p6opaque_real_data(tc, OBJECT_BODY(o));
-    return *((MVMnum64 *)(data + offset));
+    return *((double *)(data + offset));
 }
 MVM_STATIC_INLINE MVMString * MVM_p6opaque_read_str(MVMThreadContext *tc,
                                                     MVMObject *o, size_t offset) {
@@ -138,6 +138,6 @@ size_t MVM_p6opaque_attr_offset(MVMThreadContext *tc, MVMObject *type,
     MVMObject *class_handle, MVMString *name);
 void MVM_p6opaque_attr_offset_and_arg_type(MVMThreadContext *tc, MVMObject *type,
     MVMObject *class_handle, MVMString *name, size_t *offset_out, MVMCallsiteFlags *type_out);
-MVMuint16 MVM_p6opaque_get_bigint_offset(MVMThreadContext *tc, MVMSTable *st);
+uint16_t MVM_p6opaque_get_bigint_offset(MVMThreadContext *tc, MVMSTable *st);
 uint32_t MVM_p6opaque_offset_to_attr_idx(MVMThreadContext *tc, MVMObject *type, size_t offset);
-void MVM_P6opaque_at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister *value, MVMuint16 kind);
+void MVM_P6opaque_at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, int64_t index, MVMRegister *value, uint16_t kind);

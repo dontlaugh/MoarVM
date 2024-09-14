@@ -1,7 +1,7 @@
 #include "moar.h"
 
 /* Allocates a new GC worklist. */
-MVMGCWorklist * MVM_gc_worklist_create(MVMThreadContext *tc, MVMuint8 include_gen2) {
+MVMGCWorklist * MVM_gc_worklist_create(MVMThreadContext *tc, uint8_t include_gen2) {
     MVMGCWorklist *worklist = MVM_malloc(sizeof(MVMGCWorklist));
     worklist->items = 0;
     worklist->alloc = MVM_GC_WORKLIST_START_SIZE;

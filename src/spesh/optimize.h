@@ -11,7 +11,7 @@
  * arguments it will take. */
 struct MVMSpeshCallInfo {
     MVMCallsite   *cs;
-    MVMint8        arg_is_const[MAX_ARGS_FOR_OPT];
+    int8_t        arg_is_const[MAX_ARGS_FOR_OPT];
     MVMSpeshFacts *arg_facts[MAX_ARGS_FOR_OPT];
     MVMSpeshIns   *prepargs_ins;
     MVMSpeshBB    *prepargs_bb;
@@ -19,8 +19,8 @@ struct MVMSpeshCallInfo {
 };
 
 void MVM_spesh_optimize(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshPlanned *p);
-MVM_PUBLIC MVMint16 MVM_spesh_add_spesh_slot(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c);
-MVMint16 MVM_spesh_add_spesh_slot_try_reuse(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c);
+MVM_PUBLIC int16_t MVM_spesh_add_spesh_slot(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c);
+int16_t MVM_spesh_add_spesh_slot_try_reuse(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCollectable *c);
 void MVM_spesh_copy_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand to,
         MVMSpeshOperand from);
 void MVM_spesh_copy_facts_resolved(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *to,

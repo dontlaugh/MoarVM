@@ -58,7 +58,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 /* Called by the VM to mark any GCable items. */
 static void SCRef_gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMSerializationContextBody *sc = ((MVMSerializationContextBody **)data)[0];
-    MVMuint64 i;
+    uint64_t i;
 
     MVM_gc_worklist_add(tc, worklist, &sc->handle);
     MVM_gc_worklist_add(tc, worklist, &sc->description);
@@ -164,9 +164,9 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
     /* Nothing to do for this REPR. */
 }
 
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMSerializationContextBody     *body      = ((MVMSerializationContextBody **)data)[0];
-    MVMuint64 size = 0;
+    uint64_t size = 0;
 
     size += sizeof(MVMObject *) * body->num_objects;
     size += sizeof(MVMSTable *) * body->num_stables;
@@ -178,7 +178,7 @@ static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data)
 
 static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
     MVMSerializationContextBody *body = ((MVMSerializationContextBody **)data)[0];
-    MVMuint64 index;
+    uint64_t index;
 
     if (body->sr)
         return;

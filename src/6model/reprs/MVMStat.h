@@ -1,6 +1,6 @@
 struct MVMStatBody {
     uv_stat_t *uv_stat;
-    MVMint64   exists;
+    int64_t   exists;
 #ifdef _WIN32
     MVMString *filename;
 #endif

@@ -2,7 +2,7 @@
 
 #define CONFPROG_DEBUG_LEVEL_PROFILER_RESULTS 4
 
-static void debugprint(MVMuint8 active, MVMThreadContext *tc, const char *str, ...) {
+static void debugprint(uint8_t active, MVMThreadContext *tc, const char *str, ...) {
     va_list args;
     va_start(args, str);
 
@@ -26,7 +26,7 @@ static MVMProfileThreadData * get_thread_data(MVMThreadContext *tc) {
     return tc->prof_data;
 }
 
-static MVMProfileCallNode *make_new_pcn(MVMProfileThreadData *ptd, MVMuint64 current_hrtime) {
+static MVMProfileCallNode *make_new_pcn(MVMProfileThreadData *ptd, uint64_t current_hrtime) {
     MVMProfileCallNode *current_call = ptd->current_call;
     MVMProfileCallNode *pcn     = MVM_calloc(1, sizeof(MVMProfileCallNode));
     pcn->first_entry_time = current_hrtime;
@@ -50,13 +50,13 @@ static MVMProfileCallNode *make_new_pcn(MVMProfileThreadData *ptd, MVMuint64 cur
 }
 
 /* Log that we're entering a new frame. */
-void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, MVMuint64 mode) {
+void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, uint64_t mode) {
     if (tc->instance->profiling) {
         MVMProfileThreadData *ptd = get_thread_data(tc);
 
-        MVMuint64 current_hrtime = uv_hrtime();
+        uint64_t current_hrtime = uv_hrtime();
         
-        MVMuint8 was_entered_via_confprog = 0;
+        uint8_t was_entered_via_confprog = 0;
 
         /* Try to locate the entry node, if it's in the call graph already. */
         MVMProfileCallNode *pcn = NULL;
@@ -68,8 +68,8 @@ void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, MVMuint64 m
 
         if (MVM_UNLIKELY(!ptd->current_call)) {
             /* debug_level used by the debugprint macros */
-            MVMuint8 debug_level = tc->instance->confprog ? tc->instance->confprog->debugging_level : 0;
-            MVMuint8 has_confprogs = tc->instance->confprog && (MVM_confprog_has_entrypoint(tc, MVM_PROGRAM_ENTRYPOINT_PROFILER_STATIC)
+            uint8_t debug_level = tc->instance->confprog ? tc->instance->confprog->debugging_level : 0;
+            uint8_t has_confprogs = tc->instance->confprog && (MVM_confprog_has_entrypoint(tc, MVM_PROGRAM_ENTRYPOINT_PROFILER_STATIC)
                         || MVM_confprog_has_entrypoint(tc, MVM_PROGRAM_ENTRYPOINT_PROFILER_STATIC));
             /* At the very beginning of profiling with a confprog set, the
              * root call_graph node needs to be created. */
@@ -86,7 +86,7 @@ void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, MVMuint64 m
                 }
                 else if (instrumentation->profiler_confprog_result == MVM_CONFPROG_SF_RESULT_TO_BE_DETERMINED) {
                     if (MVM_confprog_has_entrypoint(tc, MVM_PROGRAM_ENTRYPOINT_PROFILER_STATIC)) {
-                        MVMuint8 result;
+                        uint8_t result;
                         debugprint(DEBUG_LVL(PROFILER_RESULTS), tc, "running 'profiler_static' entrypoint in confprog");
                         result = MVM_confprog_run(tc, (void *)sf, MVM_PROGRAM_ENTRYPOINT_PROFILER_STATIC, MVM_CONFPROG_SF_RESULT_ALWAYS);
                         instrumentation->profiler_confprog_result = result;
@@ -197,7 +197,7 @@ void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, MVMuint64 m
 void MVM_profile_log_enter_native(MVMThreadContext *tc, MVMObject *nativecallsite) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
     MVMProfileCallNode *pcn = NULL;
-    MVMuint64 current_hrtime = uv_hrtime();
+    uint64_t current_hrtime = uv_hrtime();
     MVMNativeCallBody *callbody;
     uint32_t i;
 
@@ -285,10 +285,10 @@ MVMProfileContinuationData * MVM_profile_log_continuation_control(MVMThreadConte
     MVMProfileThreadData        *ptd       = get_thread_data(tc);
     MVMProfileContinuationData  *cd        = MVM_malloc(sizeof(MVMProfileContinuationData));
     MVMStaticFrame             **sfs       = NULL;
-    MVMuint64                   *modes     = NULL;
+    uint64_t                   *modes     = NULL;
     MVMFrame                    *cur_frame = tc->cur_frame;
-    MVMuint64                    alloc_sfs = 0;
-    MVMuint64                    num_sfs   = 0;
+    uint64_t                    alloc_sfs = 0;
+    uint64_t                    num_sfs   = 0;
     MVMFrame                   *last_frame;
 
     do {
@@ -301,7 +301,7 @@ MVMProfileContinuationData * MVM_profile_log_continuation_control(MVMThreadConte
             if (num_sfs == alloc_sfs) {
                 alloc_sfs += 16;
                 sfs        = MVM_realloc(sfs, alloc_sfs * sizeof(MVMStaticFrame *));
-                modes      = MVM_realloc(modes, alloc_sfs * sizeof(MVMuint64));
+                modes      = MVM_realloc(modes, alloc_sfs * sizeof(uint64_t));
             }
             sfs[num_sfs]   = ptd->staticframe_array[pcn->sf_idx];
             modes[num_sfs] = pcn->entry_mode;
@@ -324,7 +324,7 @@ MVMProfileContinuationData * MVM_profile_log_continuation_control(MVMThreadConte
 /* Called when we invoke a continuation. Enters all the static frames we left
  * at the point we took the continuation. */
 void MVM_profile_log_continuation_invoke(MVMThreadContext *tc, const MVMProfileContinuationData *cd) {
-    MVMuint64 i = cd->num_sfs;
+    uint64_t i = cd->num_sfs;
     while (i--)
         MVM_profile_log_enter(tc, cd->sfs[i], cd->modes[i]);
 }
@@ -336,10 +336,10 @@ void MVM_profile_log_thread_created(MVMThreadContext *tc, MVMThreadContext *chil
 }
 
 /* Logs one allocation, potentially scalar replaced. */
-static void log_one_allocation(MVMThreadContext *tc, MVMObject *obj, MVMProfileCallNode *pcn, MVMuint8 replaced) {
+static void log_one_allocation(MVMThreadContext *tc, MVMObject *obj, MVMProfileCallNode *pcn, uint8_t replaced) {
     MVMObject *what = STABLE(obj)->WHAT;
     uint32_t i;
-    MVMuint8 allocation_target;
+    uint8_t allocation_target;
     MVM_ASSERT_NOT_FROMSPACE(tc, what);
     if (replaced) {
         allocation_target = 3;
@@ -429,7 +429,7 @@ void MVM_profiler_log_gc_deallocate(MVMThreadContext *tc, MVMObject *object) {
         MVMCollectable *item = (MVMCollectable *)object;
         uint32_t i;
 
-        MVMuint8 dealloc_target = 0;
+        uint8_t dealloc_target = 0;
 
         if (what->header.flags2 & MVM_CF_FORWARDER_VALID)
             what = (MVMObject *)what->header.sc_forward_u.forwarder;
@@ -520,7 +520,7 @@ void MVM_profiler_log_gc_start(MVMThreadContext *tc, uint32_t full, uint32_t thi
 void MVM_profiler_log_gc_end(MVMThreadContext *tc) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
     MVMProfileCallNode   *pcn = ptd->current_call;
-    MVMuint64 gc_time;
+    uint64_t gc_time;
     int32_t  retained_bytes;
 
     /* Record time spent. */
@@ -550,13 +550,13 @@ void MVM_profiler_log_gc_end(MVMThreadContext *tc) {
     }
 }
 
-void MVM_profiler_log_unmanaged_data_promoted(MVMThreadContext *tc, MVMuint64 amount) {
+void MVM_profiler_log_unmanaged_data_promoted(MVMThreadContext *tc, uint64_t amount) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
 
     ptd->gc_promoted_unmanaged_bytes += amount;
 }
 
-void MVM_profiler_log_gen2_roots(MVMThreadContext *tc, MVMuint64 amount, MVMThreadContext *other) {
+void MVM_profiler_log_gen2_roots(MVMThreadContext *tc, uint64_t amount, MVMThreadContext *other) {
     if (tc != other) {
         MVMProfileThreadData *ptd = get_thread_data(tc);
 
@@ -574,7 +574,7 @@ void MVM_profiler_log_spesh_start(MVMThreadContext *tc) {
 /* Log that we've finished doing bytecode specialization or JIT. */
 void MVM_profiler_log_spesh_end(MVMThreadContext *tc) {
     MVMProfileThreadData *ptd = get_thread_data(tc->instance->main_thread);
-    MVMuint64 spesh_time;
+    uint64_t spesh_time;
 
     /* Because spesh workers might start before profiling starts,
      * MVM_profiler_log_spesh_end might get called before
@@ -588,7 +588,7 @@ void MVM_profiler_log_spesh_end(MVMThreadContext *tc) {
 }
 
 /* Log that an on stack replacement took place. */
-void MVM_profiler_log_osr(MVMThreadContext *tc, MVMuint64 jitted) {
+void MVM_profiler_log_osr(MVMThreadContext *tc, uint64_t jitted) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
     MVMProfileCallNode   *pcn = ptd->current_call;
     if (pcn) {

@@ -105,9 +105,9 @@ static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSeri
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMSpeshCandidateBody *body = (MVMSpeshCandidateBody *)data;
-    MVMuint64 size = 0;
+    uint64_t size = 0;
 
     size += body->bytecode_size;
 
@@ -121,7 +121,7 @@ static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data)
 
     size += sizeof(MVMSpeshInline) * body->num_inlines;
 
-    size += sizeof(MVMuint16) * (body->num_locals + body->num_lexicals);
+    size += sizeof(uint16_t) * (body->num_locals + body->num_lexicals);
 
     /* Dive into the jit code */
     if (body->jitcode) {
@@ -135,7 +135,7 @@ static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data)
         size += sizeof(MVMJitInline) * code->num_inlines;
         size += sizeof(MVMJitHandler) * code->num_handlers;
         if (code->local_types)
-            size += sizeof(MVMuint16) * code->num_locals;
+            size += sizeof(uint16_t) * code->num_locals;
     }
 
     return size;
@@ -202,7 +202,7 @@ void MVM_spesh_candidate_add(MVMThreadContext *tc, MVMSpeshPlanned *p) {
     MVMSpeshCandidate *candidate;
     MVMSpeshCandidate **new_candidate_list;
     MVMStaticFrameSpesh *spesh;
-    MVMuint64 start_time = 0, spesh_time = 0, jit_time = 0, end_time;
+    uint64_t start_time = 0, spesh_time = 0, jit_time = 0, end_time;
 
     /* If we've reached our specialization limit, don't continue. */
     int32_t spesh_produced = ++tc->instance->spesh_produced;

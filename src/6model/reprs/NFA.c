@@ -25,12 +25,12 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 /* Called by the VM to mark any GCable items. */
 static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMNFABody *lb = (MVMNFABody *)data;
-    MVMint64 i, j;
+    int64_t i, j;
 
     MVM_gc_worklist_add(tc, worklist, &lb->fates);
 
     for (i = 0; i < lb->num_states; i++) {
-        MVMint64 edges = lb->num_state_edges[i];
+        int64_t edges = lb->num_state_edges[i];
         for (j = 0; j < edges; j++) {
             switch (lb->states[i][j].act) {
                 case MVM_NFA_EDGE_CHARLIST:
@@ -44,7 +44,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 /* Called by the VM in order to free memory associated with this object. */
 static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
     MVMNFA *nfa = (MVMNFA *)obj;
-    MVMint64 i;
+    int64_t i;
     for (i = 0; i < nfa->body.num_states; i++)
         if (nfa->body.num_state_edges[i])
             MVM_free(nfa->body.states[i]);
@@ -71,7 +71,7 @@ static const MVMStorageSpec * get_storage_spec(MVMThreadContext *tc, MVMSTable *
 /* Serializes the data. */
 static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerializationWriter *writer) {
     MVMNFABody *body = (MVMNFABody *)data;
-    MVMint64 i, j;
+    int64_t i, j;
 
     /* Write fates. */
     MVM_serialization_write_ref(tc, writer, body->fates);
@@ -81,7 +81,7 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
 
     /* Write state edge list counts, skipping synthetic start node. */
     for (i = 0; i < body->num_states; i++) {
-        MVMint64 sig_edges = body->num_state_edges[i];
+        int64_t sig_edges = body->num_state_edges[i];
         if (sig_edges && body->states[i][0].act == MVM_NFA_EDGE_SYNTH_CP_COUNT)
             sig_edges--;
         MVM_serialization_write_int(tc, writer, sig_edges);
@@ -90,7 +90,7 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
     /* Write state graph. */
     for (i = 0; i < body->num_states; i++) {
         for (j = 0; j < body->num_state_edges[i]; j++) {
-            MVMint64 act = body->states[i][j].act;
+            int64_t act = body->states[i][j].act;
             if (act == MVM_NFA_EDGE_SYNTH_CP_COUNT)
                 continue;
             MVM_serialization_write_int(tc, writer, act);
@@ -181,15 +181,15 @@ static int opt_edge_comp(const void *av, const void *bv) {
     }
 }
 static void sort_states_and_add_synth_cp_node(MVMThreadContext *tc, MVMNFABody *body) {
-    MVMint64 s;
+    int64_t s;
     for (s = 0; s < body->num_states; s++) {
         /* See if there's enough interesting edges to do the opt. */
         int32_t applicable_edges = 0;
-        MVMint64 num_orig_edges = body->num_state_edges[s];
+        int64_t num_orig_edges = body->num_state_edges[s];
         if (num_orig_edges >= 4) {
-            MVMint64 e;
+            int64_t e;
             for (e = 0; e < num_orig_edges; e++) {
-                MVMint64 act = body->states[s][e].act;
+                int64_t act = body->states[s][e].act;
                 if (act == MVM_NFA_EDGE_CODEPOINT || act == MVM_NFA_EDGE_CODEPOINT_LL)
                     applicable_edges++;
             }
@@ -197,7 +197,7 @@ static void sort_states_and_add_synth_cp_node(MVMThreadContext *tc, MVMNFABody *
 
         /* If enough edges, insert synthetic and so the sort. */
         if (applicable_edges >= 4) {
-            MVMint64 num_new_edges = num_orig_edges + 1;
+            int64_t num_new_edges = num_orig_edges + 1;
             MVMNFAStateInfo *new_edges = MVM_malloc(num_new_edges * sizeof(MVMNFAStateInfo));
             new_edges[0].act = MVM_NFA_EDGE_SYNTH_CP_COUNT;
             new_edges[0].arg.i = applicable_edges;
@@ -213,7 +213,7 @@ static void sort_states_and_add_synth_cp_node(MVMThreadContext *tc, MVMNFABody *
 /* Deserializes the data. */
 static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMSerializationReader *reader) {
     MVMNFABody *body = (MVMNFABody *)data;
-    MVMint64 i, j;
+    int64_t i, j;
 
     /* Read fates. */
     body->fates = MVM_serialization_read_ref(tc, reader);
@@ -223,14 +223,14 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
 
     if (body->num_states > 0) {
         /* Read state edge list counts. */
-        body->num_state_edges = MVM_malloc(body->num_states * sizeof(MVMint64));
+        body->num_state_edges = MVM_malloc(body->num_states * sizeof(int64_t));
         for (i = 0; i < body->num_states; i++)
             body->num_state_edges[i] = MVM_serialization_read_int(tc, reader);
 
         /* Read state graph. */
         body->states = MVM_malloc(body->num_states * sizeof(MVMNFAStateInfo *));
         for (i = 0; i < body->num_states; i++) {
-            MVMint64 edges = body->num_state_edges[i];
+            int64_t edges = body->num_state_edges[i];
             if (edges > 0) {
                 body->states[i] = MVM_malloc(edges * sizeof(MVMNFAStateInfo));
             }
@@ -246,7 +246,7 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
                     case MVM_NFA_EDGE_CODEPOINT_NEG:
                     case MVM_NFA_EDGE_CODEPOINT_M:
                     case MVM_NFA_EDGE_CODEPOINT_M_NEG: {
-                        MVMint64 cp_or_synth_count = MVM_serialization_read_int(tc, reader);
+                        int64_t cp_or_synth_count = MVM_serialization_read_int(tc, reader);
                         if (cp_or_synth_count >= 0) {
                             body->states[i][j].arg.g = (MVMGrapheme32)cp_or_synth_count;
                         }
@@ -301,12 +301,12 @@ static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSeri
 }
 
 /* Calculates the non-GC-managed memory we hold on to. */
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMNFABody *body = (MVMNFABody *)data;
-    MVMuint64 total;
-    MVMint64 i;
+    uint64_t total;
+    int64_t i;
 
-    total = body->num_states * sizeof(MVMint64); /* for num_state_edges */
+    total = body->num_states * sizeof(int64_t); /* for num_state_edges */
     total += body->num_states * sizeof(MVMNFAStateInfo *); /* for states level 1 */
     for (i = 0; i < body->num_states; i++)
         total += body->num_state_edges[i] * sizeof(MVMNFAStateInfo);
@@ -376,7 +376,7 @@ static MVMGrapheme32 get_grapheme(MVMThreadContext *tc, MVMObject *obj) {
 MVMObject * MVM_nfa_from_statelist(MVMThreadContext *tc, MVMObject *states, MVMObject *nfa_type) {
     MVMObject  *nfa_obj;
     MVMNFABody *nfa;
-    MVMint64    i, j, num_states;
+    int64_t    i, j, num_states;
 
     MVMROOT2(tc, states, nfa_type) {
         /* Create NFA object. */
@@ -390,14 +390,14 @@ MVMObject * MVM_nfa_from_statelist(MVMThreadContext *tc, MVMObject *states, MVMO
         num_states = MVM_repr_elems(tc, states) - 1;
         nfa->num_states = num_states;
         if (num_states > 0) {
-            nfa->num_state_edges = MVM_calloc(num_states, sizeof(MVMint64));
+            nfa->num_state_edges = MVM_calloc(num_states, sizeof(int64_t));
             nfa->states = MVM_calloc(num_states, sizeof(MVMNFAStateInfo *));
         }
         for (i = 0; i < num_states; i++) {
             MVMObject *edge_info = MVM_repr_at_pos_o(tc, states, i + 1);
-            MVMint64   elems     = MVM_repr_elems(tc, edge_info);
-            MVMint64   edges     = elems / 3;
-            MVMint64   cur_edge  = 0;
+            int64_t   elems     = MVM_repr_elems(tc, edge_info);
+            int64_t   edges     = elems / 3;
+            int64_t   cur_edge  = 0;
 
             nfa->num_state_edges[i] = edges;
             if (edges > 0) {
@@ -405,9 +405,9 @@ MVMObject * MVM_nfa_from_statelist(MVMThreadContext *tc, MVMObject *states, MVMO
             }
 
             for (j = 0; j < elems; j += 3) {
-                MVMint64 act = MVM_coerce_simple_intify(tc,
+                int64_t act = MVM_coerce_simple_intify(tc,
                     MVM_repr_at_pos_o(tc, edge_info, j));
-                MVMint64 to  = MVM_coerce_simple_intify(tc,
+                int64_t to  = MVM_coerce_simple_intify(tc,
                     MVM_repr_at_pos_o(tc, edge_info, j + 2));
                 if (to <= 0 && act != MVM_NFA_EDGE_FATE)
                     MVM_exception_throw_adhoc(tc, "Invalid to edge %"PRId64" in NFA statelist", to);
@@ -479,15 +479,15 @@ static int32_t in_done(uint32_t *done, uint32_t numdone, uint32_t st) {
     return 0;
 }
 
-static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *target, MVMint64 offset, MVMint64 *total_fates_out) {
-    MVMint64  eos     = MVM_string_graphs(tc, target);
-    MVMint64  numcur  = 0;
-    MVMint64  numnext = 0;
-    MVMint64  numdone = 0;
+static int64_t * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *target, int64_t offset, int64_t *total_fates_out) {
+    int64_t  eos     = MVM_string_graphs(tc, target);
+    int64_t  numcur  = 0;
+    int64_t  numnext = 0;
+    int64_t  numdone = 0;
     uint32_t *done, *curst, *nextst;
-    MVMint64  *fates, *longlit;
-    MVMint64  i, fate_arr_len, num_states, total_fates, prev_fates, usedlonglit;
-    MVMint64  orig_offset = offset;
+    int64_t  *fates, *longlit;
+    int64_t  i, fate_arr_len, num_states, total_fates, prev_fates, usedlonglit;
+    int64_t  orig_offset = offset;
     /* We used a cached grapheme iterator since we often request the same
      * grapheme multiple times, most common after that is requesting the next
      * grapheme. */
@@ -511,7 +511,7 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
     /* Allocate fates array. */
     fate_arr_len = 1 + MVM_repr_elems(tc, nfa->fates);
     if (tc->nfa_fates_len < fate_arr_len) {
-        tc->nfa_fates     = (MVMint64 *)MVM_realloc(tc->nfa_fates, sizeof(MVMint64) * fate_arr_len);
+        tc->nfa_fates     = (int64_t *)MVM_realloc(tc->nfa_fates, sizeof(int64_t) * fate_arr_len);
         tc->nfa_fates_len = fate_arr_len;
     }
     fates = tc->nfa_fates;
@@ -521,7 +521,7 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
     /* longlit will be updated on a fate whenever NFA passes through final char of a literal. */
     /* These edges are specially marked to indicate which fate they influence the fate of. */
     if (tc->nfa_longlit_len < fate_arr_len) {
-        tc->nfa_longlit = (MVMint64 *)MVM_realloc(tc->nfa_longlit, sizeof(MVMint64) * fate_arr_len);
+        tc->nfa_longlit = (int64_t *)MVM_realloc(tc->nfa_longlit, sizeof(int64_t) * fate_arr_len);
         tc->nfa_longlit_len  = fate_arr_len;
     }
     longlit = tc->nfa_longlit;
@@ -555,9 +555,9 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
         }
         while (numcur) {
             MVMNFAStateInfo *edge_info;
-            MVMint64         edge_info_elems;
+            int64_t         edge_info_elems;
 
-            MVMint64 st = curst[--numcur];
+            int64_t st = curst[--numcur];
             if (st <= num_states) {
                 if (in_done(done, numdone, st))
                     continue;
@@ -569,8 +569,8 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
             if (MVM_UNLIKELY(nfadeb))
                 fprintf(stderr,"\t%"PRIi64"\t%"PRIi64"\t", st, edge_info_elems);
             for (i = 0; i < edge_info_elems; i++) {
-                MVMint64 act = edge_info[i].act;
-                MVMint64 to  = edge_info[i].to;
+                int64_t act = edge_info[i].act;
+                int64_t to  = edge_info[i].to;
 
                 /* All the special cases are under one test. */
                 if (act <= MVM_NFA_EDGE_EPSILON) {
@@ -582,9 +582,9 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
                     else if (act == MVM_NFA_EDGE_FATE) {
                         /* Crossed a fate edge. Check if we already saw this fate, and
                          * if so remove the entry so we can re-add at the new token length. */
-                        MVMint64 arg = edge_info[i].arg.i;
-                        MVMint64 j;
-                        MVMint64 found_fate = 0;
+                        int64_t arg = edge_info[i].arg.i;
+                        int64_t j;
+                        int64_t found_fate = 0;
                         if (MVM_UNLIKELY(nfadeb))
                             fprintf(stderr, "fate(%016llx) ", (long long unsigned int)arg);
                         for (j = 0; j < total_fates; j++) {
@@ -606,8 +606,8 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
                                 fprintf(stderr, "  %016llx\n", (long long unsigned int)fates[j]);
                             }
                             fate_arr_len      = total_fates + 10;
-                            tc->nfa_fates     = (MVMint64 *)MVM_realloc(tc->nfa_fates,
-                                sizeof(MVMint64) * fate_arr_len);
+                            tc->nfa_fates     = (int64_t *)MVM_realloc(tc->nfa_fates,
+                                sizeof(int64_t) * fate_arr_len);
                             tc->nfa_fates_len = fate_arr_len;
                             fates             = tc->nfa_fates;
                         }
@@ -638,7 +638,7 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
                         case MVM_NFA_EDGE_CODEPOINT_LL: {
                             const MVMGrapheme32 arg = edge_info[i].arg.g;
                             if (MVM_string_gi_cached_get_grapheme(tc, &gic, offset) == arg) {
-                                MVMint64 fate = (edge_info[i].act >> 8) & 0xfffff;
+                                int64_t fate = (edge_info[i].act >> 8) & 0xfffff;
                                 nextst[numnext++] = to;
                                 while (usedlonglit <= fate)
                                     longlit[usedlonglit++] = 0;
@@ -664,13 +664,13 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
                             continue;
                         }
                         case MVM_NFA_EDGE_CHARCLASS: {
-                            const MVMint64 arg = edge_info[i].arg.i;
+                            const int64_t arg = edge_info[i].arg.i;
                             if (MVM_string_grapheme_is_cclass(tc, arg, MVM_string_gi_cached_get_grapheme(tc, &gic, offset)))
                                 nextst[numnext++] = to;
                             continue;
                         }
                         case MVM_NFA_EDGE_CHARCLASS_NEG: {
-                            const MVMint64 arg = edge_info[i].arg.i;
+                            const int64_t arg = edge_info[i].arg.i;
                             if (!MVM_string_grapheme_is_cclass(tc, arg, MVM_string_gi_cached_get_grapheme(tc, &gic, offset)))
                                 nextst[numnext++] = to;
                             continue;
@@ -694,7 +694,7 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
                             const MVMGrapheme32 lc_arg = edge_info[i].arg.uclc.lc;
                             const MVMGrapheme32 ord    = MVM_string_gi_cached_get_grapheme(tc, &gic, offset);
                             if (ord == lc_arg || ord == uc_arg) {
-                                MVMint64 fate = (edge_info[i].act >> 8) & 0xfffff;
+                                int64_t fate = (edge_info[i].act >> 8) & 0xfffff;
                                 nextst[numnext++] = to;
                                 while (usedlonglit <= fate)
                                     longlit[usedlonglit++] = 0;
@@ -803,13 +803,13 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
                         case MVM_NFA_EDGE_SYNTH_CP_COUNT: {
                             /* Binary search the edges ahead for the grapheme. */
                             const MVMGrapheme32 search = MVM_string_gi_cached_get_grapheme(tc, &gic, offset);
-                            const MVMint64 num_possibilities = edge_info[i].arg.i;
-                            const MVMint64 end = i + num_possibilities;
-                            MVMint64 l = i + 1;
-                            MVMint64 r = end;
-                            MVMint64 found = -1;
+                            const int64_t num_possibilities = edge_info[i].arg.i;
+                            const int64_t end = i + num_possibilities;
+                            int64_t l = i + 1;
+                            int64_t r = end;
+                            int64_t found = -1;
                             while (l <= r) {
-                                const MVMint64 m = l + (r - l) / 2;
+                                const int64_t m = l + (r - l) / 2;
                                 const MVMGrapheme32 test = edge_info[m].arg.g;
                                 if (test == search) {
                                     /* We found it, but important we get the first edge
@@ -839,7 +839,7 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
                                             fprintf(stderr, "%d->%d ", (int)found, (int)to);
                                     }
                                     else {
-                                        const MVMint64 fate = (edge_info[found].act >> 8) & 0xfffff;
+                                        const int64_t fate = (edge_info[found].act >> 8) & 0xfffff;
                                         nextst[numnext++] = to;
                                         while (usedlonglit <= fate)
                                             longlit[usedlonglit++] = 0;
@@ -877,10 +877,10 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
 
 /* Takes an NFA, a target string in and an offset. Runs the NFA and returns
  * the order to try the fates in. */
-MVMObject * MVM_nfa_run_proto(MVMThreadContext *tc, MVMObject *nfa, MVMString *target, MVMint64 offset) {
+MVMObject * MVM_nfa_run_proto(MVMThreadContext *tc, MVMObject *nfa, MVMString *target, int64_t offset) {
     /* Run the NFA. */
-    MVMint64  total_fates, i;
-    MVMint64 *fates = nqp_nfa_run(tc, (MVMNFABody *)OBJECT_BODY(nfa), target, offset, &total_fates);
+    int64_t  total_fates, i;
+    int64_t *fates = nqp_nfa_run(tc, (MVMNFABody *)OBJECT_BODY(nfa), target, offset, &total_fates);
 
     /* Copy results into an integer array. */
     MVMObject *fateres = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTIntArray);
@@ -895,13 +895,13 @@ MVMObject * MVM_nfa_run_proto(MVMThreadContext *tc, MVMObject *nfa, MVMString *t
  * branches in the correct order. The current capture stack is needed for its
  * height. */
 void MVM_nfa_run_alt(MVMThreadContext *tc, MVMObject *nfa, MVMString *target,
-        MVMint64 offset, MVMObject *bstack, MVMObject *cstack, MVMObject *labels) {
+        int64_t offset, MVMObject *bstack, MVMObject *cstack, MVMObject *labels) {
     /* Run the NFA. */
-    MVMint64  total_fates, i;
-    MVMint64 *fates = nqp_nfa_run(tc, (MVMNFABody *)OBJECT_BODY(nfa), target, offset, &total_fates);
+    int64_t  total_fates, i;
+    int64_t *fates = nqp_nfa_run(tc, (MVMNFABody *)OBJECT_BODY(nfa), target, offset, &total_fates);
 
     /* Push the results onto the bstack. */
-    MVMint64 caps = cstack && IS_CONCRETE(cstack)
+    int64_t caps = cstack && IS_CONCRETE(cstack)
         ? MVM_repr_elems(tc, cstack)
         : 0;
     for (i = 0; i < total_fates; i++) {

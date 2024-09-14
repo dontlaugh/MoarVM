@@ -58,14 +58,14 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 
 static void describe_refs (MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
     MVMSpeshLogBody  *body      = (MVMSpeshLogBody *)data;
-    MVMuint64         i         = 0;
+    uint64_t         i         = 0;
 
-    MVMuint64 cache_1 = 0;
-    MVMuint64 cache_2 = 0;
-    MVMuint64 cache_3 = 0;
-    MVMuint64 cache_4 = 0;
-    MVMuint64 cache_5 = 0;
-    MVMuint64 cache_6 = 0;
+    uint64_t cache_1 = 0;
+    uint64_t cache_2 = 0;
+    uint64_t cache_3 = 0;
+    uint64_t cache_4 = 0;
+    uint64_t cache_5 = 0;
+    uint64_t cache_6 = 0;
 
     if (!body->entries)
         return;
@@ -138,7 +138,7 @@ static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSeri
     st->size = sizeof(MVMSpeshLog);
 }
 
-static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
+static uint64_t unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMSpeshLogBody *log = (MVMSpeshLogBody *)data;
     return log->limit * sizeof(MVMSpeshLogEntry);
 }
