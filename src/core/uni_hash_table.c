@@ -310,7 +310,7 @@ MVM_STATIC_INLINE void *MVM_uni_hash_lvalue_fetch(MVMThreadContext *tc,
 void MVM_uni_hash_insert(MVMThreadContext *tc,
                          MVMUniHashTable *hashtable,
                          const char *key,
-                         MVMint32 value) {
+                         int32_t value) {
     struct MVMUniHashEntry *new_entry = MVM_uni_hash_lvalue_fetch(tc, hashtable, key);
     if (new_entry->key) {
         if (value != new_entry->value) {

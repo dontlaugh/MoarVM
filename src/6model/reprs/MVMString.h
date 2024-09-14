@@ -16,7 +16,7 @@
  */
 
 /* Kinds of grapheme we may hold in a string. */
-typedef MVMint32 MVMGrapheme32;
+typedef int32_t MVMGrapheme32;
 typedef MVMint8  MVMGraphemeASCII;
 typedef MVMint8  MVMGrapheme8;       /* Future use */
 
@@ -32,7 +32,7 @@ typedef MVMint8  MVMGrapheme8;       /* Future use */
 typedef MVMuint32 MVMStringIndex;
 
 /* Data type for a Unicode codepoint. */
-typedef MVMint32 MVMCodepoint;
+typedef int32_t MVMCodepoint;
 
 /* Maximum number of strands we will have. */
 #define MVM_STRING_MAX_STRANDS  64

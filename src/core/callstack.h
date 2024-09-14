@@ -378,7 +378,7 @@ MVMCallStackFrame * MVM_callstack_allocate_frame(MVMThreadContext *tc, MVMuint32
         MVMuint32 env_size);
 MVMCallStackHeapFrame * MVM_callstack_allocate_heap_frame(MVMThreadContext *tc,
         MVMuint32 work_size);
-MVMint32 MVM_callstack_ensure_work_and_env_space(MVMThreadContext *tc, MVMuint32 needed_work,
+int32_t MVM_callstack_ensure_work_and_env_space(MVMThreadContext *tc, MVMuint32 needed_work,
         MVMuint32 needed_env);
 MVM_PUBLIC void * MVM_callstack_allocate_special_return(MVMThreadContext *tc,
         MVMSpecialReturn special_return, MVMSpecialReturn special_unwind,
@@ -479,7 +479,7 @@ MVM_STATIC_INLINE void MVM_callstack_iter_resumeable_init(MVMThreadContext *tc,
 
 /* Move to the next applicable record. Should be called before reading a current
  * record. Calling it again after it has returned a flase value is undefined. */
-MVM_STATIC_INLINE MVMint32 MVM_callstack_iter_move_next(MVMThreadContext *tc,
+MVM_STATIC_INLINE int32_t MVM_callstack_iter_move_next(MVMThreadContext *tc,
         MVMCallStackIterator *iter) {
     iter->current = iter->current ? iter->current->prev : iter->start;
     while (iter->current && !(iter->filter & (1 << iter->current->kind)))

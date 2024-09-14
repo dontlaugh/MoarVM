@@ -629,7 +629,7 @@ void MVM_gc_collect_free_stables(MVMThreadContext *tc) {
 
 /* Goes through the unmarked objects in the second generation heap and builds
  * free lists out of them. Also does any required finalization. */
-void MVM_gc_collect_free_gen2_unmarked(MVMThreadContext *executing_thread, MVMThreadContext *tc, MVMint32 global_destruction) {
+void MVM_gc_collect_free_gen2_unmarked(MVMThreadContext *executing_thread, MVMThreadContext *tc, int32_t global_destruction) {
     /* Visit each of the size class bins. */
     MVMGen2Allocator *gen2 = tc->gen2;
     MVMuint32 bin, obj_size, page, i;

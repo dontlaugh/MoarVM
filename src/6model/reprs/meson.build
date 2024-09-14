@@ -57,7 +57,7 @@ sixmodel_reprs_deps = [
     libtommath_lib,
 ]
 
-sixmodel_reprs_lib = static_library('sixmodel', sixmodel_reprs_srcs,
+sixmodel_reprs_lib = static_library('sixmodel_reprs_a', sixmodel_reprs_srcs,
                                     dependencies : sixmodel_reprs_deps,
                                     include_directories : [moar_src_inc, dynload_inc_dir])
 

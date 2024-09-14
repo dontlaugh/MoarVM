@@ -6,14 +6,14 @@
 	ftp://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.7.tar.gz
 */
 
-const MVMint32 gb18030_two_byte_lower_bound[126] = {
+const int32_t gb18030_two_byte_lower_bound[126] = {
 64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,
 64,64,64,64,64,64,161,161,161,161,161,161,161,64,64,64,64,64,64,64,64,64,64,64,
 64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,
 64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,
 64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64};
 
-const MVMint32 gb18030_two_byte_upper_bound[126] = {
+const int32_t gb18030_two_byte_upper_bound[126] = {
 254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,
 254,254,254,254,254,254,254,254,254,254,254,254,254,252,254,243,246,245,241,233,
 239,160,160,160,160,160,160,254,254,254,254,254,254,254,254,254,254,254,254,254,
@@ -22,7 +22,7 @@ const MVMint32 gb18030_two_byte_upper_bound[126] = {
 254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,160,
 160,160,160,160,160,159};
 
-static MVMint32 gb18030_valid_check_len2(MVMint32 c_1, MVMint32 c_2) {
+static int32_t gb18030_valid_check_len2(int32_t c_1, int32_t c_2) {
     /* This function serves like a 'first stage check' of c_1 and c_2.
        It eliminates most of the invalid combinations of c_1 and c_2, 
        but for code simplicity and to avoid lots of if-else here,
@@ -33,7 +33,7 @@ static MVMint32 gb18030_valid_check_len2(MVMint32 c_1, MVMint32 c_2) {
     return gb18030_two_byte_lower_bound[c_1] <= c_2 && c_2 <= gb18030_two_byte_upper_bound[c_1];
 }
 
-static MVMint32 gb18030_valid_check_len4(MVMint32 c_1, MVMint32 c_2, MVMint32 c_3, MVMint32 c_4) {
+static int32_t gb18030_valid_check_len4(int32_t c_1, int32_t c_2, int32_t c_3, int32_t c_4) {
     if ((0x81 <= c_1 && c_1 <= 0x83) || (c_1 == 0x84 && c_2 == 0x30)) {
         return (0x30 <= c_2 && c_2 <= 0x39) && (0x81 <= c_3 && c_3 <= 0xfe) && (0x30 <= c_4 && c_4 <= 0x39);
     } else if (c_1 == 0x84 && c_2 == 0x31) {
@@ -42,7 +42,7 @@ static MVMint32 gb18030_valid_check_len4(MVMint32 c_1, MVMint32 c_2, MVMint32 c_
     return 0;
 }
 
-static MVMint32 gb18030_valid_check_len4_first2(MVMint32 c_1, MVMint32 c_2) {
+static int32_t gb18030_valid_check_len4_first2(int32_t c_1, int32_t c_2) {
     return (((0x81 <= c_1 && c_1 <= 0x83) || (c_1 == 0x84 && c_2 == 0x30)) && (0x30 <= c_2 && c_2 <= 0x39))	|| (c_1 == 0x84 && c_2 == 0x31);
 }
 
@@ -117,12 +117,12 @@ MVMuint32 MVM_string_gb18030_decodestream(MVMThreadContext *tc, MVMDecodeStream 
     MVMGrapheme32 *buffer = NULL;
     MVMDecodeStreamBytes *cur_bytes = NULL;
     MVMDecodeStreamBytes *last_accept_bytes = ds->bytes_head;
-    MVMint32 last_accept_pos, last_was_cr;
+    int32_t last_accept_pos, last_was_cr;
     MVMuint32 reached_stopper;
 
-    MVMint32 last_was_first_byte, is_len4;
-    MVMint32 last_codepoint;
-    MVMint32 len4_cnt,len4_byte1, len4_byte2, len4_byte3, len4_byte4;
+    int32_t last_was_first_byte, is_len4;
+    int32_t last_codepoint;
+    int32_t len4_cnt,len4_byte1, len4_byte2, len4_byte3, len4_byte4;
     
     /* If there's no buffers, we're done. */ 
     if (!ds->bytes_head)
@@ -153,12 +153,12 @@ MVMuint32 MVM_string_gb18030_decodestream(MVMThreadContext *tc, MVMDecodeStream 
 
     while (cur_bytes) {
         /* Process this buffer. */
-        MVMint32 pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
+        int32_t pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
         MVMuint8 *bytes = (MVMuint8 *)cur_bytes->bytes;
 
         while (pos < cur_bytes->length) {
             MVMGrapheme32 graph = 0;
-            MVMint32 codepoint = (MVMint32) bytes[pos++];
+            int32_t codepoint = (int32_t) bytes[pos++];
             
             if (is_len4) {
                 if (len4_cnt == 2) {
@@ -265,7 +265,7 @@ done:
 
 char * MVM_string_gb18030_encode_substr(MVMThreadContext *tc, MVMString *str,
                                        MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement,
-                                       MVMint32 translate_newlines) {
+                                       int32_t translate_newlines) {
 
     MVMuint32 startu = (MVMuint32)start;
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);

@@ -595,7 +595,7 @@ void MVM_nativeref_write_lex_i(MVMThreadContext *tc, MVMObject *ref_obj, MVMint6
             var->i16 = (MVMint16)value;
             break;
         case MVM_reg_int32:
-            var->i32 = (MVMint32)value;
+            var->i32 = (int32_t)value;
             break;
         default:
             var->i64 = value;

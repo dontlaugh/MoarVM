@@ -315,7 +315,7 @@ static void step_point_hit(MVMThreadContext *tc) {
     tc->step_mode_frame = NULL;
 }
 
-MVM_PUBLIC MVMint32 MVM_debugserver_breakpoint_check(MVMThreadContext *tc, MVMuint32 file_idx, MVMuint32 line_no) {
+MVM_PUBLIC int32_t MVM_debugserver_breakpoint_check(MVMThreadContext *tc, MVMuint32 file_idx, MVMuint32 line_no) {
     MVMDebugServerData *debugserver = tc->instance->debugserver;
     MVMuint8 shall_suspend = 0;
 
@@ -636,7 +636,7 @@ static MVMThread *find_thread_by_id(MVMInstance *vm, MVMuint32 id) {
     return cur_thread;
 }
 
-static MVMint32 request_thread_suspends(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
+static int32_t request_thread_suspends(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
     MVMThread *to_do = thread ? thread : find_thread_by_id(dtc->instance, argument->thread_id);
     MVMThreadContext *tc = to_do ? to_do->body.tc : NULL;
 
@@ -693,7 +693,7 @@ static void request_all_threads_suspend(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
         if (is_thread_id_eligible(vm, cur_thread->body.thread_id)) {
             AO_t current = MVM_load(&cur_thread->body.tc->gc_status);
             if (current == MVMGCStatus_NONE || current == MVMGCStatus_UNABLE) {
-                MVMint32 result = request_thread_suspends(dtc, ctx, argument, cur_thread);
+                int32_t result = request_thread_suspends(dtc, ctx, argument, cur_thread);
                 if (result == 1) {
                     success = 0;
                     break;
@@ -711,11 +711,11 @@ static void request_all_threads_suspend(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
     uv_mutex_unlock(&vm->mutex_threads);
 }
 
-static MVMint32 request_thread_resumes(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
+static int32_t request_thread_resumes(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
     MVMInstance *vm = dtc->instance;
     MVMThread *to_do = thread ? thread : find_thread_by_id(vm, argument->thread_id);
     MVMThreadContext *tc = to_do ? to_do->body.tc : NULL;
-    MVMint32 is_one = !argument || argument->type != MT_ResumeAll;
+    int32_t is_one = !argument || argument->type != MT_ResumeAll;
     AO_t current;
 
     if (!tc) {
@@ -844,7 +844,7 @@ static void write_stacktrace_frames(MVMThreadContext *dtc, cmp_ctx_t *ctx, MVMTh
         MVMBytecodeAnnotation *annot = MVM_bytecode_resolve_annotation(tc, &cur_frame->static_info->body,
                                           offset > 0 ? offset - 1 : 0);
 
-        MVMint32 line_number = annot ? annot->line_number : 1;
+        int32_t line_number = annot ? annot->line_number : 1;
         MVMuint16 string_heap_index = annot ? annot->filename_string_heap_index : 1;
 
         char *tmp1 = annot && string_heap_index < cur_frame->static_info->body.cu->body.num_strings
@@ -891,7 +891,7 @@ static void write_stacktrace_frames(MVMThreadContext *dtc, cmp_ctx_t *ctx, MVMTh
     }
 }
 
-static MVMint32 request_thread_stacktrace(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
+static int32_t request_thread_stacktrace(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
     MVMThread *to_do = thread ? thread : find_thread_by_id(dtc->instance, argument->thread_id);
 
     if (!to_do)
@@ -915,7 +915,7 @@ static MVMint32 request_thread_stacktrace(MVMThreadContext *dtc, cmp_ctx_t *ctx,
 
 static void send_thread_info(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
-    MVMint32 threadcount = 0;
+    int32_t threadcount = 0;
     MVMThread *cur_thread;
 
     uv_mutex_lock(&vm->mutex_threads);
@@ -1745,7 +1745,7 @@ static MVMuint64 request_object_decontainerize(MVMThreadContext *dtc, cmp_ctx_t 
 }
 
 
-static MVMint32 create_context_or_code_obj_debug_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
+static int32_t create_context_or_code_obj_debug_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
     MVMInstance *vm = dtc->instance;
     MVMThread *to_do = thread ? thread : find_thread_by_id(vm, argument->thread_id);
 
@@ -1796,7 +1796,7 @@ static MVMint32 create_context_or_code_obj_debug_handle(MVMThreadContext *dtc, c
     return 0;
 }
 
-static MVMint32 create_caller_or_outer_context_debug_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
+static int32_t create_caller_or_outer_context_debug_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument, MVMThread *thread) {
     MVMObject *this_ctx = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
         : dtc->instance->VMNull;
@@ -1878,7 +1878,7 @@ static void write_one_context_lexical(MVMThreadContext *dtc, cmp_ctx_t *ctx, con
     }
 }
 
-static MVMint32 request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static int32_t request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMObject *this_ctx = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
         : dtc->instance->VMNull;
@@ -1936,7 +1936,7 @@ static MVMint32 request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
             MVMString *name = lexical_names_list[j];
             MVMuint16 lextype = static_info->body.lexical_types[j];
             MVMRegister *result = &frame->env[j];
-            MVMint32 was_from_local = 0;
+            int32_t was_from_local = 0;
             /* Lexical has to have a name - to get here it has already been added
                to the lookup hash, and that would have failed unless the key
                exists and is a concrete MVMString. */
@@ -1997,7 +1997,7 @@ MVM_STATIC_INLINE MVMObject * get_obj_at_offset(void *data, MVMint64 offset) {
     void *location = (char *)data + offset;
     return *((MVMObject **)location);
 }
-static MVMint32 request_object_attributes(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static int32_t request_object_attributes(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     MVMObject *target = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
@@ -2224,7 +2224,7 @@ static MVMuint16 write_vmarray_slot_kind(MVMThreadContext *tc, cmp_ctx_t *ctx, M
     cmp_write_str(ctx, text, strlen(text));
     return kind;
 }
-static MVMint32 request_object_metadata(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static int32_t request_object_metadata(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMObject *target = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
         : dtc->instance->VMNull;
@@ -2531,7 +2531,7 @@ static MVMint32 request_object_metadata(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
     return 0;
 }
 
-static MVMint32 request_object_positionals(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static int32_t request_object_positionals(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMObject *target = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
         : dtc->instance->VMNull;
@@ -2611,7 +2611,7 @@ static MVMint32 request_object_positionals(MVMThreadContext *dtc, cmp_ctx_t *ctx
     return 1;
 }
 
-static MVMint32 request_object_associatives(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
+static int32_t request_object_associatives(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMObject *target = argument->handle_id
         ? find_handle_target(dtc, argument->handle_id)
         : dtc->instance->VMNull;
@@ -2879,7 +2879,7 @@ static MVMint8 skip_whole_object(MVMThreadContext *tc, cmp_ctx_t *ctx, request_d
     return 1;
 }
 
-static MVMint32 parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *data) {
+static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *data) {
     MVMuint32 map_size = 0;
     MVMuint32 i;
     cmp_object_t obj;
@@ -2907,7 +2907,7 @@ static MVMint32 parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_
         MVMuint32 str_size = 16;
 
         fields_set field_to_set = 0;
-        MVMint32   type_to_parse = 0;
+        int32_t   type_to_parse = 0;
 
         CHECK(cmp_read_str(ctx, key_str, &str_size), "Couldn't read string key");
 
@@ -3065,7 +3065,7 @@ static MVMint32 parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_
                 uint32_t map_index;
 
                 MVMuint8 kind_set = 0;
-                MVMint32 kind = -1;
+                int32_t kind = -1;
                 MVMuint8 handle_is_set = 0;
                 MVMuint8 str_uses_handle = 0;
 

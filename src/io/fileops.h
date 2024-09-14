@@ -26,20 +26,20 @@
 #define MVM_STAT_PLATFORM_BLOCKSIZE -6
 #define MVM_STAT_PLATFORM_BLOCKS    -7
 
-MVMint64 MVM_file_stat(MVMThreadContext *tc, MVMString *filename, MVMint64 status, MVMint32 use_lstat);
-MVMnum64 MVM_file_time(MVMThreadContext *tc, MVMString *filename, MVMint64 status, MVMint32 use_lstat);
+MVMint64 MVM_file_stat(MVMThreadContext *tc, MVMString *filename, MVMint64 status, int32_t use_lstat);
+MVMnum64 MVM_file_time(MVMThreadContext *tc, MVMString *filename, MVMint64 status, int32_t use_lstat);
 void MVM_file_copy(MVMThreadContext *tc, MVMString *src, MVMString *dest);
 void MVM_file_rename(MVMThreadContext *tc, MVMString *src, MVMString *dest);
 void MVM_file_delete(MVMThreadContext *tc, MVMString *f);
 void MVM_file_chmod(MVMThreadContext *tc, MVMString *f, MVMint64 flag);
 void MVM_file_chown(MVMThreadContext *tc, MVMString *f, MVMuint64 uid, MVMuint64 gid);
-uv_stat_t MVM_file_info(MVMThreadContext *tc, MVMString *filename, MVMint32 use_lstat);
-MVMint64 MVM_file_info_with_error(MVMThreadContext *tc, uv_stat_t *stat, MVMString *filename, MVMint32 use_lstat);
-MVMint64 MVM_file_exists(MVMThreadContext *tc, MVMString *f, MVMint32 use_lstat);
-MVMint64 MVM_file_isreadable(MVMThreadContext *tc, MVMString *filename, MVMint32 use_lstat);
-MVMint64 MVM_file_iswritable(MVMThreadContext *tc, MVMString *filename, MVMint32 use_lstat);
-MVMint64 MVM_file_isexecutable(MVMThreadContext *tc, MVMString *filename, MVMint32 use_lstat);
-MVMObject * MVM_file_get_stdstream(MVMThreadContext *tc, MVMint32 type);
+uv_stat_t MVM_file_info(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat);
+MVMint64 MVM_file_info_with_error(MVMThreadContext *tc, uv_stat_t *stat, MVMString *filename, int32_t use_lstat);
+MVMint64 MVM_file_exists(MVMThreadContext *tc, MVMString *f, int32_t use_lstat);
+MVMint64 MVM_file_isreadable(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat);
+MVMint64 MVM_file_iswritable(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat);
+MVMint64 MVM_file_isexecutable(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat);
+MVMObject * MVM_file_get_stdstream(MVMThreadContext *tc, int32_t type);
 MVMString * MVM_file_in_libpath(MVMThreadContext *tc, MVMString *orig);
 void MVM_file_link(MVMThreadContext *tc, MVMString *oldpath, MVMString *newpath);
 void MVM_file_symlink(MVMThreadContext *tc, MVMString *oldpath, MVMString *newpath);

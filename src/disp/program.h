@@ -239,7 +239,7 @@ struct MVMDispProgramRecordingResumption {
 
     /* The index of the value in the dispatch program that corresponds to the
      * new dispatch state; -1 if there isn't any. */
-    MVMint32 new_resume_state_value;
+    int32_t new_resume_state_value;
 
     /* The total number of dispatch values read at the end of this resumption
      * (before we defer to a next resumption). This is used so we can emit the
@@ -667,7 +667,7 @@ void MVM_disp_program_record_resume(MVMThreadContext *tc, MVMObject *capture);
 void MVM_disp_program_record_resume_caller(MVMThreadContext *tc, MVMObject *capture);
 void MVM_disp_program_record_delegate(MVMThreadContext *tc, MVMString *dispatcher_id,
         MVMObject *capture);
-MVMint32 MVM_disp_program_record_next_resumption(MVMThreadContext *tc, MVMObject *with_args);
+int32_t MVM_disp_program_record_next_resumption(MVMThreadContext *tc, MVMObject *with_args);
 void MVM_disp_program_record_resume_on_bind_failure(MVMThreadContext *tc, MVMuint32 flag);
 void MVM_disp_program_record_resume_after_bind(MVMThreadContext *tc, MVMuint32 failure_flag,
         MVMuint32 success_flag);
@@ -687,7 +687,7 @@ MVMuint32 MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatch
 
 /* Functions to run dispatch programs. */
 MVMint64 MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
-        MVMCallStackDispatchRun *disp_run, MVMint32 spesh_cid,
+        MVMCallStackDispatchRun *disp_run, int32_t spesh_cid,
         MVMuint32 bytecode_offset, MVMuint32 dp_index);
 
 /* Memory management of dispatch programs. */

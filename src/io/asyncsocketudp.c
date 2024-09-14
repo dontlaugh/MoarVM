@@ -218,7 +218,7 @@ static MVMAsyncTask * read_bytes(MVMThreadContext *tc, MVMOSHandle *h, MVMObject
         MVM_exception_throw_adhoc(tc,
             "asyncreadbytes result type must have REPR AsyncTask");
     if (REPR(buf_type)->ID == MVM_REPR_ID_VMArray) {
-        MVMint32 slot_type = ((MVMArrayREPRData *)STABLE(buf_type)->REPR_data)->slot_type;
+        int32_t slot_type = ((MVMArrayREPRData *)STABLE(buf_type)->REPR_data)->slot_type;
         if (slot_type != MVM_ARRAY_U8 && slot_type != MVM_ARRAY_I8)
             MVM_exception_throw_adhoc(tc, "asyncreadbytes buffer type must be an array of uint8 or int8");
     }

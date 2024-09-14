@@ -28,7 +28,7 @@ MVMint8 MVM_spesh_get_lex_type(MVMThreadContext *tc, MVMSpeshGraph *sg, MVMuint1
     }
 }
 
-MVMuint8 MVM_spesh_get_opr_type(MVMThreadContext *tc, MVMSpeshGraph *sg, MVMSpeshIns *ins, MVMint32 i) {
+MVMuint8 MVM_spesh_get_opr_type(MVMThreadContext *tc, MVMSpeshGraph *sg, MVMSpeshIns *ins, int32_t i) {
     MVMSpeshOperand opr = ins->operands[i];
     MVMuint8 opr_kind = ins->info->operands[i];
     MVMuint8 opr_type = opr_kind & MVM_operand_type_mask;

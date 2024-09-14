@@ -25,28 +25,28 @@ struct MVMSpeshLogGuard {
 #define MVM_SPESH_LOG_LOGGED_ENOUGH 1000
 
 /* Quick inline checks if we are logging, to save function call overhead. */
-MVM_STATIC_INLINE MVMint32 MVM_spesh_log_is_logging(MVMThreadContext *tc) {
+MVM_STATIC_INLINE int32_t MVM_spesh_log_is_logging(MVMThreadContext *tc) {
     MVMFrame *cur_frame = tc->cur_frame;
     return cur_frame->spesh_cand == NULL && cur_frame->spesh_correlation_id && tc->spesh_log;
 }
-MVM_STATIC_INLINE MVMint32 MVM_spesh_log_is_caller_logging(MVMThreadContext *tc) {
+MVM_STATIC_INLINE int32_t MVM_spesh_log_is_caller_logging(MVMThreadContext *tc) {
     MVMFrame *caller_frame = tc->cur_frame->caller;
     return caller_frame && caller_frame->spesh_cand == NULL &&
         caller_frame->spesh_correlation_id && tc->spesh_log;
 }
 
-void MVM_spesh_log_initialize_thread(MVMThreadContext *tc, MVMint32 main_thread);
+void MVM_spesh_log_initialize_thread(MVMThreadContext *tc, int32_t main_thread);
 MVMSpeshLog * MVM_spesh_log_create(MVMThreadContext *tc, MVMThread *target_thread);
 void MVM_spesh_log_new_compunit(MVMThreadContext *tc);
-void MVM_spesh_log_entry(MVMThreadContext *tc, MVMint32 cid, MVMStaticFrame *sf,
+void MVM_spesh_log_entry(MVMThreadContext *tc, int32_t cid, MVMStaticFrame *sf,
         MVMArgs args);
 void MVM_spesh_log_osr(MVMThreadContext *tc);
 void MVM_spesh_log_type(MVMThreadContext *tc, MVMObject *value);
 void MVM_spesh_log_type_at(MVMThreadContext *tc, MVMObject *value, MVMuint8 *prev_op);
 void MVM_spesh_log_decont(MVMThreadContext *tc, MVMuint8 *prev_op, MVMObject *value);
-void MVM_spesh_log_bytecode_target(MVMThreadContext *tc, MVMint32 cid,
+void MVM_spesh_log_bytecode_target(MVMThreadContext *tc, int32_t cid,
         MVMuint32 bytecode_offset, MVMCode *target);
 void MVM_spesh_log_return_type(MVMThreadContext *tc, MVMObject *value);
 void MVM_spesh_log_return_to_unlogged(MVMThreadContext *tc);
 void MVM_spesh_log_dispatch_resolution_for_correlation_id(MVMThreadContext *tc,
-        MVMint32 cid, MVMuint32 bytecode_offset, MVMuint16 result_index);
+        int32_t cid, MVMuint32 bytecode_offset, MVMuint16 result_index);

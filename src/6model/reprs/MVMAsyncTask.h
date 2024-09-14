@@ -24,7 +24,7 @@ struct MVMAsyncTaskBody {
     MVMObject *cancel_notify_schedulee;
 
     /* The current state of the task. */
-    MVMint32 state;
+    int32_t state;
 };
 struct MVMAsyncTask {
     MVMObject common;

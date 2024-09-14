@@ -60,11 +60,11 @@ typedef struct {
 } SpeshGraphSizeStats;
 
 typedef struct {
-    MVMint32 cur_depth;
-    MVMint32 inline_idx[64];
+    int32_t cur_depth;
+    int32_t inline_idx[64];
 } InlineIndexStack;
 
-static void push_inline(MVMThreadContext *tc, InlineIndexStack *stack, MVMint32 idx) {
+static void push_inline(MVMThreadContext *tc, InlineIndexStack *stack, int32_t idx) {
     if (stack->cur_depth == 63)
         MVM_oops(tc, "Too many levels of inlining to dump");
     stack->cur_depth++;
@@ -89,7 +89,7 @@ static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpes
                     SpeshGraphSizeStats *stats, InlineIndexStack *inline_stack) {
     MVMSpeshIns *cur_ins;
     MVMint64     i;
-    MVMint32     size = 0;
+    int32_t     size = 0;
 
     /* Heading. */
     appendf(ds, "  BB %d (%p):\n", bb->idx, bb);
@@ -298,7 +298,7 @@ static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpes
                         MVMuint32 type = cur_ins->info->operands[i] & MVM_operand_type_mask;
                         switch (type) {
                         case MVM_operand_ins: {
-                            MVMint32 bb_idx = cur_ins->operands[i].ins_bb->idx;
+                            int32_t bb_idx = cur_ins->operands[i].ins_bb->idx;
                             if (bb_idx < 100) append(ds, " ");
                             if (bb_idx < 10)  append(ds, " ");
                             appendf(ds, "BB(%d)", bb_idx);
@@ -484,7 +484,7 @@ static void dump_facts(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g) {
     for (i = 0; i < num_locals; i++) {
         num_facts = g->fact_counts[i];
         for (j = 0; j < num_facts; j++) {
-            MVMint32 flags = g->facts[i][j].flags;
+            int32_t flags = g->facts[i][j].flags;
             MVMSpeshOperand operand;
             operand.reg.orig = i;
             operand.reg.i = j;
@@ -608,7 +608,7 @@ static void dump_fileinfo(MVMThreadContext *tc, DumpStr *ds, MVMStaticFrame *sf)
     MVMBytecodeAnnotation *ann = MVM_bytecode_resolve_annotation(tc, &sf->body, 0);
     MVMCompUnit            *cu = sf->body.cu;
     MVMuint32          str_idx = ann ? ann->filename_string_heap_index : 0;
-    MVMint32           line_nr = ann ? ann->line_number : 1;
+    int32_t           line_nr = ann ? ann->line_number : 1;
     MVMString        *filename = cu->body.filename;
     char        *filename_utf8 = "<unknown>";
     if (ann && str_idx < cu->body.num_strings) {

@@ -1588,7 +1588,7 @@ static void add_slot_name_comment(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpe
         MVM_free(name_cstr);
     }
 }
-static MVMString * spesh_attr_name(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o, MVMint32 indirect) {
+static MVMString * spesh_attr_name(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand o, int32_t indirect) {
     if (indirect) {
         MVMSpeshFacts *name_facts = MVM_spesh_get_and_use_facts(tc, g, o);
         if (name_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE)
@@ -1916,7 +1916,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
                 MVMSpeshFacts *value_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
 
                 /* Turn into a sp_fastbox_bi[_ic] instruction. */
-                MVMint32 int_cache_type_idx = MVM_intcache_type_index(tc, st->WHAT);
+                int32_t int_cache_type_idx = MVM_intcache_type_index(tc, st->WHAT);
                 MVMSpeshFacts *tgt_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
                 MVMSpeshOperand *orig_operands = ins->operands;
                 ins->info = MVM_op_get_op(int_cache_type_idx < 0
@@ -1951,7 +1951,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
                 MVMSpeshFacts *value_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
 
                 /* Turn into a sp_fastbox_bi[_ic] instruction. */
-                MVMint32 int_cache_type_idx = MVM_intcache_type_index(tc, st->WHAT);
+                int32_t int_cache_type_idx = MVM_intcache_type_index(tc, st->WHAT);
                 MVMSpeshFacts *tgt_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
                 MVMSpeshOperand *orig_operands = ins->operands;
                 ins->info = MVM_op_get_op(int_cache_type_idx < 0

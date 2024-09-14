@@ -46,11 +46,11 @@ typedef struct {
             MVMSpeshIns *ins;
         } guard;
         struct {
-            MVMint32 deopt_point_idx;
+            int32_t deopt_point_idx;
             MVMuint16 target_reg;
         } dp;
         struct {
-            MVMint32 deopt_point_idx;
+            int32_t deopt_point_idx;
             MVMuint16 hypothetical_reg_idx;
         } du;
         struct {
@@ -111,7 +111,7 @@ typedef struct {
 /* Turns a flattened-in STable into a register type to allocate, if possible.
  * Should it not be possible, returns a negative value. If passed NULL (which
  * indicates a reference type), then returns MVM_reg_obj. */
-static MVMint32 flattened_type_to_register_kind(MVMThreadContext *tc, MVMSTable *st) {
+static int32_t flattened_type_to_register_kind(MVMThreadContext *tc, MVMSTable *st) {
     if (st) {
         const MVMStorageSpec *ss = st->REPR->get_storage_spec(tc, st);
         switch (ss->boxed_primitive) {
@@ -421,7 +421,7 @@ static void real_object_required(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
  * deopt usage added, otherwise the data we need to deopt could go missing. */
 static void add_scalar_replacement_deopt_usages(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                                 GraphState *gs, MVMSpeshPEAAllocation *alloc,
-                                                MVMint32 deopt_idx) {
+                                                int32_t deopt_idx) {
     MVMP6opaqueREPRData *repr_data = (MVMP6opaqueREPRData *)alloc->type->st->REPR_data;
     MVMuint32 i;
     for (i = 0; i < repr_data->num_attributes; i++) {
@@ -434,8 +434,8 @@ static void add_scalar_replacement_deopt_usages(MVMThreadContext *tc, MVMSpeshGr
     }
 }
 static void add_deopt_materializations_idx(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
-                                           GraphState *gs, MVMint32 deopt_idx,
-                                           MVMint32 deopt_user_idx) {
+                                           GraphState *gs, int32_t deopt_idx,
+                                           int32_t deopt_user_idx) {
     MVMuint32 i;
     for (i = 0; i < MVM_VECTOR_ELEMS(gs->tracked_registers); i++) {
         MVMSpeshFacts *tracked_facts = MVM_spesh_get_facts(tc, g, gs->tracked_registers[i].reg);
@@ -463,7 +463,7 @@ static void add_deopt_materializations_ins(MVMThreadContext *tc, MVMSpeshGraph *
                                            GraphState *gs, MVMSpeshIns *deopt_ins) {
     /* Make a first pass to see if there's a SYNTH deopt index; if there is,
      * that is the one we use to do a lookup inside of the usages. */
-    MVMint32 deopt_user_idx = -1;
+    int32_t deopt_user_idx = -1;
     MVMSpeshAnn *ann = deopt_ins->annotations;
     while (ann) {
         if (ann->type == MVM_SPESH_ANN_DEOPT_SYNTH) {
@@ -598,7 +598,7 @@ static MVMuint32 analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs)
                     MVMSpeshFacts *target = MVM_spesh_get_facts(tc, g, ins->operands[0]);
                     MVMSpeshPEAAllocation *alloc = target->pea.allocation;
                     if (allocation_tracked(alloc)) {
-                        MVMint32 is_p6o_op = opcode == MVM_OP_sp_p6obind_i ||
+                        int32_t is_p6o_op = opcode == MVM_OP_sp_p6obind_i ||
                             opcode == MVM_OP_sp_p6obind_u ||
                             opcode == MVM_OP_sp_p6obind_n ||
                             opcode == MVM_OP_sp_p6obind_s ||

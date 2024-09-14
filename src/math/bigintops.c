@@ -70,7 +70,7 @@ static mp_int * force_bigint(MVMThreadContext *tc, const MVMP6bigintBody *body, 
 static void store_int64_result(MVMThreadContext *tc, MVMP6bigintBody *body, MVMint64 result) {
     if (MVM_IS_32BIT_INT(result)) {
         body->u.smallint.flag = MVM_BIGINT_32_FLAG;
-        body->u.smallint.value = (MVMint32)result;
+        body->u.smallint.value = (int32_t)result;
     }
     else {
         mp_err err;
@@ -453,9 +453,9 @@ MVMObject *MVM_bigint_gcd(MVMThreadContext *tc, MVMObject *result_type, MVMObjec
             store_bigint_result(bc, ic);
             adjust_nursery(tc, bc);
         } else {
-            MVMint32 sa = ba->u.smallint.value;
-            MVMint32 sb = bb->u.smallint.value;
-            MVMint32 t;
+            int32_t sa = ba->u.smallint.value;
+            int32_t sb = bb->u.smallint.value;
+            int32_t t;
             sa = abs(sa);
             sb = abs(sb);
             while (sb != 0) {
@@ -619,8 +619,8 @@ MVMObject *MVM_bigint_div(MVMThreadContext *tc, MVMObject *result_type, MVMObjec
         store_bigint_result(bc, ic);
         adjust_nursery(tc, bc);
     } else {
-        MVMint32 num   = ba->u.smallint.value;
-        MVMint32 denom = bb->u.smallint.value;
+        int32_t num   = ba->u.smallint.value;
+        int32_t denom = bb->u.smallint.value;
         MVMint64 value;
         if ((cmp_a == MP_LT) ^ (cmp_b == MP_LT)) {
             if (denom == 0) {
@@ -773,7 +773,7 @@ MVMObject *MVM_bigint_shr(MVMThreadContext *tc, MVMObject *result_type, MVMObjec
     } else if (n >= 32) {
         store_int64_result(tc, bb, BIGINT_IS_NEGATIVE(ba) ? -1 : 0);
     } else {
-        MVMint32 value = ba->u.smallint.value;
+        int32_t value = ba->u.smallint.value;
         value = value >> n;
         store_int64_result(tc, bb, value);
     }
@@ -815,7 +815,7 @@ MVMObject *MVM_bigint_not(MVMThreadContext *tc, MVMObject *result_type, MVMObjec
         store_bigint_result(bb, ib);
         adjust_nursery(tc, bb);
     } else {
-        MVMint32 value = ba->u.smallint.value;
+        int32_t value = ba->u.smallint.value;
         value = ~value;
         store_int64_result(tc, bb, value);
     }
@@ -1490,7 +1490,7 @@ MVMObject * MVM_bigint_rand(MVMThreadContext *tc, MVMObject *type, MVMObject *b)
 
     MVMint8 use_small_arithmetic = 0;
     MVMint8 have_to_negate = 0;
-    MVMint32 smallint_max = 0;
+    int32_t smallint_max = 0;
 
     if (MVM_BIGINT_IS_BIG(bb)) {
         if (can_be_smallint(bb->u.bigint)) {
@@ -1606,7 +1606,7 @@ MVMint64 MVM_bigint_is_prime(MVMThreadContext *tc, MVMObject *a) {
         return result;
     }
     else {
-        MVMint32 x = ba->u.smallint.value;
+        int32_t x = ba->u.smallint.value;
         if (x==2 || x==3 || x==5 || x==7) return 1;
         if (x%2==0 || x%3==0 || x%5==0 || x%7==0 || x<0) return 0;
         if (x<121) return (x>1);

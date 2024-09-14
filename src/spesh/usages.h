@@ -42,7 +42,7 @@ struct MVMSpeshUseChainEntry {
 /* A use for the purposes of deoptimization. */
 struct MVMSpeshDeoptUseEntry {
     /* Index that was used, or -1 if unconditional requirement. */
-    MVMint32 deopt_idx;
+    int32_t deopt_idx;
 
     /* The next entry in the chain. */
     MVMSpeshDeoptUseEntry *next;
@@ -57,9 +57,9 @@ void MVM_spesh_usages_add_for_handler_by_reg(MVMThreadContext *tc, MVMSpeshGraph
 void MVM_spesh_usages_create_usage(MVMThreadContext *tc, MVMSpeshGraph *g);
 void MVM_spesh_usages_create_deopt_usage(MVMThreadContext *tc, MVMSpeshGraph *g);
 void MVM_spesh_usages_add_deopt_usage(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshFacts *facts, MVMint32 deopt_idx);
+        MVMSpeshFacts *facts, int32_t deopt_idx);
 void MVM_spesh_usages_add_deopt_usage_by_reg(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshOperand operand, MVMint32 deopt_idx);
+        MVMSpeshOperand operand, int32_t deopt_idx);
 void MVM_spesh_usages_add_unconditional_deopt_usage(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts);
 void MVM_spesh_usages_add_unconditional_deopt_usage_by_reg(MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshOperand operand);

@@ -37,16 +37,16 @@ struct MVMNormalizer {
     MVMCodepoint *buffer;
 
     /* Size of the normalization buffer. */
-    MVMint32 buffer_size;
+    int32_t buffer_size;
 
     /* Start offset in the buffer where we're still processing. */
-    MVMint32 buffer_start;
+    int32_t buffer_start;
 
     /* End offset in the buffer, and where to add the next thing to process. */
-    MVMint32 buffer_end;
+    int32_t buffer_end;
 
     /* End offset in the buffer for things we've normalized and so can return. */
-    MVMint32 buffer_norm_end;
+    int32_t buffer_norm_end;
 
     /* The first significant codepoint in this normalization form that we may
      * have to do something with. If we see two things beneath the limit in a
@@ -54,28 +54,28 @@ struct MVMNormalizer {
     MVMCodepoint first_significant;
 
     /* The quickcheck property for the normalization form in question. */
-    MVMint32 quick_check_property;
+    int32_t quick_check_property;
 
     /* If we should translate the \r\n grapheme to \n (only applicable when
      * normalizing to NFG). */
-    MVMint32 translate_newlines;
+    int32_t translate_newlines;
 
-    MVMint32 prepend_buffer;
+    int32_t prepend_buffer;
 
-    MVMint32 regional_indicator;
+    int32_t regional_indicator;
 
 };
 
 /* Guts-y functions, called by the API level ones below. */
-MVMint32 MVM_unicode_normalizer_process_codepoint_full(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out);
-MVMint32 MVM_unicode_normalizer_process_codepoint_norm_terminator(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out);
+int32_t MVM_unicode_normalizer_process_codepoint_full(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out);
+int32_t MVM_unicode_normalizer_process_codepoint_norm_terminator(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out);
 
 /* Takes a codepoint to process for normalization as the "in" parameter. If we
  * are able to produce one or more normalized codepoints right off, then we
  * put it into the location pointed to by "out", and return the number of
  * codepoints now available including the one we just passed out. If we can't
  * produce a normalized codepoint right now, we return a 0. */
-MVM_STATIC_INLINE MVMint32 MVM_unicode_normalizer_process_codepoint(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out) {
+MVM_STATIC_INLINE int32_t MVM_unicode_normalizer_process_codepoint(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMCodepoint *out) {
     /* Control characters in the Latin-1 range are normalization terminators -
      * that is, we know we can spit out whatever codepoints we have seen so
      * far in normalized form without having to consider them into the
@@ -129,21 +129,21 @@ MVM_STATIC_INLINE MVMint32 MVM_unicode_normalizer_process_codepoint(MVMThreadCon
 /* Grapheme version of the above. Note that this exists mostly for API clarity
  * rather than adding any semantics; the normalizer must be configured to
  * produce NFG to get synthetics out. */
-MVM_STATIC_INLINE MVMint32 MVM_unicode_normalizer_process_codepoint_to_grapheme(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMGrapheme32 *out) {
+MVM_STATIC_INLINE int32_t MVM_unicode_normalizer_process_codepoint_to_grapheme(MVMThreadContext *tc, MVMNormalizer *n, MVMCodepoint in, MVMGrapheme32 *out) {
     assert(sizeof(MVMCodepoint) == sizeof(MVMGrapheme32));
     return MVM_unicode_normalizer_process_codepoint(tc, n, in, (MVMGrapheme32 *)out);
 }
 
 /* Push a number of codepoints into the "to normalize" buffer. */
-void MVM_unicode_normalizer_push_codepoints(MVMThreadContext *tc, MVMNormalizer *n, const MVMCodepoint *in, MVMint32 num_codepoints);
+void MVM_unicode_normalizer_push_codepoints(MVMThreadContext *tc, MVMNormalizer *n, const MVMCodepoint *in, int32_t num_codepoints);
 
 /* Get the number of codepoints/graphemes ready to fetch. */
-MVM_STATIC_INLINE MVMint32 MVM_unicode_normalizer_available(MVMThreadContext *tc, MVMNormalizer *n) {
+MVM_STATIC_INLINE int32_t MVM_unicode_normalizer_available(MVMThreadContext *tc, MVMNormalizer *n) {
     return n->buffer_norm_end - n->buffer_start;
 }
 
 /* Get the number of codepoints/graphemes ready to fetch. */
-MVM_STATIC_INLINE MVMint32 MVM_unicode_normalizer_empty(MVMThreadContext *tc, MVMNormalizer *n) {
+MVM_STATIC_INLINE int32_t MVM_unicode_normalizer_empty(MVMThreadContext *tc, MVMNormalizer *n) {
     return n->buffer_end == n->buffer_start;
 }
 
@@ -189,17 +189,17 @@ MVMString * MVM_unicode_codepoints_c_array_to_nfg_string(MVMThreadContext *tc, M
 void MVM_unicode_string_to_codepoints(MVMThreadContext *tc, MVMString *s, MVMNormalization form, MVMObject *out);
 
 /* faster atoi function */
-MVM_STATIC_INLINE MVMint32 fast_atoi( const char * dec_str ) {
-    MVMint32 value = 0;
+MVM_STATIC_INLINE int32_t fast_atoi( const char * dec_str ) {
+    int32_t value = 0;
     while( *dec_str ) {
         value = value*10 + (*dec_str++ - '0');
     }
     return value;
 }
 MVMint64 MVM_unicode_relative_ccc(MVMThreadContext *tc, MVMCodepoint cp);
-MVMint32 MVM_unicode_normalize_should_break(MVMThreadContext *tc, MVMCodepoint a, MVMCodepoint b, MVMNormalizer *norm);
+int32_t MVM_unicode_normalize_should_break(MVMThreadContext *tc, MVMCodepoint a, MVMCodepoint b, MVMNormalizer *norm);
 MVMint64 MVM_unicode_relative_ccc(MVMThreadContext *tc, MVMCodepoint cp);
-MVMint32 MVM_string_is_control_full(MVMThreadContext *tc, MVMCodepoint in);
+int32_t MVM_string_is_control_full(MVMThreadContext *tc, MVMCodepoint in);
 /* Function for choosing the appropriate line-ending grapheme depending on if
  * newline translation is enabled. */
 MVM_STATIC_INLINE MVMGrapheme32 MVM_unicode_normalizer_translated_crlf(MVMThreadContext *tc, MVMNormalizer *n) {

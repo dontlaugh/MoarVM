@@ -87,7 +87,7 @@ MVM_uni_hash_create_loop_state(struct MVMUniHashTableControl *control,
 void MVM_uni_hash_insert(MVMThreadContext *tc,
                          MVMUniHashTable *hashtable,
                          const char *key,
-                         MVMint32 value);
+                         int32_t value);
 
 MVM_STATIC_INLINE struct MVMUniHashEntry *MVM_uni_hash_fetch(MVMThreadContext *tc,
                                                               MVMUniHashTable *hashtable,

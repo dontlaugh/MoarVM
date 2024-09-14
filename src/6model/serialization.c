@@ -223,7 +223,7 @@ static void * base64_decode(const char *s, size_t *data_len)
  * ***************************************************************************/
 
 /* Writes an int32 into a buffer. */
-static void write_int32(char *buffer, size_t offset, MVMint32 value) {
+static void write_int32(char *buffer, size_t offset, int32_t value) {
     memcpy(buffer + offset, &value, 4);
 #ifdef MVM_BIGENDIAN
     switch_endian(buffer + offset, 4);
@@ -248,20 +248,20 @@ static void write_double(char *buffer, size_t offset, double value) {
 
 /* Adds an item to the MVMString heap if needed, and returns the index where
  * it may be found. */
-static MVMint32 add_string_to_heap(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMString *s) {
+static int32_t add_string_to_heap(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMString *s) {
     if (s == NULL) {
         /* We ensured that the first entry in the heap represents the null MVMString,
          * so can just hand back 0 here. */
         return 0;
     }
     else if (MVM_repr_exists_key(tc, writer->seen_strings, s)) {
-        return (MVMint32)MVM_repr_at_key_int(tc, writer->seen_strings, s);
+        return (int32_t)MVM_repr_at_key_int(tc, writer->seen_strings, s);
     }
     else {
         MVMint64 next_idx = MVM_repr_elems(tc, writer->root.string_heap);
         MVM_repr_bind_pos_s(tc, writer->root.string_heap, next_idx, s);
         MVM_repr_bind_key_int(tc, writer->seen_strings, s, next_idx);
-        return (MVMint32)next_idx;
+        return (int32_t)next_idx;
     }
 }
 
@@ -397,7 +397,7 @@ void MVM_serialization_write_num(MVMThreadContext *tc, MVMSerializationWriter *w
 
 /* Writing function for native strings. */
 void MVM_serialization_write_str(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMString *value) {
-    MVMint32 heap_loc = add_string_to_heap(tc, writer, value);
+    int32_t heap_loc = add_string_to_heap(tc, writer, value);
 
     /* avoid warnings that heap_loc > STRING_HEAP_LOC_MAX is always false */
     if (!(heap_loc >= 0 && heap_loc <= STRING_HEAP_LOC_MAX)) {
@@ -449,7 +449,7 @@ void MVM_serialization_write_cstr(MVMThreadContext *tc, MVMSerializationWriter *
 
 /* Writes the ID, index pair that identifies an entry in a Serialization
    context. */
-static void write_locate_sc_and_index(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMint32 sc_id, MVMint32 idx) {
+static void write_locate_sc_and_index(MVMThreadContext *tc, MVMSerializationWriter *writer, int32_t sc_id, int32_t idx) {
     if (sc_id <= PACKED_SC_MAX && idx <= PACKED_SC_IDX_MAX) {
         MVMuint32 packed = (sc_id << PACKED_SC_SHIFT) | (idx & PACKED_SC_IDX_MASK);
         MVM_serialization_write_int(tc, writer, packed);
@@ -463,7 +463,7 @@ static void write_locate_sc_and_index(MVMThreadContext *tc, MVMSerializationWrit
 
 /* Writes an object reference. */
 static void write_obj_ref(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMObject *ref) {
-    MVMint32 sc_id, idx;
+    int32_t sc_id, idx;
 
     if (OBJ_IS_NULL(MVM_sc_get_obj_sc(tc, ref))) {
         /* This object doesn't belong to an SC yet, so it must be serialized as part of
@@ -472,14 +472,14 @@ static void write_obj_ref(MVMThreadContext *tc, MVMSerializationWriter *writer, 
         MVM_sc_push_object(tc, writer->root.sc, ref);
     }
     sc_id = get_sc_id(tc, writer, MVM_sc_get_obj_sc(tc, ref));
-    idx   = (MVMint32)MVM_sc_find_object_idx(tc, MVM_sc_get_obj_sc(tc, ref), ref);
+    idx   = (int32_t)MVM_sc_find_object_idx(tc, MVM_sc_get_obj_sc(tc, ref), ref);
     write_locate_sc_and_index(tc, writer, sc_id, idx);
 }
 
 /* Writes an array where each item is a variant reference. */
 static void write_array_var(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMObject *arr) {
-    MVMint32 elems = (MVMint32)MVM_repr_elems(tc, arr);
-    MVMint32 i;
+    int32_t elems = (int32_t)MVM_repr_elems(tc, arr);
+    int32_t i;
 
     /* Write out element count. */
     MVM_serialization_write_int(tc, writer, elems);
@@ -491,8 +491,8 @@ static void write_array_var(MVMThreadContext *tc, MVMSerializationWriter *writer
 
 /* Writes an array where each item is an integer. */
 static void write_array_int(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMObject *arr) {
-    MVMint32 elems = (MVMint32)MVM_repr_elems(tc, arr);
-    MVMint32 i;
+    int32_t elems = (int32_t)MVM_repr_elems(tc, arr);
+    int32_t i;
 
     /* Write out element count. */
     MVM_serialization_write_int(tc, writer, elems);
@@ -504,8 +504,8 @@ static void write_array_int(MVMThreadContext *tc, MVMSerializationWriter *writer
 
 /* Writes an array where each item is a MVMString. */
 static void write_array_str(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMObject *arr) {
-    MVMint32 elems = (MVMint32)MVM_repr_elems(tc, arr);
-    MVMint32 i;
+    int32_t elems = (int32_t)MVM_repr_elems(tc, arr);
+    int32_t i;
 
     /* Write out element count. */
     MVM_serialization_write_int(tc, writer, elems);
@@ -548,14 +548,14 @@ static void write_hash_str_var(MVMThreadContext *tc, MVMSerializationWriter *wri
 /* Writes a reference to a code object in some SC. */
 static void write_code_ref(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMObject *code) {
     MVMSerializationContext *sc = MVM_sc_get_obj_sc(tc, code);
-    MVMint32  sc_id   = get_sc_id(tc, writer, sc);
-    MVMint32  idx     = (MVMint32)MVM_sc_find_code_idx(tc, sc, code);
+    int32_t  sc_id   = get_sc_id(tc, writer, sc);
+    int32_t  idx     = (int32_t)MVM_sc_find_code_idx(tc, sc, code);
     write_locate_sc_and_index(tc, writer, sc_id, idx);
 }
 static MVM_NO_RETURN void throw_closure_serialization_error(MVMThreadContext *tc, MVMCode *closure, const char *message) MVM_NO_RETURN_ATTRIBUTE;
 static MVM_NO_RETURN void throw_closure_serialization_error(MVMThreadContext *tc, MVMCode *closure, const char *message) {
     MVMString *file;
-    MVMint32 line;
+    int32_t line;
     MVMROOT(tc, closure) {
         MVM_gc_enter_from_allocator(tc); /* opportunity for creating a heap snapshot for debugging */
     }
@@ -592,7 +592,7 @@ static MVMObject * closure_to_static_code_ref(MVMThreadContext *tc, MVMObject *c
 
 /* Takes an outer context that is potentially to be serialized. Checks if it
  * is of interest, and if so sets it up to be serialized. */
-static MVMint32 get_serialized_context_idx(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMFrame *ctx, MVMCode *closure) {
+static int32_t get_serialized_context_idx(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMFrame *ctx, MVMCode *closure) {
      if (OBJ_IS_NULL(MVM_sc_get_frame_sc(tc, ctx))) {
         /* Make sure we should chase a level down. */
         if (OBJ_IS_NULL(closure_to_static_code_ref(tc, ctx->code_ref, 0))) {
@@ -606,7 +606,7 @@ static MVMint32 get_serialized_context_idx(MVMThreadContext *tc, MVMSerializatio
             }
             writer->contexts_list[writer->num_contexts++] = ctx;
             MVM_sc_set_frame_sc(tc, ctx, writer->root.sc);
-            return (MVMint32)writer->num_contexts;
+            return (int32_t)writer->num_contexts;
         }
     }
     else {
@@ -619,7 +619,7 @@ static MVMint32 get_serialized_context_idx(MVMThreadContext *tc, MVMSerializatio
         c = writer->num_contexts;
         for (i = 0; i < c; i++)
             if (writer->contexts_list[i] == ctx)
-                return (MVMint32)i + 1;
+                return (int32_t)i + 1;
         throw_closure_serialization_error(
             tc,
             closure,
@@ -630,7 +630,7 @@ static MVMint32 get_serialized_context_idx(MVMThreadContext *tc, MVMSerializatio
 
 /* Takes a closure, that is to be serialized. Checks if it has an outer that is
  * of interest, and if so sets it up to be serialized. */
-static MVMint32 get_serialized_outer_context_idx(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMObject *closure) {
+static int32_t get_serialized_outer_context_idx(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMObject *closure) {
     if (((MVMCode *)closure)->body.is_compiler_stub)
         return 0;
     if (((MVMCode *)closure)->body.outer == NULL)
@@ -642,7 +642,7 @@ static MVMint32 get_serialized_outer_context_idx(MVMThreadContext *tc, MVMSerial
  * table for it. Also adds it to this SC's code refs set and tags it with the
  * current SC. */
 static void serialize_closure(MVMThreadContext *tc, MVMSerializationWriter *writer, MVMObject *closure) {
-    MVMint32 static_sc_id, static_idx, context_idx;
+    int32_t static_sc_id, static_idx, context_idx;
 
     /* Locate the static code object. */
     MVMObject *static_code_ref = closure_to_static_code_ref(tc, closure, 1);
@@ -660,7 +660,7 @@ static void serialize_closure(MVMThreadContext *tc, MVMSerializationWriter *writ
 
     /* Add an entry to the closures table. */
     static_sc_id = get_sc_id(tc, writer, static_code_sc);
-    static_idx   = (MVMint32)MVM_sc_find_code_idx(tc, static_code_sc, static_code_ref);
+    static_idx   = (int32_t)MVM_sc_find_code_idx(tc, static_code_sc, static_code_ref);
     write_int32(writer->root.closures_table, offset, static_sc_id);
     write_int32(writer->root.closures_table, offset + 4, static_idx);
     write_int32(writer->root.closures_table, offset + 8, context_idx);
@@ -676,7 +676,7 @@ static void serialize_closure(MVMThreadContext *tc, MVMSerializationWriter *writ
         write_int32(writer->root.closures_table, offset + 16,
             get_sc_id(tc, writer, MVM_sc_get_obj_sc(tc, code_obj)));
         write_int32(writer->root.closures_table, offset + 20,
-            (MVMint32)MVM_sc_find_object_idx(tc, MVM_sc_get_obj_sc(tc, code_obj), code_obj));
+            (int32_t)MVM_sc_find_object_idx(tc, MVM_sc_get_obj_sc(tc, code_obj), code_obj));
     }
     else {
         write_int32(writer->root.closures_table, offset + 12, 0);
@@ -960,7 +960,7 @@ static void serialize_how_lazy(MVMThreadContext *tc, MVMSerializationWriter *wri
         write_obj_ref(tc, writer, st->HOW);
     }
     else {
-        MVMint32 sc_id = get_sc_id(tc, writer, st->HOW_sc);
+        int32_t sc_id = get_sc_id(tc, writer, st->HOW_sc);
         write_locate_sc_and_index(tc, writer, sc_id, st->HOW_idx);
     }
 }
@@ -1005,7 +1005,7 @@ static void add_param_intern(MVMThreadContext *tc, MVMSerializationWriter *write
     /* Write parameter count and parameter object refs. */
     num_params = MVM_repr_elems(tc, params);
     write_int32(*(writer->cur_write_buffer), *(writer->cur_write_offset),
-        (MVMint32)num_params);
+        (int32_t)num_params);
     *(writer->cur_write_offset) += 4;
     for (i = 0; i < num_params; i++)
         write_obj_ref(tc, writer, MVM_repr_at_pos_o(tc, params, i));
@@ -1237,7 +1237,7 @@ static void serialize_context(MVMThreadContext *tc, MVMSerializationWriter *writ
             "Serialization Error: closure outer is a code object not in an SC");
     }
     static_sc_id = get_sc_id(tc, writer, static_code_sc);
-    static_idx   = (MVMint32)MVM_sc_find_code_idx(tc, static_code_sc, static_code_ref);
+    static_idx   = (int32_t)MVM_sc_find_code_idx(tc, static_code_sc, static_code_ref);
 
     /* Ensure there's space in the STables table; grow if not. */
     offset = writer->root.num_contexts * CONTEXTS_TABLE_ENTRY_SIZE;
@@ -1310,15 +1310,15 @@ static void serialize_repossessions(MVMThreadContext *tc, MVMSerializationWriter
 
     /* Make entries. */
     for (i = 0; i < writer->root.num_repos; i++) {
-        MVMint32 offset  = (MVMint32)(i * REPOS_TABLE_ENTRY_SIZE);
-        MVMint32 obj_idx = (MVMint32)(MVM_repr_at_pos_i(tc, rep_indexes, i) >> 1);
-        MVMint32 is_st   = MVM_repr_at_pos_i(tc, rep_indexes, i) & 1;
+        int32_t offset  = (int32_t)(i * REPOS_TABLE_ENTRY_SIZE);
+        int32_t obj_idx = (int32_t)(MVM_repr_at_pos_i(tc, rep_indexes, i) >> 1);
+        int32_t is_st   = MVM_repr_at_pos_i(tc, rep_indexes, i) & 1;
         MVMSerializationContext *orig_sc =
             (MVMSerializationContext *)MVM_repr_at_pos_o(tc, rep_scs, i);
 
         /* Work out original object's SC location. */
-        MVMint32 orig_sc_id = get_sc_id(tc, writer, orig_sc);
-        MVMint32 orig_idx   = (MVMint32)(is_st
+        int32_t orig_sc_id = get_sc_id(tc, writer, orig_sc);
+        int32_t orig_idx   = (int32_t)(is_st
             ? MVM_sc_find_stable_idx(tc, orig_sc, writer->root.sc->body->root_stables[obj_idx])
             : MVM_sc_find_object_idx(tc, orig_sc, writer->root.sc->body->root_objects[obj_idx]));
 
@@ -1373,7 +1373,7 @@ static void serialize(MVMThreadContext *tc, MVMSerializationWriter *writer) {
 MVMObject * MVM_serialization_serialize(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *empty_string_heap, MVMObject *type) {
     MVMSerializationWriter *writer;
     MVMObject *result   = NULL;
-    MVMint32   sc_elems = (MVMint32)sc->body->num_objects;
+    int32_t   sc_elems = (int32_t)sc->body->num_objects;
     MVMint64 i = 0;
     MVMint64 seed_strings = MVM_repr_elems(tc, empty_string_heap);
 
@@ -1462,8 +1462,8 @@ static MVMint64 read_int64(const char *buffer, size_t offset) {
 }
 
 /* Reads an int32 from a buffer. */
-static MVMint32 read_int32(const char *buffer, size_t offset) {
-    MVMint32 value;
+static int32_t read_int32(const char *buffer, size_t offset) {
+    int32_t value;
     memcpy(&value, buffer + offset, 4);
 #ifdef MVM_BIGENDIAN
     switch_endian((char *)&value, 4);
@@ -1548,7 +1548,7 @@ static MVMSerializationContext * locate_sc(MVMThreadContext *tc, MVMSerializatio
 }
 
 /* Ensure that we aren't going to read off the end of the buffer. */
-MVM_STATIC_INLINE void assert_can_read(MVMThreadContext *tc, MVMSerializationReader *reader, MVMint32 amount) {
+MVM_STATIC_INLINE void assert_can_read(MVMThreadContext *tc, MVMSerializationReader *reader, int32_t amount) {
     char *read_end = *(reader->cur_read_buffer) + *(reader->cur_read_offset) + amount;
     if (read_end > *(reader->cur_read_end))
         fail_deserialize(tc, NULL, reader,
@@ -1701,7 +1701,7 @@ MVMnum64 MVM_serialization_read_num(MVMThreadContext *tc, MVMSerializationReader
 
 /* Reading function for native strings. */
 MVMString * MVM_serialization_read_str(MVMThreadContext *tc, MVMSerializationReader *reader) {
-    MVMint32 offset;
+    int32_t offset;
 
     assert_can_read(tc, reader, 2);
     offset = read_uint16(*(reader->cur_read_buffer), *(reader->cur_read_offset));
@@ -1770,7 +1770,7 @@ char * MVM_serialization_read_cstr(MVMThreadContext *tc, MVMSerializationReader 
    common parts into one function permits the serialized representation to be
    changed, but frustratingly it requires two return values, which is a bit of
    a pain in (real) C. Hence this rather ungainly function. */
-MVM_STATIC_INLINE MVMSerializationContext * read_locate_sc_and_index(MVMThreadContext *tc, MVMSerializationReader *reader, MVMint32 *idx) {
+MVM_STATIC_INLINE MVMSerializationContext * read_locate_sc_and_index(MVMThreadContext *tc, MVMSerializationReader *reader, int32_t *idx) {
     MVMuint32 sc_id;
     MVMuint32 packed;
 
@@ -1789,7 +1789,7 @@ MVM_STATIC_INLINE MVMSerializationContext * read_locate_sc_and_index(MVMThreadCo
 
 /* Reads in and resolves an object references. */
 static MVMObject * read_obj_ref(MVMThreadContext *tc, MVMSerializationReader *reader) {
-    MVMint32 idx;
+    int32_t idx;
     MVMSerializationContext *sc = read_locate_sc_and_index(tc, reader, &idx);
     /* sequence point... */
     return MVM_sc_get_object(tc, sc, idx);
@@ -1798,7 +1798,7 @@ static MVMObject * read_obj_ref(MVMThreadContext *tc, MVMSerializationReader *re
 /* Reads in an array of variant references. */
 static MVMObject * read_array_var(MVMThreadContext *tc, MVMSerializationReader *reader) {
     MVMObject *result = MVM_gc_allocate_object(tc, STABLE(tc->instance->boot_types.BOOTArray));
-    MVMint32 elems, i;
+    int32_t elems, i;
 
     /* Read the element count. */
     elems = MVM_serialization_read_int(tc, reader);
@@ -1820,7 +1820,7 @@ static MVMObject * read_array_var(MVMThreadContext *tc, MVMSerializationReader *
 /* Reads in an hash with string keys and variant references. */
 static MVMObject * read_hash_str_var(MVMThreadContext *tc, MVMSerializationReader *reader) {
     MVMObject *result = MVM_gc_allocate_object(tc, STABLE(tc->instance->boot_types.BOOTHash));
-    MVMint32 elems, i;
+    int32_t elems, i;
 
     /* Read the element count. */
     elems = MVM_serialization_read_int(tc, reader);
@@ -1863,7 +1863,7 @@ static MVMObject * read_array_int(MVMThreadContext *tc, MVMSerializationReader *
 /* Reads in an array of strings. */
 static MVMObject * read_array_str(MVMThreadContext *tc, MVMSerializationReader *reader) {
     MVMObject *result = MVM_gc_allocate_object(tc, STABLE(tc->instance->boot_types.BOOTStrArray));
-    MVMint32 elems, i;
+    int32_t elems, i;
 
     /* Read the element count. */
     elems = MVM_serialization_read_int(tc, reader);
@@ -1881,7 +1881,7 @@ static MVMObject * read_array_str(MVMThreadContext *tc, MVMSerializationReader *
 
 /* Reads in a code reference. */
 static MVMObject * read_code_ref(MVMThreadContext *tc, MVMSerializationReader *reader) {
-    MVMint32 idx;
+    int32_t idx;
     MVMSerializationContext *sc = read_locate_sc_and_index(tc, reader, &idx);
     return MVM_sc_get_code(tc, sc, idx);
 }
@@ -1969,7 +1969,7 @@ MVMObject * MVM_serialization_read_ref(MVMThreadContext *tc, MVMSerializationRea
 
 /* Reading function for STable references. */
 MVMSTable * MVM_serialization_read_stable_ref(MVMThreadContext *tc, MVMSerializationReader *reader) {
-    MVMint32 idx;
+    int32_t idx;
     MVMSerializationContext *sc = read_locate_sc_and_index(tc, reader, &idx);
     return MVM_sc_get_stable(tc, sc, idx);
 }
@@ -2179,12 +2179,12 @@ static void resolve_dependencies(MVMThreadContext *tc, MVMSerializationReader *r
  * REPR and getting its allocation size set up. */
 static void stub_stable(MVMThreadContext *tc, MVMSerializationReader *reader, MVMuint32 i) {
     /* Save last read positions. */
-    MVMint32   orig_stables_data_offset = reader->stables_data_offset;
+    int32_t   orig_stables_data_offset = reader->stables_data_offset;
     char     **orig_read_buffer         = reader->cur_read_buffer;
-    MVMint32  *orig_read_offset         = reader->cur_read_offset;
+    int32_t  *orig_read_offset         = reader->cur_read_offset;
     char     **orig_read_end            = reader->cur_read_end;
     char      *orig_read_buffer_val     = reader->cur_read_buffer ? *(reader->cur_read_buffer) : NULL;
-    MVMint32   orig_read_offset_val     = reader->cur_read_offset ? *(reader->cur_read_offset) : 0;
+    int32_t   orig_read_offset_val     = reader->cur_read_offset ? *(reader->cur_read_offset) : 0;
     char      *orig_read_end_val        = reader->cur_read_end    ? *(reader->cur_read_end)    : NULL;
 
     /* Calculate location of STable's table row. */
@@ -2235,7 +2235,7 @@ static void stub_stable(MVMThreadContext *tc, MVMSerializationReader *reader, MV
 /* This is slightly misnamed because it doesn't read objects_data_offset.
    However, we never need that at the same time as we need the other data, so it
    makes sense not to over generalise this code. */
-static MVMSTable *read_object_table_entry(MVMThreadContext *tc, MVMSerializationReader *reader, MVMuint32 i, MVMint32 *concrete) {
+static MVMSTable *read_object_table_entry(MVMThreadContext *tc, MVMSerializationReader *reader, MVMuint32 i, int32_t *concrete) {
     MVMuint32 si;        /* The SC in the dependencies table, + 1 */
     MVMuint32 si_idx;    /* The index in that SC */
     /* Calculate location of object's table row. */
@@ -2262,7 +2262,7 @@ static MVMSTable *read_object_table_entry(MVMThreadContext *tc, MVMSerialization
 /* Stubs an object we need to deserialize, setting their REPR and type object
  * flag. */
 static void stub_object(MVMThreadContext *tc, MVMSerializationReader *reader, MVMuint32 i) {
-    MVMint32 concrete;
+    int32_t concrete;
     MVMSTable *st = read_object_table_entry(tc, reader, i, &concrete);
 
     /* Allocate and store stub object, unless it's already there due to a
@@ -2282,15 +2282,15 @@ static void stub_object(MVMThreadContext *tc, MVMSerializationReader *reader, MV
 }
 
 /* Deserializes a context. */
-static void deserialize_context(MVMThreadContext *tc, MVMSerializationReader *reader, MVMint32 row) {
+static void deserialize_context(MVMThreadContext *tc, MVMSerializationReader *reader, int32_t row) {
     MVMStaticFrame *sf;
     MVMFrame       *f;
     MVMint64        i, syms;
 
     /* Save last read positions. */
-    MVMint32   orig_contexts_data_offset = reader->contexts_data_offset;
+    int32_t   orig_contexts_data_offset = reader->contexts_data_offset;
     char     **orig_read_buffer          = reader->cur_read_buffer;
-    MVMint32  *orig_read_offset          = reader->cur_read_offset;
+    int32_t  *orig_read_offset          = reader->cur_read_offset;
     char     **orig_read_end             = reader->cur_read_end;
 
     /* Calculate location of context's table row. */
@@ -2365,7 +2365,7 @@ static void deserialize_context(MVMThreadContext *tc, MVMSerializationReader *re
 
 /* Deserializes a closure, though without attaching outer (that comes in a
  * later step). */
-static void deserialize_closure(MVMThreadContext *tc, MVMSerializationReader *reader, MVMint32 i) {
+static void deserialize_closure(MVMThreadContext *tc, MVMSerializationReader *reader, int32_t i) {
     /* Calculate location of closure's table row. */
     char *table_row = reader->root.closures_table + i * CLOSURES_TABLE_ENTRY_SIZE;
 
@@ -2410,7 +2410,7 @@ static void deserialize_closure(MVMThreadContext *tc, MVMSerializationReader *re
 
 /* Reads in what we need to lazily deserialize ->HOW later. */
 static void deserialize_how_lazy(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
-    MVMSerializationContext *sc = read_locate_sc_and_index(tc, reader, (MVMint32 *) &st->HOW_idx);
+    MVMSerializationContext *sc = read_locate_sc_and_index(tc, reader, (int32_t *) &st->HOW_idx);
 
     MVM_ASSIGN_REF(tc, &(st->header), st->HOW_sc, sc);
 }
@@ -2447,11 +2447,11 @@ static MVMuint8 calculate_int_bytes(MVMThreadContext *tc, MVMSerializationReader
     return need + 1;
 }
 
-static MVMObject *read_param_intern(MVMThreadContext *tc, MVMSerializationReader *reader, MVMint32 offset, MVMint32 *type_idx, MVMint32 *st_idx) {
+static MVMObject *read_param_intern(MVMThreadContext *tc, MVMSerializationReader *reader, int32_t offset, int32_t *type_idx, int32_t *st_idx) {
     char **orig_cur_read_buffer    = reader->cur_read_buffer;
-    MVMint32 *orig_cur_read_offset = reader->cur_read_offset;
+    int32_t *orig_cur_read_offset = reader->cur_read_offset;
     char **orig_cur_read_end       = reader->cur_read_end;
-    MVMint32 param_interns_data_offset = reader->param_interns_data_offset;
+    int32_t param_interns_data_offset = reader->param_interns_data_offset;
 
     reader->cur_read_buffer = &(reader->root.param_interns_data);
     reader->cur_read_offset = &(param_interns_data_offset);
@@ -2468,12 +2468,12 @@ static MVMObject *read_param_intern(MVMThreadContext *tc, MVMSerializationReader
     *st_idx   = read_int32(*(reader->cur_read_buffer), *(reader->cur_read_offset) + 4);
     *(reader->cur_read_offset) += 8;
 
-    MVMint32 num_params = read_int32(*(reader->cur_read_buffer), *(reader->cur_read_offset));
+    int32_t num_params = read_int32(*(reader->cur_read_buffer), *(reader->cur_read_offset));
     *(reader->cur_read_offset) += 4;
 
     MVMObject *params = MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTArray);
     MVM_repr_push_o(tc, params, ptype);
-    MVMint32 i;
+    int32_t i;
     MVMROOT(tc, params) {
         for (i = 0; i < num_params; i++) {
             MVMObject *param = read_obj_ref(tc, reader);
@@ -2489,14 +2489,14 @@ static MVMObject *read_param_intern(MVMThreadContext *tc, MVMSerializationReader
 }
 
 /* Deserializes a single STable, along with its REPR data. */
-static void deserialize_stable(MVMThreadContext *tc, MVMSerializationReader *reader, MVMint32 i, MVMSTable *st) {
+static void deserialize_stable(MVMThreadContext *tc, MVMSerializationReader *reader, int32_t i, MVMSTable *st) {
     /* Save last read positions. */
-    MVMint32   orig_stables_data_offset = reader->stables_data_offset;
+    int32_t   orig_stables_data_offset = reader->stables_data_offset;
     char     **orig_read_buffer         = reader->cur_read_buffer;
-    MVMint32  *orig_read_offset         = reader->cur_read_offset;
+    int32_t  *orig_read_offset         = reader->cur_read_offset;
     char     **orig_read_end            = reader->cur_read_end;
     char      *orig_read_buffer_val     = reader->cur_read_buffer ? *(reader->cur_read_buffer) : NULL;
-    MVMint32   orig_read_offset_val     = reader->cur_read_offset ? *(reader->cur_read_offset) : 0;
+    int32_t   orig_read_offset_val     = reader->cur_read_offset ? *(reader->cur_read_offset) : 0;
     char      *orig_read_end_val        = reader->cur_read_end    ? *(reader->cur_read_end)    : NULL;
 
     /* Calculate location of STable's table row. */
@@ -2662,14 +2662,14 @@ static void deserialize_stable(MVMThreadContext *tc, MVMSerializationReader *rea
 }
 
 /* Deserializes a single object. */
-static void deserialize_object(MVMThreadContext *tc, MVMSerializationReader *reader, MVMint32 i, MVMObject *obj) {
+static void deserialize_object(MVMThreadContext *tc, MVMSerializationReader *reader, int32_t i, MVMObject *obj) {
     /* We've no more to do for type objects. */
     if (IS_CONCRETE(obj)) {
         /* Calculate location of object's table row. */
         char *obj_table_row = reader->root.objects_table + i * OBJECTS_TABLE_ENTRY_SIZE;
 
         char     **orig_read_buffer         = reader->cur_read_buffer;
-        MVMint32  *orig_read_offset         = reader->cur_read_offset;
+        int32_t  *orig_read_offset         = reader->cur_read_offset;
         char     **orig_read_end            = reader->cur_read_end;
 
         /* Set current read buffer to the correct thing. */
@@ -2751,7 +2751,7 @@ MVMObject * MVM_serialization_demand_object(MVMThreadContext *tc, MVMSerializati
     }
 
     if ((MVMuint64)idx < sr->root.sc->body->num_param_intern_lookup && sr->root.sc->body->param_intern_lookup[idx]) {
-        MVMint32 type_idx, st_idx;
+        int32_t type_idx, st_idx;
         MVMObject *params;
         MVMROOT(tc, sc) {
             params = read_param_intern(tc, sr, sr->root.sc->body->param_intern_lookup[idx] - 1, &type_idx, &st_idx);
@@ -2805,9 +2805,9 @@ MVMSTable * MVM_serialization_demand_stable(MVMThreadContext *tc, MVMSerializati
     }
 
     if ((MVMuint64)idx < sr->root.sc->body->num_param_intern_st_lookup && sr->root.sc->body->param_intern_st_lookup[idx]) {
-        MVMint32 intern_idx = sr->root.sc->body->param_intern_st_lookup[idx];
+        int32_t intern_idx = sr->root.sc->body->param_intern_st_lookup[idx];
         sr->root.sc->body->param_intern_st_lookup[idx] = 0; /* prevent endless recursion */
-        MVMint32 type_idx, st_idx;
+        int32_t type_idx, st_idx;
         MVMObject *params;
         MVMROOT(tc, sc) {
             params = read_param_intern(tc, sr, intern_idx - 1, &type_idx, &st_idx);
@@ -2891,7 +2891,7 @@ void MVM_serialization_force_stable(MVMThreadContext *tc, MVMSerializationReader
     if (!st->WHAT) {
         /* Not finished. Try to find the index. */
         MVMDeserializeWorklist *wl = &(sr->wl_stables);
-        MVMint32  found = 0;
+        int32_t  found = 0;
         MVMuint32 i;
         for (i = 0; i < wl->num_indexes; i++) {
             MVMuint32 index = wl->indexes[i];
@@ -2916,7 +2916,7 @@ void MVM_serialization_force_stable(MVMThreadContext *tc, MVMSerializationReader
 /* Repossess an object or STable. Ignores those not matching the specified
  * type (where 0 = object, 1 = STable). */
 static void repossess(MVMThreadContext *tc, MVMSerializationReader *reader, MVMint64 i,
-                      MVMObject *repo_conflicts, MVMint32 type) {
+                      MVMObject *repo_conflicts, int32_t type) {
     MVMuint32 slot;
 
     /* Calculate location of table row. */
@@ -2924,7 +2924,7 @@ static void repossess(MVMThreadContext *tc, MVMSerializationReader *reader, MVMi
 
     /* Do appropriate type of repossession, provided it matches the type of
      * thing we're current repossessing. */
-    MVMint32 repo_type = read_int32(table_row, 0);
+    int32_t repo_type = read_int32(table_row, 0);
     if (repo_type != type)
         return;
     if (repo_type == 0) {
@@ -3014,14 +3014,14 @@ static void repossess(MVMThreadContext *tc, MVMSerializationReader *reader, MVMi
  * from a different compilation unit or created it in something we already
  * compiled, we will just use that existing parameterization. */
 static void collect_param_interns(MVMThreadContext *tc, MVMSerializationReader *reader) {
-    MVMint32 iidx;
+    int32_t iidx;
 
     char **orig_cur_read_buffer    = reader->cur_read_buffer;
-    MVMint32 *orig_cur_read_offset = reader->cur_read_offset;
+    int32_t *orig_cur_read_offset = reader->cur_read_offset;
     char **orig_cur_read_end       = reader->cur_read_end;
 
     MVMuint32 orig_param_interns_data_offset = reader->param_interns_data_offset;
-    MVMint32 param_interns_data_offset = orig_param_interns_data_offset;
+    int32_t param_interns_data_offset = orig_param_interns_data_offset;
 
     /* Switch to reading the parameterization segment. */
     reader->cur_read_buffer = &(reader->root.param_interns_data);
@@ -3030,21 +3030,21 @@ static void collect_param_interns(MVMThreadContext *tc, MVMSerializationReader *
 
     /* Go over all the interns we have. */
     for (iidx = 0; iidx < reader->root.num_param_interns; iidx++) {
-        MVMint32   num_params, i;
+        int32_t   num_params, i;
 
         /* Offset the offset by 1 to reserve 0 for "no parametric" for easier checking
          * and so we don't have to pre-fill the lookup tables with -1 */
-        MVMint32 offset = *(reader->cur_read_offset) + 1;
+        int32_t offset = *(reader->cur_read_offset) + 1;
 
         /* Skip the parametric type object. */
-        MVMint32 idx;
+        int32_t idx;
         read_locate_sc_and_index(tc, reader, &idx);
 
         /* Read indexes where type object and STable will get placed if a
          * matching intern is found. */
         assert_can_read(tc, reader, 8);
-        MVMint32 type_idx = read_int32(*(reader->cur_read_buffer), *(reader->cur_read_offset));
-        MVMint32 st_idx   = read_int32(*(reader->cur_read_buffer), *(reader->cur_read_offset) + 4);
+        int32_t type_idx = read_int32(*(reader->cur_read_buffer), *(reader->cur_read_offset));
+        int32_t st_idx   = read_int32(*(reader->cur_read_buffer), *(reader->cur_read_offset) + 4);
         *(reader->cur_read_offset) += 8;
 
         assert((MVMuint64)type_idx < reader->root.sc->body->num_param_intern_lookup);
@@ -3076,7 +3076,7 @@ static void collect_param_interns(MVMThreadContext *tc, MVMSerializationReader *
 void MVM_serialization_deserialize(MVMThreadContext *tc, MVMSerializationContext *sc,
         MVMObject *string_heap, MVMObject *codes_static,
         MVMObject *repo_conflicts, MVMString *data) {
-    MVMint32 scodes, i;
+    int32_t scodes, i;
 
     /* Allocate and set up reader. */
     MVMSerializationReader *reader = MVM_calloc(1, sizeof(MVMSerializationReader));
@@ -3097,7 +3097,7 @@ void MVM_serialization_deserialize(MVMThreadContext *tc, MVMSerializationContext
      * probably fine. */
     MVM_sc_set_code_list(tc, sc, codes_static);
     reader->codes_list = codes_static;
-    scodes = (MVMint32)MVM_repr_elems(tc, codes_static);
+    scodes = (int32_t)MVM_repr_elems(tc, codes_static);
     reader->num_static_codes = scodes;
 
     /* Mark all the static code refs we've been provided with as static. */

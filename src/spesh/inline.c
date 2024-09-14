@@ -101,15 +101,15 @@ static int is_graph_inlineable(MVMThreadContext *tc, MVMSpeshGraph *inliner,
         MVMStaticFrame *target_sf, MVMSpeshIns *runbytecode_ins,
         MVMSpeshGraph *ig, char **no_inline_reason, MVMOpInfo const **no_inline_info) {
     MVMSpeshBB *bb = ig->entry;
-    MVMint32 same_hll = target_sf->body.cu->body.hll_config ==
+    int32_t same_hll = target_sf->body.cu->body.hll_config ==
             inliner->sf->body.cu->body.hll_config;
     if (no_inline_info)
         *no_inline_info = NULL;
     while (bb) {
         MVMSpeshIns *ins = bb->first_ins;
         while (ins) {
-            MVMint32 opcode = ins->info->opcode;
-            MVMint32 is_phi = opcode == MVM_SSA_PHI;
+            int32_t opcode = ins->info->opcode;
+            int32_t is_phi = opcode == MVM_SSA_PHI;
 
             /* Instruction may be marked directly as not being inlinable, in
              * which case we're done. */
@@ -192,8 +192,8 @@ static int is_graph_inlineable(MVMThreadContext *tc, MVMSpeshGraph *inliner,
 
 /* Gets the effective size for inlining considerations of a specialization,
  * which is its code size minus the code size of its inlines. */
-static MVMint32 get_effective_size(MVMThreadContext *tc, MVMSpeshCandidate *cand) {
-    MVMint32 result = cand->body.bytecode_size;
+static int32_t get_effective_size(MVMThreadContext *tc, MVMSpeshCandidate *cand) {
+    int32_t result = cand->body.bytecode_size;
     MVMuint32 i;
     for (i = 0; i < cand->body.num_inlines; i++)
         result -= cand->body.inlines[i].bytecode_size;
@@ -204,16 +204,16 @@ static MVMint32 get_effective_size(MVMThreadContext *tc, MVMSpeshCandidate *cand
 
 /* Add deopt usage info to the inlinee. */
 static void add_deopt_usages(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMint32 *deopt_usage_info, MVMSpeshIns **deopt_usage_ins) {
+        int32_t *deopt_usage_info, MVMSpeshIns **deopt_usage_ins) {
     MVMuint32 usage_idx = 0;
     MVMuint32 ins_idx = 0;
     while (deopt_usage_info[usage_idx] != -1) {
         MVMSpeshIns *ins = deopt_usage_ins[ins_idx++];
-        MVMint32 count = deopt_usage_info[usage_idx + 1];
-        MVMint32 i;
+        int32_t count = deopt_usage_info[usage_idx + 1];
+        int32_t i;
         usage_idx += 2;
         for (i = 0; i < count; i++) {
-            MVMint32 deopt_idx = deopt_usage_info[usage_idx++];
+            int32_t deopt_idx = deopt_usage_info[usage_idx++];
             MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
             MVMSpeshDeoptUseEntry *entry = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshDeoptUseEntry));
             entry->deopt_idx = deopt_idx;
@@ -580,8 +580,8 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
 
     /* If the inliner and inlinee are from different compilation units or
      * HLLs, we potentially have to fix up extra things. */
-    MVMint32 same_comp_unit = inliner->sf->body.cu == inlinee->sf->body.cu;
-    MVMint32 same_hll = same_comp_unit || inliner->sf->body.cu->body.hll_config ==
+    int32_t same_comp_unit = inliner->sf->body.cu == inlinee->sf->body.cu;
+    int32_t same_hll = same_comp_unit || inliner->sf->body.cu->body.hll_config ==
             inlinee_sf->body.cu->body.hll_config;
 
     /* Gather all of the registers that have a deopt usage at the point of
@@ -619,7 +619,7 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
         while (ins) {
             MVMuint16    opcode = ins->info->opcode;
             MVMSpeshAnn *ann    = ins->annotations;
-            MVMint32 has_deopt = 0;
+            int32_t has_deopt = 0;
             while (ann) {
                 switch (ann->type) {
                 case MVM_SPESH_ANN_DEOPT_ONE_INS:
@@ -867,11 +867,11 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
         inliner->alloc_deopt_addrs += inlinee->alloc_deopt_addrs;
         if (inliner->deopt_addrs)
             inliner->deopt_addrs = MVM_realloc(inliner->deopt_addrs,
-                inliner->alloc_deopt_addrs * sizeof(MVMint32) * 2);
+                inliner->alloc_deopt_addrs * sizeof(int32_t) * 2);
         else
-            inliner->deopt_addrs = MVM_malloc(inliner->alloc_deopt_addrs * sizeof(MVMint32) * 2);
+            inliner->deopt_addrs = MVM_malloc(inliner->alloc_deopt_addrs * sizeof(int32_t) * 2);
         memcpy(inliner->deopt_addrs + inliner->num_deopt_addrs * 2,
-            inlinee->deopt_addrs, inlinee->alloc_deopt_addrs * sizeof(MVMint32) * 2);
+            inlinee->deopt_addrs, inlinee->alloc_deopt_addrs * sizeof(int32_t) * 2);
         inliner->num_deopt_addrs += inlinee->num_deopt_addrs;
     }
 
@@ -975,7 +975,7 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
 
     /* Create/update per-specialization local and lexical type maps. */
     if (!inliner->local_types && inliner->num_locals) {
-        MVMint32 local_types_size = inliner->num_locals * sizeof(MVMuint16);
+        int32_t local_types_size = inliner->num_locals * sizeof(MVMuint16);
         inliner->local_types = MVM_malloc(local_types_size);
         memcpy(inliner->local_types, inliner->sf->body.local_types, local_types_size);
     }
@@ -986,7 +986,7 @@ static MVMSpeshBB * merge_graph(MVMThreadContext *tc, MVMSpeshGraph *inliner,
             inlinee->local_types ? inlinee->local_types : inlinee->sf->body.local_types,
             inlinee->num_locals * sizeof(MVMuint16));
     if (!inliner->lexical_types && inliner->num_lexicals) {
-        MVMint32 lexical_types_size = inliner->num_lexicals * sizeof(MVMuint16);
+        int32_t lexical_types_size = inliner->num_lexicals * sizeof(MVMuint16);
         inliner->lexical_types = MVM_malloc(lexical_types_size);
         memcpy(inliner->lexical_types, inliner->sf->body.lexical_types, lexical_types_size);
     }
@@ -1091,8 +1091,8 @@ static void tweak_succ(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         new_succ->pred[0] = bb;
     }
     else {
-        MVMint32 found = 0;
-        MVMint32 i;
+        int32_t found = 0;
+        int32_t i;
         for (i = 0; i < new_succ->num_pred; i++)
             if (new_succ->pred[i] == prev_pred) {
                 new_succ->pred[i] = bb;
@@ -1270,10 +1270,10 @@ static void rewrite_returns(MVMThreadContext *tc, MVMSpeshGraph *inliner,
      * version of the target register. We then insert a PHI that merges those
      * versions. */
     MVMSpeshBB *bb = inlinee->entry;
-    MVMint32 initial_last_result_version = runbytecode_ins->info->opcode != MVM_OP_sp_runbytecode_v
+    int32_t initial_last_result_version = runbytecode_ins->info->opcode != MVM_OP_sp_runbytecode_v
         ? inliner->fact_counts[runbytecode_ins->operands[0].reg.orig]
         : -1;
-    MVMint32 saw_return = 0;
+    int32_t saw_return = 0;
     while (bb) {
         MVMSpeshIns *ins = bb->first_ins;
         while (ins) {
@@ -1336,7 +1336,7 @@ static void rewrite_returns(MVMThreadContext *tc, MVMSpeshGraph *inliner,
             ins = ins->next;
         }
         if (bb == inlinee_last_bb) {
-            MVMint32 final_last_result_version = runbytecode_ins->info->opcode != MVM_OP_sp_runbytecode_v
+            int32_t final_last_result_version = runbytecode_ins->info->opcode != MVM_OP_sp_runbytecode_v
                 ? inliner->fact_counts[runbytecode_ins->operands[0].reg.orig]
                 : -1;
             if (final_last_result_version != initial_last_result_version) {
@@ -1410,7 +1410,7 @@ static MVMSpeshIns * find_first_instruction(MVMThreadContext *tc, MVMSpeshGraph 
 /* Annotates first and last instruction in post-processed inlinee with start
  * and end inline annotations. */
 static void annotate_inline_start_end(MVMThreadContext *tc, MVMSpeshGraph *inliner,
-        MVMSpeshGraph *inlinee, MVMint32 idx, MVMSpeshBB *inlinee_last_bb,
+        MVMSpeshGraph *inlinee, int32_t idx, MVMSpeshBB *inlinee_last_bb,
         MVMuint32 inline_boundary_handler) {
     /* Annotate first instruction as an inline start. */
     MVMSpeshAnn *start_ann     = MVM_spesh_alloc(tc, inliner, sizeof(MVMSpeshAnn));

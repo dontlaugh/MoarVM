@@ -33,7 +33,7 @@ static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
     MVM_free(((MVMContext *)obj)->body.traversals);
 }
 
-static MVMint32 apply_traversals(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMuint8 *traversals,
+static int32_t apply_traversals(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMuint8 *traversals,
                                  MVMuint32 num_traversals) {
     MVMuint32 i;
     MVMuint32 could_move = 1;
@@ -319,7 +319,7 @@ MVMObject * MVM_context_from_frame_non_traversable(MVMThreadContext *tc, MVMFram
 }
 
 /* Checks if we can perform a traversal and reach an existing frame. */
-static MVMint32 traversal_exists(MVMThreadContext *tc, MVMFrame *base, MVMuint8 *traversals,
+static int32_t traversal_exists(MVMThreadContext *tc, MVMFrame *base, MVMuint8 *traversals,
                                  MVMuint32 num_traversals) {
     MVMSpeshFrameWalker fw;
     MVMuint32 could_move;

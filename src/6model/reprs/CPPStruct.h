@@ -43,27 +43,27 @@ struct MVMCPPStructNameMap {
  * attributes and so forth. */
 struct MVMCPPStructREPRData {
     /* The size and alignment of the structure in bytes. */
-    MVMint32 struct_size;
-    MVMint32 struct_align;
+    int32_t struct_size;
+    int32_t struct_align;
 
     /* The number of attributes we have allocated slots for. Note that
      * slots can vary in size. */
-    MVMint32 num_attributes;
+    int32_t num_attributes;
 
     /* Number of child objects we store. */
-    MVMint32 num_child_objs;
+    int32_t num_child_objs;
 
     /* Lower bits are flags indicating what kind of attribute we have;
      * whether it's one that is just a simple value that we can always
      * access directly in the C struct body, or a more complex one that
      * we need to maintain in the C struct and in the GC-able list. Upper
      * bits say where to find it. */
-    MVMint32 *attribute_locations;
+    int32_t *attribute_locations;
 
     /* Maps attribute position numbers to their location in the C struct.
      * Note that this will not be the only place we need to update for
      * any reference type. */
-    MVMint32 *struct_offsets;
+    int32_t *struct_offsets;
 
     /* If the attribute was actually flattened in to this object from another
      * representation, this is the s-table of the type of that attribute. NULL
@@ -80,7 +80,7 @@ struct MVMCPPStructREPRData {
 
     /* Slots holding flattened objects that need another REPR to initialize
      * them; terminated with -1. */
-    MVMint32 *initialize_slots;
+    int32_t *initialize_slots;
 };
 
 /* Initializes the CPPStruct REPR. */

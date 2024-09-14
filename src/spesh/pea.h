@@ -61,7 +61,7 @@ struct MVMSpeshPEAMaterializeInfo {
  * point. */
 struct MVMSpeshPEADeoptPoint {
     /* The index of the deopt point. */
-    MVMint32 deopt_point_idx;
+    int32_t deopt_point_idx;
 
     /* The index into the materialize_info specifying how to materialize
      * this object. */

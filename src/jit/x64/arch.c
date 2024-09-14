@@ -48,13 +48,13 @@ static const MVMint8 arg_fpr[] = {
 
 
 void MVM_jit_arch_storage_for_arglist(MVMThreadContext *tc, MVMJitCompiler *compiler,
-                                      MVMJitExprTree *tree, MVMint32 arglist_node,
+                                      MVMJitExprTree *tree, int32_t arglist_node,
                                       MVMJitStorageRef *storage) {
     MVMuint32 narg = MVM_JIT_EXPR_NCHILD(tree, arglist_node);
-    MVMint32 *args = MVM_JIT_EXPR_LINKS(tree, arglist_node);
+    int32_t *args = MVM_JIT_EXPR_LINKS(tree, arglist_node);
     MVMuint32 i, ngpr = 0, nfpr = 0, nstack = 0;
     for (i = 0; i < narg; i++) {
-        MVMint32 carg_type = MVM_JIT_EXPR_ARGS(tree, args[i])[0];
+        int32_t carg_type = MVM_JIT_EXPR_ARGS(tree, args[i])[0];
         /* posix stores numeric args in floating point registers, everything
          * else in general purpose registers, until it doesn't fit anymore, in
          * which case it stores them on the stack */
@@ -97,12 +97,12 @@ static const MVMint8 arg_fpr[] = {
 
 
 void MVM_jit_arch_storage_for_arglist(MVMThreadContext *tc, MVMJitCompiler *compiler,
-                                      MVMJitExprTree *tree, MVMint32 arglist_node,
+                                      MVMJitExprTree *tree, int32_t arglist_node,
                                       MVMJitStorageRef *storage) {
-    MVMint32 i, narg = MVM_JIT_EXPR_NCHILD(tree, arglist_node);
-    MVMint32 *args = MVM_JIT_EXPR_LINKS(tree, arglist_node);
+    int32_t i, narg = MVM_JIT_EXPR_NCHILD(tree, arglist_node);
+    int32_t *args = MVM_JIT_EXPR_LINKS(tree, arglist_node);
     for (i = 0; i < MIN(narg, 4); i++) {
-        MVMint32 carg_type = MVM_JIT_EXPR_ARGS(tree, args[i])[0];
+        int32_t carg_type = MVM_JIT_EXPR_ARGS(tree, args[i])[0];
         if (carg_type == MVM_JIT_NUM) {
             storage[i]._cls = MVM_JIT_STORAGE_FPR;
             storage[i]._pos = arg_fpr[i];

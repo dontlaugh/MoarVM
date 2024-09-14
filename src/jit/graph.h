@@ -1,3 +1,4 @@
+#pragma once
 /* The MVMJitGraph is - for now - really a linked list of instructions.
  * It's likely I'll add complexity when it's needed */
 struct MVMJitGraph {
@@ -6,9 +7,9 @@ struct MVMJitGraph {
     MVMJitNode    *last_node;
 
     /* Number of instruction+bb+graph labels, but excluding the expression labels */
-    MVMint32       num_labels;
+    int32_t       num_labels;
     /* Offset for instruction labels */
-    MVMint32       obj_label_ofs;
+    int32_t       obj_label_ofs;
 
     /* Sequence number for expr trees */
     MVMuint16      expr_seq_nr;
@@ -25,24 +26,24 @@ struct MVMJitGraph {
 };
 
 struct MVMJitDeopt {
-    MVMint32 idx;
-    MVMint32 label;
+    int32_t idx;
+    int32_t label;
 };
 
 struct MVMJitHandler {
-    MVMint32 start_label;
-    MVMint32 end_label;
-    MVMint32 goto_label;
+    int32_t start_label;
+    int32_t end_label;
+    int32_t goto_label;
 };
 
 struct MVMJitInline {
-    MVMint32 start_label;
-    MVMint32 end_label;
+    int32_t start_label;
+    int32_t end_label;
 };
 
 /* A label (no more than a number) */
 struct MVMJitLabel {
-    MVMint32    name;
+    int32_t    name;
 };
 
 struct MVMJitPrimitive {
@@ -73,7 +74,7 @@ struct MVMJitControl {
 
 /* What does a branch need? a label to go to, an instruction to read */
 struct MVMJitBranch {
-    MVMint32     dest;
+    int32_t     dest;
     MVMSpeshIns *ins;
 };
 
@@ -189,7 +190,7 @@ struct MVMJitInvoke {
     MVMint16      spesh_cand_or_sf_slot;
     MVMint8       is_fast;
     MVMuint32     resolve_offset;           /* Only for spesh resolve */
-    MVMint32      reentry_label;
+    int32_t      reentry_label;
 };
 
 struct MVMJitRunByteCode {
@@ -199,7 +200,7 @@ struct MVMJitRunByteCode {
     MVMint16      code_register;
     MVMint16      spesh_cand;
     MVMSpeshOperand *map;
-    MVMint32      reentry_label;
+    int32_t      reentry_label;
 };
 
 struct MVMJitRunCCode {
@@ -208,7 +209,7 @@ struct MVMJitRunCCode {
     MVMint16      return_register;
     MVMint16      code_register;
     MVMSpeshOperand *map;
-    MVMint32      reentry_label;
+    int32_t      reentry_label;
 };
 
 struct MVMJitRunNativeCall {
@@ -219,18 +220,18 @@ struct MVMJitRunNativeCall {
     MVMint16         return_register;
     MVMint16         rv_type;
     MVMSpeshOperand *map;
-    MVMint32         reentry_label;
+    int32_t         reentry_label;
 };
 
 struct MVMJitDispatch {
-    MVMint32      id;
+    int32_t      id;
     MVMCallsite  *callsite;
     MVMuint16     sf_slot;
     MVMuint32     ice_slot;
     MVMReturnType return_type;
     MVMint16      return_register;
     MVMSpeshOperand *map;
-    MVMint32      reentry_label;
+    int32_t      reentry_label;
 };
 
 struct MVMJitIsType {
@@ -239,20 +240,20 @@ struct MVMJitIsType {
     MVMint16      type_register;
     MVMuint16     sf_slot;
     MVMuint32     ice_slot;
-    MVMint32      reentry_label;
+    int32_t      reentry_label;
 };
 
 struct MVMJitJumpList {
     MVMint64 num_labels;
     MVMint16 reg;
     /* labels of the goto's / jump instructions themselves */
-    MVMint32 *in_labels;
+    int32_t *in_labels;
     /* labels the goto's jump to */
-    MVMint32 *out_labels;
+    int32_t *out_labels;
 };
 
 struct MVMJitData {
-    MVMint32 label;
+    int32_t label;
     void     *data;
     size_t    size;
 };

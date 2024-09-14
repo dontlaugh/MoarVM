@@ -32,10 +32,10 @@ typedef enum {
 /* An entry in the spesh log. */
 struct MVMSpeshLogEntry {
     /* The kind of log entry it is; discriminator for the union. */
-    MVMint32 kind;
+    int32_t kind;
 
     /* Call frame correlation ID. */
-    MVMint32 id;
+    int32_t id;
 
     union {
         /* Entry to a call frame (ENTRY). */
@@ -47,14 +47,14 @@ struct MVMSpeshLogEntry {
         /* Observed parameter type (PARAMETER, PARAMETER_DECONT). */
         struct {
             MVMObject *type;
-            MVMint32 flags;
+            int32_t flags;
             MVMuint16 arg_idx;
         } param;
 
         /* Observed type (TYPE, RETURN). */
         struct {
             MVMObject *type;
-            MVMint32 flags;
+            int32_t flags;
             MVMuint32 bytecode_offset;
         } type;
 

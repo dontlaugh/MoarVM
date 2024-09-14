@@ -12,7 +12,7 @@ struct MVMP6intBody {
     /* Integer storage slot. */
     union {
         MVMint64  i64;
-        MVMint32  i32;
+        int32_t  i32;
         MVMint16  i16;
         MVMint8   i8;
         MVMuint64 u64;

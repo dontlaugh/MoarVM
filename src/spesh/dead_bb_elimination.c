@@ -1,6 +1,6 @@
 #include "moar.h"
 
-static void mark_handler_unreachable(MVMThreadContext *tc, MVMSpeshGraph *g, MVMint32 index) {
+static void mark_handler_unreachable(MVMThreadContext *tc, MVMSpeshGraph *g, int32_t index) {
     if (!g->unreachable_handlers)
         g->unreachable_handlers = MVM_spesh_alloc(tc, g, g->num_handlers);
     g->unreachable_handlers[index] = 1;
@@ -26,7 +26,7 @@ static MVMSpeshBB * linear_prev_with_ins(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 static void cleanup_dead_bb_instructions(MVMThreadContext *tc, MVMSpeshGraph *g,
-                                         MVMSpeshBB *dead_bb, MVMint32 cleanup_facts,
+                                         MVMSpeshBB *dead_bb, int32_t cleanup_facts,
                                          MVMuint8 *deleted_inline) {
     MVMSpeshIns *ins = dead_bb->first_ins;
     MVMint8 *frame_handlers_started = MVM_calloc(g->num_handlers, 1);
@@ -118,7 +118,7 @@ static void mark_bb_seen(MVMThreadContext *tc, MVMSpeshBB *bb, MVMint8 *seen) {
 /* Eliminates dead basic blocks, optionally cleaning up facts. (In the case
  * this is called during spesh graph construction, the facts do not yet
  * exist). */
-void MVM_spesh_eliminate_dead_bbs(MVMThreadContext *tc, MVMSpeshGraph *g, MVMint32 update_facts) {
+void MVM_spesh_eliminate_dead_bbs(MVMThreadContext *tc, MVMSpeshGraph *g, int32_t update_facts) {
     MVMSpeshBB *cur_bb;
     MVMuint8 deleted_inline = 0;
 
@@ -177,7 +177,7 @@ void MVM_spesh_eliminate_dead_bbs(MVMThreadContext *tc, MVMSpeshGraph *g, MVMint
 
     /* Re-number BBs so we get sequential ordering again. */
     if (g->num_bbs != orig_bbs) {
-        MVMint32    new_idx  = 0;
+        int32_t    new_idx  = 0;
         MVMSpeshBB *cur_bb   = g->entry;
         while (cur_bb) {
             cur_bb->idx = new_idx;

@@ -73,7 +73,7 @@ struct MVMFrame {
     /* The current spesh correlation ID, if we're interpreting code and
      * recording logs. Zero if interpreting unspecialized and not recording.
      * Junk if running specialized code. */
-    MVMint32 spesh_correlation_id;
+    int32_t spesh_correlation_id;
 
     /* The 'entry label' is a sort of indirect return address for the JIT */
     void * jit_entry_label;
@@ -106,7 +106,7 @@ struct MVMFrameExtra {
      * we traverse, we can precisely recreate the stack trace. This works,
      * since we forbid inlining of the ctx op, so there's always a clear
      * starter frame. */
-    MVMint32 caller_deopt_idx;
+    int32_t caller_deopt_idx;
     void *caller_jit_position;
 
     /* Often when we have an exit handler we're returning a value, so can find
@@ -136,7 +136,7 @@ MVMFrame * MVM_frame_debugserver_move_to_heap(MVMThreadContext *tc, MVMThreadCon
 
 MVMRegister * MVM_frame_initial_work(MVMThreadContext *tc, MVMuint16 *local_types,
                                      MVMuint16 num_locals);
-void MVM_frame_dispatch(MVMThreadContext *tc, MVMCode *code, MVMArgs args, MVMint32 spesh_cand);
+void MVM_frame_dispatch(MVMThreadContext *tc, MVMCode *code, MVMArgs args, int32_t spesh_cand);
 MVM_PUBLIC void MVM_frame_dispatch_zero_args(MVMThreadContext *tc, MVMCode *code);
 void MVM_frame_dispatch_from_c(MVMThreadContext *tc, MVMCode *code,
         MVMCallStackArgsFromC *args_record, MVMRegister *return_value,
@@ -164,8 +164,8 @@ MVMRegister * MVM_frame_lexical_lookup_using_frame_walker(MVMThreadContext *tc,
 MVM_PUBLIC MVMRegister * MVM_frame_find_lexical_by_name_rel_caller(MVMThreadContext *tc, MVMString *name, MVMFrame *cur_caller_frame);
 MVMRegister * MVM_frame_find_dynamic_using_frame_walker(MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw, MVMString *name, MVMuint16 *type, MVMFrame *initial_frame,
-        MVMint32 vivify, MVMFrame **found_frame);
-MVMRegister * MVM_frame_find_contextual_by_name(MVMThreadContext *tc, MVMString *name, MVMuint16 *type, MVMFrame *cur_frame, MVMint32 vivify, MVMFrame **found_frame);
+        int32_t vivify, MVMFrame **found_frame);
+MVMRegister * MVM_frame_find_contextual_by_name(MVMThreadContext *tc, MVMString *name, MVMuint16 *type, MVMFrame *cur_frame, int32_t vivify, MVMFrame **found_frame);
 void MVM_frame_getdynlex_with_frame_walker(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
         MVMString *name, MVMRegister *result);
 void MVM_frame_getdynlex(MVMThreadContext *tc, MVMString *name, MVMFrame *cur_frame, MVMRegister *result);

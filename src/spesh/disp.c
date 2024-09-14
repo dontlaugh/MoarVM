@@ -2,7 +2,7 @@
 
 #define GET_UI16(pc, idx)   *((MVMuint16 *)((pc) + (idx)))
 
-MVM_STATIC_INLINE MVMuint64 GET_UI64(const MVMuint8 *pc, MVMint32 idx) {
+MVM_STATIC_INLINE MVMuint64 GET_UI64(const MVMuint8 *pc, int32_t idx) {
     MVMuint64 retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
@@ -156,7 +156,7 @@ static MVMuint32 find_disp_op_first_real_arg(MVMThreadContext *tc, MVMSpeshIns *
 
 /* Find an annotation on a dispatch instruction and remove it. */
 static MVMSpeshAnn * take_dispatch_annotation(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshIns *ins, MVMint32 kind) {
+        MVMSpeshIns *ins, int32_t kind) {
     MVMSpeshAnn *deopt_ann = ins->annotations;
     MVMSpeshAnn *prev = NULL;
     while (deopt_ann) {
@@ -445,7 +445,7 @@ MVMOpInfo * MVM_spesh_disp_initialize_resumption_op_info(MVMThreadContext *tc,
     MVMuint16 operand_index = base_info->num_operands;
     MVMuint16 i;
     for (i = 0; i < dpr->init_callsite->flag_count; i++) {
-        MVMint32 include = dpr->init_values
+        int32_t include = dpr->init_values
             ? dpr->init_values[i].source == MVM_DISP_RESUME_INIT_ARG ||
                 dpr->init_values[i].source == MVM_DISP_RESUME_INIT_TEMP
             : 1;
@@ -474,7 +474,7 @@ MVMOpInfo * MVM_spesh_disp_initialize_resumption_op_info(MVMThreadContext *tc,
  * registers that are used by the resumption. */
 static void insert_resume_inits(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         MVMSpeshIns **insert_after, MVMDispProgram *dp, MVMSpeshOperand *orig_args,
-        MVMSpeshOperand *temporaries, MVMint32 deopt_idx) {
+        MVMSpeshOperand *temporaries, int32_t deopt_idx) {
     MVMuint32 i;
     for (i = 0; i < dp->num_resumptions; i++) {
         /* Allocate the instruction. */
@@ -625,16 +625,16 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
 
     /* In the case we emit bytecode, we may also need to delay release of
      * the temporaries until after runbytecode optimization. */
-    MVMint32 delay_temps_release = 0;
+    int32_t delay_temps_release = 0;
 
     /* Keep result register alive */
-    MVMint32 keep_result_register = ins->info->opcode != MVM_OP_dispatch_v;
+    int32_t keep_result_register = ins->info->opcode != MVM_OP_dispatch_v;
 
     /* Visit the ops of the dispatch program and translate them. */
     MVMSpeshIns *insert_after = ins;
     MVMSpeshIns *orig_next = ins->next;
     MVMCallsite *callsite = NULL;
-    MVMint32 skip_args = -1;
+    int32_t skip_args = -1;
     for (i = 0; i < dp->num_ops; i++) {
         MVMDispProgramOp *op = &(dp->ops[i]);
         switch (op->code) {
@@ -1647,7 +1647,7 @@ int MVM_spesh_disp_optimize(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
             }
             qsort(outcome_hits, MVM_VECTOR_ELEMS(outcome_hits), sizeof(OutcomeHitCount),
                 compare_hits);
-            MVMint32 selected_outcome = -1;
+            int32_t selected_outcome = -1;
             if (MVM_VECTOR_ELEMS(outcome_hits) == 0) {
                 MVM_spesh_graph_add_comment(tc, g, ins, p
                     ? "Polymorphic callsite and polymorphic in this specialization"

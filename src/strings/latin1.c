@@ -75,7 +75,7 @@ MVMuint32 MVM_string_latin1_decodestream(MVMThreadContext *tc, MVMDecodeStream *
     MVMGrapheme32 *buffer;
     MVMDecodeStreamBytes *cur_bytes;
     MVMDecodeStreamBytes *last_accept_bytes = ds->bytes_head;
-    MVMint32 last_accept_pos, last_was_cr;
+    int32_t last_accept_pos, last_was_cr;
     MVMuint32 reached_stopper;
 
     /* If there's no buffers, we're done. */
@@ -96,7 +96,7 @@ MVMuint32 MVM_string_latin1_decodestream(MVMThreadContext *tc, MVMDecodeStream *
     reached_stopper = 0;
     while (cur_bytes) {
         /* Process this buffer. */
-        MVMint32  pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
+        int32_t  pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
         MVMuint8 *bytes = cur_bytes->bytes;
         while (pos < cur_bytes->length) {
             MVMCodepoint codepoint = bytes[pos++];
@@ -156,7 +156,7 @@ MVMuint32 MVM_string_latin1_decodestream(MVMThreadContext *tc, MVMDecodeStream *
  * will become a ?. The result string is NULL terminated, but the specified
  * size is the non-null part. */
 char * MVM_string_latin1_encode_substr(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size, MVMint64 start, MVMint64 length,
-        MVMString *replacement, MVMint32 translate_newlines) {
+        MVMString *replacement, int32_t translate_newlines) {
     /* Latin-1 is a single byte encoding, but \r\n is a 2-byte grapheme, so we
      * may have to resize as we go. */
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
@@ -227,6 +227,6 @@ char * MVM_string_latin1_encode_substr(MVMThreadContext *tc, MVMString *str, MVM
  * will become a ?. The result string is NULL terminated, but the specified
  * size is the non-null part. */
 char * MVM_string_latin1_encode(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size,
-        MVMint32 translate_newlines) {
+        int32_t translate_newlines) {
     return MVM_string_latin1_encode_substr(tc, str, output_size, 0, -1, NULL, translate_newlines);
 }

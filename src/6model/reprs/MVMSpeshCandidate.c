@@ -115,9 +115,9 @@ static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data)
 
     size += sizeof(MVMCollectable *) * body->num_spesh_slots;
 
-    size += sizeof(MVMint32) * body->num_deopts;
+    size += sizeof(int32_t) * body->num_deopts;
 
-    size += sizeof(MVMint32) * body->num_deopt_synths * 2; /* 2 values per entry */
+    size += sizeof(int32_t) * body->num_deopt_synths * 2; /* 2 values per entry */
 
     size += sizeof(MVMSpeshInline) * body->num_inlines;
 
@@ -205,7 +205,7 @@ void MVM_spesh_candidate_add(MVMThreadContext *tc, MVMSpeshPlanned *p) {
     MVMuint64 start_time = 0, spesh_time = 0, jit_time = 0, end_time;
 
     /* If we've reached our specialization limit, don't continue. */
-    MVMint32 spesh_produced = ++tc->instance->spesh_produced;
+    int32_t spesh_produced = ++tc->instance->spesh_produced;
     if (tc->instance->spesh_limit)
         if (spesh_produced > tc->instance->spesh_limit)
             return;

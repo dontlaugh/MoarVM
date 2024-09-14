@@ -22,5 +22,5 @@ MVMObject * MVM_io_socket_create(MVMThreadContext *tc, MVMint64 listen);
 struct sockaddr * MVM_io_resolve_host_name(MVMThreadContext *tc,
         MVMString *host, MVMint64 port,
         MVMuint16 family, MVMint64 type, MVMint64 protocol,
-        MVMint32 passive);
+        int32_t passive);
 MVMString * MVM_io_get_hostname(MVMThreadContext *tc);

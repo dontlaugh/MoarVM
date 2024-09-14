@@ -1,7 +1,7 @@
 #include "moar.h"
 
 /* Checks if we have any existing specialization of this. */
-static MVMint32 have_existing_specialization(MVMThreadContext *tc, MVMStaticFrame *sf,
+static int32_t have_existing_specialization(MVMThreadContext *tc, MVMStaticFrame *sf,
         MVMCallsite *cs, MVMSpeshStatsType *type_tuple) {
     MVMStaticFrameSpesh *sfs = sf->body.spesh;
     MVMuint32 i;
@@ -128,7 +128,7 @@ static void plan_for_cs(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame
                     /* Make sure that the prefix matches what we've already decided
                      * to focus on, and that the tuple wasn't already covered. */
                     MVMSpeshStatsByType *by_type = &(by_cs->by_type[j]);
-                    MVMint32 found, valid;
+                    int32_t found, valid;
                     if (tuples_used[j])
                         continue;
                     valid = 1;
@@ -188,7 +188,7 @@ static void plan_for_cs(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame
                 MVM_VECTOR_DECL(MVMSpeshStatsByType *, evidence);
                 MVM_VECTOR_INIT(evidence, 4);
                 for (j = 0; j < by_cs->num_by_type; j++) {
-                    MVMint32 matching = 1;
+                    int32_t matching = 1;
                     for (k = 0; k < by_cs->cs->flag_count; k++) {
                         if (chosen_position[k] && memcmp(&(by_cs->by_type[j].arg_types[k]),
                                     &(chosen_tuple[k]), sizeof(MVMSpeshStatsType)) != 0) {

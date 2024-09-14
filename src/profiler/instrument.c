@@ -556,7 +556,7 @@ static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
         /* Try to resolve the code filename and line number. */
         MVMBytecodeAnnotation *annot = MVM_bytecode_resolve_annotation(tc,
             &(sf->body), 0);
-        MVMuint32 fshi = annot ? (MVMint32)annot->filename_string_heap_index : 0;
+        MVMuint32 fshi = annot ? (int32_t)annot->filename_string_heap_index : 0;
 
         /* Add name of code object. */
         MVM_repr_bind_key_o(tc, node_hash, pds->name,
@@ -573,7 +573,7 @@ static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
             MVM_repr_bind_key_o(tc, node_hash, pds->file,
                 box_s(tc, tc->instance->str_consts.empty));
         MVM_repr_bind_key_o(tc, node_hash, pds->line,
-            box_i(tc, annot ? (MVMint32)annot->line_number : -1));
+            box_i(tc, annot ? (int32_t)annot->line_number : -1));
         MVM_free(annot);
 
         /* Use static frame memory address to get a unique ID. */

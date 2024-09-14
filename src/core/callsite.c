@@ -109,12 +109,12 @@ MVM_PUBLIC MVMCallsite * MVM_callsite_get_common(MVMThreadContext *tc, MVMCommon
 }
 
 /* Checks if two callsites are equal. */
-static MVMint32 callsites_equal(MVMThreadContext *tc, MVMCallsite *cs1, MVMCallsite *cs2,
-                                MVMint32 num_flags, MVMint32 num_nameds) {
+static int32_t callsites_equal(MVMThreadContext *tc, MVMCallsite *cs1, MVMCallsite *cs2,
+                                int32_t num_flags, int32_t num_nameds) {
     if (num_flags && memcmp(cs1->arg_flags, cs2->arg_flags, num_flags))
         return 0;
 
-    MVMint32 i;
+    int32_t i;
     for (i = 0; i < num_nameds; i++)
         if (!MVM_string_equal(tc, cs1->arg_names[i], cs2->arg_names[i]))
             return 0;

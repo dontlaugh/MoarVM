@@ -11,25 +11,25 @@
 #define GET_I16(pc, idx)    *((MVMint16 *)((pc) + (idx)))
 #define GET_UI16(pc, idx)   *((MVMuint16 *)((pc) + (idx)))
 
-MVM_STATIC_INLINE MVMint32 GET_I32(const MVMuint8 *pc, MVMint32 idx) {
-    MVMint32 retval;
+MVM_STATIC_INLINE int32_t GET_I32(const MVMuint8 *pc, int32_t idx) {
+    int32_t retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
 }
 
-MVM_STATIC_INLINE MVMuint32 GET_UI32(const MVMuint8 *pc, MVMint32 idx) {
+MVM_STATIC_INLINE MVMuint32 GET_UI32(const MVMuint8 *pc, int32_t idx) {
     MVMuint32 retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
 }
 
-MVM_STATIC_INLINE MVMuint64 GET_UI64(const MVMuint8 *pc, MVMint32 idx) {
+MVM_STATIC_INLINE MVMuint64 GET_UI64(const MVMuint8 *pc, int32_t idx) {
     MVMuint64 retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
 }
 
-MVM_STATIC_INLINE MVMuint32 GET_N32(const MVMuint8 *pc, MVMint32 idx) {
+MVM_STATIC_INLINE MVMuint32 GET_N32(const MVMuint8 *pc, int32_t idx) {
     MVMnum32 retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
@@ -48,16 +48,16 @@ void MVM_spesh_graph_grow_deopt_table(MVMThreadContext *tc, MVMSpeshGraph *g) {
         g->alloc_deopt_addrs += 8;
         if (g->deopt_addrs)
             g->deopt_addrs = MVM_realloc(g->deopt_addrs,
-                g->alloc_deopt_addrs * sizeof(MVMint32) * 2);
+                g->alloc_deopt_addrs * sizeof(int32_t) * 2);
         else
-            g->deopt_addrs = MVM_malloc(g->alloc_deopt_addrs * sizeof(MVMint32) * 2);
+            g->deopt_addrs = MVM_malloc(g->alloc_deopt_addrs * sizeof(int32_t) * 2);
     }
 }
 
 /* Records a de-optimization annotation and mapping pair. */
-MVMint32 MVM_spesh_graph_add_deopt_annotation(MVMThreadContext *tc, MVMSpeshGraph *g,
+int32_t MVM_spesh_graph_add_deopt_annotation(MVMThreadContext *tc, MVMSpeshGraph *g,
                                           MVMSpeshIns *ins_node, MVMuint32 deopt_target,
-                                          MVMint32 type) {
+                                          int32_t type) {
     /* Add an annotations. */
     MVMSpeshAnn *ann      = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshAnn));
     ann->type             = type;
@@ -137,13 +137,13 @@ MVMSpeshBB * MVM_spesh_graph_linear_prev(MVMThreadContext *tc, MVMSpeshGraph *g,
 }
 
 /* Checks if a handler is a catch handler or a control handler. */
-static MVMint32 is_catch_handler(MVMThreadContext *tc, MVMSpeshGraph *g, MVMint32 handler_idx) {
+static int32_t is_catch_handler(MVMThreadContext *tc, MVMSpeshGraph *g, int32_t handler_idx) {
     return g->handlers[handler_idx].category_mask & MVM_EX_CAT_CATCH;
 }
 
 /* Checks if a basic block already has a particular successor. */
-static MVMint32 already_succs(MVMThreadContext *tc, MVMSpeshBB *bb, MVMSpeshBB *succ) {
-    MVMint32 i = 0;
+static int32_t already_succs(MVMThreadContext *tc, MVMSpeshBB *bb, MVMSpeshBB *succ) {
+    int32_t i = 0;
     for (i = 0; i < bb->num_succ; i++)
         if (bb->succ[i] == succ)
             return 1;
@@ -151,7 +151,7 @@ static MVMint32 already_succs(MVMThreadContext *tc, MVMSpeshBB *bb, MVMSpeshBB *
 }
 
 /* Checks if the op is one of the spesh dispatch ops. */
-static MVMint32 spesh_dispatchy(MVMuint16 opcode) {
+static int32_t spesh_dispatchy(MVMuint16 opcode) {
     return (opcode >= MVM_OP_sp_dispatch_v    && opcode <= MVM_OP_sp_dispatch_o)    ||
            (opcode >= MVM_OP_sp_runbytecode_v && opcode <= MVM_OP_sp_runbytecode_o) ||
            (opcode >= MVM_OP_sp_runcfunc_v    && opcode <= MVM_OP_sp_runcfunc_o) ||
@@ -212,13 +212,13 @@ int MVM_spesh_graph_ins_ends_bb(MVMThreadContext *tc, const MVMOpInfo *info) {
 #define MVM_CFG_BB_END      2
 #define MVM_CFG_BB_JUMPLIST 4
 static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf,
-                      MVMint32 *existing_deopts, MVMint32 num_existing_deopts,
-                      MVMint32 *existing_deopt_synths, MVMint32 num_existing_deopt_synths,
-                      MVMint32 *deopt_usage_info, MVMSpeshIns ***deopt_usage_ins_out) {
+                      int32_t *existing_deopts, int32_t num_existing_deopts,
+                      int32_t *existing_deopt_synths, int32_t num_existing_deopt_synths,
+                      int32_t *deopt_usage_info, MVMSpeshIns ***deopt_usage_ins_out) {
     MVMSpeshBB  *cur_bb, *prev_bb;
     MVMSpeshIns *last_ins;
     MVMint64     i;
-    MVMint32     bb_idx;
+    int32_t     bb_idx;
 
     /* Temporary array of all MVMSpeshIns we create (one per instruction).
      * Overestimate at size. Has the flat view, matching the bytecode. */
@@ -242,7 +242,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
     /* Which handlers are active; used for placing edges from blocks covered
      * by exception handlers. */
     MVMuint8 *active_handlers = MVM_calloc(1, g->num_handlers);
-    MVMint32 num_active_handlers = 0;
+    int32_t num_active_handlers = 0;
 
     /* Make first pass through the bytecode. In this pass, we make MVMSpeshIns
      * nodes for each instruction and set the start/end of block bits. Also
@@ -647,8 +647,8 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
          * real successor, all catch exception handlers, and all OSR points.
          */
         if (cur_bb == g->entry) {
-            MVMint32 num_bbs = 1 + g->num_handlers + num_osr_points;
-            MVMint32 insert_pos = 1;
+            int32_t num_bbs = 1 + g->num_handlers + num_osr_points;
+            int32_t insert_pos = 1;
             cur_bb->succ     = MVM_spesh_alloc(tc, g, num_bbs * sizeof(MVMSpeshBB *));
             cur_bb->handler_succ = MVM_spesh_alloc(tc, g, g->num_handlers * sizeof(MVMSpeshBB *));
             cur_bb->succ[0]  = cur_bb->linear_next;
@@ -841,7 +841,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
         MVMuint32 idx = 0;
         MVM_VECTOR_INIT(usage_ins, 32);
         while (1) {
-            MVMint32 offset = deopt_usage_info[idx];
+            int32_t offset = deopt_usage_info[idx];
             if (offset == -1)
                 break;
             MVM_VECTOR_PUSH(usage_ins, ins_flat[byte_to_ins_flags[offset] >> 3]);
@@ -864,7 +864,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
  * "register read before assigned" cases. (We can thus just start off with
  * them NULL, since zeroed memory is cheaper than copying a VMNull in to
  * place). */
-static MVMint32 is_handler_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 reg) {
+static int32_t is_handler_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 reg) {
     MVMuint32 num_handlers = g->num_handlers;
     MVMuint32 i;
     for (i = 0; i < num_handlers; i++) {
@@ -919,8 +919,8 @@ static void add_predecessors(MVMThreadContext *tc, MVMSpeshGraph *g) {
 
 /* Produces an array of the basic blocks, sorted in reverse postorder from
  * the entry point. */
-static void dfs(MVMSpeshBB **rpo, MVMint32 *insert_pos, MVMuint8 *seen, MVMSpeshBB *bb) {
-    MVMint32 i;
+static void dfs(MVMSpeshBB **rpo, int32_t *insert_pos, MVMuint8 *seen, MVMSpeshBB *bb) {
+    int32_t i;
     seen[bb->idx] = 1;
     for (i = 0; i < bb->num_succ; i++) {
         MVMSpeshBB *succ = bb->succ[i];
@@ -934,7 +934,7 @@ static void dfs(MVMSpeshBB **rpo, MVMint32 *insert_pos, MVMuint8 *seen, MVMSpesh
 MVMSpeshBB ** MVM_spesh_graph_reverse_postorder(MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB **rpo  = MVM_calloc(g->num_bbs, sizeof(MVMSpeshBB *));
     MVMuint8    *seen = MVM_calloc(g->num_bbs, 1);
-    MVMint32     ins  = g->num_bbs - 1;
+    int32_t     ins  = g->num_bbs - 1;
     dfs(rpo, &ins, seen, g->entry);
     MVM_free(seen);
     if (ins != -1) {
@@ -948,7 +948,7 @@ MVMSpeshBB ** MVM_spesh_graph_reverse_postorder(MVMThreadContext *tc, MVMSpeshGr
 }
 
 /* 2-finger intersection algorithm, to find new immediate dominator. */
-static void iter_check(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo, MVMint32 *doms, MVMint32 iters) {
+static void iter_check(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo, int32_t *doms, int32_t iters) {
     if (iters > 100000) {
 #ifdef NDEBUG
         MVMuint32 k;
@@ -968,8 +968,8 @@ static void iter_check(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo,
         MVM_oops(tc, "Spesh: dominator intersection went infinite");
     }
 }
-static MVMint32 intersect(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo, MVMint32 *doms, MVMint32 finger1, MVMint32 finger2) {
-    MVMint32 iters = 0;
+static int32_t intersect(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo, int32_t *doms, int32_t finger1, int32_t finger2) {
+    int32_t iters = 0;
     while (finger1 != finger2) {
         while (finger1 > finger2) {
             iter_check(tc, g, rpo, doms, iters++);
@@ -984,12 +984,12 @@ static MVMint32 intersect(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **r
 }
 
 /* Computes dominator information about the basic blocks. */
-static MVMint32 * compute_dominators(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo) {
+static int32_t * compute_dominators(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo) {
     MVMuint32 i, j, changed;
 
     /* Create result list, with all initialized to undefined (use -1, as it's
      * not a valid basic block index). Start node dominates itself. */
-    MVMint32 *doms = MVM_malloc(g->num_bbs * sizeof(MVMint32));
+    int32_t *doms = MVM_malloc(g->num_bbs * sizeof(int32_t));
     doms[0] = 0;
     for (i = 1; i < g->num_bbs; i++)
         doms[i] = -1;
@@ -1004,8 +1004,8 @@ static MVMint32 * compute_dominators(MVMThreadContext *tc, MVMSpeshGraph *g, MVM
             MVMSpeshBB *b = rpo[i];
 
             /* See if there's a better dominator. */
-            MVMint32 chosen_pred = -1;
-            MVMint32 new_idom;
+            int32_t chosen_pred = -1;
+            int32_t new_idom;
             for (j = 0; j < b->num_pred; j++) {
                 new_idom = b->pred[j]->rpo_idx;
                 if (doms[new_idom] != -1)
@@ -1020,7 +1020,7 @@ static MVMint32 * compute_dominators(MVMThreadContext *tc, MVMSpeshGraph *g, MVM
             }
             for (j = 0; j < b->num_pred; j++) {
                 if (j != (MVMuint32)chosen_pred) {
-                    MVMint32 p_idx = b->pred[j]->rpo_idx;
+                    int32_t p_idx = b->pred[j]->rpo_idx;
                     if (doms[p_idx] != -1)
                         new_idom = intersect(tc, g, rpo, doms, p_idx, new_idom);
                 }
@@ -1038,7 +1038,7 @@ static MVMint32 * compute_dominators(MVMThreadContext *tc, MVMSpeshGraph *g, MVM
 /* Builds the dominance tree children lists for each node. */
 static void add_child(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *target, MVMSpeshBB *to_add) {
     MVMSpeshBB **new_children;
-    MVMint32 i;
+    int32_t i;
 
     /* Already in the child list? */
     for (i = 0; i < target->num_children; i++)
@@ -1053,7 +1053,7 @@ static void add_child(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *target
     target->children = new_children;
     target->num_children++;
 }
-static void add_children(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo, MVMint32 *doms) {
+static void add_children(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo, int32_t *doms) {
     MVMuint32 i;
     for (i = 0; i < g->num_bbs; i++) {
         MVMSpeshBB *bb   = rpo[i];
@@ -1066,7 +1066,7 @@ static void add_children(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rp
 /* Builds the dominance frontier set for each node. */
 static void add_to_frontier_set(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *target, MVMSpeshBB *to_add) {
     MVMSpeshBB **new_df;
-    MVMint32 i;
+    int32_t i;
 
     /* Already in the set? */
     for (i = 0; i < target->num_df; i++)
@@ -1081,14 +1081,14 @@ static void add_to_frontier_set(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpesh
     target->df = new_df;
     target->num_df++;
 }
-static void add_dominance_frontiers(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo, MVMint32 *doms) {
-    MVMint32 j;
+static void add_dominance_frontiers(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo, int32_t *doms) {
+    int32_t j;
     MVMSpeshBB *b = g->entry;
     while (b) {
         if (b->num_pred >= 2) { /* Thus it's a join point. */
             for (j = 0; j < b->num_pred; j++) {
-                MVMint32 runner      = b->pred[j]->rpo_idx;
-                MVMint32 finish_line = doms[b->rpo_idx];
+                int32_t runner      = b->pred[j]->rpo_idx;
+                int32_t finish_line = doms[b->rpo_idx];
                 while (runner != finish_line) {
                     add_to_frontier_set(tc, g, rpo[runner], b);
                     runner = doms[runner];
@@ -1106,19 +1106,19 @@ typedef struct {
     MVMuint16    num_ass_nodes;
 
     /* Count of processed assignments aka. C(V). */
-    MVMint32 count;
+    int32_t count;
 
     /* Stack of integers aka. S(V). */
-    MVMint32 *stack;
-    MVMint32  stack_top;
-    MVMint32  stack_alloc;
+    int32_t *stack;
+    int32_t  stack_top;
+    int32_t  stack_alloc;
 } SSAVarInfo;
 
 /* Creates an SSAVarInfo for each local, initializing it with a list of nodes
  * that assign to the local. */
 static SSAVarInfo * initialize_ssa_var_info(MVMThreadContext *tc, MVMSpeshGraph *g) {
     SSAVarInfo *var_info = MVM_calloc(g->num_locals, sizeof(SSAVarInfo));
-    MVMint32 i;
+    int32_t i;
 
     /* Visit all instructions, looking for local writes. */
     MVMSpeshBB *bb = g->entry;
@@ -1128,8 +1128,8 @@ static SSAVarInfo * initialize_ssa_var_info(MVMThreadContext *tc, MVMSpeshGraph 
             for (i = 0; i < ins->info->num_operands; i++) {
                 if ((ins->info->operands[i] & MVM_operand_rw_mask) == MVM_operand_write_reg) {
                     MVMuint16 written = ins->operands[i].reg.orig;
-                    MVMint32  found   = 0;
-                    MVMint32  j;
+                    int32_t  found   = 0;
+                    int32_t  j;
                     for (j = 0; j < var_info[written].num_ass_nodes; j++)
                         if (var_info[written].ass_nodes[j] == bb) {
                             found = 1;
@@ -1137,7 +1137,7 @@ static SSAVarInfo * initialize_ssa_var_info(MVMThreadContext *tc, MVMSpeshGraph 
                         }
                     if (!found) {
                         if (var_info[written].num_ass_nodes % 8 == 0) {
-                            MVMint32 new_size = var_info[written].num_ass_nodes + 8;
+                            int32_t new_size = var_info[written].num_ass_nodes + 8;
                             var_info[written].ass_nodes = MVM_realloc(
                                 var_info[written].ass_nodes,
                                 new_size * sizeof(MVMSpeshBB *));
@@ -1174,7 +1174,7 @@ MVMOpInfo *MVM_spesh_graph_get_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMui
     if (nrargs - 1 < MVMPhiNodeCacheSparseBegin) {
         result = &g->phi_infos[nrargs - 1];
     } else {
-        MVMint32 cache_idx;
+        int32_t cache_idx;
 
         for (cache_idx = MVMPhiNodeCacheSparseBegin; !result && cache_idx < MVMPhiNodeCacheSize; cache_idx++) {
             if (g->phi_infos[cache_idx].opcode == MVM_SSA_PHI) {
@@ -1202,8 +1202,8 @@ MVMOpInfo *MVM_spesh_graph_get_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMui
 }
 
 /* Inserts SSA phi functions at the required places in the graph. */
-void MVM_spesh_graph_place_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMint32 n, MVMuint16 var) {
-    MVMint32     i;
+void MVM_spesh_graph_place_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, int32_t n, MVMuint16 var) {
+    int32_t     i;
     MVMOpInfo   *phi_op  = MVM_spesh_graph_get_phi(tc, g, n + 1);
     MVMSpeshIns *ins     = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshIns));
     ins->info            = phi_op;
@@ -1215,14 +1215,14 @@ void MVM_spesh_graph_place_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshB
     bb->first_ins       = ins;
 }
 static void insert_phi_functions(MVMThreadContext *tc, MVMSpeshGraph *g, SSAVarInfo *var_info) {
-    MVMint32    *has_already  = MVM_calloc(g->num_bbs, sizeof(MVMint32));
-    MVMint32    *work         = MVM_calloc(g->num_bbs, sizeof(MVMint32));
+    int32_t    *has_already  = MVM_calloc(g->num_bbs, sizeof(int32_t));
+    int32_t    *work         = MVM_calloc(g->num_bbs, sizeof(int32_t));
     MVMSpeshBB **worklist     = MVM_calloc(g->num_bbs, sizeof(MVMSpeshBB *));
-    MVMint32     worklist_top = 0;
-    MVMint32     iter_count   = 0;
+    int32_t     worklist_top = 0;
+    int32_t     iter_count   = 0;
 
     /* Go over all locals. */
-    MVMint32 var, i, j, found;
+    int32_t var, i, j, found;
     for (var = 0; var < g->num_locals; var++) {
         /* Move to next iteration. */
         iter_count++;
@@ -1267,8 +1267,8 @@ static void insert_phi_functions(MVMThreadContext *tc, MVMSpeshGraph *g, SSAVarI
 }
 
 /* Renames the local variables such that we end up with SSA form. */
-static MVMint32 which_pred(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *y, MVMSpeshBB *x) {
-    MVMint32 i;
+static int32_t which_pred(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *y, MVMSpeshBB *x) {
+    int32_t i;
     for (i = 0; i < y->num_pred; i++)
         if (y->pred[i] == x)
             return i;
@@ -1276,18 +1276,18 @@ static MVMint32 which_pred(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *y
     MVM_oops(tc, "Spesh: which_pred failed to find x");
 }
 static void rename_locals(MVMThreadContext *tc, MVMSpeshGraph *g, SSAVarInfo *var_info, MVMSpeshBB *x) {
-    MVMint32 i;
+    int32_t i;
 
     /* Visit instructions and do renames in normal (non-phi) instructions. */
     MVMSpeshIns *a = x->first_ins;
     while (a) {
         /* Rename reads, provided it's not a PHI. */
-        MVMint32 is_phi = a->info->opcode == MVM_SSA_PHI;
+        int32_t is_phi = a->info->opcode == MVM_SSA_PHI;
         if (!is_phi) {
             for (i = 0; i < a->info->num_operands; i++) {
                 if ((a->info->operands[i] & MVM_operand_rw_mask) == MVM_operand_read_reg) {
                     MVMuint16 orig = a->operands[i].reg.orig;
-                    MVMint32  st   = var_info[orig].stack_top;
+                    int32_t  st   = var_info[orig].stack_top;
                     if (st >= 0)
                         a->operands[i].reg.i = var_info[orig].stack[st];
                     else
@@ -1300,7 +1300,7 @@ static void rename_locals(MVMThreadContext *tc, MVMSpeshGraph *g, SSAVarInfo *va
         for (i = 0; i < a->info->num_operands; i++) {
             if (is_phi || (a->info->operands[i] & MVM_operand_rw_mask) == MVM_operand_write_reg) {
                 MVMuint16 orig = a->operands[i].reg.orig;
-                MVMint32 reg_i = var_info[orig].count;
+                int32_t reg_i = var_info[orig].count;
                 a->operands[i].reg.i = reg_i;
                 if (var_info[orig].stack_top + 1 >= var_info[orig].stack_alloc) {
                     if (var_info[orig].stack_alloc)
@@ -1308,7 +1308,7 @@ static void rename_locals(MVMThreadContext *tc, MVMSpeshGraph *g, SSAVarInfo *va
                     else
                         var_info[orig].stack_alloc = 8;
                     var_info[orig].stack = MVM_realloc(var_info[orig].stack,
-                        var_info[orig].stack_alloc * sizeof(MVMint32));
+                        var_info[orig].stack_alloc * sizeof(int32_t));
                 }
                 var_info[orig].stack[++var_info[orig].stack_top] = reg_i;
                 var_info[orig].count++;
@@ -1323,11 +1323,11 @@ static void rename_locals(MVMThreadContext *tc, MVMSpeshGraph *g, SSAVarInfo *va
     /* Visit successors and update their phi functions. */
     for (i = 0; i < x->num_succ; i++) {
         MVMSpeshBB  *y = x->succ[i];
-        MVMint32     j = which_pred(tc, g, y, x);
+        int32_t     j = which_pred(tc, g, y, x);
         MVMSpeshIns *p = y->first_ins;
         while (p && p->info->opcode == MVM_SSA_PHI) {
             MVMuint16 orig = p->operands[j + 1].reg.orig;
-            MVMint32  st   = var_info[orig].stack_top;
+            int32_t  st   = var_info[orig].stack_top;
             if (st >= 0)
                 p->operands[j + 1].reg.i = var_info[orig].stack[st];
             else
@@ -1343,7 +1343,7 @@ static void rename_locals(MVMThreadContext *tc, MVMSpeshGraph *g, SSAVarInfo *va
     /* Go over assignments and pop new variable names. */
     a = x->first_ins;
     while (a) {
-        MVMint32 is_phi = a->info->opcode == MVM_SSA_PHI;
+        int32_t is_phi = a->info->opcode == MVM_SSA_PHI;
         for (i = 0; i < a->info->num_operands; i++) {
             if (is_phi || (a->info->operands[i] & MVM_operand_rw_mask) == MVM_operand_write_reg) {
                 MVMuint16 orig = a->operands[i].reg.orig;
@@ -1361,11 +1361,11 @@ static void rename_locals(MVMThreadContext *tc, MVMSpeshGraph *g, SSAVarInfo *va
  * needed. */
 static void ssa(MVMThreadContext *tc, MVMSpeshGraph *g) {
     SSAVarInfo *var_info;
-    MVMint32 i, num_locals;
+    int32_t i, num_locals;
 
     /* Compute dominance frontiers. */
     MVMSpeshBB **rpo  = MVM_spesh_graph_reverse_postorder(tc, g);
-    MVMint32    *doms = compute_dominators(tc, g, rpo);
+    int32_t    *doms = compute_dominators(tc, g, rpo);
     add_children(tc, g, rpo, doms);
     add_dominance_frontiers(tc, g, rpo, doms);
     MVM_free(rpo);
@@ -1485,7 +1485,7 @@ MVMSpeshGraph * MVM_spesh_graph_create_from_cand(MVMThreadContext *tc, MVMStatic
 /* Recomputes the dominance tree, after modifications to the CFG. */
 void MVM_spesh_graph_recompute_dominance(MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB **rpo;
-    MVMint32 *doms;
+    int32_t *doms;
 
     /* First, clear away all existing dominance tree information; we also toss
      * out all of the predecessors, in case they got out of sync (should try
@@ -1521,7 +1521,7 @@ void MVM_spesh_graph_mark(MVMThreadContext *tc, MVMSpeshGraph *g, MVMGCWorklist 
     for (i = 0; i < num_locals; i++) {
         num_facts = g->fact_counts[i];
         for (j = 0; j < num_facts; j++) {
-            MVMint32 flags = g->facts[i][j].flags;
+            int32_t flags = g->facts[i][j].flags;
             if (flags & MVM_SPESH_FACT_KNOWN_TYPE)
                 MVM_gc_worklist_add(tc, worklist, &(g->facts[i][j].type));
             if (flags & MVM_SPESH_FACT_KNOWN_DECONT_TYPE)
@@ -1561,7 +1561,7 @@ void MVM_spesh_graph_describe(MVMThreadContext *tc, MVMSpeshGraph *g, MVMHeapSna
     for (i = 0; i < num_locals; i++) {
         num_facts = g->fact_counts[i];
         for (j = 0; j < num_facts; j++) {
-            MVMint32 flags = g->facts[i][j].flags;
+            int32_t flags = g->facts[i][j].flags;
             if (flags & MVM_SPESH_FACT_KNOWN_TYPE)
                 MVM_profile_heap_add_collectable_rel_const_cstr(tc, snapshot, (MVMCollectable *)g->facts[i][j].type, "Known Type");
             if (flags & MVM_SPESH_FACT_KNOWN_DECONT_TYPE)

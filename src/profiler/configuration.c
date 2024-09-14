@@ -86,7 +86,7 @@ typedef union CPRegister {
     MVMuint8           u8;
     MVMint16           i16;
     MVMuint16          u16;
-    MVMint32           i32;
+    int32_t           i32;
     MVMuint32          u32;
     MVMint64           i64;
     MVMuint64          u64;
@@ -952,7 +952,7 @@ MVMint64 MVM_confprog_run(MVMThreadContext *tc, void *subject, MVMuint8 entrypoi
                 cur_op += 6;
                 goto NEXT;
             OP(getcodelocation): {
-                MVMint32 line_out = 0;
+                int32_t line_out = 0;
                 MVMString *file_out = NULL;
                 MVMObject *code_obj = (MVMObject *)((MVMStaticFrame *)reg_base[REGISTER_STRUCT_ACCUMULATOR].any)->body.static_code;
                 cur_op += 4;

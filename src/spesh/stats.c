@@ -29,7 +29,7 @@ static MVMuint32 by_callsite_idx(MVMThreadContext *tc, MVMSpeshStats *ss, MVMCal
 
 /* Checks if a type tuple is incomplete (no types logged for some passed
  * objects, or no decont type logged for a container type). */
-static MVMint32 incomplete_type_tuple(MVMThreadContext *tc, MVMCallsite *cs,
+static int32_t incomplete_type_tuple(MVMThreadContext *tc, MVMCallsite *cs,
                                       MVMSpeshStatsType *arg_types) {
     MVMuint32 i;
     for (i = 0; i < cs->flag_count; i++) {
@@ -46,7 +46,7 @@ static MVMint32 incomplete_type_tuple(MVMThreadContext *tc, MVMCallsite *cs,
 }
 
 /* Returns true if the callsite has no object arguments, false otherwise. */
-static MVMint32 cs_without_object_args(MVMThreadContext *tc, MVMCallsite *cs) {
+static int32_t cs_without_object_args(MVMThreadContext *tc, MVMCallsite *cs) {
     MVMuint32 i;
     for (i = 0; i < cs->flag_count; i++)
         if (cs->arg_flags[i] & MVM_CALLSITE_ARG_OBJ)
@@ -56,7 +56,7 @@ static MVMint32 cs_without_object_args(MVMThreadContext *tc, MVMCallsite *cs) {
 
 /* Gets the stats by type, adding it if it's missing. Frees arg_types. Returns
  * the index in the by type array, or -1 if unresolved. */
-static MVMint32 by_type(MVMThreadContext *tc, MVMSpeshStats *ss, MVMuint32 callsite_idx,
+static int32_t by_type(MVMThreadContext *tc, MVMSpeshStats *ss, MVMuint32 callsite_idx,
                         MVMSpeshStatsType *arg_types) {
     /* Resolve type by callsite level info. If this is the no-callsite
      * specialization there is nothing further to do. */
@@ -299,7 +299,7 @@ static void incorporate_stats(MVMThreadContext *tc, MVMSpeshSimStackFrame *simf,
                               MVMuint32 frame_depth, MVMSpeshSimStackFrame *caller,
                               MVMObject *sf_updated) {
     MVMSpeshStatsByType *tss;
-    MVMint32 first_type_hit = 0;
+    int32_t first_type_hit = 0;
 
     /* Bump version if needed. */
     if (simf->ss->last_update != tc->instance->spesh_stats_version) {
@@ -416,8 +416,8 @@ static MVMSpeshSimStackFrame * sim_stack_find(MVMThreadContext *tc, MVMSpeshSimS
     while (found_at != 0) {
         found_at--;
         if (sims->frames[found_at].cid == cid) {
-            MVMint32 pop = (sims->used - found_at) - 1;
-            MVMint32 i;
+            int32_t pop = (sims->used - found_at) - 1;
+            int32_t i;
             for (i = 0; i < pop; i++)
                 sim_stack_pop(tc, sims, sf_updated);
             return &(sims->frames[found_at]);
@@ -451,9 +451,9 @@ static MVMSpeshStatsType * param_type(MVMThreadContext *tc, MVMSpeshSimStackFram
 /* Decides whether to save or free the simulation stack. */
 static void save_or_free_sim_stack(MVMThreadContext *tc, MVMSpeshSimStack *sims,
                                    MVMThreadContext *save_on_tc, MVMObject *sf_updated) {
-    MVMint32 first_survivor = -1;
+    int32_t first_survivor = -1;
     MVMuint32 i;
-    MVMint32 j;
+    int32_t j;
     if (save_on_tc) {
         for (i = 0; i < sims->used; i++) {
             MVMSpeshSimStackFrame *simf = &(sims->frames[i]);

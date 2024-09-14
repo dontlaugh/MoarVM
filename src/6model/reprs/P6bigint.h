@@ -14,11 +14,11 @@ struct MVMP6bigintBody {
          * should never happen in a real pointer due to alignment. */
         struct {
 #if defined(MVM_BIGENDIAN) && MVM_PTR_SIZE > 4
-            MVMint32  value;
+            int32_t  value;
             MVMuint32 flag;
 #else
             MVMuint32 flag;
-            MVMint32  value;
+            int32_t  value;
 #endif
         } smallint;
 

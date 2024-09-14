@@ -15,7 +15,7 @@ subdir('x64')
 
 jit_inc = include_directories('.')
 
-jit_lib = static_library('jit', jit_srcs)
+jit_lib = static_library('jit_a', jit_srcs)
 
 jit_stub_lib = static_library('jit_stub', ['stub.c'])
 

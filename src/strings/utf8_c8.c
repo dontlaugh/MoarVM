@@ -207,7 +207,7 @@ static int append_grapheme(MVMThreadContext *tc, DecodeState *state, MVMGrapheme
         MVMNFGSynthetic *synth = MVM_nfg_get_synthetic_info(tc, g);
         int mismatch = 0;
         if (synth->codes[0] == state->orig_codes[state->orig_codes_unnormalized]) {
-            MVMint32 i;
+            int32_t i;
             for (i = 1; i < synth->num_codes; i++) {
                 size_t orig_idx = state->orig_codes_unnormalized + i;
                 if (state->orig_codes_pos <= orig_idx ||
@@ -251,7 +251,7 @@ static int append_grapheme(MVMThreadContext *tc, DecodeState *state, MVMGrapheme
 
 /* Called when decoding has reached an acceptable codepoint. */
 static void process_ok_codepoint(MVMThreadContext *tc, DecodeState *state) {
-    MVMint32 ready;
+    int32_t ready;
     MVMGrapheme32 g;
 
     /* Consider the byte range accepted. */
@@ -281,7 +281,7 @@ static void process_ok_codepoint(MVMThreadContext *tc, DecodeState *state) {
 /* Called when a bad byte has been encountered, or at the end of output. */
 static void process_bad_bytes(MVMThreadContext *tc, DecodeState *state) {
     size_t i;
-    MVMint32 ready;
+    int32_t ready;
 
     /* Flush normalization buffer and take from that. */
     MVM_unicode_normalizer_eof(tc, &(state->norm));
@@ -412,16 +412,16 @@ MVMString * MVM_string_utf8_c8_decode(MVMThreadContext *tc, const MVMObject *res
 MVMuint32 MVM_string_utf8_c8_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
                                      const MVMuint32 *stopper_chars,
                                      MVMDecodeStreamSeparators *seps,
-                                     MVMint32 eof) {
+                                     int32_t eof) {
     /* Local state for decode loop. */
     MVMDecodeStreamBytes *cur_bytes;
     MVMDecodeStreamBytes *last_accept_bytes = ds->bytes_head;
-    MVMint32 last_accept_pos = ds->bytes_head_pos;
+    int32_t last_accept_pos = ds->bytes_head_pos;
     DecodeState state;
     int expected_continuations = 0;
     int min_expected_codepoint = 0;
     MVMuint32 reached_stopper = 0;
-    MVMint32 result_graphs = 0;
+    int32_t result_graphs = 0;
 
     /* If there's no buffers, we're done. */
     if (!ds->bytes_head)
@@ -472,7 +472,7 @@ MVMuint32 MVM_string_utf8_c8_decodestream(MVMThreadContext *tc, MVMDecodeStream 
         while (state.cur_byte < bytes) {
             /* Process a byte. */
             MVMuint8 decode_byte = state.utf8[state.cur_byte];
-            MVMint32 maybe_new_graph = 0;
+            int32_t maybe_new_graph = 0;
             switch (state.expecting) {
                 case EXPECT_START:
                     if ((decode_byte & 0x80) == 0) {
@@ -680,7 +680,7 @@ char * MVM_string_utf8_c8_encode_substr(MVMThreadContext *tc,
                     hex2int(tc, synth->codes[3]);
             }
             else {
-                MVMint32 i;
+                int32_t i;
                 for (i = 0; i < synth->num_codes; i++)
                     emit_cp(tc, synth->codes[i], &result, &result_pos, &result_limit, repl_bytes, repl_length);
             }

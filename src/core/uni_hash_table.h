@@ -69,5 +69,5 @@ struct MVMUniHashEntry {
      * architectures (alignment padding), and likely the hash is more likely
      * to vary (and hence speed up key equality testing) than key length. */
     MVMuint32 hash_val;
-    MVMint32 value;
+    int32_t value;
 };

@@ -440,7 +440,7 @@ static MVMString * collapse_strands(MVMThreadContext *tc, MVMString *orig) {
      * using a grapheme iterator. */
     else {
         size_t i;
-        MVMint32 common_storage_type = orig->body.storage.strands[0].blob_string->body.storage_type;
+        int32_t common_storage_type = orig->body.storage.strands[0].blob_string->body.storage_type;
         MVMROOT(tc, orig) {
             result = (MVMString *)MVM_repr_alloc_init(tc, tc->instance->VMString);
             result->body.num_graphs = MVM_string_graphs(tc, orig);
@@ -482,7 +482,7 @@ static MVMString * collapse_strands(MVMThreadContext *tc, MVMString *orig) {
 static MVMString * re_nfg(MVMThreadContext *tc, MVMString *in) {
     MVMNormalizer norm;
     MVMCodepointIter ci;
-    MVMint32 ready;
+    int32_t ready;
     MVMString *out = NULL;
     MVMuint32 bufsize = in->body.num_graphs;
 
@@ -1244,7 +1244,7 @@ static MVMGrapheme32 ord_getbasechar (MVMThreadContext *tc, MVMGrapheme32 g) {
     }
     else {
         MVMGrapheme32 return_g;
-        MVMint32 ready;
+        int32_t ready;
         MVMNormalizer norm;
         MVM_unicode_normalizer_init(tc, &norm, MVM_NORMALIZE_NFD);
 
@@ -1623,7 +1623,7 @@ MVMint64 MVM_string_index_of_grapheme(MVMThreadContext *tc, MVMString *a, MVMGra
 
 /* Case change functions. */
 MVMint64 MVM_string_grapheme_is_cclass(MVMThreadContext *tc, MVMint64 cclass, MVMGrapheme32 g);
-static MVMString * do_case_change(MVMThreadContext *tc, MVMString *s, MVMint32 type, char *error) {
+static MVMString * do_case_change(MVMThreadContext *tc, MVMString *s, int32_t type, char *error) {
     MVMint64 sgraphs;
     MVM_string_check_arg(tc, s, error);
     sgraphs = MVM_string_graphs_nocheck(tc, s);
@@ -1632,7 +1632,7 @@ static MVMString * do_case_change(MVMThreadContext *tc, MVMString *s, MVMint32 t
         MVMGraphemeIter gi;
         MVMint64 result_graphs = sgraphs;
         MVMGrapheme32 *result_buf = MVM_malloc(result_graphs * sizeof(MVMGrapheme32));
-        MVMint32 changed = 0;
+        int32_t changed = 0;
         MVMint64 i = 0;
         MVM_string_gi_init(tc, &gi, s);
         while (MVM_string_gi_has_more(tc, &gi)) {
@@ -1695,7 +1695,7 @@ static MVMString * do_case_change(MVMThreadContext *tc, MVMString *s, MVMint32 t
                     /* To maintain NFG, we need to re-normalize when we get an
                      * expansion. */
                     MVMNormalizer norm;
-                    MVMint32 num_result_graphs;
+                    int32_t num_result_graphs;
                     MVM_unicode_normalizer_init(tc, &norm, MVM_NORMALIZE_NFG);
                     MVM_unicode_normalizer_push_codepoints(tc, &norm, result_cps, num_result_cps);
                     MVM_unicode_normalizer_eof(tc, &norm);
@@ -1826,7 +1826,7 @@ MVMString * MVM_string_decode(MVMThreadContext *tc,
  * See comments for MVM_string_decode_config() above for more details. */
 char * MVM_string_encode_config(MVMThreadContext *tc, MVMString *s, MVMint64 start,
         MVMint64 length, MVMuint64 *output_size, MVMint64 encoding_flag,
-        MVMString *replacement, MVMint32 translate_newlines, MVMuint8 config) {
+        MVMString *replacement, int32_t translate_newlines, MVMuint8 config) {
     switch(encoding_flag) {
         case MVM_encoding_type_utf8:
             return MVM_string_utf8_encode_substr(tc, s, output_size, start, length, replacement, translate_newlines);
@@ -1861,7 +1861,7 @@ char * MVM_string_encode_config(MVMThreadContext *tc, MVMString *s, MVMint64 sta
 }
 char * MVM_string_encode(MVMThreadContext *tc, MVMString *s, MVMint64 start,
         MVMint64 length, MVMuint64 *output_size, MVMint64 encoding_flag,
-        MVMString *replacement, MVMint32 translate_newlines) {
+        MVMString *replacement, int32_t translate_newlines) {
     return MVM_string_encode_config(tc, s, start, length, output_size, encoding_flag, replacement, translate_newlines, MVM_ENCODING_PERMISSIVE);
 }
 
@@ -2044,7 +2044,7 @@ MVM_STATIC_INLINE int nfg_is_join_stable(MVMThreadContext *tc, MVMString *a, MVM
 }
 /* Used in MVM_string_join to check stability of adding the next piece */
 MVM_STATIC_INLINE void join_check_stability(MVMThreadContext *tc, MVMString *piece,
-    MVMString *separator, MVMString **pieces, MVMint32 *concats_stable, MVMint64 num_pieces, MVMint64 sgraphs, MVMint64 piece_index) {
+    MVMString *separator, MVMString **pieces, int32_t *concats_stable, MVMint64 num_pieces, MVMint64 sgraphs, MVMint64 piece_index) {
     if (!sgraphs) {
         /* If there's no separator and one piece is The Empty String we
          * have to be extra careful about concat stability */
@@ -2091,7 +2091,7 @@ MVMString * MVM_string_join(MVMThreadContext *tc, MVMString *separator, MVMObjec
     MVMString **pieces = NULL;
     MVMint64    elems, num_pieces, sgraphs, i, is_str_array, total_graphs;
     MVMuint16   sstrands, total_strands;
-    MVMint32    concats_stable = 1, all_strands;
+    int32_t    concats_stable = 1, all_strands;
     size_t      bytes;
 
     MVM_string_check_arg(tc, separator, "join separator");
@@ -2603,7 +2603,7 @@ MVMint64 MVM_string_compare(MVMThreadContext *tc, MVMString *a, MVMString *b) {
                 /* If we get here, all the codepoints in the synthetics have matched
                  * so go based on which has more codepoints left in that grapheme */
                 if (!rtrn) {
-                    MVMint32 a_has_more = MVM_string_grapheme_ci_has_more(tc, &ci_a),
+                    int32_t a_has_more = MVM_string_grapheme_ci_has_more(tc, &ci_a),
                              b_has_more = MVM_string_grapheme_ci_has_more(tc, &ci_b);
 
                     return a_has_more < b_has_more ? -1 :

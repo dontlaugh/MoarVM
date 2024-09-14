@@ -2,8 +2,8 @@ struct MVMJitTileTemplate {
     void (*emit)(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTile *tile, MVMJitExprTree *tree);
     const char    *path;
     const char    *expr;
-    MVMint32  left_sym;
-    MVMint32  right_sym;
+    int32_t  left_sym;
+    int32_t  right_sym;
 
     MVMuint32  num_refs;
     MVMuint32 value_bitmap;
@@ -12,12 +12,12 @@ struct MVMJitTileTemplate {
 
 struct MVMJitTile {
     void (*emit)(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTile *tile, MVMJitExprTree *tree);
-    MVMint32 node;
+    int32_t node;
     enum MVMJitExprOperator op;
 
     MVMuint32  num_refs;
-    MVMint32   refs[4];
-    MVMint32   args[6];
+    int32_t   refs[4];
+    int32_t   args[6];
     MVMuint8 values[4];
 
     MVMuint8 register_spec[4];
@@ -36,7 +36,7 @@ struct MVMJitTileBB {
 /* A tile I'm planning to insert into the list */
 struct MVMJitTileInsert {
     MVMuint32 position;
-    MVMint32 order;
+    int32_t order;
     MVMJitTile *tile;
 };
 
@@ -48,21 +48,21 @@ struct MVMJitTileList {
     MVM_VECTOR_DECL(struct MVMJitTileBB, blocks);
 
     /* TODO implement structures to mark basic blocks */
-    MVMint32 num_arglist_refs;
+    int32_t num_arglist_refs;
 };
 
 
 
 
 MVMJitTile     * MVM_jit_tile_make(MVMThreadContext *tc, MVMJitCompiler *compiler, void *emit,
-                                   MVMint32 num_args, MVMint32 num_values, ...);
+                                   int32_t num_args, int32_t num_values, ...);
 MVMJitTile     * MVM_jit_tile_make_from_template(MVMThreadContext *tc, MVMJitCompiler *compiler,
                                                  const MVMJitTileTemplate *template,
-                                                 MVMJitExprTree *tree, MVMint32 node);
+                                                 MVMJitExprTree *tree, int32_t node);
 MVMJitTileList * MVM_jit_tile_expr_tree(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitExprTree *tree);
 
 
-void MVM_jit_tile_list_insert(MVMThreadContext *tc, MVMJitTileList *list, MVMJitTile *tile, MVMuint32 position, MVMint32 order);
+void MVM_jit_tile_list_insert(MVMThreadContext *tc, MVMJitTileList *list, MVMJitTile *tile, MVMuint32 position, int32_t order);
 void MVM_jit_tile_list_edit(MVMThreadContext *tc, MVMJitTileList *list);
 void MVM_jit_tile_list_destroy(MVMThreadContext *tc, MVMJitTileList *list);
 

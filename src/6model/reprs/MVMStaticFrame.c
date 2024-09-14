@@ -347,7 +347,7 @@ char * MVM_staticframe_file_location(MVMThreadContext *tc, MVMStaticFrame *sf) {
     MVMBytecodeAnnotation *ann = MVM_bytecode_resolve_annotation(tc, &sf->body, 0);
     MVMCompUnit *cu = sf->body.cu;
     MVMuint32          str_idx = ann ? ann->filename_string_heap_index : 0;
-    MVMint32           line_nr = ann ? ann->line_number : 1;
+    int32_t           line_nr = ann ? ann->line_number : 1;
     MVMString        *filename = cu->body.filename;
     char        *filename_utf8 = "<unknown>";
     char               *result = MVM_malloc(1024);

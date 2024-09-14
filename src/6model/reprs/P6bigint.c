@@ -104,7 +104,7 @@ static void set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (MVM_IS_32BIT_INT(value)) {
         body->u.smallint.flag = MVM_BIGINT_32_FLAG;
-        body->u.smallint.value = (MVMint32)value;
+        body->u.smallint.value = (int32_t)value;
     }
     else {
         MVM_p6bigint_store_as_mp_int(tc, body, value);
@@ -125,7 +125,7 @@ static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
     MVMP6bigintBody *body = (MVMP6bigintBody *)data;
     if (value < 2147483647ULL) {
         body->u.smallint.flag = MVM_BIGINT_32_FLAG;
-        body->u.smallint.value = (MVMint32)value;
+        body->u.smallint.value = (int32_t)value;
     }
     else {
         mp_err err;

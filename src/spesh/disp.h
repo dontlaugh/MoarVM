@@ -6,7 +6,7 @@ struct MVMSpeshResumeInit {
     /* The deopt index of the dispatch. Deoptimization already knows how to
      * locate this, so we can reuse that logic in order to work out the
      * deopt index of the current dispatch. */
-    MVMint32 deopt_idx;
+    int32_t deopt_idx;
 
     /* The index of the resumption within the dispatch program. */
     MVMuint16 res_idx;

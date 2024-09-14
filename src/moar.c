@@ -372,8 +372,8 @@ MVMInstance * MVM_vm_create_instance(void) {
             instance->jit_breakpoints     = NULL;
         }
         while (jit_breakpoints_str != NULL && *jit_breakpoints_str) {
-            MVMint32 frame_nr, block_nr, nchars;
-            MVMint32 result = sscanf(jit_breakpoints_str, "%d/%d%n",
+            int32_t frame_nr, block_nr, nchars;
+            int32_t result = sscanf(jit_breakpoints_str, "%d/%d%n",
                                      &frame_nr, &block_nr, &nchars);
             if (result < 2)
                 break;

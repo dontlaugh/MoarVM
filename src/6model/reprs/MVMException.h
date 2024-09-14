@@ -7,7 +7,7 @@ struct MVMExceptionBody {
     MVMObject *payload;
 
     /* The exception category. */
-    MVMint32 category;
+    int32_t category;
 
     /* Flag indicating if we should return after unwinding. */
     MVMuint8 return_after_unwind;

@@ -265,7 +265,7 @@ static void deserialize_sc_deps(MVMThreadContext *tc, MVMCompUnit *cu, ReaderSta
     /* Allocate SC lists in compilation unit. */
     cu_body->scs = MVM_malloc(rs->expected_scs * sizeof(MVMSerializationContext *));
     cu_body->scs_to_resolve = MVM_malloc(rs->expected_scs * sizeof(MVMSerializationContextBody *));
-    cu_body->sc_handle_idxs = MVM_malloc(rs->expected_scs * sizeof(MVMint32));
+    cu_body->sc_handle_idxs = MVM_malloc(rs->expected_scs * sizeof(int32_t));
     cu_body->num_scs = rs->expected_scs;
 
     /* Resolve all the things. */
@@ -597,7 +597,7 @@ static MVMStaticFrame ** deserialize_frames(MVMThreadContext *tc, MVMCompUnit *c
 
 /* Finishes up reading and exploding of a frame. */
 void MVM_bytecode_finish_frame(MVMThreadContext *tc, MVMCompUnit *cu,
-                               MVMStaticFrame *sf, MVMint32 dump_only) {
+                               MVMStaticFrame *sf, int32_t dump_only) {
     MVMuint32 j, num_debug_locals;
     MVMuint8 *pos;
     MVMuint16 slvs;

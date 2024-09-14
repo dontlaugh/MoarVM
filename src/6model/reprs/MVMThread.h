@@ -36,7 +36,7 @@ struct MVMThreadBody {
 
     /* Non-zero if the thread should not block shutdown of the VM (those with
      * zero in here will be joined when the main thread ends). */
-    MVMint32 app_lifetime;
+    int32_t app_lifetime;
 };
 struct MVMThread {
     MVMObject common;

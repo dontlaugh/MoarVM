@@ -54,7 +54,7 @@ MVMObject *MVM_intcache_get(MVMThreadContext *tc, MVMObject *type, MVMint64 valu
     return NULL;
 }
 
-MVMint32 MVM_intcache_type_index(MVMThreadContext *tc, MVMObject *type) {
+int32_t MVM_intcache_type_index(MVMThreadContext *tc, MVMObject *type) {
     int type_index;
     int found = -1;
     uv_mutex_lock(&tc->instance->mutex_int_const_cache);

@@ -15,7 +15,7 @@ static void mk_storage_spec(MVMThreadContext *tc, MVMuint16 bits, MVMuint16 is_u
     spec->is_unsigned     = is_unsigned;
     switch (bits) {
     case 64: spec->align = ALIGNOF(MVMint64); break;
-    case 32: spec->align = ALIGNOF(MVMint32); break;
+    case 32: spec->align = ALIGNOF(int32_t); break;
     case 16: spec->align = ALIGNOF(MVMint16); break;
     default: spec->align = ALIGNOF(MVMint8);  break;
     }
@@ -80,7 +80,7 @@ void MVMP6int_set_int(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     switch (repr_data->bits) {
         case 64: ((MVMP6intBody *)data)->value.i64 = value; break;
-        case 32: ((MVMP6intBody *)data)->value.i32 = (MVMint32)value; break;
+        case 32: ((MVMP6intBody *)data)->value.i32 = (int32_t)value; break;
         case 16: ((MVMP6intBody *)data)->value.i16 = (MVMint16)value; break;
         default: ((MVMP6intBody *)data)->value.i8 = (MVMint8)value; break;
     }
@@ -208,7 +208,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
         case MVM_OP_box_i: {
             if (repr_data->bits == 64 && !(st->mode_flags & MVM_FINALIZE_TYPE)) {
                 /* Turn into a sp_fastbox_i[_ic] instruction. */
-                MVMint32 int_cache_type_idx = MVM_intcache_type_index(tc, st->WHAT);
+                int32_t int_cache_type_idx = MVM_intcache_type_index(tc, st->WHAT);
                 MVMSpeshFacts *tgt_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
                 MVMSpeshOperand *orig_operands = ins->operands;
 
@@ -234,7 +234,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
         case MVM_OP_box_u: {
             if (repr_data->bits == 64 && !(st->mode_flags & MVM_FINALIZE_TYPE)) {
                 /* Turn into a sp_fastbox_u[_ic] instruction. */
-                MVMint32 int_cache_type_idx = MVM_intcache_type_index(tc, st->WHAT);
+                int32_t int_cache_type_idx = MVM_intcache_type_index(tc, st->WHAT);
                 MVMSpeshFacts *tgt_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
                 MVMSpeshOperand *orig_operands = ins->operands;
 
@@ -259,7 +259,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
         }
         case MVM_OP_unbox_i:
         case MVM_OP_decont_i: {
-            MVMint32 bits = repr_data->bits;
+            int32_t bits = repr_data->bits;
             MVMuint16 op = bits == 64 ? MVM_OP_sp_get_i64 :
                            bits == 32 ? MVM_OP_sp_get_i32 :
                            bits == 16 ? MVM_OP_sp_get_i16 :
@@ -282,7 +282,7 @@ static void spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshGraph *g, MVMSpes
         }
         case MVM_OP_unbox_u:
         case MVM_OP_decont_u: {
-            MVMint32 bits = repr_data->bits;
+            int32_t bits = repr_data->bits;
             MVMuint16 op = bits == 64 ? MVM_OP_sp_get_u64 :
                            bits == 32 ? MVM_OP_sp_get_u32 :
                            bits == 16 ? MVM_OP_sp_get_u16 :

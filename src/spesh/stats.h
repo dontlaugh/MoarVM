@@ -195,7 +195,7 @@ struct MVMSpeshSimStackFrame {
     /* Type stats index (not pointer in case of realloc); -1 if not yet set.
      * This is resolved once using arg_types, and then remembered, so we can
      * correlate the statistics across spesh log buffers. */
-    MVMint32 type_idx;
+    int32_t type_idx;
 
     /* Argument types logged. Sized by number of callsite flags. */
     MVMSpeshStatsType *arg_types;

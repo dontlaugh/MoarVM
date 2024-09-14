@@ -29,7 +29,7 @@ MVMCompUnit * MVM_cu_from_bytes(MVMThreadContext *tc, MVMuint8 *bytes, MVMuint32
 }
 
 /* Loads a compilation unit from a bytecode file, mapping it into memory. */
-MVMCompUnit * MVM_cu_map_from_file(MVMThreadContext *tc, const char *filename, MVMint32 free_filename) {
+MVMCompUnit * MVM_cu_map_from_file(MVMThreadContext *tc, const char *filename, int32_t free_filename) {
     MVMCompUnit *cu          = NULL;
     void        *block       = NULL;
     void        *handle      = NULL;

@@ -216,7 +216,7 @@ static void callback_invoke(MVMThreadContext *tc, void *data) {
 }
 static char callback_handler(DCCallback *cb, DCArgs *cb_args, DCValue *cb_result, MVMNativeCallback *data) {
     CallbackInvokeData cid;
-    MVMint32 num_roots, i;
+    int32_t num_roots, i;
     MVMRegister res = {0};
     MVMRegister *args;
     unsigned int interval_id;
@@ -225,7 +225,7 @@ static char callback_handler(DCCallback *cb, DCArgs *cb_args, DCValue *cb_result
     MVMThreadContext *tc = MVM_nativecall_find_thread_context(data->instance);
 
     /* Unblock GC if needed, so this thread can do work. */
-    MVMint32 was_blocked = MVM_gc_is_thread_blocked(tc);
+    int32_t was_blocked = MVM_gc_is_thread_blocked(tc);
     if (was_blocked)
         MVM_gc_mark_thread_unblocked(tc);
 

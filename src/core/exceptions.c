@@ -14,7 +14,7 @@ MVM_STATIC_INLINE MVMFrameHandler * MVM_frame_effective_handlers(MVMFrame *f) {
 }
 
 /* Maps ID of exception category to its name. */
-static const char * cat_name(MVMThreadContext *tc, MVMint32 cat) {
+static const char * cat_name(MVMThreadContext *tc, int32_t cat) {
     switch (cat) {
         case MVM_EX_CAT_CATCH:
             return "catch";
@@ -76,10 +76,10 @@ typedef struct {
     MVMFrame        *frame;
     MVMFrameHandler *handler;
     MVMJitHandler   *jit_handler;
-    MVMint32         handler_out_of_dynamic_scope;
+    int32_t         handler_out_of_dynamic_scope;
 } LocatedHandler;
 
-static MVMint32 handler_can_handle(MVMFrame *f, MVMFrameHandler *fh, MVMuint32 cat, MVMObject *payload) {
+static int32_t handler_can_handle(MVMFrame *f, MVMFrameHandler *fh, MVMuint32 cat, MVMObject *payload) {
     MVMuint32         category_mask = fh->category_mask;
     MVMuint64       block_has_label = category_mask & MVM_EX_CAT_LABELED;
     MVMuint64           block_label = block_has_label ? (uintptr_t)(f->work[fh->label_reg].o) : 0;
@@ -96,7 +96,7 @@ static MVMint32 handler_can_handle(MVMFrame *f, MVMFrameHandler *fh, MVMuint32 c
  * dynamic scope becomes lexical so far as the optimized bytecode is
  * concerned, then this just needs a scan of the table without any further
  * checks being needed. */
-static MVMint32 search_frame_handlers_dyn(MVMThreadContext *tc, MVMFrame *f,
+static int32_t search_frame_handlers_dyn(MVMThreadContext *tc, MVMFrame *f,
                                           MVMuint32 cat, MVMObject *payload,
                                           LocatedHandler *lh) {
     MVMuint32  i;
@@ -166,7 +166,7 @@ static MVMint32 search_frame_handlers_dyn(MVMThreadContext *tc, MVMFrame *f,
  * lexical capture may not be inlined, so we only need to consider the topmost
  * frame's handlers, not anything it might have inlined into it.
  */
-static MVMint32 search_frame_handlers_lex(MVMThreadContext *tc, MVMFrame *f,
+static int32_t search_frame_handlers_lex(MVMThreadContext *tc, MVMFrame *f,
                                           MVMuint32 cat, MVMObject *payload,
                                           LocatedHandler *lh,
                                           MVMuint32 *skip_first_inlinee,
@@ -187,7 +187,7 @@ static MVMint32 search_frame_handlers_lex(MVMThreadContext *tc, MVMFrame *f,
      * and ignore the frame handlers area. This is fine to do, because frames
      * that have an exit handler attached can not be inlined.
      */
-    MVMint32 fehr = f->flags == MVM_FRAME_FLAG_EXIT_HAND_RUN;
+    int32_t fehr = f->flags == MVM_FRAME_FLAG_EXIT_HAND_RUN;
 
     if (f->spesh_cand && f->spesh_cand->body.jitcode && f->jit_entry_label) {
         MVMJitCode *jitcode = f->spesh_cand->body.jitcode;
@@ -291,7 +291,7 @@ static LocatedHandler search_for_handler_from(MVMThreadContext *tc, MVMFrame *f,
             skip_first_inlinee = 1;
             /* fallthrough */
         case MVM_EX_THROW_LEX: {
-            MVMint32 skip_all_inlinees = 0;
+            int32_t skip_all_inlinees = 0;
             while (f != NULL) {
                 MVMFrame *outer_from_inlinee = NULL;
                 if (search_frame_handlers_lex(tc, f, cat, payload, &lh, &skip_first_inlinee,
@@ -575,7 +575,7 @@ MVMObject * MVM_exception_backtrace(MVMThreadContext *tc, MVMObject *ex_obj) {
             MVMuint32             offset = cur_op - MVM_frame_effective_bytecode(cur_frame);
             MVMBytecodeAnnotation *annot = MVM_bytecode_resolve_annotation(tc, &cur_frame->static_info->body,
                                                 offset > 0 ? offset - 1 : 0);
-            MVMuint32             fshi   = annot ? (MVMint32)annot->filename_string_heap_index : -1;
+            MVMuint32             fshi   = annot ? (int32_t)annot->filename_string_heap_index : -1;
             MVMString      *filename_str;
 
             /* annotations hash will contain "file" and "line" */
@@ -716,7 +716,7 @@ static void panic_unhandled_ex(MVMThreadContext *tc, MVMException *ex) {
 
 /* Checks if we're throwing lexically, and - if yes - if the current HLL has
  * a handler for unlocated lexical handlers. */
-static MVMint32 use_lexical_handler_hll_error(MVMThreadContext *tc, MVMuint8 mode) {
+static int32_t use_lexical_handler_hll_error(MVMThreadContext *tc, MVMuint8 mode) {
     return (mode == MVM_EX_THROW_LEX || mode == MVM_EX_THROW_LEX_CALLER) &&
         !MVM_is_null(tc, (MVMObject *)MVM_hll_current(tc)->lexical_handler_not_found_error);
 }
@@ -850,7 +850,7 @@ void MVM_exception_resume(MVMThreadContext *tc, MVMObject *ex_obj) {
  * Use MVM_oops in the case a thread context is available.
  * TODO: Some hook for embedders.
  */
-MVM_NO_RETURN void MVM_panic(MVMint32 exitCode, const char *messageFormat, ...) {
+MVM_NO_RETURN void MVM_panic(int32_t exitCode, const char *messageFormat, ...) {
     va_list args;
     fputs("MoarVM panic: ", stderr);
     va_start(args, messageFormat);
@@ -1005,7 +1005,7 @@ void MVM_crash_on_error(void) {
     crash_on_error = 1;
 }
 
-MVMint32 MVM_get_exception_category(MVMThreadContext *tc, MVMObject *ex) {
+int32_t MVM_get_exception_category(MVMThreadContext *tc, MVMObject *ex) {
     if (IS_CONCRETE(ex) && REPR(ex)->ID == MVM_REPR_ID_MVMException)
         return ((MVMException *)ex)->body.category;
     else
@@ -1050,7 +1050,7 @@ void MVM_bind_exception_payload(MVMThreadContext *tc, MVMObject *ex, MVMObject *
     }
 }
 
-void MVM_bind_exception_category(MVMThreadContext *tc, MVMObject *ex, MVMint32 category) {
+void MVM_bind_exception_category(MVMThreadContext *tc, MVMObject *ex, int32_t category) {
     if (IS_CONCRETE(ex) && REPR(ex)->ID == MVM_REPR_ID_MVMException)
         ((MVMException *)ex)->body.category = category;
     else

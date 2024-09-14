@@ -90,7 +90,7 @@ struct MVMCompUnitBody {
     MVMuint32  string_heap_fast_table_top;
 
     /* Refers to serialized below. sneaked in here to optimize struct layout */
-    MVMint32  serialized_size;
+    int32_t  serialized_size;
 
     MVMuint8  *string_heap_start;
     MVMuint8  *string_heap_read_limit;
@@ -114,7 +114,7 @@ struct MVMCompUnitBody {
     MVMSerializationContextBody **scs_to_resolve;
 
     /* List of SC handle string indexes. */
-    MVMint32 *sc_handle_idxs;
+    int32_t *sc_handle_idxs;
 
     /* HLL configuration for this compilation unit. */
     MVMHLLConfig *hll_config;

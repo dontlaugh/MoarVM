@@ -29,10 +29,10 @@ struct MVMNFGSynthetic {
     /* The base (non-combining) grapheme. */
     /* The index of the base (non-combining) grapheme
      * set to -1 if it does not exist */
-    MVMint32 base_index;
+    int32_t base_index;
 
     /* The number of codepoints we have. */
-    MVMint32 num_codes;
+    int32_t num_codes;
 
     /* Array of codepoints. */
     MVMCodepoint *codes;
@@ -44,13 +44,13 @@ struct MVMNFGSynthetic {
     MVMGrapheme32 *case_fc;
 
     /* Grapheme counts of cached case transforms. */
-    MVMint32 case_uc_graphs;
-    MVMint32 case_lc_graphs;
-    MVMint32 case_tc_graphs;
-    MVMint32 case_fc_graphs;
+    int32_t case_uc_graphs;
+    int32_t case_lc_graphs;
+    int32_t case_tc_graphs;
+    int32_t case_fc_graphs;
 
     /* Is this a UTF-8 C-8 synthetic? */
-    MVMint32 is_utf8_c8;
+    int32_t is_utf8_c8;
 };
 
 /* A node in the NFG trie. */
@@ -60,7 +60,7 @@ struct MVMNFGTrieNode {
     MVMNFGTrieNodeEntry *next_codes;
 
     /* Number of entries in next_cps. */
-    MVMint32 num_entries;
+    int32_t num_entries;
 
     /* Non-zero if we reach a result at this node (and will always be negative
      * since it's an NFG synthetic). */
@@ -82,12 +82,12 @@ struct MVMNFGTrieNodeEntry {
 #define MVM_GRAPHEME_MAX_CODEPOINTS 1024
 
 /* Functions related to grapheme handling. */
-MVMGrapheme32 MVM_nfg_codes_to_grapheme(MVMThreadContext *tc, MVMCodepoint *codes, MVMint32 num_codes);
-MVMGrapheme32 MVM_nfg_codes_to_grapheme_utf8_c8(MVMThreadContext *tc, MVMCodepoint *codes, MVMint32 num_codes);
+MVMGrapheme32 MVM_nfg_codes_to_grapheme(MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes);
+MVMGrapheme32 MVM_nfg_codes_to_grapheme_utf8_c8(MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes);
 MVMGrapheme32 MVM_nfg_crlf_grapheme(MVMThreadContext *tc);
 MVMNFGSynthetic * MVM_nfg_get_synthetic_info(MVMThreadContext *tc, MVMGrapheme32 synth);
-MVMuint32 MVM_nfg_get_case_change(MVMThreadContext *tc, MVMGrapheme32 codepoint, MVMint32 case_, MVMGrapheme32 **result);
-MVMint32 MVM_nfg_is_concat_stable(MVMThreadContext *tc, MVMString *a, MVMString *b);
+MVMuint32 MVM_nfg_get_case_change(MVMThreadContext *tc, MVMGrapheme32 codepoint, int32_t case_, MVMGrapheme32 **result);
+int32_t MVM_nfg_is_concat_stable(MVMThreadContext *tc, MVMString *a, MVMString *b);
 
 /* NFG subsystem initialization and cleanup. */
 void MVM_nfg_init(MVMThreadContext *tc);

@@ -28,42 +28,42 @@ MVM_STATIC_INLINE MVMuint32 MVM_FFS(MVMBitmap x) {
 
 /* NB - make this a separate 'library', use it for register bitmap */
 /* Witness the elegance of the bitmap for our purposes. */
-MVM_STATIC_INLINE void MVM_bitmap_set(MVMBitmap *bits, MVMint32 idx) {
+MVM_STATIC_INLINE void MVM_bitmap_set(MVMBitmap *bits, int32_t idx) {
     bits[idx >> 6] |= (UINT64_C(1) << (idx & 0x3f));
 }
 
-MVM_STATIC_INLINE void MVM_bitmap_set_low(MVMBitmap *bits, MVMint32 idx) {
+MVM_STATIC_INLINE void MVM_bitmap_set_low(MVMBitmap *bits, int32_t idx) {
     *bits |= (UINT64_C(1) << (idx & 0x3f));
 }
 
-MVM_STATIC_INLINE MVMuint64 MVM_bitmap_get(MVMBitmap *bits, MVMint32 idx) {
+MVM_STATIC_INLINE MVMuint64 MVM_bitmap_get(MVMBitmap *bits, int32_t idx) {
     return bits[idx >> 6] & (UINT64_C(1) << (idx & 0x3f));
 }
 
-MVM_STATIC_INLINE MVMuint64 MVM_bitmap_get_low(MVMBitmap bits, MVMint32 idx ) {
+MVM_STATIC_INLINE MVMuint64 MVM_bitmap_get_low(MVMBitmap bits, int32_t idx ) {
     return bits & (UINT64_C(1) << (idx & 0x3f));
 }
 
-MVM_STATIC_INLINE void MVM_bitmap_delete(MVMBitmap *bits, MVMint32 idx) {
+MVM_STATIC_INLINE void MVM_bitmap_delete(MVMBitmap *bits, int32_t idx) {
     bits[idx >> 6] &= ~(UINT64_C(1) << (idx & 0x3f));
 }
 
-MVM_STATIC_INLINE void MVM_bitmap_union(MVMBitmap *out, MVMBitmap *a, MVMBitmap *b, MVMint32 n) {
-    MVMint32 i;
+MVM_STATIC_INLINE void MVM_bitmap_union(MVMBitmap *out, MVMBitmap *a, MVMBitmap *b, int32_t n) {
+    int32_t i;
     for (i = 0; i < n; i++) {
         out[i] = a[i] | b[i];
     }
 }
 
-MVM_STATIC_INLINE void MVM_bitmap_difference(MVMBitmap *out, MVMBitmap *a, MVMBitmap *b, MVMint32 n) {
-    MVMint32 i;
+MVM_STATIC_INLINE void MVM_bitmap_difference(MVMBitmap *out, MVMBitmap *a, MVMBitmap *b, int32_t n) {
+    int32_t i;
     for (i = 0; i < n; i++) {
         out[i] = a[i] ^ b[i];
     }
 }
 
-MVM_STATIC_INLINE void MVM_bitmap_intersection(MVMBitmap *out, MVMBitmap *a, MVMBitmap *b, MVMint32 n) {
-    MVMint32 i;
+MVM_STATIC_INLINE void MVM_bitmap_intersection(MVMBitmap *out, MVMBitmap *a, MVMBitmap *b, int32_t n) {
+    int32_t i;
     for (i = 0; i < n; i++) {
         out[i] = a[i] & b[i];
     }

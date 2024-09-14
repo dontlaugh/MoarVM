@@ -7,7 +7,7 @@
 static void instrument_graph_with_breakpoints(MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB *bb = g->entry->linear_next;
 
-    MVMint32 last_filename = -1;
+    int32_t last_filename = -1;
     MVMint64 last_line_number = -1;
 
     char *filename_buf = NULL;
@@ -122,8 +122,8 @@ static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB *bb = g->entry->linear_next;
     MVMuint16 array_slot = 0;
 
-    MVMint32 last_line_number = -2;
-    MVMint32 last_filename = -1;
+    int32_t last_line_number = -2;
+    int32_t last_filename = -1;
 
     MVMuint16 allocd_slots  = g->num_bbs * 2;
     char *line_report_store = MVM_calloc(allocd_slots, sizeof(char));

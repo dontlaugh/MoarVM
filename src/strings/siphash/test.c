@@ -54,11 +54,11 @@ uint32_t stored = 0;
 	t1 = gettime_ns();\
 } while (0)
 #define MVMGrapheme32 int32_t
-#define MVMint32 int32_t
+#define int32_t int32_t
 #define MVMuint64 uint64_t
 #define MVMuint8 uint8_t
 typedef union {
-	MVMint32 graphs[2];
+	int32_t graphs[2];
 	MVMuint8 bytes[4];
 	uint64_t u64;
 } MVMJenHashGraphemeView;

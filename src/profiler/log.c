@@ -521,7 +521,7 @@ void MVM_profiler_log_gc_end(MVMThreadContext *tc) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
     MVMProfileCallNode   *pcn = ptd->current_call;
     MVMuint64 gc_time;
-    MVMint32  retained_bytes;
+    int32_t  retained_bytes;
 
     /* Record time spent. */
     gc_time = uv_hrtime() - ptd->cur_gc_start_time;

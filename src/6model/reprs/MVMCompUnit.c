@@ -162,7 +162,7 @@ static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data)
     size += body->num_scs * (
             sizeof(MVMSerializationContext *) +     /* scs */
             sizeof(MVMSerializationContextBody *) + /* scs_to_resolve */
-            sizeof(MVMint32)                        /* sc_handle_idxs */
+            sizeof(int32_t)                        /* sc_handle_idxs */
             );
 
     return size;

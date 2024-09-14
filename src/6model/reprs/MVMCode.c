@@ -117,7 +117,7 @@ MVM_PUBLIC MVMObject * MVM_code_location(MVMThreadContext *tc, MVMObject *code) 
     MVMObject *BOOTHash = tc->instance->boot_types.BOOTHash;
     MVMObject *result;
     MVMString *file;
-    MVMint32   line;
+    int32_t   line;
     MVMObject *filename_boxed;
     MVMObject *linenumber_boxed;
     MVMString *filename_key, *linenumber_key;
@@ -147,7 +147,7 @@ MVM_PUBLIC MVMObject * MVM_code_location(MVMThreadContext *tc, MVMObject *code) 
 }
 
 void MVM_code_location_out(MVMThreadContext *tc, MVMObject *code,
-                           MVMString **file_out, MVMint32 *line_out) {
+                           MVMString **file_out, int32_t *line_out) {
     if (REPR(code)->ID != MVM_REPR_ID_MVMCode) {
         MVM_exception_throw_adhoc(tc, "getcodelocation needs an object of MVMCode REPR, got %s instead", REPR(code)->name);
     } else {

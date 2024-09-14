@@ -169,7 +169,7 @@ MVMJitCode * MVM_jit_compiler_assemble(MVMThreadContext *tc, MVMJitCompiler *cl,
     char * memory;
     size_t codesize;
 
-    MVMint32 dasm_error = 0;
+    int32_t dasm_error = 0;
 
    /* compile the function */
     if ((dasm_error = dasm_link(cl, &codesize)) != 0) {
@@ -210,7 +210,7 @@ MVMJitCode * MVM_jit_compiler_assemble(MVMThreadContext *tc, MVMJitCompiler *cl,
     code->sf         = jg->sg->sf;
     code->spill_size = cl->spills_num;
     if (cl->spills_num > 0) {
-        MVMint32 sg_num_locals = jg->sg->num_locals;
+        int32_t sg_num_locals = jg->sg->num_locals;
         code->num_locals  = sg_num_locals + cl->spills_num;
         code->local_types = MVM_malloc(code->num_locals * sizeof(MVMuint16));
         if (jg->sg->local_types != NULL) {
@@ -231,7 +231,7 @@ MVMJitCode * MVM_jit_compiler_assemble(MVMThreadContext *tc, MVMJitCompiler *cl,
     code->labels = MVM_calloc(code->num_labels, sizeof(void*));
 
     for (i = 0; i < code->num_labels; i++) {
-        MVMint32 offset = dasm_getpclabel(cl, i);
+        int32_t offset = dasm_getpclabel(cl, i);
         if (offset < 0) {
             if (tc->instance->jit_debug_enabled)
                 fprintf(stderr, "JIT ERROR: Negative offset for dynamic label %d\n", i);
@@ -364,7 +364,7 @@ void MVM_jit_compile_expr_tree(MVMThreadContext *tc, MVMJitCompiler *compiler, M
     MVM_jit_tile_list_destroy(tc, list);
 }
 
-MVM_STATIC_INLINE MVMint32 reg_type_bucket(MVMint8 reg_type) {
+MVM_STATIC_INLINE int32_t reg_type_bucket(MVMint8 reg_type) {
     switch (reg_type) {
     case MVM_reg_num32:
     case MVM_reg_num64:

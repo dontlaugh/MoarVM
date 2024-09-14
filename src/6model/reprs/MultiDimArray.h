@@ -12,7 +12,7 @@ struct MVMMultiDimArrayBody {
         MVMObject **o;
         MVMString **s;
         MVMint64   *i64;
-        MVMint32   *i32;
+        int32_t   *i32;
         MVMint16   *i16;
         MVMint8    *i8;
         MVMnum64   *n64;

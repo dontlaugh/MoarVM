@@ -219,7 +219,7 @@ MVMCallStackHeapFrame * MVM_callstack_allocate_heap_frame(MVMThreadContext *tc,
 
 /* Sees if we can allocate work space (extra registers) for the purposes of
  * OSR. */
-MVMint32 MVM_callstack_ensure_work_and_env_space(MVMThreadContext *tc, MVMuint32 needed_work,
+int32_t MVM_callstack_ensure_work_and_env_space(MVMThreadContext *tc, MVMuint32 needed_work,
         MVMuint32 needed_env) {
     /* Call this to ensure we really do have a frame on the top of the stack,
      * rather than just reading tc->cur_frame. */
@@ -659,7 +659,7 @@ MVM_STATIC_INLINE void cleanup_dispatch_run_record(MVMThreadContext *tc) {
         MVM_disp_resume_destroy_resumption_state(tc, &(disp_run->resumption_state));
     move_to_prev_record(tc);
 }
-MVM_STATIC_INLINE MVMint32 cleanup_dispatch_record_record(MVMThreadContext *tc, MVMuint8 exceptional) {
+MVM_STATIC_INLINE int32_t cleanup_dispatch_record_record(MVMThreadContext *tc, MVMuint8 exceptional) {
     if (!exceptional) {
         MVMuint8 *bytecode_was = *(tc->interp_cur_op);
         handle_end_of_dispatch_record(tc);
@@ -675,7 +675,7 @@ MVM_STATIC_INLINE MVMint32 cleanup_dispatch_record_record(MVMThreadContext *tc, 
     }
     return 0;
 }
-MVM_STATIC_INLINE MVMint32 cleanup_bind_control_record(MVMThreadContext *tc) {
+MVM_STATIC_INLINE int32_t cleanup_bind_control_record(MVMThreadContext *tc) {
     MVMCallStackBindControl *control_record =
         (MVMCallStackBindControl *)tc->stack_top;
     if (control_record->state == MVM_BIND_CONTROL_FAILED) {
@@ -691,7 +691,7 @@ MVM_STATIC_INLINE MVMint32 cleanup_bind_control_record(MVMThreadContext *tc) {
         return 0;
     }
 }
-MVM_STATIC_INLINE MVMint32 cleanup_special_return_record(MVMThreadContext *tc, MVMuint8 exceptional) {
+MVM_STATIC_INLINE int32_t cleanup_special_return_record(MVMThreadContext *tc, MVMuint8 exceptional) {
     MVMCallStackSpecialReturn *sr = (MVMCallStackSpecialReturn *)tc->stack_top;
     MVMSpecialReturn special_return = sr->special_return;
     MVMSpecialReturn special_unwind = sr->special_unwind;
@@ -776,7 +776,7 @@ void MVM_callstack_unwind_to_frame(MVMThreadContext *tc, MVMuint8 exceptional) {
 
 /* Unwinds the frame on top of the callstack and the non-bytecode entries below it */
 MVMuint64 MVM_callstack_unwind_frame(MVMThreadContext *tc, MVMuint8 exceptional) {
-    MVMint32 thunked = 0;
+    int32_t thunked = 0;
     assert(is_bytecode_frame(tc->stack_top->kind));
 
     do {

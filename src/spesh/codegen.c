@@ -4,7 +4,7 @@
  * have been applied to it. */
 
 typedef struct {
-    MVM_VECTOR_DECL(MVMint32, idxs);
+    MVM_VECTOR_DECL(int32_t, idxs);
     MVM_VECTOR_DECL(MVMSpeshIns *, seen_phis);
 } AllDeoptUsers;
 
@@ -16,10 +16,10 @@ typedef struct {
     MVMuint32  bytecode_alloc;
 
     /* Offsets where basic blocks are. */
-    MVMint32 *bb_offsets;
+    int32_t *bb_offsets;
 
     /* Fixups we need to do by basic block. */
-    MVMint32    *fixup_locations;
+    int32_t    *fixup_locations;
     MVMSpeshBB **fixup_bbs;
     MVMuint32    num_fixups;
     MVMuint32    alloc_fixups;
@@ -29,9 +29,9 @@ typedef struct {
 
     /* Persisted deopt usage info, so we can recover it should be produce an
      * inline from this bytecode in the future. */
-    MVM_VECTOR_DECL(MVMint32, deopt_usage_info);
+    MVM_VECTOR_DECL(int32_t, deopt_usage_info);
 
-    MVM_VECTOR_DECL(MVMint32, deopt_synth_addrs);
+    MVM_VECTOR_DECL(int32_t, deopt_synth_addrs);
 
     /* Working deopt users state (so we can allocate it once and re-use it). */
     AllDeoptUsers all_deopt_users;
@@ -93,7 +93,7 @@ static void collect_deopt_users(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpesh
     while (users) {
         MVMSpeshIns *ins = users->user;
         if (ins->info->opcode == MVM_SSA_PHI) {
-            MVMint32 seen = 0;
+            int32_t seen = 0;
             MVMuint32 i;
             for (i = 0; i < MVM_VECTOR_ELEMS(all_deopt_users->seen_phis); i++) {
                 if (all_deopt_users->seen_phis[i] == ins) {
@@ -114,7 +114,7 @@ static void collect_deopt_users(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpesh
 static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWriterState *ws, MVMSpeshBB *bb) {
     MVMSpeshIns *ins = bb->first_ins;
     while (ins) {
-        MVMint32 i;
+        int32_t i;
 
         /* Process any pre-annotations, and note if there were any deopt ones;
          * if so, these should be processed later. */
@@ -163,8 +163,8 @@ static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWrit
                     (ins->info->operands[0] & MVM_operand_rw_mask) == MVM_operand_write_reg) {
                 collect_deopt_users(tc, g, ins->operands[0], &(ws->all_deopt_users));
                 if (MVM_VECTOR_ELEMS(ws->all_deopt_users.idxs)) {
-                    MVMint32 count = MVM_VECTOR_ELEMS(ws->all_deopt_users.idxs);
-                    MVMint32 i;
+                    int32_t count = MVM_VECTOR_ELEMS(ws->all_deopt_users.idxs);
+                    int32_t i;
                     MVM_VECTOR_PUSH(ws->deopt_usage_info, ws->bytecode_pos);
                     MVM_VECTOR_PUSH(ws->deopt_usage_info, count);
                     for (i = 0; i < count; i++)
@@ -179,7 +179,7 @@ static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWrit
                 /* Ext op; resolve. */
                 MVMExtOpRecord *extops     = g->sf->body.cu->body.extops;
                 MVMuint16       num_extops = g->sf->body.cu->body.num_extops;
-                MVMint32        found      = 0;
+                int32_t        found      = 0;
                 for (i = 0; i < num_extops; i++) {
                     if (extops[i].info == ins->info) {
                         write_int16(ws, MVM_OP_EXT_BASE + i);
@@ -289,7 +289,7 @@ static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWrit
                         break;
                     case MVM_operand_ins: {
                         MVMuint32 bb_idx = ins->operands[i].ins_bb->idx;
-                        MVMint32 offset;
+                        int32_t offset;
                         if (bb_idx >= g->num_bbs)
                             MVM_panic(1, "Spesh codegen: out of range BB index %d", bb_idx);
                         offset = ws->bb_offsets[bb_idx];
@@ -302,7 +302,7 @@ static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWrit
                             if (ws->num_fixups == ws->alloc_fixups) {
                                 ws->alloc_fixups *= 2;
                                 ws->fixup_locations = MVM_realloc(ws->fixup_locations,
-                                    ws->alloc_fixups * sizeof(MVMint32));
+                                    ws->alloc_fixups * sizeof(int32_t));
                                 ws->fixup_bbs = MVM_realloc(ws->fixup_bbs,
                                     ws->alloc_fixups * sizeof(MVMSpeshBB *));
                             }
@@ -332,8 +332,8 @@ static void write_instructions(MVMThreadContext *tc, MVMSpeshGraph *g, SpeshWrit
         /* If there were deopt point annotations, update table. */
         if (has_deopts) {
 #ifndef NDEBUG
-            MVMint32 seen_deopt_idx = 0;
-            MVMint32 deopt_idx;
+            int32_t seen_deopt_idx = 0;
+            int32_t deopt_idx;
             switch (ins->info->opcode) {
             case MVM_OP_sp_guard:
             case MVM_OP_sp_guardconc:
@@ -399,10 +399,10 @@ MVMSpeshCode * MVM_spesh_codegen(MVMThreadContext *tc, MVMSpeshGraph *g) {
     ws->bytecode_pos    = 0;
     ws->bytecode_alloc  = 1024;
     ws->bytecode        = MVM_malloc(ws->bytecode_alloc);
-    ws->bb_offsets      = MVM_malloc(g->num_bbs * sizeof(MVMint32));
+    ws->bb_offsets      = MVM_malloc(g->num_bbs * sizeof(int32_t));
     ws->num_fixups      = 0;
     ws->alloc_fixups    = 64;
-    ws->fixup_locations = MVM_malloc(ws->alloc_fixups * sizeof(MVMint32));
+    ws->fixup_locations = MVM_malloc(ws->alloc_fixups * sizeof(int32_t));
     ws->fixup_bbs       = MVM_malloc(ws->alloc_fixups * sizeof(MVMSpeshBB *));
     for (i = 0; i < g->num_bbs; i++)
         ws->bb_offsets[i] = -1;

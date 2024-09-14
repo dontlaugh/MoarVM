@@ -4,9 +4,9 @@
 #define MVM_LOG_OSR 0
 
 /* Locates deopt index matching OSR point. */
-static MVMint32 get_osr_deopt_index(MVMThreadContext *tc, MVMSpeshCandidate *cand) {
+static int32_t get_osr_deopt_index(MVMThreadContext *tc, MVMSpeshCandidate *cand) {
     /* Calculate offset. */
-    MVMint32 offset = (*(tc->interp_cur_op) - *(tc->interp_bytecode_start));
+    int32_t offset = (*(tc->interp_cur_op) - *(tc->interp_bytecode_start));
 
     /* Locate it in the deopt table. */
     MVMuint32 i;
@@ -40,7 +40,7 @@ static void perform_osr(MVMThreadContext *tc, MVMSpeshCandidate *specialized) {
     }
 
     /* Work out the OSR deopt index, to locate the entry point. */
-    MVMint32 osr_index = get_osr_deopt_index(tc, specialized);
+    int32_t osr_index = get_osr_deopt_index(tc, specialized);
 #if MVM_LOG_OSR
     fprintf(stderr, "Performing OSR of frame '%s' (cuid: %s) at index %d\n",
         MVM_string_utf8_encode_C_string(tc, tc->cur_frame->static_info->body.name),
@@ -95,14 +95,14 @@ static void perform_osr(MVMThreadContext *tc, MVMSpeshCandidate *specialized) {
 void MVM_spesh_osr_poll_for_result(MVMThreadContext *tc) {
     MVMStaticFrame *sf = tc->cur_frame->static_info;
     MVMStaticFrameSpesh *spesh = sf->body.spesh;
-    MVMint32 num_cands = spesh->body.num_spesh_candidates;
+    int32_t num_cands = spesh->body.num_spesh_candidates;
     if (sf != tc->osr_hunt_static_frame || num_cands != tc->osr_hunt_num_spesh_candidates) {
         /* Provided OSR is enabled... */
         if (tc->instance->spesh_osr_enabled) {
             /* ...and no snapshots were taken, otherwise we'd invalidate the positions */
             if (!tc->cur_frame->extra || !tc->cur_frame->extra->caller_pos_needed) {
                 /* Check if there's a candidate available and install it if so. */
-                MVMint32 ag_result = MVM_spesh_arg_guard_run(tc,
+                int32_t ag_result = MVM_spesh_arg_guard_run(tc,
                     spesh->body.spesh_arg_guard,
                     tc->cur_frame->params.arg_info, NULL);
                 if (ag_result >= 0) {

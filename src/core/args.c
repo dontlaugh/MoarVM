@@ -1,6 +1,6 @@
 #include "moar.h"
 
-MVM_STATIC_INLINE MVMint32 is_named_used(MVMArgProcContext *ctx, MVMuint32 idx) {
+MVM_STATIC_INLINE int32_t is_named_used(MVMArgProcContext *ctx, MVMuint32 idx) {
     return ctx->named_used_size > 64
         ? ctx->named_used.byte_array[idx]
         : ctx->named_used.bit_field & ((MVMuint64)1 << idx);
@@ -40,7 +40,7 @@ void MVM_args_destroy_identity_map(MVMThreadContext *tc) {
 
 /* Perform flattening of arguments as provided, and return the resulting
  * callstack record. */
-static MVMint32 callsite_name_index(MVMThreadContext *tc, MVMCallStackFlattening *record,
+static int32_t callsite_name_index(MVMThreadContext *tc, MVMCallStackFlattening *record,
         MVMuint16 names_so_far, MVMString *search_name) {
     MVMCallsite *cs = &(record->produced_cs);
     MVMuint16 i;
@@ -161,7 +161,7 @@ MVMCallStackFlattening * MVM_args_perform_flattening(MVMThreadContext *tc, MVMCa
                 MVMuint32 j;
                 for (j = 0; j < seen; j++) {
                     MVMString *arg_name = anv[j].name;
-                    MVMint32 already_index = callsite_name_index(tc, record, cur_new_name,
+                    int32_t already_index = callsite_name_index(tc, record, cur_new_name,
                             arg_name);
                     if (already_index < 0) {
                         /* Didn't see this name yet, so add to callsite and args. */
@@ -217,7 +217,7 @@ MVMCallStackFlattening * MVM_args_perform_flattening(MVMThreadContext *tc, MVMCa
         }
         else if (flag & MVM_CALLSITE_ARG_NAMED) {
             /* Named arg. */
-            MVMint32 already_index = callsite_name_index(tc, record, cur_new_name,
+            int32_t already_index = callsite_name_index(tc, record, cur_new_name,
                     cs->arg_names[cur_orig_name]);
             if (already_index < 0) {
                 /* New name, so add to new callsite and args. */
@@ -660,7 +660,7 @@ static void save_for_exit_handler(MVMThreadContext *tc, MVMObject *result) {
     MVMFrameExtra *e = MVM_frame_extra(tc, tc->cur_frame);
     e->exit_handler_result = result;
 }
-void MVM_args_set_result_obj(MVMThreadContext *tc, MVMObject *result, MVMint32 frameless) {
+void MVM_args_set_result_obj(MVMThreadContext *tc, MVMObject *result, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;
@@ -729,7 +729,7 @@ void MVM_args_set_dispatch_result_obj(MVMThreadContext *tc, MVMFrame *target, MV
     }
 }
 
-void MVM_args_set_result_int(MVMThreadContext *tc, MVMint64 result, MVMint32 frameless) {
+void MVM_args_set_result_int(MVMThreadContext *tc, MVMint64 result, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;
@@ -773,7 +773,7 @@ void MVM_args_set_result_int(MVMThreadContext *tc, MVMint64 result, MVMint32 fra
     }
 }
 
-void MVM_args_set_result_uint(MVMThreadContext *tc, MVMuint64 result, MVMint32 frameless) {
+void MVM_args_set_result_uint(MVMThreadContext *tc, MVMuint64 result, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;
@@ -863,7 +863,7 @@ void MVM_args_set_dispatch_result_uint(MVMThreadContext *tc, MVMFrame *target, M
     }
 }
 
-void MVM_args_set_result_num(MVMThreadContext *tc, MVMnum64 result, MVMint32 frameless) {
+void MVM_args_set_result_num(MVMThreadContext *tc, MVMnum64 result, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;
@@ -930,7 +930,7 @@ void MVM_args_set_dispatch_result_num(MVMThreadContext *tc, MVMFrame *target, MV
     }
 }
 
-void MVM_args_set_result_str(MVMThreadContext *tc, MVMString *result, MVMint32 frameless) {
+void MVM_args_set_result_str(MVMThreadContext *tc, MVMString *result, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;
@@ -994,7 +994,7 @@ void MVM_args_set_dispatch_result_str(MVMThreadContext *tc, MVMFrame *target, MV
     }
 }
 
-void MVM_args_assert_void_return_ok(MVMThreadContext *tc, MVMint32 frameless) {
+void MVM_args_assert_void_return_ok(MVMThreadContext *tc, int32_t frameless) {
     MVMFrame *target;
     if (frameless) {
         target = tc->cur_frame;

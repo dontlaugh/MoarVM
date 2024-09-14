@@ -10,7 +10,7 @@ typedef enum {
 /* A reference to a place something is stored */
 typedef struct {
     MVMJitStorageClass _cls;
-    MVMint32           _pos;
+    int32_t           _pos;
 } MVMJitStorageRef; /* I'll never run out of names for a CONS */
 
 
@@ -25,6 +25,6 @@ typedef struct {
 
 void MVM_jit_linear_scan_allocate(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitTileList *list);
 void MVM_jit_arch_storage_for_arglist(MVMThreadContext *tc, MVMJitCompiler *compiler,
-                                      MVMJitExprTree *tree, MVMint32 arglist_node,
+                                      MVMJitExprTree *tree, int32_t arglist_node,
                                       MVMJitStorageRef *storage);
 MVMJitStorageClass MVM_jit_arch_register_class(MVMuint8 register_id);

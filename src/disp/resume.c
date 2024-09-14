@@ -94,11 +94,11 @@ static void setup_deopted_resumption(MVMThreadContext *tc,  MVMDispResumptionDat
 /* Looks down the callstack to find the dispatch that we are resuming, starting
  * from the indicated start point. If found, populates the struct pointed to by
  * the data parameter and returns a non-zero value. */
-static MVMint32 should_keep_searching(MVMThreadContext *tc, MVMDispProgram *dp) {
+static int32_t should_keep_searching(MVMThreadContext *tc, MVMDispProgram *dp) {
     return !dp || dp->num_resumptions == 0 || dp->ops[0].code == MVMDispOpcodeStartResumption;
 }
 static MVMuint32 find_internal(MVMThreadContext *tc, MVMDispResumptionData *data,
-        MVMuint32 exhausted, MVMint32 caller) {
+        MVMuint32 exhausted, int32_t caller) {
     /* Create iterator, which is over both dispatch records and frames. */
 #if DUMP_RESUMPTIONS
     fprintf(stderr, "looking for a resumption; exhausted = %d, caller = %d\n",
@@ -111,8 +111,8 @@ static MVMuint32 find_internal(MVMThreadContext *tc, MVMDispResumptionData *data
      * start looking for something to resume? We never want to look at the
      * current frame (or inline), and we need to go one more out if we're in
      * caller mode. */
-    MVMint32 frames_to_skip = caller ? 2 : 1;
-    MVMint32 seen_frame = 0;
+    int32_t frames_to_skip = caller ? 2 : 1;
+    int32_t seen_frame = 0;
     while (MVM_callstack_iter_move_next(tc, &iter)) {
         MVMCallStackRecord *cur = MVM_callstack_iter_current(tc, &iter);
         switch (cur->kind) {
@@ -144,12 +144,12 @@ static MVMuint32 find_internal(MVMThreadContext *tc, MVMDispResumptionData *data
                          * We always look first for the dispatch that we're "on";
                          * it is the one in the most nested inline, if there are
                          * any inlines. */
-                        MVMint32 deopt_idx = MVM_spesh_deopt_find_inactive_frame_deopt_idx(tc,
+                        int32_t deopt_idx = MVM_spesh_deopt_find_inactive_frame_deopt_idx(tc,
                                 frame, cand);
                         if (deopt_idx == -1)
                             MVM_oops(tc, "Failed to find deopt index when processing resume");
                         MVMuint32 i;
-                        MVMint32 saw_dispatch_with_resumptions = 0;
+                        int32_t saw_dispatch_with_resumptions = 0;
                         for (i = 0; i < cand->body.num_resume_inits; i++) {
                             if (cand->body.resume_inits[i].deopt_idx == deopt_idx) {
                                 if (exhausted == 0) {

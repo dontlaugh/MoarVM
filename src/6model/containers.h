@@ -51,7 +51,7 @@ struct MVMContainerSpec {
     void (*post_deserialize) (MVMThreadContext *tc, MVMSTable *st);
 
     /* Returns a non-zero value if we can store to the container. */
-    MVMint32 (*can_store) (MVMThreadContext *tc, MVMObject *cont);
+    int32_t (*can_store) (MVMThreadContext *tc, MVMObject *cont);
 
     /* If available, reference atomic compare and swap operation, atomic load
      * operation, and atomic store operation. */

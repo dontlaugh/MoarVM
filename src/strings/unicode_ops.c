@@ -57,10 +57,10 @@ union collation_key_u {
     MVMuint32              a[4];
 };
 struct level_eval_s2 {
-    MVMint32 Less, Same, More;
+    int32_t Less, Same, More;
 };
 union level_eval_u2 {
-    MVMint32 a2[3];
+    int32_t a2[3];
     struct level_eval_s2 s2;
 };
 struct level_eval_s {
@@ -76,7 +76,7 @@ typedef union level_eval_u level_eval;
 struct ring_buffer {
     MVMCodepoint codes[codepoint_sequence_no_max];
     MVMuint32    count;
-    MVMint32  location;
+    int32_t  location;
     MVMCodepoint codes_out[codepoint_sequence_no_max];
     MVMuint32    codes_out_count;
 };
@@ -142,16 +142,16 @@ typedef struct ring_buffer ring_buffer;
     #define DEBUG_COLLATION_MODE_PRINT(level_eval_settings)
     #define DEBUG_PRINT(...)
 #endif
-MVMint32 MVM_unicode_collation_primary (MVMThreadContext *tc, MVMint32 codepoint) {
+int32_t MVM_unicode_collation_primary (MVMThreadContext *tc, int32_t codepoint) {
      return MVM_unicode_codepoint_get_property_int(tc, codepoint, MVM_UNICODE_PROPERTY_MVM_COLLATION_PRIMARY);
 }
-MVMint32 MVM_unicode_collation_secondary (MVMThreadContext *tc, MVMint32 codepoint) {
+int32_t MVM_unicode_collation_secondary (MVMThreadContext *tc, int32_t codepoint) {
      return MVM_unicode_codepoint_get_property_int(tc, codepoint, MVM_UNICODE_PROPERTY_MVM_COLLATION_SECONDARY);
 }
-MVMint32 MVM_unicode_collation_tertiary (MVMThreadContext *tc, MVMint32 codepoint) {
+int32_t MVM_unicode_collation_tertiary (MVMThreadContext *tc, int32_t codepoint) {
      return MVM_unicode_codepoint_get_property_int(tc, codepoint, MVM_UNICODE_PROPERTY_MVM_COLLATION_TERTIARY);
 }
-MVMint32 MVM_unicode_collation_quickcheck (MVMThreadContext *tc, MVMint32 codepoint) {
+int32_t MVM_unicode_collation_quickcheck (MVMThreadContext *tc, int32_t codepoint) {
     return MVM_unicode_codepoint_get_property_int(tc, codepoint, MVM_UNICODE_PROPERTY_MVM_COLLATION_QC);
 }
 static MVMint64 collation_push_cp (MVMThreadContext *tc, collation_stack *stack, MVMCodepointIter *ci, int *cp_maybe, int cp_num, char *name);
@@ -193,23 +193,23 @@ static MVMint64 push_onto_stack (MVMThreadContext *tc, collation_stack *stack, c
     return 1;
 }
 /* TODO write a script to generate this code */
-MVM_STATIC_INLINE MVMint32 compute_AAAA(MVMCodepoint cp, int offset) {
+MVM_STATIC_INLINE int32_t compute_AAAA(MVMCodepoint cp, int offset) {
     return (offset + (cp >> 15));
 }
-MVM_STATIC_INLINE MVMint32 compute_BBBB_offset(MVMCodepoint cp, int offset) {
+MVM_STATIC_INLINE int32_t compute_BBBB_offset(MVMCodepoint cp, int offset) {
     return ((cp - offset) | 0x8000);
 }
-MVM_STATIC_INLINE MVMint32 compute_BBBB_and(MVMCodepoint cp) {
+MVM_STATIC_INLINE int32_t compute_BBBB_and(MVMCodepoint cp) {
     return ((cp & 0x7FFF) | 0x8000);
 }
 #define initial_collation_norm_buf_size 5
-static MVMint32 NFD_and_push_collation_values (MVMThreadContext *tc, MVMCodepoint cp, collation_stack *stack, MVMCodepointIter *ci, char *name) {
+static int32_t NFD_and_push_collation_values (MVMThreadContext *tc, MVMCodepoint cp, collation_stack *stack, MVMCodepointIter *ci, char *name) {
     MVMNormalizer norm;
     MVMCodepoint cp_out;
-    MVMint32 ready,
+    int32_t ready,
              result_pos  = 0;
     MVMCodepoint *result = MVM_malloc(sizeof(MVMCodepoint) * initial_collation_norm_buf_size);
-    MVMint32 result_size = initial_collation_norm_buf_size;
+    int32_t result_size = initial_collation_norm_buf_size;
     MVMint64 rtrn        = 0;
     MVM_unicode_normalizer_init(tc, &norm, MVM_NORMALIZE_NFD);
     ready = MVM_unicode_normalizer_process_codepoint(tc, &norm, cp, &cp_out);
@@ -277,7 +277,7 @@ static void collation_push_MVM_values (MVMThreadContext *tc, MVMCodepoint cp, co
             }
         }
         else {
-            MVMint32 NFD_rtrn = NFD_and_push_collation_values(tc, cp, stack, ci, name);
+            int32_t NFD_rtrn = NFD_and_push_collation_values(tc, cp, stack, ci, name);
             if (NFD_rtrn) {
                 return;
             }
@@ -383,7 +383,7 @@ static MVMint64 collation_push_cp (MVMThreadContext *tc, collation_stack *stack,
         cp_num = 1;
     }
     else {
-        MVMint32 i;
+        int32_t i;
         for (i = 0; i < cp_num; i++) {
             cps[i] = cp_maybe[i];
         }
@@ -481,8 +481,8 @@ static void ring_buffer_done(MVMThreadContext *tc, ring_buffer *buffer) {
     /* Otherwise we need to copy it manually */
     else {
         /* Copy backwards from the last copied to the first copied codepoint in the ring buffer */
-        MVMint32 out_location     = buffer->codes_out_count - 1;
-        MVMint32 buf_location     = buffer->location;
+        int32_t out_location     = buffer->codes_out_count - 1;
+        int32_t buf_location     = buffer->location;
         for (; 0 <= out_location; out_location--) {
             buffer->codes_out[out_location] = buffer->codes[buf_location];
             buf_location--;
@@ -748,7 +748,7 @@ MVMString * MVM_unicode_get_name(MVMThreadContext *tc, MVMint64 codepoint) {
         name_len = strlen(name);
     /* Look up name. */
     else {
-        MVMint32 codepoint_row = MVM_codepoint_to_row_index(tc, codepoint);
+        int32_t codepoint_row = MVM_codepoint_to_row_index(tc, codepoint);
         if (codepoint_row != -1) {
             name = codepoint_names[codepoint_row];
         }
@@ -835,20 +835,20 @@ MVMint64 MVM_unicode_codepoint_has_property_value(MVMThreadContext *tc, MVMint64
  * codepoints argument will be set to a pointer to a buffer where those code
  * points can be read from. The caller must not mutate the buffer, nor free
  * it. */
-MVMuint32 MVM_unicode_get_case_change(MVMThreadContext *tc, MVMCodepoint codepoint, MVMint32 case_,
+MVMuint32 MVM_unicode_get_case_change(MVMThreadContext *tc, MVMCodepoint codepoint, int32_t case_,
                                       const MVMCodepoint **result) {
     if (case_ == MVM_unicode_case_change_type_fold) {
-        MVMint32 folding_index = MVM_unicode_get_property_int(tc,
+        int32_t folding_index = MVM_unicode_get_property_int(tc,
             codepoint, MVM_UNICODE_PROPERTY_CASE_FOLDING);
         if (folding_index) {
-            MVMint32 is_simple = MVM_unicode_get_property_int(tc,
+            int32_t is_simple = MVM_unicode_get_property_int(tc,
                 codepoint, MVM_UNICODE_PROPERTY_CASE_FOLDING_SIMPLE);
             if (is_simple) {
                 *result = &(CaseFolding_simple_table[folding_index]);
                 return 1;
             }
             else {
-                MVMint32 i = 3;
+                int32_t i = 3;
                 while (0 < i && CaseFolding_grows_table[folding_index][i - 1] == 0)
                     i--;
                 *result = &(CaseFolding_grows_table[folding_index][0]);
@@ -857,17 +857,17 @@ MVMuint32 MVM_unicode_get_case_change(MVMThreadContext *tc, MVMCodepoint codepoi
         }
     }
     else {
-        MVMint32 special_casing_index = MVM_unicode_get_property_int(tc,
+        int32_t special_casing_index = MVM_unicode_get_property_int(tc,
             codepoint, MVM_UNICODE_PROPERTY_SPECIAL_CASING);
         if (special_casing_index) {
-            MVMint32 i = 3;
+            int32_t i = 3;
                 while (0 < i && SpecialCasing_table[special_casing_index][case_][i - 1] == 0)
                     i--;
                 *result = SpecialCasing_table[special_casing_index][case_];
                 return i;
         }
         else {
-            MVMint32 changes_index = MVM_unicode_get_property_int(tc,
+            int32_t changes_index = MVM_unicode_get_property_int(tc,
                 codepoint, MVM_UNICODE_PROPERTY_CASE_CHANGE_INDEX);
             if (changes_index) {
                 const MVMCodepoint *found = &(case_changes[changes_index][case_]);
@@ -929,7 +929,7 @@ void MVM_unicode_init(MVMThreadContext *tc) {
     MVMUniHashTable *hash_array = MVM_calloc(MVM_NUM_PROPERTY_CODES, sizeof(MVMUniHashTable));
     MVMuint32 index = 0;
     for ( ; index < num_unicode_property_value_keypairs; index++) {
-        MVMint32 property_code = unicode_property_value_keypairs[index].value >> 24;
+        int32_t property_code = unicode_property_value_keypairs[index].value >> 24;
         MVM_uni_hash_insert(tc, &hash_array[property_code],
                             unicode_property_value_keypairs[index].name,
                             unicode_property_value_keypairs[index].value & 0xFFFFFF);
@@ -951,7 +951,7 @@ void MVM_unicode_init(MVMThreadContext *tc) {
     }
     tc->instance->unicode_property_values_hashes = hash_array;
 }
-static MVMint32 unicode_cname_to_property_value_code(MVMThreadContext *tc, MVMint64 property_code, const char *cname, MVMuint64 cname_length) {
+static int32_t unicode_cname_to_property_value_code(MVMThreadContext *tc, MVMint64 property_code, const char *cname, MVMuint64 cname_length) {
     char *out_str = NULL;
                                    /* number + dash + property_value + NULL */
     MVMuint64 out_str_length = length_of_num(property_code) + 1 + cname_length + 1;
@@ -972,12 +972,12 @@ MVMint64 MVM_unicode_name_to_property_value_code(MVMThreadContext *tc, MVMint64 
     else {
         MVMuint64 cname_length;
         char *cname = MVM_string_ascii_encode(tc, name, &cname_length, 0);
-        MVMint32 code = unicode_cname_to_property_value_code(tc, property_code, cname, cname_length);
+        int32_t code = unicode_cname_to_property_value_code(tc, property_code, cname, cname_length);
         MVM_free(cname);
         return code;
     }
 }
-MVMint32 MVM_unicode_cname_to_property_value_code(MVMThreadContext *tc, MVMint64 property_code, const char *cname, size_t cname_length) {
+int32_t MVM_unicode_cname_to_property_value_code(MVMThreadContext *tc, MVMint64 property_code, const char *cname, size_t cname_length) {
     if (property_code <= 0 || MVM_NUM_PROPERTY_CODES <= property_code)
         return 0;
     else
@@ -987,13 +987,13 @@ MVMint32 MVM_unicode_cname_to_property_value_code(MVMThreadContext *tc, MVMint64
 /* Look up the primary composite for a pair of codepoints, if it exists.
  * Returns 0 if not. */
 MVMCodepoint MVM_unicode_find_primary_composite(MVMThreadContext *tc, MVMCodepoint l, MVMCodepoint c) {
-    MVMint32 lower = l & 0xFF;
-    MVMint32 upper = (l >> 8) & 0xFF;
-    MVMint32 plane = (l >> 16) & 0xF;
-    const MVMint32 *pcs  = comp_p[plane][upper][lower];
+    int32_t lower = l & 0xFF;
+    int32_t upper = (l >> 8) & 0xFF;
+    int32_t plane = (l >> 16) & 0xF;
+    const int32_t *pcs  = comp_p[plane][upper][lower];
     if (pcs) {
-        MVMint32 entries = pcs[0];
-        MVMint32 i;
+        int32_t entries = pcs[0];
+        int32_t i;
         for (i = 1; i < entries; i += 2)
             if (pcs[i] == c)
                 return pcs[i + 1];
@@ -1015,7 +1015,7 @@ MVMString * MVM_unicode_string_from_name(MVMThreadContext *tc, MVMString *name) 
     }
     /* Otherwise look up the sequence */
     else {
-        const MVMint32 *uni_seq = NULL;
+        const int32_t *uni_seq = NULL;
         char *cname = MVM_string_utf8_encode_C_string(tc, name_uc);
         if (MVM_uni_hash_is_empty(tc, &tc->instance->property_codes_by_seq_names)) {
             generate_property_codes_by_seq_names(tc);

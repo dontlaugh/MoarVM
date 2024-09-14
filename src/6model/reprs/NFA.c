@@ -113,7 +113,7 @@ static void serialize(MVMThreadContext *tc, MVMSTable *st, void *data, MVMSerial
                         /* Synthetic. Write the number of codepoints negated,
                          * and then each of the codepoints. */
                         MVMNFGSynthetic *si = MVM_nfg_get_synthetic_info(tc, g);
-                        MVMint32 k;
+                        int32_t k;
                         MVM_serialization_write_int(tc, writer, -(si->num_codes));
                         for (k = 0; k < si->num_codes; k++)
                             MVM_serialization_write_int(tc, writer, si->codes[k]);
@@ -165,8 +165,8 @@ static int classify_edge(MVMNFAStateInfo *e) {
 static int opt_edge_comp(const void *av, const void *bv) {
     MVMNFAStateInfo *a = (MVMNFAStateInfo *)av;
     MVMNFAStateInfo *b = (MVMNFAStateInfo *)bv;
-    MVMint32 type_a = classify_edge(a);
-    MVMint32 type_b = classify_edge(b);
+    int32_t type_a = classify_edge(a);
+    int32_t type_b = classify_edge(b);
     if (type_a < type_b)
         return -1;
     if (type_a > type_b)
@@ -184,7 +184,7 @@ static void sort_states_and_add_synth_cp_node(MVMThreadContext *tc, MVMNFABody *
     MVMint64 s;
     for (s = 0; s < body->num_states; s++) {
         /* See if there's enough interesting edges to do the opt. */
-        MVMint32 applicable_edges = 0;
+        int32_t applicable_edges = 0;
         MVMint64 num_orig_edges = body->num_state_edges[s];
         if (num_orig_edges >= 4) {
             MVMint64 e;
@@ -251,9 +251,9 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
                             body->states[i][j].arg.g = (MVMGrapheme32)cp_or_synth_count;
                         }
                         else {
-                            MVMint32 num_codes = -cp_or_synth_count;
+                            int32_t num_codes = -cp_or_synth_count;
                             MVMCodepoint *codes = MVM_malloc(num_codes * sizeof(MVMCodepoint));
-                            MVMint32 k;
+                            int32_t k;
                             for (k = 0; k < num_codes; k++)
                                 codes[k] = (MVMCodepoint)MVM_serialization_read_int(tc, reader);
                             body->states[i][j].arg.g = MVM_nfg_codes_to_grapheme(tc, codes, num_codes);
@@ -471,7 +471,7 @@ MVMObject * MVM_nfa_from_statelist(MVMThreadContext *tc, MVMObject *states, MVMO
 
 /* Does a run of the NFA. Produces a list of integers indicating the
  * chosen ordering. */
-static MVMint32 in_done(MVMuint32 *done, MVMuint32 numdone, MVMuint32 st) {
+static int32_t in_done(MVMuint32 *done, MVMuint32 numdone, MVMuint32 st) {
     MVMuint32 i = 0;
     for (i = 0; i < numdone; i++)
         if (done[i] == st)
@@ -741,7 +741,7 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
                         case MVM_NFA_EDGE_CODEPOINT_M:
                         case MVM_NFA_EDGE_CODEPOINT_M_NEG: {
                             MVMNormalizer norm;
-                            MVMint32 ready;
+                            int32_t ready;
                             MVMGrapheme32 ga = edge_info[i].arg.g;
                             MVMGrapheme32 gb = MVM_string_ord_basechar_at(tc, target, offset);
 
@@ -760,7 +760,7 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
                         case MVM_NFA_EDGE_CODEPOINT_IM:
                         case MVM_NFA_EDGE_CODEPOINT_IM_NEG: {
                             MVMNormalizer norm;
-                            MVMint32 ready;
+                            int32_t ready;
                             MVMGrapheme32 uc_arg = edge_info[i].arg.uclc.uc;
                             MVMGrapheme32 lc_arg = edge_info[i].arg.uclc.lc;
                             const MVMGrapheme32 ord = MVM_string_ord_basechar_at(tc, target, offset);

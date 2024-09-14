@@ -16,7 +16,7 @@ io_srcs = [
 io_inc = [include_directories('.', '..'), mimalloc_inc, dynload_inc_dir ]
 io_deps_extra = [libuv_dep, dynload_s_lib, libtommath_lib, ryu_lib]
 
-io_lib = static_library('io', io_srcs, dependencies : io_deps_extra,
+io_lib = static_library('io_a', io_srcs, dependencies : io_deps_extra,
                         include_directories : io_inc)
 
 io_dep = declare_dependency(link_with : io_lib,

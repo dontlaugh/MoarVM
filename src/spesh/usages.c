@@ -42,11 +42,11 @@ void MVM_spesh_usages_add_for_handler_by_reg(MVMThreadContext *tc, MVMSpeshGraph
 
 /* Takes a spesh graph and adds usage information. */
 static void add_usage_for_bb(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb) {
-    MVMint32 i;
+    int32_t i;
     MVMSpeshIns *ins = bb->first_ins;
     while (ins) {
         /* Look through operands for reads and writes. */
-        MVMint32 is_phi = ins->info->opcode == MVM_SSA_PHI;
+        int32_t is_phi = ins->info->opcode == MVM_SSA_PHI;
         for (i = 0; i < ins->info->num_operands; i++) {
             /* Reads need usage tracking. */
             if ((is_phi && i > 0)
@@ -167,7 +167,7 @@ static void process_write(MVMThreadContext *tc, DeoptAnalysisState *state, MVMSp
     }
 }
 static void process_deopt(MVMThreadContext *tc, DeoptAnalysisState *state, MVMSpeshGraph *g,
-                          MVMSpeshBB *bb, MVMSpeshIns *ins, MVMint32 deopt_idx) {
+                          MVMSpeshBB *bb, MVMSpeshIns *ins, int32_t deopt_idx) {
     /* Go through the active writers. Any that are no longer active will be
      * filtered out along the way as a side-effect of processing the deopt.
      * For each one that is still really active, add the deopt usage. */
@@ -335,14 +335,14 @@ void MVM_spesh_usages_create_deopt_usage(MVMThreadContext *tc, MVMSpeshGraph *g)
 
 /* Adds a deopt usage. */
 void MVM_spesh_usages_add_deopt_usage(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshFacts *facts, MVMint32 deopt_idx) {
+        MVMSpeshFacts *facts, int32_t deopt_idx) {
     MVMSpeshDeoptUseEntry *deopt_entry = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshDeoptUseEntry));
     deopt_entry->deopt_idx = deopt_idx;
     deopt_entry->next = facts->usage.deopt_users;
     facts->usage.deopt_users = deopt_entry;
 }
 void MVM_spesh_usages_add_deopt_usage_by_reg(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshOperand operand, MVMint32 deopt_idx) {
+        MVMSpeshOperand operand, int32_t deopt_idx) {
     MVM_spesh_usages_add_deopt_usage(tc, g, MVM_spesh_get_facts(tc, g, operand), deopt_idx);
 }
 

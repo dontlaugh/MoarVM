@@ -7,7 +7,7 @@
 #define MAX_NAMED_ARGS 8
 
 /* Adds facts for an object arg. */
-static void add_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMint32 slot,
+static void add_facts(MVMThreadContext *tc, MVMSpeshGraph *g, int32_t slot,
                       MVMSpeshStatsType type_tuple_entry, MVMSpeshIns *arg_ins) {
     /* Add appropriate facts from the arg type tuple. */
     MVMint16 orig = arg_ins->operands[0].reg.orig;
@@ -77,7 +77,7 @@ static void pos_box(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
 }
 
 /* Gets the primitive boxed by a type. */
-static MVMuint16 prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, MVMint32 i) {
+static MVMuint16 prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, int32_t i) {
     MVMObject *type = type_tuple ? type_tuple[i].type : NULL;
     const MVMStorageSpec *ss;
     if (!type)
@@ -88,9 +88,9 @@ static MVMuint16 prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, 
     return 0;
 }
 
-static MVMuint8 cmp_prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, MVMint32 i, MVMint32 wanted_prim_spec) {
+static MVMuint8 cmp_prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tuple, int32_t i, int32_t wanted_prim_spec) {
     MVMObject *type = NULL;
-    MVMint32 concrete = 0;
+    int32_t concrete = 0;
     const MVMStorageSpec *ss;
     if (type_tuple) {
         if (type_tuple[i].decont_type) {
@@ -129,7 +129,7 @@ static MVMuint8 cmp_prim_spec(MVMThreadContext *tc, MVMSpeshStatsType *type_tupl
 
 static void insert_getarg_and_box(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                   MVMSpeshIns *insert_point, MVMCallsiteFlags arg_flags,
-                                  MVMint32 argument_idx, MVMSpeshOperand value_temp) {
+                                  int32_t argument_idx, MVMSpeshOperand value_temp) {
     /* Instruction to get value depends on argument type. */
     if ((arg_flags & MVM_CALLSITE_ARG_TYPE_MASK) == MVM_CALLSITE_ARG_OBJ) {
         /* It's already a boxed object, so just fetch it into the value
@@ -215,7 +215,7 @@ static void insert_getarg_and_box(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpe
 
 /* Puts a single named argument into a slurpy hash, boxing if needed. */
 static void slurp_named_arg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
-                            MVMSpeshIns *hash_ins, MVMint32 named_idx) {
+                            MVMSpeshIns *hash_ins, int32_t named_idx) {
     MVMSpeshIns *key_ins;
 
     /* Look up arg flags and name, and compute index. */
@@ -255,7 +255,7 @@ static void slurp_named_arg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
 }
 
 static void slurp_positional_arg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
-                                 MVMSpeshIns *array_ins, MVMint32 pos_idx, MVMint32 target_idx) {
+                                 MVMSpeshIns *array_ins, int32_t pos_idx, int32_t target_idx) {
     MVMSpeshIns *index_ins;
 
     /* Look up arg flags and name, and compute index. */
@@ -311,13 +311,13 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
     MVMuint8     *pos_added  = MVM_calloc(MAX_POS_ARGS, sizeof(MVMuint8));
     MVMSpeshIns **named_ins  = MVM_calloc(MAX_NAMED_ARGS, sizeof(MVMSpeshIns *));
     MVMSpeshBB  **named_bb   = MVM_calloc(MAX_NAMED_ARGS, sizeof(MVMSpeshBB *));
-    MVMint32      req_max    = -1;
-    MVMint32      opt_min    = -1;
-    MVMint32      opt_max    = -1;
-    MVMint32      num_named  = 0;
-    MVMint32      named_used = 0;
-    MVMint32      cs_flags   = cs->flag_count;
-    MVMint32    named_passed = cs_flags - cs->num_pos;
+    int32_t      req_max    = -1;
+    int32_t      opt_min    = -1;
+    int32_t      opt_max    = -1;
+    int32_t      num_named  = 0;
+    int32_t      named_used = 0;
+    int32_t      cs_flags   = cs->flag_count;
+    int32_t    named_passed = cs_flags - cs->num_pos;
 
     /* We use a bit field to track named argument use; on deopt we will put it
      * into the deoptimized frame. */
@@ -456,7 +456,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
     if (cs->num_pos >= req_max + 1 && (opt_max < 0 || cs->num_pos <= opt_max + 1)) {
         /* Ensure we've got all the arg fetch instructions we need, and that
          * types match or it's a box/unbox. */
-        MVMint32 i;
+        int32_t i;
         for (i = 0; i < cs->num_pos && i < MAX_POS_ARGS; i++) {
             MVMCallsiteEntry arg_flag = cs->arg_flags[i];
             MVMCallsiteEntry arg_type = arg_flag & MVM_CALLSITE_ARG_TYPE_MASK;
@@ -528,12 +528,12 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
         for (i = 0; i < num_named; i++) {
             /* Get the flag of the passed arg, if any. */
             MVMString *arg_name       = MVM_spesh_get_string(tc, g, named_ins[i]->operands[1]);
-            MVMint32   cur_idx        = 0;
-            MVMint32   cur_named      = 0;
+            int32_t   cur_idx        = 0;
+            int32_t   cur_named      = 0;
             MVMuint8   found_flag     = 0;
-            MVMint32   found_flag_idx = -1;
-            MVMint32   found_idx      = -1;
-            MVMint32   j;
+            int32_t   found_flag_idx = -1;
+            int32_t   found_idx      = -1;
+            int32_t   j;
             for (j = 0; j < cs_flags; j++) {
                 if (cs->arg_flags[j] & MVM_CALLSITE_ARG_NAMED) {
                     if (MVM_string_equal(tc, arg_name, cs->arg_names[cur_named])) {
@@ -788,12 +788,12 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
         for (i = 0; i < num_named; i++) {
             /* See if the arg was passed. */
             MVMString *arg_name       = MVM_spesh_get_string(tc, g, named_ins[i]->operands[1]);
-            MVMint32   cur_idx        = 0;
-            MVMint32   cur_named      = 0;
+            int32_t   cur_idx        = 0;
+            int32_t   cur_named      = 0;
             MVMuint8   found_flag     = 0;
-            MVMint32   found_idx      = -1;
-            MVMint32   found_flag_idx = -1;
-            MVMint32   j;
+            int32_t   found_idx      = -1;
+            int32_t   found_flag_idx = -1;
+            int32_t   j;
             for (j = 0; j < cs_flags; j++) {
                 if (cs->arg_flags[j] & MVM_CALLSITE_ARG_NAMED) {
                     if (MVM_string_equal(tc, arg_name, cs->arg_names[cur_named])) {
@@ -1108,7 +1108,7 @@ void MVM_spesh_args(MVMThreadContext *tc, MVMSpeshGraph *g, MVMCallsite *cs,
 
         /* If we have a slurpy array ... */
         if (param_sp_ins) {
-            MVMint32 start_slurping_at = param_sp_ins->operands[1].lit_i16;
+            int32_t start_slurping_at = param_sp_ins->operands[1].lit_i16;
             /* Construct it as a hash. */
             MVMObject *array_type = g->sf->body.cu->body.hll_config->slurpy_array_type;
             if (REPR(array_type)->ID == MVM_REPR_ID_VMArray && !REPR(array_type)->initialize) {

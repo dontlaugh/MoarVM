@@ -183,7 +183,7 @@ MVM_STATIC_INLINE MVMDecodeStreamSeparators * get_sep_spec(MVMThreadContext *tc,
 
 /* Sets the separators to be used by this decode stream. */
 void MVM_decoder_set_separators(MVMThreadContext *tc, MVMDecoder *decoder, MVMObject *seps) {
-    MVMint32 is_str_array = REPR(seps)->pos_funcs.get_elem_storage_spec(tc,
+    int32_t is_str_array = REPR(seps)->pos_funcs.get_elem_storage_spec(tc,
         STABLE(seps)).boxed_primitive == MVM_STORAGE_SPEC_BP_STR;
     get_ds(tc, decoder); /* Ensure we're sufficiently initialized. */
     if (is_str_array) {
@@ -252,7 +252,7 @@ MVMString * MVM_decoder_take_chars(MVMThreadContext *tc, MVMDecoder *decoder, MV
     MVMString *result = NULL;
     enter_single_user(tc, decoder);
     MVMROOT(tc, decoder) {
-        result = MVM_string_decodestream_get_chars(tc, get_ds(tc, decoder), (MVMint32)chars, eof);
+        result = MVM_string_decodestream_get_chars(tc, get_ds(tc, decoder), (int32_t)chars, eof);
     }
     exit_single_user(tc, decoder);
     return result;
@@ -289,8 +289,8 @@ MVMString * MVM_decoder_take_line(MVMThreadContext *tc, MVMDecoder *decoder,
     enter_single_user(tc, decoder);
     MVMROOT(tc, decoder) {
         result = incomplete_ok
-            ? MVM_string_decodestream_get_until_sep_eof(tc, ds, sep_spec, (MVMint32)chomp)
-            : MVM_string_decodestream_get_until_sep(tc, ds, sep_spec, (MVMint32)chomp);
+            ? MVM_string_decodestream_get_until_sep_eof(tc, ds, sep_spec, (int32_t)chomp)
+            : MVM_string_decodestream_get_until_sep(tc, ds, sep_spec, (int32_t)chomp);
     }
     exit_single_user(tc, decoder);
     return result;

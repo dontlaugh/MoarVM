@@ -32,12 +32,12 @@ struct MVMJitExprInfo {
     MVMuint8 size;
 };
 
-MVM_STATIC_ASSERT(sizeof(MVMJitExprInfo) <= sizeof(MVMint32));
+MVM_STATIC_ASSERT(sizeof(MVMJitExprInfo) <= sizeof(int32_t));
 
 struct MVMJitExprTree {
     MVMJitGraph *graph;
-    MVM_VECTOR_DECL(MVMint32, nodes);
-    MVM_VECTOR_DECL(MVMint32, roots);
+    MVM_VECTOR_DECL(int32_t, nodes);
+    MVM_VECTOR_DECL(int32_t, roots);
     MVM_VECTOR_DECL(union {
         MVMint64 i;
         MVMnum64 n;
@@ -49,11 +49,11 @@ struct MVMJitExprTree {
 };
 
 struct MVMJitExprTemplate {
-    const MVMint32 *code;
+    const int32_t *code;
     const char *info;
-    MVMint32 len;
-    MVMint32 root;
-    MVMint32 flags;
+    int32_t len;
+    int32_t root;
+    int32_t flags;
 };
 
 #define MVM_JIT_EXPR_TEMPLATE_VALUE       0
@@ -62,14 +62,14 @@ struct MVMJitExprTemplate {
 
 struct MVMJitTreeTraverser {
     void  (*preorder)(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
-                      MVMJitExprTree *tree, MVMint32 node);
+                      MVMJitExprTree *tree, int32_t node);
     void   (*inorder)(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
-                      MVMJitExprTree *tree, MVMint32 node, MVMint32 child);
+                      MVMJitExprTree *tree, int32_t node, int32_t child);
     void (*postorder)(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
-                      MVMJitExprTree *tree, MVMint32 node);
+                      MVMJitExprTree *tree, int32_t node);
     void       *data;
 
-    MVM_VECTOR_DECL(MVMint32, visits);
+    MVM_VECTOR_DECL(int32_t, visits);
     enum {
         MVM_JIT_TRAVERSER_REPEAT,
         MVM_JIT_TRAVERSER_ONCE
@@ -81,47 +81,47 @@ struct MVMJitTreeTraverser {
 
 /* properties of expression ops */
 enum MVMJitExprOperator MVM_jit_expr_op_invert_comparison(enum MVMJitExprOperator op);
-MVMint32 MVM_jit_expr_op_is_binary(enum MVMJitExprOperator op);
-MVMint32 MVM_jit_expr_op_is_unary(enum MVMJitExprOperator op);
-MVMint32 MVM_jit_expr_op_is_commutative(enum MVMJitExprOperator op);
-MVMint32 MVM_jit_expr_op_is_call(enum MVMJitExprOperator op);
+int32_t MVM_jit_expr_op_is_binary(enum MVMJitExprOperator op);
+int32_t MVM_jit_expr_op_is_unary(enum MVMJitExprOperator op);
+int32_t MVM_jit_expr_op_is_commutative(enum MVMJitExprOperator op);
+int32_t MVM_jit_expr_op_is_call(enum MVMJitExprOperator op);
 const char * MVM_jit_expr_operator_name(MVMThreadContext *tc, enum MVMJitExprOperator operator);
 
 MVMJitExprTree * MVM_jit_expr_tree_build(MVMThreadContext *tc, MVMJitGraph *jg, MVMSpeshIterator *iter);
-MVMint32 MVM_jit_expr_apply_template(MVMThreadContext *tc, MVMJitExprTree *tree, const MVMJitExprTemplate*, MVMint32 *operands);
-MVMint32 MVM_jit_expr_apply_template_adhoc(MVMThreadContext *tc, MVMJitExprTree *tree, char *template, ...);
+int32_t MVM_jit_expr_apply_template(MVMThreadContext *tc, MVMJitExprTree *tree, const MVMJitExprTemplate*, int32_t *operands);
+int32_t MVM_jit_expr_apply_template_adhoc(MVMThreadContext *tc, MVMJitExprTree *tree, char *template, ...);
 void MVM_jit_expr_tree_traverse(MVMThreadContext *tc, MVMJitExprTree *tree, MVMJitTreeTraverser *traverser);
 void MVM_jit_expr_tree_destroy(MVMThreadContext *tc, MVMJitExprTree *tree);
-MVMint32 MVM_jit_expr_tree_get_nodes(MVMThreadContext *tc, MVMJitExprTree *tree,
-                                     MVMint32 node, const char *path, MVMint32 *buffer);
+int32_t MVM_jit_expr_tree_get_nodes(MVMThreadContext *tc, MVMJitExprTree *tree,
+                                     int32_t node, const char *path, int32_t *buffer);
 
 
-MVM_STATIC_INLINE MVMJitExprInfo * MVM_JIT_EXPR_INFO(MVMJitExprTree *tree, MVMint32 node) {
+MVM_STATIC_INLINE MVMJitExprInfo * MVM_JIT_EXPR_INFO(MVMJitExprTree *tree, int32_t node) {
     return (MVMJitExprInfo*)(tree->nodes + node + 1);
 }
 
-MVM_STATIC_INLINE MVMuint8 MVM_JIT_EXPR_NCHILD(MVMJitExprTree *tree, MVMint32 node) {
+MVM_STATIC_INLINE MVMuint8 MVM_JIT_EXPR_NCHILD(MVMJitExprTree *tree, int32_t node) {
     return MVM_JIT_EXPR_INFO(tree, node)->num_links;
 }
 
-MVM_STATIC_INLINE MVMuint8 MVM_JIT_EXPR_TYPE(MVMJitExprTree *tree, MVMint32 node) {
+MVM_STATIC_INLINE MVMuint8 MVM_JIT_EXPR_TYPE(MVMJitExprTree *tree, int32_t node) {
     return MVM_JIT_EXPR_INFO(tree, node)->type;
 }
 
-MVM_STATIC_INLINE MVMint32 MVM_JIT_EXPR_FIRST_CHILD(MVMJitExprTree *tree, MVMint32 node) {
+MVM_STATIC_INLINE int32_t MVM_JIT_EXPR_FIRST_CHILD(MVMJitExprTree *tree, int32_t node) {
     return node + 2;
 }
 
-MVM_STATIC_INLINE MVMint32 * MVM_JIT_EXPR_LINKS(MVMJitExprTree *tree, MVMint32 node) {
+MVM_STATIC_INLINE int32_t * MVM_JIT_EXPR_LINKS(MVMJitExprTree *tree, int32_t node) {
     return tree->nodes + MVM_JIT_EXPR_FIRST_CHILD(tree, node);
 }
 
 
-MVM_STATIC_INLINE MVMint32 * MVM_JIT_EXPR_ARGS(MVMJitExprTree *tree, MVMint32 node) {
+MVM_STATIC_INLINE int32_t * MVM_JIT_EXPR_ARGS(MVMJitExprTree *tree, int32_t node) {
     return MVM_JIT_EXPR_LINKS(tree, node) + MVM_JIT_EXPR_NCHILD(tree, node);
 }
 
-MVM_STATIC_INLINE MVMint32 MVM_JIT_EXPR_IS_NUM(MVMJitExprTree *tree, MVMint32 node) {
+MVM_STATIC_INLINE int32_t MVM_JIT_EXPR_IS_NUM(MVMJitExprTree *tree, int32_t node) {
     MVMuint8 expr_type = MVM_JIT_EXPR_TYPE(tree,node);
     return expr_type == MVM_reg_num32 || expr_type == MVM_reg_num64;
 }

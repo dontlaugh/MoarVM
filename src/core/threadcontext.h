@@ -245,7 +245,7 @@ struct MVMThreadContext {
 #if MVM_GC_DEBUG
     /* Whether we are currently in the specializer. Used to catch GC runs that
      * take place at times they never should. */
-    MVMint32 in_spesh;
+    int32_t in_spesh;
 #endif
 
     /* State to cheaply determine if we should look again for the availability
@@ -253,7 +253,7 @@ struct MVMThreadContext {
      * interpreter of static frame and number of spesh candidates matches, we
      * know there was no change since the last OSR point. */
     MVMStaticFrame *osr_hunt_static_frame;
-    MVMint32 osr_hunt_num_spesh_candidates;
+    int32_t osr_hunt_num_spesh_candidates;
 
     /************************************************************************
      * Per-thread state held by assorted VM subsystems
@@ -265,7 +265,7 @@ struct MVMThreadContext {
 
     /* Serialization context write barrier disabled depth (anything non-zero
      * means disabled). */
-    MVMint32           sc_wb_disable_depth;
+    int32_t           sc_wb_disable_depth;
 
     /* Any serialization contexts we are compiling. The current one is at
      * index 0. */

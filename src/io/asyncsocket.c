@@ -190,7 +190,7 @@ static MVMAsyncTask * read_bytes(MVMThreadContext *tc, MVMOSHandle *h, MVMObject
         MVM_exception_throw_adhoc(tc,
             "asyncreadbytes result type must have REPR AsyncTask");
     if (REPR(buf_type)->ID == MVM_REPR_ID_VMArray) {
-        MVMint32 slot_type = ((MVMArrayREPRData *)STABLE(buf_type)->REPR_data)->slot_type;
+        int32_t slot_type = ((MVMArrayREPRData *)STABLE(buf_type)->REPR_data)->slot_type;
         if (slot_type != MVM_ARRAY_U8 && slot_type != MVM_ARRAY_I8)
             MVM_exception_throw_adhoc(tc, "asyncreadbytes buffer type must be an array of uint8 or int8");
     }
@@ -1022,7 +1022,7 @@ static const MVMAsyncTaskOps listen_op_table = {
 /* Initiates an async socket listener. */
 MVMObject * MVM_io_socket_listen_async(MVMThreadContext *tc, MVMObject *queue,
                                        MVMObject *schedulee, MVMString *host,
-                                       MVMint64 port, MVMint32 backlog, MVMObject *async_type) {
+                                       MVMint64 port, int32_t backlog, MVMObject *async_type) {
     MVMAsyncTask *task;
     ListenInfo   *li;
     struct sockaddr *dest;
@@ -1237,7 +1237,7 @@ static const MVMAsyncTaskOps unix_listen_op_table = {
 /* Initiates an async socket listener. */
 MVMObject * MVM_io_socket_listen_unix_async(MVMThreadContext *tc, MVMObject *queue,
                                        MVMObject *schedulee, MVMString *path,
-                                       MVMint32 backlog, MVMObject *async_type) {
+                                       int32_t backlog, MVMObject *async_type) {
     MVMAsyncTask *task;
     UnixListenInfo   *li;
 

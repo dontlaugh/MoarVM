@@ -98,7 +98,7 @@ static void go_to_first_inline(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MV
             }
             else {
                 MVMFrameExtra *extra; /* Get a local copy as well for the same reason */
-                MVMint32 deopt_idx = prev && (extra = prev->extra) && extra->caller_deopt_idx > 0
+                int32_t deopt_idx = prev && (extra = prev->extra) && extra->caller_deopt_idx > 0
                     ? extra->caller_deopt_idx - 1
                     : MVM_spesh_deopt_find_inactive_frame_deopt_idx(tc, f, spesh_cand);
                 if (deopt_idx >= 0) {
@@ -230,7 +230,7 @@ MVMuint32 MVM_spesh_frame_walker_get_lex(MVMThreadContext *tc, MVMSpeshFrameWalk
     find_lex_info(tc, fw, &cur_frame, &sf, &base_index);
     MVMuint32 idx = MVM_get_lexical_by_name(tc, sf, name);
     if (idx != MVM_INDEX_HASH_NOT_FOUND) {
-        MVMint32 index = base_index + idx;
+        int32_t index = base_index + idx;
         MVMRegister *result = &cur_frame->env[index];
         MVMuint16 kind = sf->body.lexical_types[idx];
         *found_out = result;

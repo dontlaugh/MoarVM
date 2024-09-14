@@ -88,7 +88,7 @@ void MVM_exception_throwobj(MVMThreadContext *tc, MVMuint8 mode, MVMObject *exOb
 void MVM_exception_throwpayload(MVMThreadContext *tc, MVMuint8 mode, MVMuint32 cat, MVMObject *payload, MVMRegister *resume_result);
 void MVM_exception_resume(MVMThreadContext *tc, MVMObject *exObj);
 MVM_PUBLIC MVM_NO_RETURN void MVM_panic_allocation_failed(size_t len) MVM_NO_RETURN_ATTRIBUTE;
-MVM_PUBLIC MVM_NO_RETURN void MVM_panic(MVMint32 exitCode, const char *messageFormat, ...) MVM_NO_RETURN_ATTRIBUTE MVM_FORMAT(printf, 2, 3);
+MVM_PUBLIC MVM_NO_RETURN void MVM_panic(int32_t exitCode, const char *messageFormat, ...) MVM_NO_RETURN_ATTRIBUTE MVM_FORMAT(printf, 2, 3);
 MVM_PUBLIC MVM_NO_RETURN void MVM_oops(MVMThreadContext *tc, const char *messageFormat, ...) MVM_NO_RETURN_ATTRIBUTE MVM_FORMAT(printf, 2, 3);
 MVM_PUBLIC MVM_NO_RETURN void MVM_exception_throw_adhoc(MVMThreadContext *tc, const char *messageFormat, ...) MVM_NO_RETURN_ATTRIBUTE MVM_FORMAT(printf, 2, 3);
 MVM_NO_RETURN void MVM_exception_throw_adhoc_va(MVMThreadContext *tc, const char *messageFormat, va_list args) MVM_NO_RETURN_ATTRIBUTE;
@@ -96,8 +96,8 @@ MVM_PUBLIC MVM_NO_RETURN void MVM_exception_throw_adhoc_free(MVMThreadContext *t
 MVM_NO_RETURN void MVM_exception_throw_adhoc_free_va(MVMThreadContext *tc, char **waste, const char *messageFormat, va_list args) MVM_NO_RETURN_ATTRIBUTE;
 MVM_PUBLIC void MVM_crash_on_error(void);
 char * MVM_exception_backtrace_line(MVMThreadContext *tc, MVMFrame *cur_frame, MVMuint16 not_top, MVMuint8 *throw_address);
-MVMint32 MVM_get_exception_category(MVMThreadContext *tc, MVMObject *ex);
-void MVM_bind_exception_category(MVMThreadContext *tc, MVMObject *ex, MVMint32 category);
+int32_t MVM_get_exception_category(MVMThreadContext *tc, MVMObject *ex);
+void MVM_bind_exception_category(MVMThreadContext *tc, MVMObject *ex, int32_t category);
 MVMObject * MVM_get_exception_payload(MVMThreadContext *tc, MVMObject *ex);
 void MVM_bind_exception_payload(MVMThreadContext *tc, MVMObject *ex, MVMObject *payload);
 MVMString * MVM_get_exception_message(MVMThreadContext *tc, MVMObject *ex);

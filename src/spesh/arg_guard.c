@@ -6,7 +6,7 @@ typedef struct {
     MVMCallsite *cs;
     /* Index of the certain specialization for this callsite, if any
      * (-1 if none). */
-    MVMint32 certain_idx;
+    int32_t certain_idx;
     /* Indices of observed or derived type specializations. */
     MVM_VECTOR_DECL(MVMuint32, typed_idxs);
 } CallsiteCandidates;
@@ -60,7 +60,7 @@ static MVMSpeshArgGuard * allocate_tree(MVMThreadContext *tc, MVMuint32 total_no
 /* Takes a callsite and a current argument index (-1 if we didn't start yet).
  * Finds the next argument index that is an object type and returns it.
  * Returns -1 if there are no further object arguments. */
-static MVMint32 next_type_index(MVMCallsite *cs, MVMint32 cur_obj_arg_idx) {
+static int32_t next_type_index(MVMCallsite *cs, int32_t cur_obj_arg_idx) {
     MVMuint16 i;
     for (i = 0; i < cs->flag_count; i++)
         if ((cs->arg_flags[i] & MVM_CALLSITE_ARG_OBJ) && i > cur_obj_arg_idx)
@@ -124,7 +124,7 @@ static MVMuint32 add_decont_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
 static MVMuint32 add_nodes_for_typed_argument(MVMThreadContext *tc,
         MVMSpeshArgGuard *tree, MVMSpeshCandidate **candidates,
         MVMCallsite *cs, MVMuint32 *valid_candidates,
-        MVMuint32 num_valid_candidates, MVMint32 type_index,
+        MVMuint32 num_valid_candidates, int32_t type_index,
         MVMint8 consider_decont_type, MVMuint32 certain_fallback) {
     MVMuint32 first_added = 0;
 
@@ -144,11 +144,11 @@ static MVMuint32 add_nodes_for_typed_argument(MVMThreadContext *tc,
         /* Do the partitioning. */
         MVM_VECTOR_DECL(TypeCandidates, by_type);
         MVMuint32 i, j, update_node = 0, derived_only;
-        MVMint32 derived_idx, additional_update_node;
+        int32_t derived_idx, additional_update_node;
         MVM_VECTOR_INIT(by_type, num_valid_candidates);
         for (i = 0; i < num_valid_candidates; i++) {
             /* See if we already have a type for this. */
-            MVMint32 found = -1;
+            int32_t found = -1;
             MVMSpeshStatsType type_info = candidates[valid_candidates[i]]->body.type_tuple[type_index];
             MVMObject *search_type = consider_decont_type
                 ? type_info.decont_type
@@ -322,7 +322,7 @@ void MVM_spesh_arg_guard_regenerate(MVMThreadContext *tc, MVMSpeshArgGuard **gua
     for (i = 0; i < num_spesh_candidates; i++) {
         /* Skip discarded candidates. */
         MVMSpeshCandidate *cand = candidates[i];
-        MVMint32 found = -1;
+        int32_t found = -1;
         if (cand->body.discarded)
             continue;
 
@@ -400,7 +400,7 @@ void MVM_spesh_arg_guard_regenerate(MVMThreadContext *tc, MVMSpeshArgGuard **gua
 /* Runs the guard against a type tuple, which is used primarily for detecting
  * if an existing specialization already exists. Returns the index of that
  * specialization, or -1 if there is no match. */
-MVMint32 MVM_spesh_arg_guard_run_types(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
+int32_t MVM_spesh_arg_guard_run_types(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
                                         MVMCallsite *cs, MVMSpeshStatsType *types) {
     MVMuint32 current_node = 0;
     MVMSpeshStatsType *test = NULL;
@@ -468,8 +468,8 @@ MVMint32 MVM_spesh_arg_guard_run_types(MVMThreadContext *tc, MVMSpeshArgGuard *a
 
 /* Evaluates the argument guards. Returns >= 0 if there is a matching spesh
  * candidate, or -1 if there is not. */
-MVMint32 MVM_spesh_arg_guard_run(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
-                                 MVMArgs args, MVMint32 *certain) {
+int32_t MVM_spesh_arg_guard_run(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
+                                 MVMArgs args, int32_t *certain) {
     MVMuint32 current_node = 0;
     MVMObject *test = NULL;
     if (!ag)
@@ -517,7 +517,7 @@ MVMint32 MVM_spesh_arg_guard_run(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
 
 /* Runs the guards using call information gathered by the optimizer. This is
  * used for finding existing candidates to emit fast calls to or inline. */
-MVMint32 MVM_spesh_arg_guard_run_callinfo(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
+int32_t MVM_spesh_arg_guard_run_callinfo(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
                                           MVMSpeshCallInfo *arg_info) {
     MVMuint32 current_node = 0;
     MVMSpeshFacts *facts = NULL;

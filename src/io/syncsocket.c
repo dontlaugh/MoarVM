@@ -50,7 +50,7 @@ typedef struct {
     MVMuint16 last_packet_end;
 
     /* Did we reach EOF yet? */
-    MVMint32 eof;
+    int32_t eof;
 
     /* ID for instrumentation. */
     unsigned int interval_id;
@@ -178,7 +178,7 @@ static MVMint64 socket_eof(MVMThreadContext *tc, MVMOSHandle *h) {
     return data->eof;
 }
 
-static void socket_flush(MVMThreadContext *tc, MVMOSHandle *h, MVMint32 sync) {
+static void socket_flush(MVMThreadContext *tc, MVMOSHandle *h, int32_t sync) {
     /* A no-op for sockets; we don't buffer. */
 }
 
@@ -272,7 +272,7 @@ static size_t get_struct_size_for_family(sa_family_t family) {
 struct sockaddr * MVM_io_resolve_host_name(MVMThreadContext *tc,
         MVMString *host, MVMint64 port,
         MVMuint16 family, MVMint64 type, MVMint64 protocol,
-        MVMint32 passive) {
+        int32_t passive) {
     char *host_cstr     = MVM_string_utf8_encode_C_string(tc, host);
     char  port_cstr[8];
 
@@ -423,7 +423,7 @@ static void socket_connect(MVMThreadContext *tc, MVMOSHandle *h, MVMString *host
     }
 }
 
-static void socket_bind(MVMThreadContext *tc, MVMOSHandle *h, MVMString *host, MVMint64 port, MVMuint16 family, MVMint32 backlog) {
+static void socket_bind(MVMThreadContext *tc, MVMOSHandle *h, MVMString *host, MVMint64 port, MVMuint16 family, int32_t backlog) {
     MVMIOSyncSocketData *data = (MVMIOSyncSocketData *)h->body.data;
     if (!data->handle) {
         struct sockaddr *dest = MVM_io_resolve_host_name(tc, host, port, family, MVM_SOCKET_TYPE_STREAM, MVM_SOCKET_PROTOCOL_ANY, 1);

@@ -133,7 +133,7 @@ static MVMint64 read_bytes(MVMThreadContext *tc, MVMOSHandle *h, char **buf_out,
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
     char *buf = MVM_malloc(bytes);
     unsigned int interval_id = MVM_telemetry_interval_start(tc, "syncfile.read_to_buffer");
-    MVMint32 bytes_read;
+    int32_t bytes_read;
 #ifdef _WIN32
     /* Can only perform relatively small reads from a Windows console;
      * trying to do larger ones gives back ENOMEM, most likely due to
@@ -224,7 +224,7 @@ static MVMint64 write_bytes(MVMThreadContext *tc, MVMOSHandle *h, char *buf, MVM
 }
 
 /* Flushes the file handle. */
-static void flush(MVMThreadContext *tc, MVMOSHandle *h, MVMint32 sync){
+static void flush(MVMThreadContext *tc, MVMOSHandle *h, int32_t sync){
     MVMIOFileData *data = (MVMIOFileData *)h->body.data;
     flush_output_buffer(tc, data);
     if (sync) {

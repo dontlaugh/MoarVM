@@ -758,7 +758,7 @@ static MVMGrapheme32 gb2312_index_to_cp_record[87][94]=
 ,0x9edd,0x9ee0,0x9edf,0x9ee2,0x9ee9,0x9ee7,0x9ee5,0x9eea,0x9eef,0x9f22,0x9f2c
 ,0x9f2f,0x9f39,0x9f37,0x9f3d,0x9f3e,0x9f44}};
 
-static MVMint32 gb2312_cp_to_index_record[24380]=
+static int32_t gb2312_cp_to_index_record[24380]=
 {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -1788,8 +1788,8 @@ static MVMGrapheme32 gb2312_index_to_cp(MVMuint16 codepoint) {
     }
 }
 
-static MVMint32 gb2312_cp_to_index(MVMGrapheme32 codepoint) {
-    MVMint32 result = 0;
+static int32_t gb2312_cp_to_index(MVMGrapheme32 codepoint) {
+    int32_t result = 0;
     if (0 <= codepoint && codepoint <= 1105) {
         result = gb2312_cp_to_index_record[codepoint];
     }

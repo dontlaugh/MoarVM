@@ -54,7 +54,7 @@ static const char * get_typename(MVMuint16 type) {
 #define GET_REG(pc, idx)    *((MVMuint16 *)((pc) + (idx)))
 #define GET_I16(pc, idx)    *((MVMint16 *)((pc) + (idx)))
 #define GET_UI16(pc, idx)   *((MVMuint16 *)((pc) + (idx)))
-#define GET_I32(pc, idx)    *((MVMint32 *)((pc) + (idx)))
+#define GET_I32(pc, idx)    *((int32_t *)((pc) + (idx)))
 #define GET_UI32(pc, idx)   *((MVMuint32 *)((pc) + (idx)))
 #define GET_N32(pc, idx)    *((MVMnum32 *)((pc) + (idx)))
 
@@ -573,7 +573,7 @@ void MVM_dump_bytecode(MVMThreadContext *tc) {
             MVM_dump_bytecode_of(tc, tc->cur_frame, NULL);
         } else {
             MVM_dump_bytecode_of(tc, tc->cur_frame, tc->cur_frame->spesh_cand);
-            /*MVMint32 spesh_cand_idx;*/
+            /*int32_t spesh_cand_idx;*/
             /*MVMuint8 found = 0;*/
             /*for (spesh_cand_idx = 0; spesh_cand_idx < sf->body.num_spesh_candidates; spesh_cand_idx++) {*/
             /*MVMSpeshCandidate *cand = sf->body.spesh_candidates[spesh_cand_idx];*/
@@ -592,7 +592,7 @@ void MVM_dump_bytecode(MVMThreadContext *tc) {
     }
 }
 
-void MVM_dump_bytecode_stackframe(MVMThreadContext *tc, MVMint32 depth) {
+void MVM_dump_bytecode_stackframe(MVMThreadContext *tc, int32_t depth) {
     MVMStaticFrame *sf;
     MVMuint8 *effective_bytecode;
     MVMFrame *frame = tc->cur_frame;

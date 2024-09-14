@@ -23,10 +23,10 @@ void MVM_jit_dump_bytecode(MVMThreadContext *tc, MVMJitCode *code) {
 
 
 static void dump_tree(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
-                      MVMJitExprTree *tree, MVMint32 node) {
+                      MVMJitExprTree *tree, int32_t node) {
     MVMJitExprInfo *info   = MVM_JIT_EXPR_INFO(tree, node);
     const char *op_name = MVM_jit_expr_operator_name(tc, tree->nodes[node]);
-    MVMint32 *links = MVM_JIT_EXPR_LINKS(tree, node);
+    int32_t *links = MVM_JIT_EXPR_LINKS(tree, node);
     MVMuint32 *depth = traverser->data;
     MVMuint32 i, j;
     char indent[64];
@@ -39,7 +39,7 @@ static void dump_tree(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
     indent[i] = 0;
     j = 0;
     for (i = 0; i < info->num_args; i++) {
-        MVMint32 arg = links[i];
+        int32_t arg = links[i];
         j += snprintf(nargs + j, sizeof(nargs)-j-3, "%"PRId32, arg);
         if (i+1 < info->num_args && j < sizeof(nargs)-3) {
             j += sprintf(nargs + j, ", ");
@@ -51,20 +51,20 @@ static void dump_tree(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
 }
 
 static void ascend_tree(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
-                        MVMJitExprTree *tree, MVMint32 node) {
+                        MVMJitExprTree *tree, int32_t node) {
     MVMuint32 *depth = traverser->data;
     (*depth)--;
 }
 
 
 static void write_graphviz_node(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
-                                MVMJitExprTree *tree, MVMint32 node) {
+                                MVMJitExprTree *tree, int32_t node) {
     FILE *graph_file       = traverser->data;
     const char *op_name    = MVM_jit_expr_operator_name(tc, tree->nodes[node]);
-    MVMint32 *links        = MVM_JIT_EXPR_LINKS(tree, node);
-    MVMint32 *args         = MVM_JIT_EXPR_ARGS(tree, node);
+    int32_t *links        = MVM_JIT_EXPR_LINKS(tree, node);
+    int32_t *args         = MVM_JIT_EXPR_ARGS(tree, node);
     MVMJitExprInfo *info   = MVM_JIT_EXPR_INFO(tree, node);
-    MVMint32 i;
+    int32_t i;
     /* maximum length of op name is 'invokish' at 8 characters, let's allocate
      * 16; maximum number of parameters is 4, and 64 bits; printing them in
      * hexadecimal would require at most 8 characters, plus 4 for the '0x' and

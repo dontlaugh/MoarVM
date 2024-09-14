@@ -494,8 +494,8 @@ static void setup_core_sc(MVMThreadContext *tc) {
     MVMString *handle = MVM_string_ascii_decode_nt(tc,
         tc->instance->VMString, "__6MODEL_CORE__");
     MVMSerializationContext * const sc = (MVMSerializationContext *)MVM_sc_create(tc, handle);
-    MVMint32 obj_index = 0;
-    MVMint32 st_index  = 0;
+    int32_t obj_index = 0;
+    int32_t st_index  = 0;
 
 #define add_to_sc_with_st(tc, sc, variable) do { \
     MVM_sc_set_object(tc, sc, obj_index++, variable); \

@@ -74,7 +74,7 @@
  * return a false return value and we will fallback to /dev/urandom */
 #if !defined(_WIN32)
     #include <unistd.h>
-    MVMint32 MVM_getrandom_urandom (MVMThreadContext *tc, void *out, size_t size) {
+    int32_t MVM_getrandom_urandom (MVMThreadContext *tc, void *out, size_t size) {
         int fd = MVM_platform_open("/dev/urandom", O_RDONLY);
         if (fd < 0 || read(fd, out, size) <= 0) {
             if (fd) close(fd);
@@ -97,20 +97,20 @@
 /* getrandom() was added to glibc much later than it was added to the kernel. Since
  * we detect the presence of the system call to decide whether to use this,
  * just use the syscall instead since the wrapper is not guaranteed to exist.*/
-    MVMint32 MVM_getrandom (MVMThreadContext *tc, void *out, size_t size) {
+    int32_t MVM_getrandom (MVMThreadContext *tc, void *out, size_t size) {
         long rtrn = syscall(SYS_getrandom, out, size, GRND_NONBLOCK);
         return rtrn <= 0 ? MVM_getrandom_urandom(tc, out, size) : 1;
     }
 #elif defined(MVM_random_use_getrandom)
     /* Call the getrandom() wrapper in Solaris and FreeBSD since they were
      * added at the same time as getentropy() and this allows us to avoid blocking. */
-    MVMint32 MVM_getrandom (MVMThreadContext *tc, void *out, size_t size) {
+    int32_t MVM_getrandom (MVMThreadContext *tc, void *out, size_t size) {
         ssize_t rtrn = getrandom(out, size, GRND_NONBLOCK);
         return rtrn <= 0 ? MVM_getrandom_urandom(tc, out, size) : 1;
     }
 
 #elif defined(MVM_random_use_getentropy)
-    MVMint32 MVM_getrandom (MVMThreadContext *tc, void *out, size_t size) {
+    int32_t MVM_getrandom (MVMThreadContext *tc, void *out, size_t size) {
         int rtrn = getentropy(out, size);
         return rtrn <= 0 ? MVM_getrandom_urandom(tc, out, size) : 1;
     }
@@ -143,14 +143,14 @@
         }
         return 0;
     }
-    MVMint32 MVM_getrandom (MVMThreadContext *tc, void *out, size_t size) {
+    int32_t MVM_getrandom (MVMThreadContext *tc, void *out, size_t size) {
         /* Return 0 if the context doesn't exist and we are unable to create it */
         if (!hCryptContext && !win32_urandom_init())
             return 0;
         return pCryptGenRandom(hCryptContext, (DWORD)size, (BYTE*)out) ? 1 : 0;
     }
 #else
-    MVMint32 MVM_getrandom (MVMThreadContext *tc, void *out, size_t size) {
+    int32_t MVM_getrandom (MVMThreadContext *tc, void *out, size_t size) {
         return MVM_getrandom_urandom(tc, out, size);
     }
 #endif

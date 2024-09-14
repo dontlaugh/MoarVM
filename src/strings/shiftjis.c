@@ -21,7 +21,7 @@ static MVMGrapheme32 shift_jis_index_to_cp (MVMThreadContext *tc, MVMint16 index
  * The result string is NULL terminated, but the specified size is the non-null part. */
 char * MVM_string_shiftjis_encode_substr(MVMThreadContext *tc, MVMString *str,
         MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement,
-        MVMint32 translate_newlines, MVMint64 config) {
+        int32_t translate_newlines, MVMint64 config) {
     MVMuint32 startu = (MVMuint32)start;
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
     MVMuint32 lengthu = (MVMuint32)(length == -1 ? strgraphs - startu : length);
@@ -336,7 +336,7 @@ MVMuint32 MVM_string_shiftjis_decodestream(MVMThreadContext *tc, MVMDecodeStream
     MVMGrapheme32 *buffer = NULL;
     MVMDecodeStreamBytes *cur_bytes = NULL;
     MVMDecodeStreamBytes *last_accept_bytes = ds->bytes_head;
-    MVMint32 last_accept_pos, last_was_cr;
+    int32_t last_accept_pos, last_was_cr;
     MVMuint32 reached_stopper;
     MVMStringIndex repl_length = ds->replacement ? MVM_string_graphs(tc, ds->replacement) : 0;
     MVMStringIndex repl_pos = 0;
@@ -362,7 +362,7 @@ MVMuint32 MVM_string_shiftjis_decodestream(MVMThreadContext *tc, MVMDecodeStream
     reached_stopper = 0;
     while (cur_bytes) {
         /* Process this buffer. */
-        MVMint32  pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
+        int32_t  pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
         MVMuint8 *bytes = (MVMuint8 *)cur_bytes->bytes;
         while (pos < cur_bytes->length || start_repl) {
             MVMGrapheme32 graph;

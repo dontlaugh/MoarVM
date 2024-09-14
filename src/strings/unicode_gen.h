@@ -2,13 +2,13 @@
 
 struct MVMUnicodeNamedValue {
     const char *name;
-    MVMint32 value;
+    int32_t value;
 };
 #define num_unicode_property_keypairs 3889
 
 #define MVM_NUM_UNICODE_EXTENTS 106
 
-MVMint32 MVM_unicode_is_in_block(MVMThreadContext *tc, MVMString *str, MVMint64 pos, MVMString *block_name);
+int32_t MVM_unicode_is_in_block(MVMThreadContext *tc, MVMString *str, MVMint64 pos, MVMString *block_name);
 
 #define MVM_CODEPOINT_NAMES_COUNT 57855
 #define MVM_NUM_PROPERTY_CODES 107

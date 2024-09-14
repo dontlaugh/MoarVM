@@ -32,7 +32,7 @@ typedef int (gzFile);
     #define MAX(x, y) ((y) > (x) ? (y) : (x))
 #endif
 /* Check if we're currently taking heap snapshots. */
-MVMint32 MVM_profile_heap_profiling(MVMThreadContext *tc) {
+int32_t MVM_profile_heap_profiling(MVMThreadContext *tc) {
     return tc->instance->heap_snapshots != NULL;
 }
 
@@ -681,7 +681,7 @@ static void process_workitems(MVMThreadContext *tc, MVMHeapSnapshotState *ss) {
                 MVMThreadContext *thread_tc = (MVMThreadContext *)item.target;
                 if (thread_tc->cur_frame && MVM_FRAME_IS_ON_CALLSTACK(tc, thread_tc->cur_frame)) {
                     MVMFrame *cur_frame = thread_tc->cur_frame;
-                    MVMint32 idx = 0;
+                    int32_t idx = 0;
                     while (cur_frame && MVM_FRAME_IS_ON_CALLSTACK(tc, cur_frame)) {
                         add_reference_idx(tc, ss, idx,
                             push_workitem(tc, ss, MVM_SNAPSHOT_COL_KIND_FRAME,

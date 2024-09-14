@@ -14,18 +14,18 @@ struct MVMJitCompiler {
     dasm_State *dasm_handle;
     MVMJitGraph   *graph;
 
-    MVMint32    label_offset;
+    int32_t    label_offset;
 
     /* For spilling values that don't fit into the register allocator */
-    MVMint32    spills_base;
-    MVMint32    spills_free[4];
-    MVM_VECTOR_DECL(struct { MVMint8 reg_type; MVMint32 next; }, spills);
+    int32_t    spills_base;
+    int32_t    spills_free[4];
+    MVM_VECTOR_DECL(struct { MVMint8 reg_type; int32_t next; }, spills);
 
     void *dasm_globals[MVM_JIT_MAX_GLOBALS];
 };
 
 /* Declarations for architecture-specific codegen stuff */
-MVMint32 MVM_jit_support(void);
+int32_t MVM_jit_support(void);
 const unsigned char * MVM_jit_actions(void);
 void MVM_jit_emit_prologue(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg);
 void MVM_jit_emit_epilogue(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg);
@@ -33,13 +33,13 @@ void MVM_jit_emit_primitive(MVMThreadContext *tc, MVMJitCompiler *compiler,
                             MVMJitGraph *jg, MVMJitPrimitive *prim);
 void MVM_jit_emit_call_c(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
                          MVMJitCallC *call_spec);
-void MVM_jit_emit_branch(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMint32 label);
+void MVM_jit_emit_branch(MVMThreadContext *tc, MVMJitCompiler *compiler, int32_t label);
 void MVM_jit_emit_conditional_branch(MVMThreadContext *tc, MVMJitCompiler *compiler,
-                                     MVMint32 cond, MVMint32 label, MVMuint8 test_type);
+                                     int32_t cond, int32_t label, MVMuint8 test_type);
 void MVM_jit_emit_block_branch(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
                                MVMJitBranch *branch_spec);
 void MVM_jit_emit_label(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
-                        MVMint32 label);
+                        int32_t label);
 void MVM_jit_emit_guard(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
                         MVMJitGuard *guard);
 void MVM_jit_emit_jumplist(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg,
@@ -49,12 +49,12 @@ void MVM_jit_emit_control(MVMThreadContext *tc, MVMJitCompiler *compiler,
 void MVM_jit_emit_data(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitData *data);
 
 void MVM_jit_emit_load(MVMThreadContext *tc, MVMJitCompiler *compiler,
-                       MVMint8 reg_dst, MVMJitStorageClass mem_cls, MVMint32 mem_src, MVMint32 size);
+                       MVMint8 reg_dst, MVMJitStorageClass mem_cls, int32_t mem_src, int32_t size);
 void MVM_jit_emit_store(MVMThreadContext *tc, MVMJitCompiler *compiler,
-                        MVMJitStorageClass mem_cls, MVMint32 mem_pos, MVMint8 reg_src, MVMint32 size);
+                        MVMJitStorageClass mem_cls, int32_t mem_pos, MVMint8 reg_src, int32_t size);
 void MVM_jit_emit_copy(MVMThreadContext *tc, MVMJitCompiler *compiler,
                        MVMint8 dst_reg, MVMint8 src_num);
-void MVM_jit_emit_marker(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMint32 num);
+void MVM_jit_emit_marker(MVMThreadContext *tc, MVMJitCompiler *compiler, int32_t num);
 void MVM_jit_emit_deopt_check(MVMThreadContext *tc, MVMJitCompiler *compiler);
 void MVM_jit_emit_runbytecode(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitRunByteCode *runcode);
 void MVM_jit_emit_runccode(MVMThreadContext *tc, MVMJitCompiler *compiler, MVMJitGraph *jg, MVMJitRunCCode *runcode);

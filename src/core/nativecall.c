@@ -569,7 +569,7 @@ static MVMObject * nativecall_cast(MVMThreadContext *tc, MVMObject *target_spec,
                                 value = *(MVMint16 *)cpointer_body;
                                 break;
                             case 32:
-                                value = *(MVMint32 *)cpointer_body;
+                                value = *(int32_t *)cpointer_body;
                                 break;
                             case 64:
                             default:
@@ -628,7 +628,7 @@ static MVMObject * nativecall_cast(MVMThreadContext *tc, MVMObject *target_spec,
                             value = *(MVMint16 *)cpointer_body;
                             break;
                         case 32:
-                            value = *(MVMint32 *)cpointer_body;
+                            value = *(int32_t *)cpointer_body;
                             break;
                         case 64:
                         default:
@@ -834,8 +834,8 @@ void MVM_nativecall_refresh(MVMThreadContext *tc, MVMObject *cthingy) {
         MVMint64            i;
 
         for (i = 0; i < repr_data->num_attributes; i++) {
-            MVMint32  kind = repr_data->attribute_locations[i] & MVM_CSTRUCT_ATTR_MASK;
-            MVMint32  slot = repr_data->attribute_locations[i] >> MVM_CSTRUCT_ATTR_SHIFT;
+            int32_t  kind = repr_data->attribute_locations[i] & MVM_CSTRUCT_ATTR_MASK;
+            int32_t  slot = repr_data->attribute_locations[i] >> MVM_CSTRUCT_ATTR_SHIFT;
             void *cptr   = NULL; /* Address of the struct member holding the pointer in the C storage. */
             void *objptr = NULL; /* The pointer in the object representing the C object. */
 
@@ -886,8 +886,8 @@ void MVM_nativecall_refresh(MVMThreadContext *tc, MVMObject *cthingy) {
         MVMint64              i;
 
         for (i = 0; i < repr_data->num_attributes; i++) {
-            MVMint32 kind = repr_data->attribute_locations[i] & MVM_CPPSTRUCT_ATTR_MASK;
-            MVMint32 slot = repr_data->attribute_locations[i] >> MVM_CPPSTRUCT_ATTR_SHIFT;
+            int32_t kind = repr_data->attribute_locations[i] & MVM_CPPSTRUCT_ATTR_MASK;
+            int32_t slot = repr_data->attribute_locations[i] >> MVM_CPPSTRUCT_ATTR_SHIFT;
             void *cptr = NULL;   /* The pointer in the C storage. */
             void *objptr = NULL; /* The pointer in the object representing the C object. */
 

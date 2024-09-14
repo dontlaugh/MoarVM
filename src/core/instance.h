@@ -308,8 +308,8 @@ struct MVMInstance {
 
     /* Number of specializations produced, and limit on number of
      * specializations (zero if no limit). */
-    MVMint32 spesh_produced;
-    MVMint32 spesh_limit;
+    int32_t spesh_produced;
+    int32_t spesh_limit;
 
     /* The thread object representing the spesh thread */
     MVMObject *spesh_thread;
@@ -345,8 +345,8 @@ struct MVMInstance {
     /* bisection flags, to stop the JIT from using the expression compiler above
      * certain frame seq nr / basic blocks nrs, allowing a debugger to figure
      * out where a particular piece of code breaks */
-    MVMint32 jit_expr_last_frame;
-    MVMint32 jit_expr_last_bb;
+    int32_t jit_expr_last_frame;
+    int32_t jit_expr_last_bb;
     /* File for JIT perf map logging */
     FILE *jit_perf_map;
 
@@ -354,12 +354,12 @@ struct MVMInstance {
     char *jit_bytecode_dir;
 
     /* sequence number for JIT compiled frames */
-    MVMint32 jit_seq_nr;
+    int32_t jit_seq_nr;
 
     /* array of places we want the JIT to insert (hard) breakpoints */
     MVM_VECTOR_DECL(struct {
-        MVMint32 frame_nr;
-        MVMint32 block_nr;
+        int32_t frame_nr;
+        int32_t block_nr;
     }, jit_breakpoints);
 
     /************************************************************************

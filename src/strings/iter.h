@@ -135,7 +135,7 @@ MVM_STATIC_INLINE void MVM_string_gi_move_to(MVMThreadContext *tc, MVMGraphemeIt
 }
 
 /* Checks if there is more to read from a grapheme iterator. */
-MVM_STATIC_INLINE MVMint32 MVM_string_gi_has_more(MVMThreadContext *tc, MVMGraphemeIter *gi) {
+MVM_STATIC_INLINE int32_t MVM_string_gi_has_more(MVMThreadContext *tc, MVMGraphemeIter *gi) {
     return gi->pos < gi->end || gi->repetitions || gi->strands_remaining;
 }
 /* Returns number of graphs left in the strand, ignoring repetitions */
@@ -234,21 +234,21 @@ struct MVMCodepointIter {
      * the number of combiners we returned so far, and the total number of
      * combiners there are. */
     MVMCodepoint  *synth_codes;
-    MVMint32       visited_synth_codes;
-    MVMint32       total_synth_codes;
+    int32_t       visited_synth_codes;
+    int32_t       total_synth_codes;
     /* first_code is only used for string_grapheme_ci functions */
     MVMCodepoint   first_code;
     /* If we should translate newline \n into \r\n. */
-    MVMint32       translate_newlines;
+    int32_t       translate_newlines;
     /* Used to pass through utf8-c8 synthetics, but not any others so we can
      * renomalize text without getting rid of utf8-c8 synthetics */
-    MVMint32       pass_utfc8_synthetics;
+    int32_t       pass_utfc8_synthetics;
 
 };
 
 /* Initializes a code point iterator. */
 MVM_STATIC_INLINE void MVM_string_ci_init(MVMThreadContext *tc, MVMCodepointIter *ci, MVMString *s,
-        MVMint32 translate_newlines, MVMint32 pass_utfc8_synthetics) {
+        int32_t translate_newlines, int32_t pass_utfc8_synthetics) {
     /* Initialize our underlying grapheme iterator. */
     MVM_string_gi_init(tc, &(ci->gi), s);
 
@@ -261,7 +261,7 @@ MVM_STATIC_INLINE void MVM_string_ci_init(MVMThreadContext *tc, MVMCodepointIter
     ci->pass_utfc8_synthetics = pass_utfc8_synthetics;
 };
 /* Iterates on a grapheme. Returns the number of codepoints in the grapheme */
-MVM_STATIC_INLINE MVMGrapheme32 MVM_string_grapheme_ci_init(MVMThreadContext *tc, MVMCodepointIter *ci, MVMGrapheme32 g, MVMint32 pass_utfc8_synthetics) {
+MVM_STATIC_INLINE MVMGrapheme32 MVM_string_grapheme_ci_init(MVMThreadContext *tc, MVMCodepointIter *ci, MVMGrapheme32 g, int32_t pass_utfc8_synthetics) {
     MVMNFGSynthetic *synth = NULL;
     if (g < 0) {
         /* Get the synthetics info. */
@@ -299,11 +299,11 @@ MVM_STATIC_INLINE MVMCodepoint MVM_string_grapheme_ci_get_codepoint(MVMThreadCon
 /* Checks if there is more to read from a code point iterator; this is the
  * case if we're still walking through a synthetic or we have more things
  * available from the underlying grapheme iterator. */
-MVM_STATIC_INLINE MVMint32 MVM_string_ci_has_more(MVMThreadContext *tc, MVMCodepointIter *ci) {
+MVM_STATIC_INLINE int32_t MVM_string_ci_has_more(MVMThreadContext *tc, MVMCodepointIter *ci) {
     return ci->synth_codes || MVM_string_gi_has_more(tc, &(ci->gi));
 }
 /* Only for use with string_grapheme_ci ops */
-MVM_STATIC_INLINE MVMint32 MVM_string_grapheme_ci_has_more(MVMThreadContext *tc, MVMCodepointIter *ci) {
+MVM_STATIC_INLINE int32_t MVM_string_grapheme_ci_has_more(MVMThreadContext *tc, MVMCodepointIter *ci) {
     return ci->visited_synth_codes < ci->total_synth_codes;
 }
 

@@ -6,7 +6,7 @@
  * MoarVM per thread. */
 MVMThreadContext * MVM_tc_create(MVMThreadContext *parent, MVMInstance *instance) {
     MVMThreadContext *tc = MVM_calloc(1, sizeof(MVMThreadContext));
-    MVMint32 i;
+    int32_t i;
 
     /* Associate with VM instance. */
     tc->instance = instance;
@@ -42,7 +42,7 @@ MVMThreadContext * MVM_tc_create(MVMThreadContext *parent, MVMInstance *instance
         tc->temp_bigints[i] = MVM_malloc(sizeof(mp_int));
         mp_err err;
         if ((err = mp_init(tc->temp_bigints[i])) != MP_OKAY) {
-            MVMint32 j;
+            int32_t j;
             for (j = 0; j < i; j++) {
                 mp_clear(tc->temp_bigints[j]);
                 MVM_free(tc->temp_bigints[j]);
@@ -70,7 +70,7 @@ MVMThreadContext * MVM_tc_create(MVMThreadContext *parent, MVMInstance *instance
  * objects from this nursery to the second generation. Only after
  * that is true should this be called. */
 void MVM_tc_destroy(MVMThreadContext *tc) {
-    MVMint32 i;
+    int32_t i;
 
     /* If an exception handler calls nqp::exit, we don't unwind the stack and
      * exception handlers aren't cleaned up yet */

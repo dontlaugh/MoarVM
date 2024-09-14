@@ -213,7 +213,7 @@ static void callback_invoke(MVMThreadContext *tc, void *data) {
 }
 static void callback_handler(ffi_cif *cif, void *cb_result, void **cb_args, void *cb_data) {
     CallbackInvokeData cid;
-    MVMint32 num_roots, i;
+    int32_t num_roots, i;
     MVMRegister res = {0};
     MVMRegister *args;
     MVMNativeCallback *data = (MVMNativeCallback *)cb_data;
@@ -223,7 +223,7 @@ static void callback_handler(ffi_cif *cif, void *cb_result, void **cb_args, void
     MVMThreadContext *tc = MVM_nativecall_find_thread_context(data->instance);
 
     /* Unblock GC if needed, so this thread can do work. */
-    MVMint32 was_blocked = MVM_gc_is_thread_blocked(tc);
+    int32_t was_blocked = MVM_gc_is_thread_blocked(tc);
     if (was_blocked)
         MVM_gc_mark_thread_unblocked(tc);
 

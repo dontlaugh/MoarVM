@@ -141,7 +141,7 @@ void MVM_frame_destroy(MVMThreadContext *tc, MVMFrame *frame) {
  * Since we're not creating it to run bytecode, just for the purpose of a
  * serialized closure, we don't create any call stack record for it. */
 static MVMFrame * create_context_only(MVMThreadContext *tc, MVMStaticFrame *static_frame,
-        MVMObject *code_ref, MVMint32 autoclose) {
+        MVMObject *code_ref, int32_t autoclose) {
     MVMFrame *frame;
 
     MVMROOT2(tc, static_frame, code_ref) {
@@ -251,10 +251,10 @@ static MVMFrame * autoclose(MVMThreadContext *tc, MVMStaticFrame *needed) {
  * promoted there anyway. Returns a pointer to the frame wherever in memory it ends
  * up living. Separate versions for specialized and unspecialized frames. */
 static MVMFrame * allocate_unspecialized_frame(MVMThreadContext *tc,
-        MVMStaticFrame *static_frame, MVMint32 heap) {
+        MVMStaticFrame *static_frame, int32_t heap) {
     MVMFrame *frame;
-    MVMint32 work_size = static_frame->body.work_size;
-    MVMint32 env_size = static_frame->body.env_size;
+    int32_t work_size = static_frame->body.work_size;
+    int32_t env_size = static_frame->body.env_size;
     if (heap) {
         /* Allocate frame on the heap. The callstack record includes space
          * for the work registers and ->work will have been set up already. */
@@ -293,10 +293,10 @@ static MVMFrame * allocate_unspecialized_frame(MVMThreadContext *tc,
     return frame;
 }
 static MVMFrame * allocate_specialized_frame(MVMThreadContext *tc,
-        MVMStaticFrame *static_frame, MVMSpeshCandidate *spesh_cand, MVMint32 heap) {
+        MVMStaticFrame *static_frame, MVMSpeshCandidate *spesh_cand, int32_t heap) {
     MVMFrame *frame;
-    MVMint32 work_size = spesh_cand->body.work_size;
-    MVMint32 env_size = spesh_cand->body.env_size;
+    int32_t work_size = spesh_cand->body.work_size;
+    int32_t env_size = spesh_cand->body.env_size;
     if (heap) {
         /* Allocate frame on the heap. The callstack record includes space
          * for the work registers and ->work will have been set up already. */
@@ -452,7 +452,7 @@ static void report_outer_conflict(MVMThreadContext *tc, MVMStaticFrame *static_f
 }
 
 /* Dispatches execution to the specified code object with the specified args. */
-void MVM_frame_dispatch(MVMThreadContext *tc, MVMCode *code, MVMArgs args, MVMint32 spesh_cand) {
+void MVM_frame_dispatch(MVMThreadContext *tc, MVMCode *code, MVMArgs args, int32_t spesh_cand) {
     /* Did we get given a specialization? */
     MVMStaticFrame *static_frame = code->body.sf;
     MVMStaticFrameSpesh *spesh;
@@ -474,8 +474,8 @@ void MVM_frame_dispatch(MVMThreadContext *tc, MVMCode *code, MVMArgs args, MVMin
     else {
         spesh = static_frame->body.spesh;
 #if MVM_SPESH_CHECK_PRESELECTION
-        MVMint32 certain = -1;
-        MVMint32 correct = MVM_spesh_arg_guard_run(tc, spesh->body.spesh_arg_guard,
+        int32_t certain = -1;
+        int32_t correct = MVM_spesh_arg_guard_run(tc, spesh->body.spesh_arg_guard,
             args, &certain);
         if (spesh_cand != correct && spesh_cand != certain) {
             fprintf(stderr, "Inconsistent spesh preselection of '%s' (%s): got %d, not %d\n",
@@ -548,7 +548,7 @@ void MVM_frame_dispatch(MVMThreadContext *tc, MVMCode *code, MVMArgs args, MVMin
         MVM_args_proc_setup(tc, &(frame->params), args);
     }
     else {
-        MVMint32 on_heap = static_frame->body.allocate_on_heap;
+        int32_t on_heap = static_frame->body.allocate_on_heap;
         if (on_heap) {
             MVMROOT3(tc, static_frame, code, outer) {
                 frame = allocate_unspecialized_frame(tc, static_frame, 1);
@@ -570,7 +570,7 @@ void MVM_frame_dispatch(MVMThreadContext *tc, MVMCode *code, MVMArgs args, MVMin
         /* If we should be spesh logging, set the correlation ID. */
         if (tc->instance->spesh_enabled && tc->spesh_log && static_frame->body.bytecode_size < MVM_SPESH_MAX_BYTECODE_SIZE) {
             if (spesh->body.spesh_entries_recorded++ < MVM_SPESH_LOG_LOGGED_ENOUGH) {
-                MVMint32 id = ++tc->spesh_cid;
+                int32_t id = ++tc->spesh_cid;
                 frame->spesh_correlation_id = id;
                 MVMROOT3(tc, static_frame, code, outer) {
                     if (on_heap) {
@@ -1397,8 +1397,8 @@ MVMRegister * MVM_frame_find_lexical_by_name_rel_caller(MVMThreadContext *tc, MV
  * specified type. Returns null if it does not exist. */
 static void try_cache_dynlex(MVMThreadContext *tc, MVMFrame *from, MVMFrame *to, MVMString *name, MVMRegister *reg, MVMuint16 type, MVMuint32 fcost, MVMuint32 icost) {
 #if MVM_DYNLEX_CACHE_ENABLED
-    MVMint32 next = 0;
-    MVMint32 frames = 0;
+    int32_t next = 0;
+    int32_t frames = 0;
     MVMuint32 desperation = 0;
 
     if (fcost+icost > 20)
@@ -1428,7 +1428,7 @@ static void try_cache_dynlex(MVMThreadContext *tc, MVMFrame *from, MVMFrame *to,
 }
 MVMRegister * MVM_frame_find_dynamic_using_frame_walker(MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw, MVMString *name, MVMuint16 *type, MVMFrame *initial_frame,
-        MVMint32 vivify, MVMFrame **found_frame) {
+        int32_t vivify, MVMFrame **found_frame) {
     FILE *dlog = tc->instance->dynvar_log_fh;
     MVMuint32 fcost = 0;  /* frames traversed */
     MVMuint32 icost = 0;  /* inlines traversed */
@@ -1522,7 +1522,7 @@ MVMRegister * MVM_frame_find_dynamic_using_frame_walker(MVMThreadContext *tc,
     return NULL;
 }
 MVMRegister * MVM_frame_find_contextual_by_name(MVMThreadContext *tc, MVMString *name,
-        MVMuint16 *type, MVMFrame *initial_frame, MVMint32 vivify, MVMFrame **found_frame) {
+        MVMuint16 *type, MVMFrame *initial_frame, int32_t vivify, MVMFrame **found_frame) {
     MVMSpeshFrameWalker fw;
     MVM_spesh_frame_walker_init(tc, &fw, initial_frame, 0);
     return MVM_frame_find_dynamic_using_frame_walker(tc, &fw, name, type, initial_frame,

@@ -409,10 +409,10 @@ MVMString * MVM_coerce_n_s(MVMThreadContext *tc, MVMnum64 n) {
 MVMint64 MVM_coerce_s_i(MVMThreadContext *tc, MVMString *str) {
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
     MVMint64       result = 0;
-    MVMint32       any = 0, negative = 0;
+    int32_t       any = 0, negative = 0;
 
     MVMint64 cutoff;
-    MVMint32 cutlim;
+    int32_t cutlim;
 
     if (!strgraphs)
         return result;
@@ -567,10 +567,10 @@ MVMint64 MVM_coerce_s_i(MVMThreadContext *tc, MVMString *str) {
 MVMuint64 MVM_coerce_s_u(MVMThreadContext *tc, MVMString *str) {
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
     MVMuint64      result = 0;
-    MVMint32       any = 0, negative = 0;
+    int32_t       any = 0, negative = 0;
 
     MVMuint64 cutoff;
-    MVMint32 cutlim;
+    int32_t cutlim;
 
     if (!strgraphs)
         return result;

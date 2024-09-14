@@ -117,12 +117,12 @@ MVMint64 MVM_args_has_named(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMStr
 void MVM_args_assert_nameds_used(MVMThreadContext *tc, MVMArgProcContext *ctx);
 
 /* Result setting. */
-void MVM_args_set_result_obj(MVMThreadContext *tc, MVMObject *result, MVMint32 frameless);
-void MVM_args_set_result_int(MVMThreadContext *tc, MVMint64 result, MVMint32 frameless);
-void MVM_args_set_result_uint(MVMThreadContext *tc, MVMuint64 result, MVMint32 frameless);
-void MVM_args_set_result_num(MVMThreadContext *tc, MVMnum64 result, MVMint32 frameless);
-void MVM_args_set_result_str(MVMThreadContext *tc, MVMString *result, MVMint32 frameless);
-void MVM_args_assert_void_return_ok(MVMThreadContext *tc, MVMint32 frameless);
+void MVM_args_set_result_obj(MVMThreadContext *tc, MVMObject *result, int32_t frameless);
+void MVM_args_set_result_int(MVMThreadContext *tc, MVMint64 result, int32_t frameless);
+void MVM_args_set_result_uint(MVMThreadContext *tc, MVMuint64 result, int32_t frameless);
+void MVM_args_set_result_num(MVMThreadContext *tc, MVMnum64 result, int32_t frameless);
+void MVM_args_set_result_str(MVMThreadContext *tc, MVMString *result, int32_t frameless);
+void MVM_args_assert_void_return_ok(MVMThreadContext *tc, int32_t frameless);
 void MVM_args_set_dispatch_result_obj(MVMThreadContext *tc, MVMFrame *target, MVMObject *result);
 void MVM_args_set_dispatch_result_int(MVMThreadContext *tc, MVMFrame *target, MVMint64 result);
 void MVM_args_set_dispatch_result_uint(MVMThreadContext *tc, MVMFrame *target, MVMuint64 result);

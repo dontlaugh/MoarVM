@@ -85,7 +85,7 @@ void MVM_spesh_manipulate_delete_ins(MVMThreadContext *tc, MVMSpeshGraph *g,
                 }
                 if (prev) {
                     MVMSpeshAnn *append_to = prev->annotations;
-                    MVMint32 conflict = 0;
+                    int32_t conflict = 0;
                     while (append_to) {
                         if (append_to->type == MVM_SPESH_ANN_DEOPT_ALL_INS ||
                                 append_to->type == MVM_SPESH_ANN_DEOPT_INLINE) {
@@ -119,16 +119,16 @@ void MVM_spesh_manipulate_delete_ins(MVMThreadContext *tc, MVMSpeshGraph *g,
 void MVM_spesh_manipulate_cleanup_ins_deps(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMint16 opcode = ins->info->opcode;
     if (opcode == MVM_SSA_PHI) {
-        MVMint32 i;
+        int32_t i;
         MVM_spesh_get_facts(tc, g, ins->operands[0])->dead_writer = 1;
         for (i = 1; i < ins->info->num_operands; i++)
             MVM_spesh_usages_delete_by_reg(tc, g, ins->operands[i], ins);
     }
     else {
-        MVMint32 i;
+        int32_t i;
         MVMuint8 is_inc_dec = MVM_spesh_is_inc_dec_op(opcode);
         for (i = 0; i < ins->info->num_operands; i++) {
-            MVMint32 rw = ins->info->operands[i] & MVM_operand_rw_mask;
+            int32_t rw = ins->info->operands[i] & MVM_operand_rw_mask;
             if (rw == MVM_operand_write_reg)
                 MVM_spesh_get_facts(tc, g, ins->operands[i])->dead_writer = 1;
             else if (rw == MVM_operand_read_reg)
@@ -346,7 +346,7 @@ static MVMSpeshOperand make_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVM
 
     /* Add locals table entry. */
     if (!g->local_types) {
-        MVMint32 local_types_size = g->num_locals * sizeof(MVMuint16);
+        int32_t local_types_size = g->num_locals * sizeof(MVMuint16);
         g->local_types = MVM_malloc(local_types_size);
         memcpy(g->local_types, g->sf->body.local_types, local_types_size);
     }
@@ -424,7 +424,7 @@ MVMSpeshOperand MVM_spesh_manipulate_split_version(MVMThreadContext *tc, MVMSpes
     MVMSpeshOperand new_version = MVM_spesh_manipulate_new_version(tc, g, split.reg.orig);
     /* Queue of children to process; more than we need by definition */
     MVMSpeshBB **bbq = alloca(sizeof(MVMSpeshBB*) * g->num_bbs);
-    MVMint32 top = 0;
+    int32_t top = 0;
     /* Push initial basic block */
     bbq[top++] = bb;
     while (top != 0) {

@@ -1,7 +1,7 @@
 /* Facts we might have about a particular SSA version of a register. */
 struct MVMSpeshFacts {
     /* Flags indicating things we know. */
-    MVMint32 flags;
+    int32_t flags;
 
     /* Known type, if any. */
     MVMObject *type;

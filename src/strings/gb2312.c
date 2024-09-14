@@ -59,7 +59,7 @@ MVMString * MVM_string_gb2312_decode(MVMThreadContext *tc, const MVMObject *resu
 #define GB2312_DECODE_CODEPOINT_EXCEPTION -4
 #define GB2312_DECODE_CHINESE_CODEPOINT -5
 
-static int gb2312_decode_handler(MVMThreadContext *tc, MVMint32 last_was_first_byte,
+static int gb2312_decode_handler(MVMThreadContext *tc, int32_t last_was_first_byte,
                                  MVMuint16 codepoint, MVMuint16 last_codepoint, MVMGrapheme32 *out) {
     MVMGrapheme32 graph;
     if (codepoint <= 127) {
@@ -93,10 +93,10 @@ MVMuint32 MVM_string_gb2312_decodestream(MVMThreadContext *tc, MVMDecodeStream *
     MVMGrapheme32 *buffer = NULL;
     MVMDecodeStreamBytes *cur_bytes = NULL;
     MVMDecodeStreamBytes *last_accept_bytes = ds->bytes_head;
-    MVMint32 last_accept_pos, last_was_cr;
+    int32_t last_accept_pos, last_was_cr;
     MVMuint32 reached_stopper;
 
-    MVMint32 last_was_first_byte;
+    int32_t last_was_first_byte;
     MVMuint16 last_codepoint;
     
     /* If there's no buffers, we're done. */ 
@@ -121,7 +121,7 @@ MVMuint32 MVM_string_gb2312_decodestream(MVMThreadContext *tc, MVMDecodeStream *
 
     while (cur_bytes) {
         /* Process this buffer. */
-        MVMint32 pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
+        int32_t pos = cur_bytes == ds->bytes_head ? ds->bytes_head_pos : 0;
         MVMuint8 *bytes = (MVMuint8 *)cur_bytes->bytes;
 
         while (pos < cur_bytes->length) {
@@ -204,7 +204,7 @@ done:
 
 char * MVM_string_gb2312_encode_substr(MVMThreadContext *tc, MVMString *str,
                                        MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement,
-                                       MVMint32 translate_newlines) {
+                                       int32_t translate_newlines) {
 
     MVMuint32 startu = (MVMuint32)start;
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
@@ -249,7 +249,7 @@ char * MVM_string_gb2312_encode_substr(MVMThreadContext *tc, MVMString *str,
                 result[out_pos++] = codepoint;
             }
             else {
-                MVMint32 gb2312_cp;
+                int32_t gb2312_cp;
                 gb2312_cp = gb2312_cp_to_index(codepoint);
                 if (gb2312_cp == GB2312_NULL) {
                     if (replacement) {

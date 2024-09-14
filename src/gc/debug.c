@@ -23,7 +23,7 @@ void MVM_gc_debug_find_region(MVMThreadContext *tc, void *ptr) {
             }
             if (thread_tc->gen2) {
                 MVMGen2Allocator *gen2 = thread_tc->gen2;
-                MVMint32 bin;
+                int32_t bin;
                 for (bin = 0; bin < MVM_GEN2_BINS; bin++) {
                     MVMGen2SizeClass *szc = &(gen2->size_classes[bin]);
                     MVMuint32 page;

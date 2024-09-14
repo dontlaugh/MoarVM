@@ -25,7 +25,7 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
         MVMCArrayREPRData *repr_data = MVM_malloc(sizeof(MVMCArrayREPRData));
         MVMObject *type    = MVM_repr_at_key_o(tc, info, str_consts.type);
         const MVMStorageSpec *ss = REPR(type)->get_storage_spec(tc, STABLE(type));
-        MVMint32 type_id   = REPR(type)->ID;
+        int32_t type_id   = REPR(type)->ID;
 
         MVM_ASSIGN_REF(tc, &(st->header), repr_data->elem_type, type);
         st->REPR_data = repr_data;
@@ -131,7 +131,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
     MVMCArrayBody     *dest_body = (MVMCArrayBody *)dest;
 
     if (src_body->managed) {
-        MVMint32 alsize = src_body->allocated * repr_data->elem_size;
+        int32_t alsize = src_body->allocated * repr_data->elem_size;
         dest_body->storage = malloc(alsize);
         memcpy(dest_body->storage, src_body->storage, alsize);
     }
@@ -148,7 +148,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 static void gc_cleanup(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMCArrayBody     *body      = (MVMCArrayBody *)data;
     MVMCArrayREPRData *repr_data = (MVMCArrayREPRData *)st->REPR_data;
-    MVMint32 i;
+    int32_t i;
 
     if (body->managed) {
         if (repr_data->elem_kind == MVM_CARRAY_ELEM_KIND_STRING) {
@@ -168,8 +168,8 @@ static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
 
 static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMCArrayBody *body = (MVMCArrayBody *)data;
-    const MVMint32 elems = body->elems;
-    MVMint32 i;
+    const int32_t elems = body->elems;
+    int32_t i;
 
     /* Don't traverse child_objs list if there isn't one. */
     if (!body->child_objs) return;
@@ -214,9 +214,9 @@ static void die_pos_nyi(MVMThreadContext *tc) {
 }
 
 
-static void expand(MVMThreadContext *tc, MVMCArrayREPRData *repr_data, MVMCArrayBody *body, MVMint32 min_size) {
+static void expand(MVMThreadContext *tc, MVMCArrayREPRData *repr_data, MVMCArrayBody *body, int32_t min_size) {
     MVMint8 is_complex;
-    MVMint32 next_size = body->allocated? 2 * body->allocated: 4;
+    int32_t next_size = body->allocated? 2 * body->allocated: 4;
 
     if (min_size > next_size)
         next_size = min_size;

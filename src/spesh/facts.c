@@ -90,7 +90,7 @@ static void decont_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *in
 
     /* If we know the original is decontainerized already, just copy its
      * info. */
-    MVMint32 in_flags = in_facts->flags;
+    int32_t in_flags = in_facts->flags;
     if ((in_flags & MVM_SPESH_FACT_TYPEOBJ) ||
             ((in_flags & MVM_SPESH_FACT_KNOWN_TYPE) &&
             !in_facts->type->st->container_spec)) {
@@ -413,7 +413,7 @@ static void log_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         }
         g->log_guards[g->num_log_guards].ins = guard;
         g->log_guards[g->num_log_guards].bb = ins->next ? bb : bb->linear_next;
-        facts->log_guards = MVM_spesh_alloc(tc, g, sizeof(MVMint32));
+        facts->log_guards = MVM_spesh_alloc(tc, g, sizeof(int32_t));
         facts->log_guards[0] = g->num_log_guards;
         facts->num_log_guards++;
         g->num_log_guards++;
@@ -423,7 +423,7 @@ static void log_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
 /* Visits the blocks in dominator tree order, recursively. */
 static void add_bb_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                          MVMSpeshPlanned *p) {
-    MVMint32 i;
+    int32_t i;
 
     /* Look for instructions that provide or propagate facts. */
     MVMSpeshIns *ins = bb->first_ins;

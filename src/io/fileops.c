@@ -14,7 +14,7 @@
 #define DEFAULT_MODE _S_IWRITE /* work around sucky libuv defaults */
 #endif
 
-static MVMint64 file_info_with_error(MVMThreadContext *tc, uv_stat_t* stat, MVMString *filename, MVMint32 use_lstat) {
+static MVMint64 file_info_with_error(MVMThreadContext *tc, uv_stat_t* stat, MVMString *filename, int32_t use_lstat) {
     char * const a = MVM_string_utf8_c8_encode_C_string(tc, filename);
     uv_fs_t req;
 
@@ -27,11 +27,11 @@ static MVMint64 file_info_with_error(MVMThreadContext *tc, uv_stat_t* stat, MVMS
     return res;
 }
 
-MVMint64 MVM_file_info_with_error(MVMThreadContext *tc, uv_stat_t* stat, MVMString *filename, MVMint32 use_lstat) {
+MVMint64 MVM_file_info_with_error(MVMThreadContext *tc, uv_stat_t* stat, MVMString *filename, int32_t use_lstat) {
     return file_info_with_error(tc, stat, filename, use_lstat);
 }
 
-static uv_stat_t file_info(MVMThreadContext *tc, MVMString *filename, MVMint32 use_lstat) {
+static uv_stat_t file_info(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) {
     char * const a = MVM_string_utf8_c8_encode_C_string(tc, filename);
     uv_fs_t req;
 
@@ -47,11 +47,11 @@ static uv_stat_t file_info(MVMThreadContext *tc, MVMString *filename, MVMint32 u
     return req.statbuf;
 }
 
-uv_stat_t MVM_file_info(MVMThreadContext *tc, MVMString *filename, MVMint32 use_lstat) {
+uv_stat_t MVM_file_info(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) {
     return file_info(tc, filename, use_lstat);
 }
 
-MVMint64 MVM_file_stat(MVMThreadContext *tc, MVMString *filename, MVMint64 status, MVMint32 use_lstat) {
+MVMint64 MVM_file_stat(MVMThreadContext *tc, MVMString *filename, MVMint64 status, int32_t use_lstat) {
     MVMint64 r = -1;
 
     switch (status) {
@@ -125,7 +125,7 @@ MVMint64 MVM_file_stat(MVMThreadContext *tc, MVMString *filename, MVMint64 statu
     return r;
 }
 
-MVMnum64 MVM_file_time(MVMThreadContext *tc, MVMString *filename, MVMint64 status, MVMint32 use_lstat) {
+MVMnum64 MVM_file_time(MVMThreadContext *tc, MVMString *filename, MVMint64 status, int32_t use_lstat) {
     uv_stat_t statbuf = file_info(tc, filename, use_lstat);
     uv_timespec_t ts;
 
@@ -220,7 +220,7 @@ void MVM_file_chown(MVMThreadContext *tc, MVMString *f, MVMuint64 uid, MVMuint64
     MVM_free(a);
 }
 
-MVMint64 MVM_file_exists(MVMThreadContext *tc, MVMString *f, MVMint32 use_lstat) {
+MVMint64 MVM_file_exists(MVMThreadContext *tc, MVMString *f, int32_t use_lstat) {
     uv_fs_t req;
     char * const a = MVM_string_utf8_c8_encode_C_string(tc, f);
     const MVMint64 result = (use_lstat
@@ -235,7 +235,7 @@ MVMint64 MVM_file_exists(MVMThreadContext *tc, MVMString *f, MVMint32 use_lstat)
 
 #ifdef _WIN32
 #define FILE_IS(name, rwx) \
-    MVMint64 MVM_file_is ## name (MVMThreadContext *tc, MVMString *filename, MVMint32 use_lstat) { \
+    MVMint64 MVM_file_is ## name (MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) { \
         uv_stat_t statbuf; \
         if (file_info_with_error(tc, &statbuf, filename, use_lstat) < 0) { \
             return 0; \
@@ -247,7 +247,7 @@ MVMint64 MVM_file_exists(MVMThreadContext *tc, MVMString *f, MVMint32 use_lstat)
     }
 FILE_IS(readable, READ)
 FILE_IS(writable, WRITE)
-MVMint64 MVM_file_isexecutable(MVMThreadContext *tc, MVMString *filename, MVMint32 use_lstat) {
+MVMint64 MVM_file_isexecutable(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) {
     MVMint64 r = 0;
     uv_stat_t statbuf;
     if (file_info_with_error(tc, &statbuf, filename, use_lstat) < 0)
@@ -309,7 +309,7 @@ MVMint64 MVM_are_we_group_member(MVMThreadContext *tc, gid_t group) {
 }
 
 #define FILE_IS(name, rwx) \
-    MVMint64 MVM_file_is ## name (MVMThreadContext *tc, MVMString *filename, MVMint32 use_lstat) { \
+    MVMint64 MVM_file_is ## name (MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) { \
         uv_stat_t statbuf; \
         if (file_info_with_error(tc, &statbuf, filename, use_lstat) < 0) \
             return 0; \
@@ -323,7 +323,7 @@ MVMint64 MVM_are_we_group_member(MVMThreadContext *tc, gid_t group) {
     }
 FILE_IS(readable, R)
 FILE_IS(writable, W)
-    MVMint64 MVM_file_isexecutable(MVMThreadContext *tc, MVMString *filename, MVMint32 use_lstat) {
+    MVMint64 MVM_file_isexecutable(MVMThreadContext *tc, MVMString *filename, int32_t use_lstat) {
         uv_stat_t statbuf;
         if (file_info_with_error(tc, &statbuf, filename, use_lstat) < 0)
             return 0;
@@ -338,7 +338,7 @@ FILE_IS(writable, W)
 #endif
 
 /* Get a MoarVM file handle representing one of the standard streams */
-MVMObject * MVM_file_get_stdstream(MVMThreadContext *tc, MVMint32 descriptor) {
+MVMObject * MVM_file_get_stdstream(MVMThreadContext *tc, int32_t descriptor) {
     return MVM_file_handle_from_fd(tc, descriptor);
 }
 

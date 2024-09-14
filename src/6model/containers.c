@@ -101,7 +101,7 @@ static void code_pair_deserialize(MVMThreadContext *tc, MVMSTable *st, MVMSerial
     MVM_ASSIGN_REF(tc, &(st->header), data->store_code, MVM_serialization_read_ref(tc, reader));
 }
 
-static MVMint32 code_pair_can_store(MVMThreadContext *tc, MVMObject *cont) {
+static int32_t code_pair_can_store(MVMThreadContext *tc, MVMObject *cont) {
     return 1;
 }
 
@@ -331,7 +331,7 @@ static void value_desc_cont_spesh(MVMThreadContext *tc, MVMSTable *st, MVMSpeshG
     }
 }
 
-static MVMint32 value_desc_cont_can_store(MVMThreadContext *tc, MVMObject *cont) {
+static int32_t value_desc_cont_can_store(MVMThreadContext *tc, MVMObject *cont) {
     return !MVM_is_null(tc, read_container_descriptor(cont));
 }
 
@@ -681,7 +681,7 @@ static void native_ref_deserialize(MVMThreadContext *tc, MVMSTable *st, MVMSeria
     /* Nothing to do. */
 }
 
-static MVMint32 native_ref_can_store(MVMThreadContext *tc, MVMObject *cont) {
+static int32_t native_ref_can_store(MVMThreadContext *tc, MVMObject *cont) {
     return 1;
 }
 

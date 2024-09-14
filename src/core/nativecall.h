@@ -61,7 +61,7 @@ struct MVMNativeCallback {
     MVMObject **types;
 
     /* The number of entries in typeinfos/types. */
-    MVMint32 num_types;
+    int32_t num_types;
 
     /* The MoarVM callsite object for this call. */
     MVMCallsite *cs;

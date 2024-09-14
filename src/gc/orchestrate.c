@@ -372,13 +372,13 @@ void MVM_gc_mark_thread_unblocked(MVMThreadContext *tc) {
  * blocked between checking this and calling unblock, it's safe anyway since
  * these cases are handled in MVM_gc_mark_thread_unblocked. Note that this
  * relies on a thread itself only ever calling block/unblock. */
-MVMint32 MVM_gc_is_thread_blocked(MVMThreadContext *tc) {
+int32_t MVM_gc_is_thread_blocked(MVMThreadContext *tc) {
     AO_t gc_status = MVM_load(&(tc->gc_status)) & MVMGCSTATUS_MASK;
     return gc_status == MVMGCStatus_UNABLE ||
            gc_status == MVMGCStatus_STOLEN;
 }
 
-static MVMint32 is_full_collection(MVMThreadContext *tc) {
+static int32_t is_full_collection(MVMThreadContext *tc) {
     MVMuint64 percent_growth, promoted;
     size_t rss;
 

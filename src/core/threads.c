@@ -270,11 +270,11 @@ MVMint64 MVM_thread_lock_count(MVMThreadContext *tc, MVMObject *thread_obj) {
     }
 }
 
-MVMint32 MVM_thread_cleanup_threads_list(MVMThreadContext *tc, MVMThread **head) {
+int32_t MVM_thread_cleanup_threads_list(MVMThreadContext *tc, MVMThread **head) {
     /* Assumed to be the only thread accessing the list.
      * must set next on every item. */
     MVMThread *new_list = NULL, *this = *head, *next;
-    MVMint32 alive = 0;
+    int32_t alive = 0;
     *head = NULL;
     while (this) {
         next = this->body.next;

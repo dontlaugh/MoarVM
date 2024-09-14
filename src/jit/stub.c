@@ -2,7 +2,7 @@
 /* Stub file to mark our lack of support for this architecture. We
    should probably stub dasm, too, rather than include x86 */
 
-MVMint32 MVM_jit_support() {
+int32_t MVM_jit_support() {
     return 0;
 }
 

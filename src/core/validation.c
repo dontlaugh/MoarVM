@@ -12,7 +12,7 @@
 #define GET_I16(pc, idx)    *((MVMint16 *)(pc + idx))
 #define GET_UI16(pc, idx)   *((MVMuint16 *)(pc + idx))
 
-MVM_STATIC_INLINE MVMuint32 GET_UI32(const MVMuint8 *pc, MVMint32 idx) {
+MVM_STATIC_INLINE MVMuint32 GET_UI32(const MVMuint8 *pc, int32_t idx) {
     MVMuint32 retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
@@ -46,7 +46,7 @@ typedef struct {
     MVMuint32         cur_instr;
     MVMCallsite      *cur_call;
     MVMuint16         cur_arg;
-    MVMint32          acceptable_max_arity;
+    int32_t          acceptable_max_arity;
     MVMint16          checkarity_seen;
     MVMCallsiteEntry  expected_named_arg;
     MVMuint16         remaining_args;

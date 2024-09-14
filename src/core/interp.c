@@ -37,19 +37,19 @@ MVM_STATIC_INLINE MVMuint16 check_lex(MVMThreadContext *tc, MVMFrame *f, MVMuint
 #define GET_I16(pc, idx)    *((MVMint16 *)(pc + idx))
 #define GET_UI16(pc, idx)   *((MVMuint16 *)(pc + idx))
 
-MVM_STATIC_INLINE MVMint32 GET_I32(const MVMuint8 *pc, MVMint32 idx) {
-    MVMint32 retval;
+MVM_STATIC_INLINE int32_t GET_I32(const MVMuint8 *pc, int32_t idx) {
+    int32_t retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
 }
 
-MVM_STATIC_INLINE MVMuint32 GET_UI32(const MVMuint8 *pc, MVMint32 idx) {
+MVM_STATIC_INLINE MVMuint32 GET_UI32(const MVMuint8 *pc, int32_t idx) {
     MVMuint32 retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
 }
 
-MVM_STATIC_INLINE MVMuint64 GET_UI64(const MVMuint8 *pc, MVMint32 idx) {
+MVM_STATIC_INLINE MVMuint64 GET_UI64(const MVMuint8 *pc, int32_t idx) {
     MVMuint64 retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
@@ -276,7 +276,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                 cur_op += 4;
                 goto NEXT;
             OP(trunc_i32):
-                GET_REG(cur_op, 0).i32 = (MVMint32)GET_REG(cur_op, 2).i64;
+                GET_REG(cur_op, 0).i32 = (int32_t)GET_REG(cur_op, 2).i64;
                 cur_op += 4;
                 goto NEXT;
             OP(extend_n32):
@@ -3454,7 +3454,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                 goto NEXT;
             OP(bind_sk):
                 MVM_io_bind(tc, GET_REG(cur_op, 0).o,
-                    GET_REG(cur_op, 2).s, GET_REG(cur_op, 4).i64, GET_REG(cur_op, 6).u16, (MVMint32)GET_REG(cur_op, 8).i64);
+                    GET_REG(cur_op, 2).s, GET_REG(cur_op, 4).i64, GET_REG(cur_op, 6).u16, (int32_t)GET_REG(cur_op, 8).i64);
                 cur_op += 10;
                 goto NEXT;
             OP(accept_sk):
@@ -4003,7 +4003,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
             OP(asynclisten):
                 GET_REG(cur_op, 0).o = MVM_io_socket_listen_async(tc,
                     GET_REG(cur_op, 2).o, GET_REG(cur_op, 4).o, GET_REG(cur_op, 6).s,
-                    GET_REG(cur_op, 8).i64, (MVMint32)GET_REG(cur_op, 10).i64, GET_REG(cur_op, 12).o);
+                    GET_REG(cur_op, 8).i64, (int32_t)GET_REG(cur_op, 10).i64, GET_REG(cur_op, 12).o);
                 cur_op += 14;
                 goto NEXT;
             OP(asyncwritebytes):
@@ -5365,7 +5365,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                         GET_REG(cur_op, 0).i64 = (MVMint64)(MVMint16)GET_REG(cur_op, 0).u64;
                     }
                     else if (size == 4) {
-                        GET_REG(cur_op, 0).i64 = (MVMint64)(MVMint32)GET_REG(cur_op, 0).u64;
+                        GET_REG(cur_op, 0).i64 = (MVMint64)(int32_t)GET_REG(cur_op, 0).u64;
                     }
                 }
                 cur_op += 8;
@@ -6005,7 +6005,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                 cur_op += 6;
                 goto NEXT;
             OP(sp_get_i32):
-                GET_REG(cur_op, 0).i64 = *((MVMint32 *)((char *)GET_REG(cur_op, 2).o + GET_UI16(cur_op, 4)));
+                GET_REG(cur_op, 0).i64 = *((int32_t *)((char *)GET_REG(cur_op, 2).o + GET_UI16(cur_op, 4)));
                 cur_op += 6;
                 goto NEXT;
             OP(sp_get_i16):
@@ -6055,7 +6055,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
             }
             OP(sp_bind_i32): {
                 MVMObject *o     = GET_REG(cur_op, 0).o;
-                *((MVMint32 *)((char *)o + GET_UI16(cur_op, 2))) = GET_REG(cur_op, 4).i64;
+                *((int32_t *)((char *)o + GET_UI16(cur_op, 2))) = GET_REG(cur_op, 4).i64;
                 cur_op += 6;
                 goto NEXT;
             }
@@ -6227,14 +6227,14 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
             OP(sp_p6oget_i32): {
                 MVMObject *o     = GET_REG(cur_op, 2).o;
                 char      *data  = MVM_p6opaque_real_data(tc, OBJECT_BODY(o));
-                GET_REG(cur_op, 0).i64 = *((MVMint32 *)(data + GET_UI16(cur_op, 4)));
+                GET_REG(cur_op, 0).i64 = *((int32_t *)(data + GET_UI16(cur_op, 4)));
                 cur_op += 6;
                 goto NEXT;
             }
             OP(sp_p6obind_i32): {
                 MVMObject *o     = GET_REG(cur_op, 0).o;
                 char      *data  = MVM_p6opaque_real_data(tc, OBJECT_BODY(o));
-                *((MVMint32 *)(data + GET_UI16(cur_op, 2))) = (MVMint32)GET_REG(cur_op, 4).i64;
+                *((int32_t *)(data + GET_UI16(cur_op, 2))) = (int32_t)GET_REG(cur_op, 4).i64;
                 cur_op += 6;
                 goto NEXT;
             }
@@ -6299,7 +6299,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                 MVMP6bigintBody *body = (MVMP6bigintBody *)((char *)obj + GET_UI16(cur_op, 6));
                 MVMint64 value = GET_REG(cur_op, 8).i64;
                 if (MVM_IS_32BIT_INT(value)) {
-                    body->u.smallint.value = (MVMint32)value;
+                    body->u.smallint.value = (int32_t)value;
                     body->u.smallint.flag = MVM_BIGINT_32_FLAG;
                 }
                 else {
@@ -6347,7 +6347,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                     MVMObject *obj = fastcreate(tc, cur_op);
                     MVMP6bigintBody *body = (MVMP6bigintBody *)((char *)obj + GET_UI16(cur_op, 6));
                     if (MVM_IS_32BIT_INT(value)) {
-                        body->u.smallint.value = (MVMint32)value;
+                        body->u.smallint.value = (int32_t)value;
                         body->u.smallint.flag = MVM_BIGINT_32_FLAG;
                     }
                     else {
@@ -6534,7 +6534,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                         if (result < -1 || result >= 15) {
                             result_obj = fastcreate(tc, cur_op);
                             bc = (MVMP6bigintBody *)((char *)result_obj + offset);
-                            bc->u.smallint.value = (MVMint32)result;
+                            bc->u.smallint.value = (int32_t)result;
                             bc->u.smallint.flag = MVM_BIGINT_32_FLAG;
                         }
                         else {
@@ -6565,7 +6565,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                         if (result < -1 || result >= 15) {
                             result_obj = fastcreate(tc, cur_op);
                             bc = (MVMP6bigintBody *)((char *)result_obj + offset);
-                            bc->u.smallint.value = (MVMint32)result;
+                            bc->u.smallint.value = (int32_t)result;
                             bc->u.smallint.flag = MVM_BIGINT_32_FLAG;
                         }
                         else {
@@ -6596,7 +6596,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                         if (result < -1 || result >= 15) {
                             result_obj = fastcreate(tc, cur_op);
                             bc = (MVMP6bigintBody *)((char *)result_obj + offset);
-                            bc->u.smallint.value = (MVMint32)result;
+                            bc->u.smallint.value = (int32_t)result;
                             bc->u.smallint.flag = MVM_BIGINT_32_FLAG;
                         }
                         else {

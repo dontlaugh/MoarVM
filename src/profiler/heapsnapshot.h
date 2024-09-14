@@ -246,7 +246,7 @@ struct MVMHeapSnapshotWorkItem {
     void *target;
 };
 
-MVMint32 MVM_profile_heap_profiling(MVMThreadContext *tc);
+int32_t MVM_profile_heap_profiling(MVMThreadContext *tc);
 void MVM_profile_heap_start(MVMThreadContext *tc, MVMObject *config);
 void MVM_profile_heap_take_snapshot(MVMThreadContext *tc);
 MVMObject * MVM_profile_heap_end(MVMThreadContext *tc);

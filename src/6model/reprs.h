@@ -226,6 +226,6 @@ MVMint64 MVM_REPR_DEFAULT_EXISTS_KEY(MVMThreadContext *tc, MVMSTable *st, MVMObj
 void MVM_REPR_DEFAULT_DELETE_KEY(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMObject *key);
 MVMStorageSpec MVM_REPR_DEFAULT_GET_VALUE_STORAGE_SPEC(MVMThreadContext *tc, MVMSTable *st);
 
-MVM_STATIC_INLINE MVMint32 MVM_code_iscode(MVMThreadContext *tc, MVMObject *code) {
+MVM_STATIC_INLINE int32_t MVM_code_iscode(MVMThreadContext *tc, MVMObject *code) {
     return REPR(code)->ID == MVM_REPR_ID_MVMCode && IS_CONCRETE(code);
 }

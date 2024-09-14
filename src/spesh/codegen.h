@@ -10,9 +10,9 @@ struct MVMSpeshCode {
     MVMFrameHandler *handlers;
 
     /* Deopt usage info, which will be stored on the candidate. */
-    MVMint32 *deopt_usage_info;
+    int32_t *deopt_usage_info;
 
-    MVMint32 *deopt_synths;
+    int32_t *deopt_synths;
     MVMuint64 num_deopt_synths;
 };
 

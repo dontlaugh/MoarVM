@@ -531,7 +531,7 @@ static MVMDispSysCall dispatcher_track_resume_state = {
 
 /* dispatcher-next-resumption */
 static void dispatcher_next_resumption_impl(MVMThreadContext *tc, MVMArgs arg_info) {
-    MVMint32 have_next_resumption = MVM_disp_program_record_next_resumption(tc,
+    int32_t have_next_resumption = MVM_disp_program_record_next_resumption(tc,
             arg_info.callsite->num_pos == 1 ? get_obj_arg(arg_info, 0) : NULL);
     MVM_args_set_result_int(tc, have_next_resumption, MVM_RETURN_CURRENT_FRAME);
 }
@@ -1256,7 +1256,7 @@ static void async_unix_listen_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *queue      = get_obj_arg(arg_info, 0);
     MVMObject *schedulee  = get_obj_arg(arg_info, 1);
     MVMString *path       = get_str_arg(arg_info, 2);
-    MVMint32   backlog    = get_int_arg(arg_info, 3);
+    int32_t   backlog    = get_int_arg(arg_info, 3);
     MVMObject *async_type = get_obj_arg(arg_info, 4);
     MVM_io_socket_listen_unix_async(tc, queue, schedulee, path, backlog, async_type);
 }
@@ -1298,7 +1298,7 @@ static MVMDispSysCall handle_open_mode = {
 /* file-stat */
 static void file_stat_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMString *filename = get_str_arg(arg_info, 0);
-    MVMint32  use_lstat = get_int_arg(arg_info, 1);
+    int32_t  use_lstat = get_int_arg(arg_info, 1);
     MVMStat   *stat_obj = (MVMStat *)MVM_repr_alloc_init(tc, tc->instance->boot_types.BOOTStat);
     uv_stat_t     *stat = MVM_calloc(1, sizeof(uv_stat_t));
     stat_obj->body.exists  = MVM_file_info_with_error(tc, stat, filename, use_lstat) < 0 ? 0 : 1;
@@ -1318,7 +1318,7 @@ static MVMDispSysCall file_stat = {
 /* stat-flags */
 static void stat_flags_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat   *stat_obj  = (MVMStat *)get_obj_arg(arg_info, 0);
-    MVMint32   stat_flag = get_int_arg(arg_info, 1);
+    int32_t   stat_flag = get_int_arg(arg_info, 1);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
     MVMint64           r = -1;
     switch (stat_flag) {
@@ -1383,7 +1383,7 @@ static MVMDispSysCall stat_flags = {
 /* stat-time */
 static void stat_time_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat   *stat_obj  = (MVMStat *)get_obj_arg(arg_info, 0);
-    MVMint32   stat_flag = get_int_arg(arg_info, 1);
+    int32_t   stat_flag = get_int_arg(arg_info, 1);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
     uv_timespec_t     ts;
     switch (stat_flag) {
@@ -1415,7 +1415,7 @@ static MVMDispSysCall stat_time = {
 /* stat-time-nanos */
 static void stat_time_nanos_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMStat   *stat_obj  = (MVMStat *)get_obj_arg(arg_info, 0);
-    MVMint32   stat_flag = get_int_arg(arg_info, 1);
+    int32_t   stat_flag = get_int_arg(arg_info, 1);
     uv_stat_t *file_stat = stat_obj->body.uv_stat;
     uv_timespec_t     ts;
     switch (stat_flag) {

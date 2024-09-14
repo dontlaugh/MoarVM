@@ -29,7 +29,7 @@ struct MVMSpeshCandidateBody {
     MVMuint32 num_deopts;
 
     /* Deoptimization mappings. */
-    MVMint32 *deopts;
+    int32_t *deopts;
 
     /* Bit field of named args used to put in place during deopt, since we
      * typically don't update the array in specialized code. */
@@ -78,10 +78,10 @@ struct MVMSpeshCandidateBody {
      *  - The deopt indices
      *  There is a trailing -1 bytecode offset to mark the end of the data.
      */
-    MVMint32 *deopt_usage_info;
+    int32_t *deopt_usage_info;
 
-    MVMint32 *deopt_synths;
-    MVMint32 num_deopt_synths;
+    int32_t *deopt_synths;
+    int32_t num_deopt_synths;
 };
 
 struct MVMSpeshCandidate {

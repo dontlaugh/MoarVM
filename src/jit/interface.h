@@ -10,7 +10,7 @@ MVM_STATIC_INLINE MVMuint8 * MVM_frame_effective_bytecode(MVMFrame *f) {
 MVM_STATIC_INLINE void MVM_jit_code_assert_within_region(MVMThreadContext *tc, MVMJitCode *code,
         void *address) {
 #if MVM_JIT_DEBUG
-    MVMint32 ofs = (char*)address - (char*)code->func_ptr;
+    int32_t ofs = (char*)address - (char*)code->func_ptr;
     if ((0 <= ofs) && (ofs < code->size))
         return;
     MVM_panic(1, "JIT: address out of range for code!\n"

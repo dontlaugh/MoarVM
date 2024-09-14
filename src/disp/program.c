@@ -122,7 +122,7 @@ static void dump_recording_values(MVMThreadContext *tc, MVMDispProgramRecording 
         }
         if (rec->resume_kind != MVMDispProgramRecordingResumeNone)
             for (MVMuint32 j = 0; j < MVM_VECTOR_ELEMS(rec->resumptions); j++)
-                if ((MVMint32)i == rec->resumptions[j].new_resume_state_value)
+                if ((int32_t)i == rec->resumptions[j].new_resume_state_value)
                     fprintf(stderr, "      Used as new resume state for resumption %d\n", j);
     }
 };
@@ -974,9 +974,9 @@ MVMObject * MVM_disp_program_record_track_arg(MVMThreadContext *tc, MVMObject *c
 
     /* Walk the capture path to resolve the index. We start at the deepest
      * point and work upward in the tree. */
-    MVMint32 i;
+    int32_t i;
     MVMuint32 real_index = index;
-    MVMint32 found_value_index = -1;
+    int32_t found_value_index = -1;
     MVMuint32 is_resume_init_capture = 0;
     for (i = MVM_VECTOR_ELEMS(p.path) - 1; i >= 0 && found_value_index < 0; i--) {
         switch (p.path[i]->transformation) {
@@ -1526,7 +1526,7 @@ MVMint64 MVM_disp_program_record_capture_is_arg_literal(MVMThreadContext *tc,
     calculate_capture_path(tc, record, capture, &p);
 
     /* Walk the capture path to see where the argument came from. */
-    MVMint32 i;
+    int32_t i;
     MVMuint32 real_index = index;
     for (i = MVM_VECTOR_ELEMS(p.path) - 1; i >= 0; i--) {
         switch (p.path[i]->transformation) {
@@ -1812,7 +1812,7 @@ void MVM_disp_program_record_delegate(MVMThreadContext *tc, MVMString *dispatche
 
 /* Record a delegation to the next resumption in this dispatch, assuming that
  * there is one. */
-MVMint32 MVM_disp_program_record_next_resumption(MVMThreadContext *tc, MVMObject *with_args) {
+int32_t MVM_disp_program_record_next_resumption(MVMThreadContext *tc, MVMObject *with_args) {
     /* Make sure we're in a dispatcher and that we're in a resume, and try to find
      * the next level dispatch. Return zero if there is none. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
@@ -2478,7 +2478,7 @@ static void emit_args_ops(MVMThreadContext *tc, MVMCallStackDispatchRecord *reco
     MVMuint32 i;
     for (i = 0; i < MVM_VECTOR_ELEMS(p.path); i++) {
         MVMCapture *cur_capture = (MVMCapture *)p.path[i]->capture;
-        MVMint32 skipped_drops = 0;
+        int32_t skipped_drops = 0;
         while (!cur_capture) {
             assert(p.path[i]->transformation == MVMDispProgramRecordingDrop);
             skipped_drops++;
@@ -2579,9 +2579,9 @@ static void emit_args_ops(MVMThreadContext *tc, MVMCallStackDispatchRecord *reco
         for (i = 0; i < num_to_produce; i++) {
             /* Work out the source of this arg in the capture. For the rationale
              * for this algorithm, see MVM_disp_program_record_track_arg. */
-            MVMint32 j;
+            int32_t j;
             MVMuint32 real_index = i;
-            MVMint32 found_value_index = -1;
+            int32_t found_value_index = -1;
             MVMuint32 from_resume_init_capture = 0;
             for (j = MVM_VECTOR_ELEMS(p.path) - 1; j >= 0 && found_value_index < 0; j--) {
                 switch (p.path[j]->transformation) {
@@ -2708,9 +2708,9 @@ static void produce_resumption_init_values(MVMThreadContext *tc, compile_state *
 
     /* Go through the capture and source each value. */
     for (MVMuint16 i = 0; i < arg_count; i++) {
-        MVMint32 j;
+        int32_t j;
         MVMuint32 real_index = i;
-        MVMint32 found_value_index = -1;
+        int32_t found_value_index = -1;
         MVMuint32 is_resume_init_capture = 0;
         for (j = MVM_VECTOR_ELEMS(p.path) - 1; j >= 0 && found_value_index < 0; j--) {
             switch (p.path[j]->transformation) {
@@ -3219,7 +3219,7 @@ MVMuint32 MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatch
 #define GET_ARG MVMRegister val = args->source[args->map[op.arg_guard.arg_idx]]
 #define MAX_RES_STATES 8
 MVMint64 MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
-        MVMCallStackDispatchRun *record, MVMint32 spesh_cid, MVMuint32 bytecode_offset,
+        MVMCallStackDispatchRun *record, int32_t spesh_cid, MVMuint32 bytecode_offset,
         MVMuint32 dp_index) {
 #if MVM_CGOTO
 #include "labels.h"

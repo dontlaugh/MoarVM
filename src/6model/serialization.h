@@ -4,10 +4,10 @@
  * filled out and grown as needed. */
 struct MVMSerializationRoot {
     /* The version of the serialization format. */
-    MVMint32 version;
+    int32_t version;
 
     /* How many parameterized type intern entries we have */
-    MVMint32  num_param_interns;
+    int32_t  num_param_interns;
 
     /* The SC we're serializing/deserializing. */
     MVMSerializationContext *sc;
@@ -22,7 +22,7 @@ struct MVMSerializationRoot {
 
     /* The number of STables, as well as pointers to the STables
      * table and data chunk. */
-    MVMint32  num_stables;
+    int32_t  num_stables;
     char     *stables_table;
     char     *stables_data;
 
@@ -30,11 +30,11 @@ struct MVMSerializationRoot {
      * table and data chunk. */
     char     *objects_table;
     char     *objects_data;
-    MVMint32  num_objects;
+    int32_t  num_objects;
 
     /* The number of closures, as we as a pointer to the closures
      * table. */
-    MVMint32  num_closures;
+    int32_t  num_closures;
     char     *closures_table;
 
     /* The number of contexts (e.g. frames), as well as pointers to
@@ -44,7 +44,7 @@ struct MVMSerializationRoot {
     MVMuint32 num_contexts;
 
     /* The number of repossessions and pointer to repossessions table. */
-    MVMint32  num_repos;
+    int32_t  num_repos;
     char     *repos_table;
 
     /* The the data segment containing them parameterized type intern entries */
@@ -75,10 +75,10 @@ struct MVMSerializationReader {
 
     /* Current offsets for the data chunks (also correspond to the amount of
      * data written in to them). */
-    MVMint32 stables_data_offset;
-    MVMint32 objects_data_offset;
-    MVMint32 contexts_data_offset;
-    MVMint32 param_interns_data_offset;
+    int32_t stables_data_offset;
+    int32_t objects_data_offset;
+    int32_t contexts_data_offset;
+    int32_t param_interns_data_offset;
 
     /* Limits up to where we can read stables, objects and contexts data. */
     char *stables_data_end;
@@ -90,7 +90,7 @@ struct MVMSerializationReader {
      * the buffer pointer itself, the current offset and the amount that is
      * allocated. These are all pointers back into this data structure. */
     char     **cur_read_buffer;
-    MVMint32  *cur_read_offset;
+    int32_t  *cur_read_offset;
     char     **cur_read_end;
 
     /* List of code objects (static first, then all the closures). */

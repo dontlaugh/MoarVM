@@ -192,7 +192,7 @@ void MVM_gc_root_add_tc_roots_to_worklist(MVMThreadContext *tc, MVMGCWorklist *w
     while (!MVM_str_hash_at_end(tc, cache, iterator)) {
         struct MVMNativeCallbackCacheHead *current_cbceh
             = MVM_str_hash_current_nocheck(tc, cache, iterator);
-        MVMint32 i;
+        int32_t i;
         MVMNativeCallback *entry = current_cbceh->head;
         add_collectable(tc, worklist, snapshot, current_cbceh->hash_handle.key,
                         "Native callback cache key");
@@ -258,7 +258,7 @@ void MVM_gc_root_temp_push_slow(MVMThreadContext *tc, MVMCollectable **obj_ref) 
  * (at present, just nativecall callbacks) we don't clear things that
  * are pushed by the native call itself. */
 MVMuint32 MVM_gc_root_temp_mark(MVMThreadContext *tc) {
-    MVMint32 current = tc->mark_temproots;
+    int32_t current = tc->mark_temproots;
     tc->mark_temproots = tc->num_temproots;
     return current;
 }

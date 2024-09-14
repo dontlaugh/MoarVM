@@ -27,7 +27,7 @@ MVM_STATIC_INLINE void clear_dynlex_cache(MVMThreadContext *tc, MVMFrame *f) {
  * record on the callstack.
  */
 static void uninline(MVMThreadContext *tc, MVMFrame *f, MVMSpeshCandidate *cand,
-                     MVMuint32 offset, MVMint32 all, MVMint32 is_pre) {
+                     MVMuint32 offset, int32_t all, int32_t is_pre) {
     /* Make absolutely sure this is the top thing on the callstack. */
     assert(MVM_callstack_current_frame(tc) == f);
 
@@ -35,7 +35,7 @@ static void uninline(MVMThreadContext *tc, MVMFrame *f, MVMSpeshCandidate *cand,
      * not exist to reference!) Thus it can be created on the stack. We need to
      * recreate the frames deepest first. The inlines list is sorted most nested
      * first, thus we traverse it in the opposite order. */
-    MVMint32 i;
+    int32_t i;
     for (i = cand->body.num_inlines - 1; i >= 0; i--) {
         MVMuint32 start = cand->body.inlines[i].start;
         MVMuint32 end = cand->body.inlines[i].end;
@@ -48,7 +48,7 @@ static void uninline(MVMThreadContext *tc, MVMFrame *f, MVMSpeshCandidate *cand,
              * If so, we'll need to recreate a dispatch run record under the
              * call frame, in order that we can successfully resume. */
             if (cand->body.inlines[i].first_spesh_resume_init != -1) {
-                MVMint32 j = cand->body.inlines[i].last_spesh_resume_init;
+                int32_t j = cand->body.inlines[i].last_spesh_resume_init;
                 while (j >= cand->body.inlines[i].first_spesh_resume_init) {
                     /* Allocate the resume init record. */
                     MVMSpeshResumeInit *ri = &(cand->body.resume_inits[j]);
@@ -215,7 +215,7 @@ static void materialize_object(MVMThreadContext *tc, MVMFrame *f, MVMuint16 **ma
 }
 
 /* Materialize all replaced objects that need to be at this deopt index. */
-static void materialize_replaced_objects(MVMThreadContext *tc, MVMFrame *f, MVMint32 deopt_index) {
+static void materialize_replaced_objects(MVMThreadContext *tc, MVMFrame *f, int32_t deopt_index) {
     MVMuint32 i;
     MVMSpeshCandidate *cand = f->spesh_cand;
     MVMuint32 num_deopt_points = MVM_VECTOR_ELEMS(cand->body.deopt_pea.deopt_point);
@@ -266,7 +266,7 @@ void MVM_spesh_deopt_one(MVMThreadContext *tc, MVMuint32 deopt_idx) {
     if (f->spesh_cand) {
         MVMuint32 deopt_target = f->spesh_cand->body.deopts[deopt_idx * 2];
         MVMuint32 deopt_offset = MVM_spesh_deopt_bytecode_pos(f->spesh_cand->body.deopts[deopt_idx * 2 + 1]);
-        MVMint32 is_pre = MVM_spesh_deopt_is_pre(f->spesh_cand->body.deopts[deopt_idx * 2 + 1]);
+        int32_t is_pre = MVM_spesh_deopt_is_pre(f->spesh_cand->body.deopts[deopt_idx * 2 + 1]);
 #if MVM_LOG_DEOPTS
         fprintf(stderr, "    Will deopt %u -> %u\n", deopt_offset, deopt_target);
 #endif
@@ -351,7 +351,7 @@ void MVM_spesh_deopt_all(MVMThreadContext *tc) {
 /* Takes a frame that we're lazily deoptimizing and finds the currently
  * active deopt index at the point of the call it was making. Returns -1 if
  * none can be resolved. */
-MVMint32 MVM_spesh_deopt_find_inactive_frame_deopt_idx(MVMThreadContext *tc,
+int32_t MVM_spesh_deopt_find_inactive_frame_deopt_idx(MVMThreadContext *tc,
     MVMFrame *f, MVMSpeshCandidate *spesh_cand)
 {
     /* Is it JITted code? */
@@ -359,7 +359,7 @@ MVMint32 MVM_spesh_deopt_find_inactive_frame_deopt_idx(MVMThreadContext *tc,
         MVMJitCode *jitcode = spesh_cand->body.jitcode;
         MVMuint32 idx = MVM_jit_code_get_active_deopt_idx(tc, jitcode, f);
         if (idx < jitcode->num_deopts) {
-            MVMint32 deopt_idx = jitcode->deopts[idx].idx;
+            int32_t deopt_idx = jitcode->deopts[idx].idx;
 #if MVM_LOG_DEOPTS
             fprintf(stderr, "    Found deopt label for JIT (idx %d)\n", deopt_idx);
 #endif
@@ -369,11 +369,11 @@ MVMint32 MVM_spesh_deopt_find_inactive_frame_deopt_idx(MVMThreadContext *tc,
     else {
         /* Not JITted; see if we can find the return address in the deopt table. */
         MVMuint32 ret_offset = (f == tc->cur_frame ? *(tc->interp_cur_op) : f->return_address) - spesh_cand->body.bytecode;
-        MVMint32 n = spesh_cand->body.num_deopts * 2;
-        MVMint32 i;
+        int32_t n = spesh_cand->body.num_deopts * 2;
+        int32_t i;
         for (i = 0; i < n; i += 2) {
             if (MVM_spesh_deopt_bytecode_pos(spesh_cand->body.deopts[i + 1]) == ret_offset) {
-                MVMint32 deopt_idx = i / 2;
+                int32_t deopt_idx = i / 2;
 #if MVM_LOG_DEOPTS
                 fprintf(stderr, "    Found deopt index for interpeter (idx %d)\n", deopt_idx);
 #endif
@@ -404,7 +404,7 @@ void MVM_spesh_deopt_during_unwind(MVMThreadContext *tc) {
 #endif
 
     /* Find the deopt index, and assuming it's found, deopt. */
-    MVMint32 deopt_idx = MVM_spesh_deopt_find_inactive_frame_deopt_idx(tc, frame, spesh_cand);
+    int32_t deopt_idx = MVM_spesh_deopt_find_inactive_frame_deopt_idx(tc, frame, spesh_cand);
     if (deopt_idx >= 0) {
         MVMuint32 deopt_target = spesh_cand->body.deopts[deopt_idx * 2];
         MVMuint32 deopt_offset = MVM_spesh_deopt_bytecode_pos(spesh_cand->body.deopts[deopt_idx * 2 + 1]);

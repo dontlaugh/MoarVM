@@ -39,7 +39,7 @@ struct MVMSpeshGraph {
     MVMSpeshLogGuard *log_guards;
 
     /* Number of log-based guards we have. */
-    MVMint32 num_log_guards;
+    int32_t num_log_guards;
 
     /* Region allocator for spesh nodes */
     MVMRegionAlloc region_alloc;
@@ -56,7 +56,7 @@ struct MVMSpeshGraph {
      * code-gen phase for the specialized bytecode will fill in the second
      * integers afterwards, which are the return address in the specialized
      * bytecode. */
-    MVMint32 *deopt_addrs;
+    int32_t *deopt_addrs;
     MVMuint32 num_deopt_addrs;
     MVMuint32 alloc_deopt_addrs;
 
@@ -171,11 +171,11 @@ struct MVMSpeshBB {
 
     /* Index (just an ascending integer along the linear_next chain), used as
      * the block identifier in dominance computation and for debug output. */
-    MVMint32 idx;
+    int32_t idx;
 
     /* The block's reverse post-order index, assinged when computing
      * dominance. */
-    MVMint32 rpo_idx;
+    int32_t rpo_idx;
 
     /* We cache the instruction pointer of the very first instruction so that
      * we can output a line number for every BB */
@@ -215,7 +215,7 @@ struct MVMSpeshIns {
 union MVMSpeshOperand {
     MVMint64     lit_i64;
     MVMint64     lit_ui64;
-    MVMint32     lit_i32;
+    int32_t     lit_i32;
     MVMuint32    lit_ui32;
     MVMint16     lit_i16;
     MVMuint16    lit_ui16;
@@ -232,7 +232,7 @@ union MVMSpeshOperand {
         MVMuint16 outers;
     } lex;
     struct {
-        MVMint32  i;    /* SSA-computed version. */
+        int32_t  i;    /* SSA-computed version. */
         MVMuint16 orig; /* Original register number. */
     } reg;
 };
@@ -243,7 +243,7 @@ struct MVMSpeshAnn {
     MVMSpeshAnn *next;
 
     /* The type of annotation we have. */
-    MVMint32 type;
+    int32_t type;
 
     /* Order in which the annotation was created; only used
      * for comments right now, but put in front of the union
@@ -253,8 +253,8 @@ struct MVMSpeshAnn {
     /* Data (meaning depends on type). */
     union {
         MVMuint32 frame_handler_index;
-        MVMint32 deopt_idx;
-        MVMint32 inline_idx;
+        int32_t deopt_idx;
+        int32_t inline_idx;
         MVMuint32 bytecode_offset;
         struct {
             MVMuint32 filename_string_index;
@@ -290,8 +290,8 @@ MVMSpeshGraph * MVM_spesh_graph_create_from_cand(MVMThreadContext *tc, MVMStatic
     MVMSpeshCandidate *cand, MVMuint32 cfg_only, MVMSpeshIns ***deopt_usage_ins_out);
 MVMSpeshBB * MVM_spesh_graph_linear_prev(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *search);
 void MVM_spesh_graph_grow_deopt_table(MVMThreadContext *tc, MVMSpeshGraph *g);
-MVMint32 MVM_spesh_graph_add_deopt_annotation(MVMThreadContext *tc, MVMSpeshGraph *g,
-    MVMSpeshIns *ins_node, MVMuint32 deopt_target, MVMint32 type);
+int32_t MVM_spesh_graph_add_deopt_annotation(MVMThreadContext *tc, MVMSpeshGraph *g,
+    MVMSpeshIns *ins_node, MVMuint32 deopt_target, int32_t type);
 MVMSpeshBB ** MVM_spesh_graph_reverse_postorder(MVMThreadContext *tc, MVMSpeshGraph *g);
 void MVM_spesh_graph_recompute_dominance(MVMThreadContext *tc, MVMSpeshGraph *g);
 void MVM_spesh_graph_mark(MVMThreadContext *tc, MVMSpeshGraph *g, MVMGCWorklist *worklist);
@@ -299,7 +299,7 @@ void MVM_spesh_graph_describe(MVMThreadContext *tc, MVMSpeshGraph *g, MVMHeapSna
 void MVM_spesh_graph_destroy(MVMThreadContext *tc, MVMSpeshGraph *g);
 MVM_PUBLIC void * MVM_spesh_alloc(MVMThreadContext *tc, MVMSpeshGraph *g, size_t bytes);
 MVMOpInfo *MVM_spesh_graph_get_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint32 nrargs);
-void MVM_spesh_graph_place_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMint32 n, MVMuint16 var);
+void MVM_spesh_graph_place_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, int32_t n, MVMuint16 var);
 
 MVM_PUBLIC void MVM_spesh_graph_add_comment(MVMThreadContext *tc, MVMSpeshGraph *g,
     MVMSpeshIns *ins, const char *fmt, ...);
