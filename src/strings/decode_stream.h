@@ -44,7 +44,7 @@ struct MVMDecodeStream {
 
     /* Currently stores only whether or not the decoder should decode strictly or
      * permissively. Set to 1 for permissive decoding, default is strict */
-    MVMuint32 config;
+    uint32_t config;
 };
 
 /* A single bunch of bytes added to a decode stream, with a link to the next

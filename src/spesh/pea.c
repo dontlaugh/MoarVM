@@ -145,10 +145,10 @@ static MVMuint16 get_deopt_materialization_info(MVMThreadContext *tc, MVMSpeshGr
 
         /* Build up information about registers containing attribute data. */
         MVMP6opaqueREPRData *repr_data = (MVMP6opaqueREPRData *)alloc->type->st->REPR_data;
-        MVMuint32 num_attrs = repr_data->num_attributes;
+        uint32_t num_attrs = repr_data->num_attributes;
         MVMuint16 *attr_regs;
         if (num_attrs > 0) {
-            MVMuint32 i;
+            uint32_t i;
             attr_regs = MVM_malloc(num_attrs * sizeof(MVMuint16));
             for (i = 0; i < num_attrs; i++)
                 attr_regs[i] = gs->attr_regs[alloc->hypothetical_attr_reg_idxs[i]];
@@ -183,9 +183,9 @@ static void apply_transform(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *
             MVMSTable *st = t->fastcreate.st;
             MVMP6opaqueREPRData *repr_data = (MVMP6opaqueREPRData *)st->REPR_data;
             MVMSpeshPEAAllocation *alloc = t->allocation;
-            MVMuint32 i;
+            uint32_t i;
             for (i = 0; i < repr_data->num_attributes; i++) {
-                MVMuint32 idx = alloc->hypothetical_attr_reg_idxs[i];
+                uint32_t idx = alloc->hypothetical_attr_reg_idxs[i];
                 gs->attr_regs[idx] = MVM_spesh_manipulate_get_unique_reg(tc, g,
                     flattened_type_to_register_kind(tc, repr_data->flattened_stables[i]));
             }
@@ -307,7 +307,7 @@ static MVMSpeshPEAAllocation * try_track_allocation(MVMThreadContext *tc, MVMSpe
     if (st->REPR->ID == MVM_REPR_ID_P6opaque) {
         MVMP6opaqueREPRData *repr_data = (MVMP6opaqueREPRData *)st->REPR_data;
         MVMSpeshPEAAllocation *alloc = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshPEAAllocation));
-        MVMuint32 i;
+        uint32_t i;
         alloc->allocator = alloc_ins;
         alloc->type = st->WHAT;
         alloc->hypothetical_attr_reg_idxs = MVM_spesh_alloc(tc, g,
@@ -337,7 +337,7 @@ static void add_transform_for_bb(MVMThreadContext *tc, GraphState *gs, MVMSpeshB
  * any. The _h form takes a hypothetical register ID, the _c form a
  * concrete register.*/
 static MVMSpeshFacts * get_shadow_facts_h(MVMThreadContext *tc, GraphState *gs, MVMuint16 idx) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < gs->shadow_facts_num; i++) {
         ShadowFact *sf = &(gs->shadow_facts[i]);
         if (sf->is_hypothetical && sf->hypothetical_reg_idx == idx)
@@ -346,7 +346,7 @@ static MVMSpeshFacts * get_shadow_facts_h(MVMThreadContext *tc, GraphState *gs, 
     return NULL;
 }
 static MVMSpeshFacts * get_shadow_facts_c(MVMThreadContext *tc, GraphState *gs, MVMSpeshOperand o) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < gs->shadow_facts_num; i++) {
         ShadowFact *sf = &(gs->shadow_facts[i]);
         if (!sf->is_hypothetical && sf->concrete_orig == o.reg.orig &&
@@ -391,12 +391,12 @@ static MVMSpeshFacts * create_shadow_facts_c(MVMThreadContext *tc, GraphState *g
 /* Map an object offset to the register with its scalar replacement. */
 static MVMuint16 attribute_offset_to_reg(MVMThreadContext *tc, MVMSpeshPEAAllocation *alloc,
         MVMint16 offset) {
-    MVMuint32 idx = MVM_p6opaque_offset_to_attr_idx(tc, alloc->type, offset);
+    uint32_t idx = MVM_p6opaque_offset_to_attr_idx(tc, alloc->type, offset);
     return alloc->hypothetical_attr_reg_idxs[idx];
 }
 
 /* Check if an allocation is being tracked. */
-static MVMuint32 allocation_tracked(MVMSpeshPEAAllocation *alloc) {
+static uint32_t allocation_tracked(MVMSpeshPEAAllocation *alloc) {
     return alloc && !alloc->irreplaceable;
 }
 
@@ -423,7 +423,7 @@ static void add_scalar_replacement_deopt_usages(MVMThreadContext *tc, MVMSpeshGr
                                                 GraphState *gs, MVMSpeshPEAAllocation *alloc,
                                                 int32_t deopt_idx) {
     MVMP6opaqueREPRData *repr_data = (MVMP6opaqueREPRData *)alloc->type->st->REPR_data;
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < repr_data->num_attributes; i++) {
         Transformation *tran = MVM_spesh_alloc(tc, g, sizeof(Transformation));
         tran->allocation = alloc;
@@ -436,7 +436,7 @@ static void add_scalar_replacement_deopt_usages(MVMThreadContext *tc, MVMSpeshGr
 static void add_deopt_materializations_idx(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                                            GraphState *gs, int32_t deopt_idx,
                                            int32_t deopt_user_idx) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(gs->tracked_registers); i++) {
         MVMSpeshFacts *tracked_facts = MVM_spesh_get_facts(tc, g, gs->tracked_registers[i].reg);
         MVMSpeshPEAAllocation *alloc = tracked_facts->pea.allocation;
@@ -492,17 +492,17 @@ static void add_deopt_materializations_ins(MVMThreadContext *tc, MVMSpeshGraph *
 /* Performs the analysis phase of partial escape analysis, figuring out what
  * rewrites we can do on the graph to achieve scalar replacement of objects
  * and, perhaps, some guard eliminations. */
-static MVMuint32 analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs) {
+static uint32_t analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs) {
     MVMSpeshBB **rpo = MVM_spesh_graph_reverse_postorder(tc, g);
     MVMuint8 *seen = MVM_calloc(g->num_bbs, 1);
-    MVMuint32 found_replaceable = 0;
-    MVMuint32 i;
+    uint32_t found_replaceable = 0;
+    uint32_t i;
     for (i = 0; i < g->num_bbs; i++) {
         MVMSpeshBB *bb = rpo[i];
         MVMSpeshIns *ins = bb->first_ins;
 
         /* For now, we don't handle loops; bail entirely if we see one. */
-        MVMuint32 j;
+        uint32_t j;
         for (j = 0; j < bb->num_pred; j++) {
             if (!seen[bb->pred[j]->rpo_idx]) {
                 pea_log("partial escape analysis not implemented for loops");
@@ -522,7 +522,7 @@ static MVMuint32 analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs)
              * deopt point, and schedule a transform of the guard into a set.
              * Also, make entries into the deopt materializations table. */
             if (ins->info->may_cause_deopt) {
-                MVMuint32 settify = 0;
+                uint32_t settify = 0;
                 MVMSpeshPEAAllocation *settify_dep = NULL;
                 switch (opcode) {
                     case MVM_OP_sp_guardconc: {
@@ -685,7 +685,7 @@ static MVMuint32 analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs)
                     }
                     else {
                         /* Otherwise, don't handle these for now. */
-                        MVMuint32 i = 0;
+                        uint32_t i = 0;
                         for (i = 1; i < ins->info->num_operands; i++)
                             real_object_required(tc, g, ins, ins->operands[i]);
                     }
@@ -694,7 +694,7 @@ static MVMuint32 analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs)
                 default: {
                     /* Other instructions using tracked objects require the
                      * real object. */
-                   MVMuint32 i = 0;
+                   uint32_t i = 0;
                    for (i = 0; i < ins->info->num_operands; i++)
                        if ((ins->info->operands[i] & MVM_operand_rw_mask) == MVM_operand_read_reg)
                             real_object_required(tc, g, ins, ins->operands[i]);
@@ -713,7 +713,7 @@ static MVMuint32 analyze(MVMThreadContext *tc, MVMSpeshGraph *g, GraphState *gs)
 }
 
 void MVM_spesh_pea(MVMThreadContext *tc, MVMSpeshGraph *g) {
-    MVMuint32 i;
+    uint32_t i;
 
     GraphState gs;
     memset(&gs, 0, sizeof(GraphState));
@@ -749,7 +749,7 @@ void MVM_spesh_pea(MVMThreadContext *tc, MVMSpeshGraph *g) {
 
 /* Clean up any deopt info. */
 void MVM_spesh_pea_destroy_deopt_info(MVMThreadContext *tc, MVMSpeshPEADeopt *deopt_pea) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(deopt_pea->materialize_info); i++)
         MVM_free(deopt_pea->materialize_info[i].attr_regs);
     MVM_VECTOR_DESTROY(deopt_pea->materialize_info);

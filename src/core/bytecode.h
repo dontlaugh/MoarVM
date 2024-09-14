@@ -1,17 +1,17 @@
 /* Bytecode annotation, post-resolution. */
 struct MVMBytecodeAnnotation {
-    MVMuint32 bytecode_offset;
-    MVMuint32 filename_string_heap_index;
-    MVMuint32 line_number;
-    MVMuint32 ann_offset;
-    MVMuint32 ann_index;
+    uint32_t bytecode_offset;
+    uint32_t filename_string_heap_index;
+    uint32_t line_number;
+    uint32_t ann_offset;
+    uint32_t ann_index;
 };
 
 void MVM_bytecode_unpack(MVMThreadContext *tc, MVMCompUnit *cu);
-MVMBytecodeAnnotation * MVM_bytecode_resolve_annotation(MVMThreadContext *tc, MVMStaticFrameBody *sfb, MVMuint32 offset);
+MVMBytecodeAnnotation * MVM_bytecode_resolve_annotation(MVMThreadContext *tc, MVMStaticFrameBody *sfb, uint32_t offset);
 void MVM_bytecode_advance_annotation(MVMThreadContext *tc, MVMStaticFrameBody *sfb, MVMBytecodeAnnotation *ba);
 void MVM_bytecode_finish_frame(MVMThreadContext *tc, MVMCompUnit *cu, MVMStaticFrame *sf, int32_t dump_only);
-MVMuint8 MVM_bytecode_find_static_lexical_scref(MVMThreadContext *tc, MVMCompUnit *cu, MVMStaticFrame *sf, MVMuint16 index, MVMuint32 *sc, MVMuint32 *id);
+MVMuint8 MVM_bytecode_find_static_lexical_scref(MVMThreadContext *tc, MVMCompUnit *cu, MVMStaticFrame *sf, MVMuint16 index, uint32_t *sc, uint32_t *id);
 
 /* Looks up op info including for ext ops; doesn't sanity check, since we
  * should be working on code that already pass validation. */

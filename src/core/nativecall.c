@@ -412,7 +412,7 @@ static const char *dlerror(void)
     DWORD dw = GetLastError();
     if (dw == 0)
         return NULL;
-    snprintf(buf, 32, "error 0x%"PRIx32"", (MVMuint32)dw);
+    snprintf(buf, 32, "error 0x%"PRIx32"", (uint32_t)dw);
     return buf;
 }
 #endif
@@ -554,7 +554,7 @@ static MVMObject * nativecall_cast(MVMThreadContext *tc, MVMObject *target_spec,
                                 value = *(MVMuint16 *)cpointer_body;
                                 break;
                             case 32:
-                                value = *(MVMuint32 *)cpointer_body;
+                                value = *(uint32_t *)cpointer_body;
                                 break;
                             case 64:
                             default:
@@ -613,7 +613,7 @@ static MVMObject * nativecall_cast(MVMThreadContext *tc, MVMObject *target_spec,
                             value = *(MVMuint16 *)cpointer_body;
                             break;
                         case 32:
-                            value = *(MVMuint32 *)cpointer_body;
+                            value = *(uint32_t *)cpointer_body;
                             break;
                         case 64:
                         default:

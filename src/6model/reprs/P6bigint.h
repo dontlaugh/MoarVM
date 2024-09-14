@@ -15,9 +15,9 @@ struct MVMP6bigintBody {
         struct {
 #if defined(MVM_BIGENDIAN) && MVM_PTR_SIZE > 4
             int32_t  value;
-            MVMuint32 flag;
+            uint32_t flag;
 #else
-            MVMuint32 flag;
+            uint32_t flag;
             int32_t  value;
 #endif
         } smallint;

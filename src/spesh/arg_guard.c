@@ -8,7 +8,7 @@ typedef struct {
      * (-1 if none). */
     int32_t certain_idx;
     /* Indices of observed or derived type specializations. */
-    MVM_VECTOR_DECL(MVMuint32, typed_idxs);
+    MVM_VECTOR_DECL(uint32_t, typed_idxs);
 } CallsiteCandidates;
 
 /* Breakdown of arguments by type (this is used both for a breakdown by
@@ -24,14 +24,14 @@ typedef struct {
     /* Only for containers, if it's rw. */
     MVMuint8 rw;
     /* Indices of candidates matching this type. */
-    MVM_VECTOR_DECL(MVMuint32, cand_idxs);
+    MVM_VECTOR_DECL(uint32_t, cand_idxs);
 } TypeCandidates;
 
 /* Calculates the maxium number of new nodes that a typed specialization may
  * need in the tree, excluding that of the callsite and the result. */
 static size_t max_typed_nodes(MVMCallsite *cs, MVMSpeshStatsType *types) {
     size_t needed = 0;
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < cs->flag_count; i++) {
         if (cs->arg_flags[i] & MVM_CALLSITE_ARG_OBJ) {
             if (types[i].type)
@@ -46,7 +46,7 @@ static size_t max_typed_nodes(MVMCallsite *cs, MVMSpeshStatsType *types) {
 }
 
 /* Allocates a spesh arg guard tree with the specified amounst of nodes. */
-static MVMSpeshArgGuard * allocate_tree(MVMThreadContext *tc, MVMuint32 total_nodes) {
+static MVMSpeshArgGuard * allocate_tree(MVMThreadContext *tc, uint32_t total_nodes) {
     /* Allocate as a single blob of memory. */
     size_t node_size = total_nodes * sizeof(MVMSpeshArgGuardNode);
     size_t size = sizeof(MVMSpeshArgGuard) + node_size;
@@ -69,8 +69,8 @@ static int32_t next_type_index(MVMCallsite *cs, int32_t cur_obj_arg_idx) {
 }
 
 /* Add a new result node and return its index. */
-static MVMuint32 add_result_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
-        MVMuint32 result_index) {
+static uint32_t add_result_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
+        uint32_t result_index) {
     tree->nodes[tree->used_nodes].op = MVM_SPESH_GUARD_OP_RESULT;
     tree->nodes[tree->used_nodes].result = result_index;
     tree->nodes[tree->used_nodes].yes = 0;
@@ -79,8 +79,8 @@ static MVMuint32 add_result_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
 }
 
 /* Add a new load node and return its index. */
-static MVMuint32 add_load_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
-        MVMCallsite *cs, MVMuint32 type_index) {
+static uint32_t add_load_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
+        MVMCallsite *cs, uint32_t type_index) {
     tree->nodes[tree->used_nodes].op = MVM_SPESH_GUARD_OP_LOAD_ARG;
     tree->nodes[tree->used_nodes].arg_index = type_index;
     tree->nodes[tree->used_nodes].yes = 0;
@@ -89,7 +89,7 @@ static MVMuint32 add_load_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
 }
 
 /* Add a new type check node and return its index. */
-static MVMuint32 add_type_check_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
+static uint32_t add_type_check_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
         MVMObject *type, MVMuint8 concrete) {
     tree->nodes[tree->used_nodes].op = concrete
         ? MVM_SPESH_GUARD_OP_STABLE_CONC
@@ -102,7 +102,7 @@ static MVMuint32 add_type_check_node(MVMThreadContext *tc, MVMSpeshArgGuard *tre
 }
 
 /* Add a new rw-check node and return its index. */
-static MVMuint32 add_rw_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
+static uint32_t add_rw_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
     tree->nodes[tree->used_nodes].op = MVM_SPESH_GUARD_OP_DEREF_RW;
     tree->nodes[tree->used_nodes].offset = 0; /* TODO populate this properly */
     tree->nodes[tree->used_nodes].yes = 0;
@@ -111,7 +111,7 @@ static MVMuint32 add_rw_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
 }
 
 /* Add a new decont node and return its index. */
-static MVMuint32 add_decont_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
+static uint32_t add_decont_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
     tree->nodes[tree->used_nodes].op = MVM_SPESH_GUARD_OP_DEREF_VALUE;
     tree->nodes[tree->used_nodes].offset = 0; /* TODO populate this properly */
     tree->nodes[tree->used_nodes].yes = 0;
@@ -121,12 +121,12 @@ static MVMuint32 add_decont_node(MVMThreadContext *tc, MVMSpeshArgGuard *tree) {
 
 /* Adds nodes for checking a particular object argument. Returns the node at
  * the start of the created tree. */
-static MVMuint32 add_nodes_for_typed_argument(MVMThreadContext *tc,
+static uint32_t add_nodes_for_typed_argument(MVMThreadContext *tc,
         MVMSpeshArgGuard *tree, MVMSpeshCandidate **candidates,
-        MVMCallsite *cs, MVMuint32 *valid_candidates,
-        MVMuint32 num_valid_candidates, int32_t type_index,
-        MVMint8 consider_decont_type, MVMuint32 certain_fallback) {
-    MVMuint32 first_added = 0;
+        MVMCallsite *cs, uint32_t *valid_candidates,
+        uint32_t num_valid_candidates, int32_t type_index,
+        MVMint8 consider_decont_type, uint32_t certain_fallback) {
+    uint32_t first_added = 0;
 
     /* If we've no next type index, then we reached the end of the
      * argument list. We should have only one result at this point. */
@@ -143,7 +143,7 @@ static MVMuint32 add_nodes_for_typed_argument(MVMThreadContext *tc,
     else {
         /* Do the partitioning. */
         MVM_VECTOR_DECL(TypeCandidates, by_type);
-        MVMuint32 i, j, update_node = 0, derived_only;
+        uint32_t i, j, update_node = 0, derived_only;
         int32_t derived_idx, additional_update_node;
         MVM_VECTOR_INIT(by_type, num_valid_candidates);
         for (i = 0; i < num_valid_candidates; i++) {
@@ -205,7 +205,7 @@ static MVMuint32 add_nodes_for_typed_argument(MVMThreadContext *tc,
         for (i = 0; i < MVM_VECTOR_ELEMS(by_type); i++) {
             if (by_type[i].type != NULL) {
                 /* The basic type check. */
-                MVMuint32 type_node = add_type_check_node(tc, tree, by_type[i].type,
+                uint32_t type_node = add_type_check_node(tc, tree, by_type[i].type,
                     by_type[i].concrete);
                 if (update_node == first_added) {
                     tree->nodes[update_node].yes = type_node;
@@ -221,7 +221,7 @@ static MVMuint32 add_nodes_for_typed_argument(MVMThreadContext *tc,
 
                 /* Check for rw-ness of container if needed. */
                 if (by_type[i].rw) {
-                    MVMuint32 rw_node = add_rw_node(tc, tree);
+                    uint32_t rw_node = add_rw_node(tc, tree);
                     tree->nodes[update_node].yes = rw_node;
                     additional_update_node = type_node;
                     update_node = rw_node;
@@ -255,7 +255,7 @@ static MVMuint32 add_nodes_for_typed_argument(MVMThreadContext *tc,
          * the case where we only have a derived specialization and it does
          * not check the argument. */
         if (derived_idx != -1) {
-            MVMuint32 added_node = add_nodes_for_typed_argument(tc,
+            uint32_t added_node = add_nodes_for_typed_argument(tc,
                 tree, candidates, cs, by_type[derived_idx].cand_idxs,
                 MVM_VECTOR_ELEMS(by_type[derived_idx].cand_idxs),
                 next_type_index(cs, type_index), 0, certain_fallback);
@@ -288,12 +288,12 @@ static MVMuint32 add_nodes_for_typed_argument(MVMThreadContext *tc,
 
 /* For a given callsite, add nodes for each specialization according to it. */
 static void add_nodes_for_callsite(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
-        MVMuint32 update_yes_node, MVMSpeshCandidate **candidates,
+        uint32_t update_yes_node, MVMSpeshCandidate **candidates,
         CallsiteCandidates cc) {
     /* If we have a certain specialization, then add a node for it. If we fail
      * at any point in finding a typed guard, we'll fall back to looking at
      * this instead. And if there's no typed guards, we'll just use this. */
-    MVMuint32 end_node = cc.certain_idx >= 0
+    uint32_t end_node = cc.certain_idx >= 0
         ? add_result_node(tc, tree, cc.certain_idx)
         : 0;
 
@@ -308,17 +308,17 @@ static void add_nodes_for_callsite(MVMThreadContext *tc, MVMSpeshArgGuard *tree,
 /* Produce and install an updated set of guards, incorporating the new
  * candidate. */
 void MVM_spesh_arg_guard_regenerate(MVMThreadContext *tc, MVMSpeshArgGuard **guard_ptr,
-        MVMSpeshCandidate **candidates, MVMuint32 num_spesh_candidates) {
+        MVMSpeshCandidate **candidates, uint32_t num_spesh_candidates) {
     MVMSpeshArgGuard *tree;
 
     /* Make a first pass thorugh the candidates, grouping them by callsite.
      * Along the way, work out how much space, at most, we'll need to store
      * the tree (when there are multiple candidates, head sharing may mean
      * we need less than this). */
-    MVMuint32 i, j;
+    uint32_t i, j;
     MVM_VECTOR_DECL(CallsiteCandidates, by_callsite);
     MVM_VECTOR_INIT(by_callsite, num_spesh_candidates);
-    MVMuint32 tree_size = 0;
+    uint32_t tree_size = 0;
     for (i = 0; i < num_spesh_candidates; i++) {
         /* Skip discarded candidates. */
         MVMSpeshCandidate *cand = candidates[i];
@@ -402,9 +402,9 @@ void MVM_spesh_arg_guard_regenerate(MVMThreadContext *tc, MVMSpeshArgGuard **gua
  * specialization, or -1 if there is no match. */
 int32_t MVM_spesh_arg_guard_run_types(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
                                         MVMCallsite *cs, MVMSpeshStatsType *types) {
-    MVMuint32 current_node = 0;
+    uint32_t current_node = 0;
     MVMSpeshStatsType *test = NULL;
-    MVMuint32 use_decont_type = 0;
+    uint32_t use_decont_type = 0;
     if (!ag)
         return -1;
     do {
@@ -470,7 +470,7 @@ int32_t MVM_spesh_arg_guard_run_types(MVMThreadContext *tc, MVMSpeshArgGuard *ag
  * candidate, or -1 if there is not. */
 int32_t MVM_spesh_arg_guard_run(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
                                  MVMArgs args, int32_t *certain) {
-    MVMuint32 current_node = 0;
+    uint32_t current_node = 0;
     MVMObject *test = NULL;
     if (!ag)
         return -1;
@@ -519,7 +519,7 @@ int32_t MVM_spesh_arg_guard_run(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
  * used for finding existing candidates to emit fast calls to or inline. */
 int32_t MVM_spesh_arg_guard_run_callinfo(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
                                           MVMSpeshCallInfo *arg_info) {
-    MVMuint32 current_node = 0;
+    uint32_t current_node = 0;
     MVMSpeshFacts *facts = NULL;
     MVMuint8 use_decont_facts = 0;
     if (!ag)
@@ -595,7 +595,7 @@ int32_t MVM_spesh_arg_guard_run_callinfo(MVMThreadContext *tc, MVMSpeshArgGuard 
 void MVM_spesh_arg_guard_gc_mark(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
                                  MVMGCWorklist *worklist) {
     if (ag) {
-        MVMuint32 i;
+        uint32_t i;
         for (i = 0; i < ag->used_nodes; i++) {
             switch (ag->nodes[i].op)
                 case MVM_SPESH_GUARD_OP_STABLE_CONC:
@@ -611,7 +611,7 @@ void MVM_spesh_arg_guard_gc_mark(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
 void MVM_spesh_arg_guard_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                      MVMSpeshArgGuard *ag) {
     if (ag) {
-        MVMuint32 i;
+        uint32_t i;
         for (i = 0; i < ag->used_nodes; i++) {
             switch (ag->nodes[i].op) {
                 case MVM_SPESH_GUARD_OP_STABLE_CONC:
@@ -628,7 +628,7 @@ void MVM_spesh_arg_guard_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState 
 /* Frees the memory associated with an argument guard. If `safe` is set to a
  * non-zero value then the memory is freed at the next safepoint. If it is set
  * to zero, the memory is freed immediately. */
-void MVM_spesh_arg_guard_destroy(MVMThreadContext *tc, MVMSpeshArgGuard *ag, MVMuint32 safe) {
+void MVM_spesh_arg_guard_destroy(MVMThreadContext *tc, MVMSpeshArgGuard *ag, uint32_t safe) {
     if (ag) {
         if (safe)
             MVM_free_at_safepoint(tc, ag);

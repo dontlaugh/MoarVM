@@ -135,7 +135,7 @@ void MVM_continuation_invoke(MVMThreadContext *tc, MVMContinuation *cont,
      * are heap frames. Also clear their dynamic tag. */
     MVMCallStackIterator iter;
     MVMFrame *bottom_frame = NULL;
-    MVMuint32 have_heap_frame = 0;
+    uint32_t have_heap_frame = 0;
     MVM_callstack_iter_frame_init(tc, &iter, cont->body.stack_top);
     while (MVM_callstack_iter_move_next(tc, &iter)) {
         MVMFrame *cur_frame = MVM_callstack_iter_current_frame(tc, &iter);

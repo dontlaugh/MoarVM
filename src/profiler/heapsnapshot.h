@@ -23,8 +23,8 @@ struct MVMHeapDumpIndex {
  * own that's got an entry in the top-level TOC.
  */
 struct MVMHeapDumpTableOfContents {
-    MVMuint32 toc_entry_alloc;
-    MVMuint32 toc_entry_used;
+    uint32_t toc_entry_alloc;
+    uint32_t toc_entry_used;
 
     char **toc_words;
     MVMuint64 *toc_positions;
@@ -33,12 +33,12 @@ struct MVMHeapDumpTableOfContents {
 struct MVMHeapSnapshotStats {
     MVMuint64 type_stats_alloc;
 
-    MVMuint32 *type_counts;
+    uint32_t *type_counts;
     MVMuint64 *type_size_sum;
 
     MVMuint64 sf_stats_alloc;
 
-    MVMuint32 *sf_counts;
+    uint32_t *sf_counts;
     MVMuint64 *sf_size_sum;
 };
 
@@ -117,26 +117,26 @@ struct MVMHeapSnapshot {
 /* An object/type object/STable type in the snapshot. */
 struct MVMHeapSnapshotType {
     /* String heap index of the REPR name. */
-    MVMuint32 repr_name;
+    uint32_t repr_name;
 
     /* String heap index of the type's debug name. */
-    MVMuint32 type_name;
+    uint32_t type_name;
 };
 
 /* A static frame in the snapshot. */
 struct MVMHeapSnapshotStaticFrame {
     /* The static frame name; index into the snapshot collection string heap. */
-    MVMuint32 name;
+    uint32_t name;
 
     /* The static frame compilation unit ID, for added uniqueness checking.
      * Also an index into the string heap. */
-    MVMuint32 cuid;
+    uint32_t cuid;
 
     /* The line number where it's declared. */
-    MVMuint32 line;
+    uint32_t line;
 
     /* And the filename; also an index into snapshot collection string heap. */
-    MVMuint32 file;
+    uint32_t file;
 };
 
 /* Kinds of collectable, plus a few "virtual" kinds to cover the various places
@@ -165,10 +165,10 @@ struct MVMHeapSnapshotCollectable {
 
     /* Index into the snapshot collection type name or frame info array,
      * depending on kind. */
-    MVMuint32 type_or_frame_index;
+    uint32_t type_or_frame_index;
 
     /* The number of other collectables this one references. */
-    MVMuint32 num_refs;
+    uint32_t num_refs;
 
     /* Index into the references info list. */
     MVMuint64 refs_start;
@@ -227,9 +227,9 @@ struct MVMHeapSnapshotState {
     MVMuint64 type_str_idx_cache[MVM_REPR_MAX_COUNT];
     MVMuint64 anon_repr_type_str_idx_cache[MVM_REPR_MAX_COUNT];
 
-    MVMuint32 type_of_type_idx_cache[8];
-    MVMuint32 repr_of_type_idx_cache[8];
-    MVMuint32 type_idx_cache[8];
+    uint32_t type_of_type_idx_cache[8];
+    uint32_t repr_of_type_idx_cache[8];
+    uint32_t type_idx_cache[8];
 
     MVMuint8 type_idx_rotating_insert_slot;
 };

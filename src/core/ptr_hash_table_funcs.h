@@ -6,8 +6,8 @@
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
 #define MVM_PTR_HASH_LOAD_FACTOR 0.75
-MVM_STATIC_INLINE MVMuint32 MVM_ptr_hash_official_size(const struct MVMPtrHashTableControl *control) {
-    return 1 << (MVMuint32)control->official_size_log2;
+MVM_STATIC_INLINE uint32_t MVM_ptr_hash_official_size(const struct MVMPtrHashTableControl *control) {
+    return 1 << (uint32_t)control->official_size_log2;
 }
 /* -1 because...
  * probe distance of 1 is the correct bucket.
@@ -16,10 +16,10 @@ MVM_STATIC_INLINE MVMuint32 MVM_ptr_hash_official_size(const struct MVMPtrHashTa
  * probe distance of 2 is the first extra bucket beyond the official allocation
  * probe distance of 255 is the 254th beyond the official allocation.
  */
-MVM_STATIC_INLINE MVMuint32 MVM_ptr_hash_allocated_items(const struct MVMPtrHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_ptr_hash_allocated_items(const struct MVMPtrHashTableControl *control) {
     return MVM_ptr_hash_official_size(control) + control->max_probe_distance_limit - 1;
 }
-MVM_STATIC_INLINE MVMuint32 MVM_ptr_hash_max_items(const struct MVMPtrHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_ptr_hash_max_items(const struct MVMPtrHashTableControl *control) {
     return MVM_ptr_hash_official_size(control) * MVM_PTR_HASH_LOAD_FACTOR;
 }
 MVM_STATIC_INLINE MVMuint8 *MVM_ptr_hash_metadata(const struct MVMPtrHashTableControl *control) {
@@ -69,7 +69,7 @@ MVM_STATIC_INLINE MVMuint64 MVM_ptr_hash_code(const void *ptr) {
     return ((uintptr_t)ptr) * UINT64_C(11400714819323198485);
 }
 #else
-MVM_STATIC_INLINE MVMuint32 MVM_ptr_hash_code(const void *ptr) {
+MVM_STATIC_INLINE uint32_t MVM_ptr_hash_code(const void *ptr) {
     return ((uintptr_t)ptr) * 0x9e3779b7;
 }
 #endif

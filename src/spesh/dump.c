@@ -55,8 +55,8 @@ static void append_null(DumpStr *ds) {
 }
 
 typedef struct {
-    MVMuint32 total_size;
-    MVMuint32 inlined_size;
+    uint32_t total_size;
+    uint32_t inlined_size;
 } SpeshGraphSizeStats;
 
 typedef struct {
@@ -101,7 +101,7 @@ static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpes
     {
         /* Also, we have a line number */
         MVMBytecodeAnnotation *bbba = MVM_bytecode_resolve_annotation(tc, &g->sf->body, bb->initial_pc);
-        MVMuint32 line_number;
+        uint32_t line_number;
         if (bbba) {
             line_number = bbba->line_number;
             MVM_free(bbba);
@@ -116,9 +116,9 @@ static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpes
     cur_ins = bb->first_ins;
     while (cur_ins) {
         MVMSpeshAnn *ann = cur_ins->annotations;
-        MVMuint32 line_number = -1;
-        MVMuint32 pop_inlines = 0;
-        MVMuint32 num_comments = 0;
+        uint32_t line_number = -1;
+        uint32_t pop_inlines = 0;
+        uint32_t num_comments = 0;
 
         while (ann) {
             /* These annotations carry a deopt index that we can find a
@@ -274,7 +274,7 @@ static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpes
                     case MVM_operand_read_lex:
                     case MVM_operand_write_lex: {
                         MVMStaticFrameBody *cursor = &g->sf->body;
-                        MVMuint32 ascension;
+                        uint32_t ascension;
                         appendf(ds, "lex(idx=%d,outers=%d", cur_ins->operands[i].lex.idx,
                             cur_ins->operands[i].lex.outers);
                         for (ascension = 0;
@@ -295,7 +295,7 @@ static void dump_bb(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g, MVMSpes
                         break;
                     }
                     case MVM_operand_literal: {
-                        MVMuint32 type = cur_ins->info->operands[i] & MVM_operand_type_mask;
+                        uint32_t type = cur_ins->info->operands[i] & MVM_operand_type_mask;
                         switch (type) {
                         case MVM_operand_ins: {
                             int32_t bb_idx = cur_ins->operands[i].ins_bb->idx;
@@ -465,7 +465,7 @@ static void dump_deopt_usages(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, operand);
     MVMSpeshDeoptUseEntry *entry = facts->usage.deopt_users;
     if (entry) {
-        MVMuint32 first = 1;
+        uint32_t first = 1;
         append(ds, ", deopt=");
         while (entry) {
             if (first)
@@ -607,7 +607,7 @@ static void dump_callsite(MVMThreadContext *tc, DumpStr *ds, MVMCallsite *cs) {
 static void dump_fileinfo(MVMThreadContext *tc, DumpStr *ds, MVMStaticFrame *sf) {
     MVMBytecodeAnnotation *ann = MVM_bytecode_resolve_annotation(tc, &sf->body, 0);
     MVMCompUnit            *cu = sf->body.cu;
-    MVMuint32          str_idx = ann ? ann->filename_string_heap_index : 0;
+    uint32_t          str_idx = ann ? ann->filename_string_heap_index : 0;
     int32_t           line_nr = ann ? ann->line_number : 1;
     MVMString        *filename = cu->body.filename;
     char        *filename_utf8 = "<unknown>";
@@ -623,7 +623,7 @@ static void dump_fileinfo(MVMThreadContext *tc, DumpStr *ds, MVMStaticFrame *sf)
 }
 
 static void dump_deopt_pea(MVMThreadContext *tc, DumpStr *ds, MVMSpeshGraph *g) {
-    MVMuint32 i, j;
+    uint32_t i, j;
     if (MVM_VECTOR_ELEMS(g->deopt_pea.materialize_info)) {
         append(ds, "\nMaterializations:\n");
         for (i = 0; i < MVM_VECTOR_ELEMS(g->deopt_pea.materialize_info); i++) {
@@ -689,7 +689,7 @@ char * MVM_spesh_dump(MVMThreadContext *tc, MVMSpeshGraph *g) {
 
     /* Dump spesh slots. */
     if (g->num_spesh_slots) {
-        MVMuint32 i;
+        uint32_t i;
         append(&ds, "\nSpesh slots:\n");
         for (i = 0; i < g->num_spesh_slots; i++) {
             MVMCollectable *value = g->spesh_slots[i];
@@ -703,7 +703,7 @@ char * MVM_spesh_dump(MVMThreadContext *tc, MVMSpeshGraph *g) {
                     MVM_6model_get_debug_name(tc, (MVMObject *)value));
             else {
                 MVMObject *obj = (MVMObject *)value;
-                MVMuint32 repr_id = REPR(obj)->ID;
+                uint32_t repr_id = REPR(obj)->ID;
                 appendf(&ds, "    %d = Instance (%s)", i,
                     MVM_6model_get_debug_name(tc, obj));
                 if (repr_id == MVM_REPR_ID_MVMStaticFrame || repr_id == MVM_REPR_ID_MVMCode) {
@@ -744,7 +744,7 @@ char * MVM_spesh_dump(MVMThreadContext *tc, MVMSpeshGraph *g) {
 /* Dumps a spesh stats type typle. */
 static void dump_stats_type_tuple(MVMThreadContext *tc, DumpStr *ds, MVMCallsite *cs,
                                   MVMSpeshStatsType *type_tuple, char *prefix) {
-    MVMuint32 j;
+    uint32_t j;
     for (j = 0; j < cs->flag_count; j++) {
         MVMObject *type = type_tuple[j].type;
         if (type) {
@@ -765,7 +765,7 @@ static void dump_stats_type_tuple(MVMThreadContext *tc, DumpStr *ds, MVMCallsite
 
 /* Dumps the statistics associated with a particular callsite object. */
 static void dump_stats_by_callsite(MVMThreadContext *tc, DumpStr *ds, MVMSpeshStatsByCallsite *css) {
-    MVMuint32 i, j, k;
+    uint32_t i, j, k;
 
     if (css->cs)
         dump_callsite(tc, ds, css->cs);
@@ -843,7 +843,7 @@ char * MVM_spesh_dump_stats(MVMThreadContext *tc, MVMStaticFrame *sf) {
 
     /* Dump the spesh stats if present. */
     if (ss) {
-        MVMuint32 i;
+        uint32_t i;
 
         appendf(&ds, "Total hits: %d\n", ss->hits);
         if (ss->osr_hits)
@@ -916,10 +916,10 @@ char * MVM_spesh_dump_planned(MVMThreadContext *tc, MVMSpeshPlanned *p) {
             break;
         case MVM_SPESH_PLANNED_OBSERVED_TYPES: {
             MVMCallsite *cs = p->cs_stats->cs;
-            MVMuint32 hit_percent = p->cs_stats->hits
+            uint32_t hit_percent = p->cs_stats->hits
                ? (100 * p->type_stats[0]->hits) / p->cs_stats->hits
                : 0;
-            MVMuint32 osr_hit_percent = p->cs_stats->osr_hits
+            uint32_t osr_hit_percent = p->cs_stats->osr_hits
                ? (100 * p->type_stats[0]->osr_hits) / p->cs_stats->osr_hits
                : 0;
             append(&ds, "It was planned for the type tuple:\n");
@@ -967,7 +967,7 @@ char * MVM_spesh_dump_arg_guard(MVMThreadContext *tc, MVMStaticFrame *sf, MVMSpe
 
     /* Dump nodes. */
     if (ag) {
-        MVMuint32 i = 0;
+        uint32_t i = 0;
         for (i = 0; i < ag->used_nodes; i++) {
             MVMSpeshArgGuardNode *agn = &(ag->nodes[i]);
             switch (agn->op) {

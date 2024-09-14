@@ -14,7 +14,7 @@ size_t MVM_spesh_disp_dispatch_op_info_size(MVMThreadContext *tc,
         const MVMOpInfo *base_info, MVMCallsite *callsite) {
     /* In general, ops support up to an operand limit; in the case that there are more,
      * we'd overrun the buffer. We thus allocate more. */
-    MVMuint32 total_ops = base_info->num_operands + callsite->flag_count;
+    uint32_t total_ops = base_info->num_operands + callsite->flag_count;
     return sizeof(MVMOpInfo) + (total_ops > MVM_MAX_OPERANDS
             ? total_ops - MVM_MAX_OPERANDS
             : 0) * sizeof(MVMuint8);
@@ -95,16 +95,16 @@ MVMCallsite * MVM_spesh_disp_callsite_for_dispatch_op(MVMuint16 opcode, MVMuint8
 
 /* Hit count of an outcome, used for analizing how to optimize the dispatch. */
 typedef struct {
-    MVMuint32 outcome;
-    MVMuint32 hits;
+    uint32_t outcome;
+    uint32_t hits;
 } OutcomeHitCount;
 
 /* Rewrite a dispatch instruction into an sp_dispatch one, resolving only the
  * static frame and inline cache offset. */
 static void rewrite_to_sp_dispatch(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
-        MVMuint32 bytecode_offset) {
+        uint32_t bytecode_offset) {
     /* Resolve the callsite. */
-    MVMuint32 callsite_idx = ins->operands[ins->info->opcode == MVM_OP_dispatch_v ? 1 : 2].callsite_idx;
+    uint32_t callsite_idx = ins->operands[ins->info->opcode == MVM_OP_dispatch_v ? 1 : 2].callsite_idx;
     MVMCallsite *callsite = g->sf->body.cu->body.callsites[callsite_idx];
 
     /* Pick the new dispatch instruction and create instruction info for it. */
@@ -127,8 +127,8 @@ static void rewrite_to_sp_dispatch(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSp
     /* Rewrite the operands. */
     MVMSpeshOperand *new_operands = MVM_spesh_alloc(tc, g,
             new_ins_info->num_operands * sizeof(MVMSpeshOperand));
-    MVMuint32 target = 0;
-    MVMuint32 source = 0;
+    uint32_t target = 0;
+    uint32_t source = 0;
     if (new_ins_info->opcode != MVM_OP_sp_dispatch_v)
         new_operands[target++] = ins->operands[source++]; /* Result value */
     new_operands[target++] = ins->operands[source++]; /* Dispatcher name */
@@ -143,7 +143,7 @@ static void rewrite_to_sp_dispatch(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSp
 
 /* Get the index of the first normal argument operand to the dispatch
  * instruction (after result unless void, dispatcher name, and callsite). */
-static MVMuint32 find_disp_op_first_real_arg(MVMThreadContext *tc, MVMSpeshIns *ins) {
+static uint32_t find_disp_op_first_real_arg(MVMThreadContext *tc, MVMSpeshIns *ins) {
     if (ins->info->opcode == MVM_OP_dispatch_v)
         return 2;
     assert(ins->info->opcode == MVM_OP_dispatch_i ||
@@ -189,10 +189,10 @@ static MVMSpeshAnn * create_synthetic_deopt_annotation(MVMThreadContext *tc, MVM
  * not happen already, otherwise clone it. */
 static void set_deopt(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
         MVMSpeshOperand *index_operand, MVMSpeshAnn *deopt_ann,
-        MVMuint32 *reused_deopt_ann) {
+        uint32_t *reused_deopt_ann) {
     if (*reused_deopt_ann) {
         /* Already reused, clone needed. */
-        MVMuint32 new_deopt_index = MVM_spesh_graph_add_deopt_annotation(tc, g,
+        uint32_t new_deopt_index = MVM_spesh_graph_add_deopt_annotation(tc, g,
             ins, g->deopt_addrs[deopt_ann->data.deopt_idx * 2], deopt_ann->type);
         index_operand->lit_ui32 = new_deopt_index;
         deopt_ann = create_synthetic_deopt_annotation(tc, g, deopt_ann);
@@ -211,7 +211,7 @@ static void set_deopt(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
 static MVMSpeshOperand emit_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns **insert_after, MVMuint16 op,
         MVMSpeshOperand guard_reg, MVMCollectable *comparee, MVMSpeshAnn *deopt_ann,
-        MVMuint32 *reused_deopt_ann) {
+        uint32_t *reused_deopt_ann) {
     /* Produce a new version for after the guarding. */
     MVMSpeshOperand guarded_reg = MVM_spesh_manipulate_split_version(tc, g,
             guard_reg, bb, *insert_after ? (*insert_after)->next : bb->first_ins);
@@ -245,7 +245,7 @@ static MVMSpeshOperand emit_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
 /* Emit a HLL guard instruction. */
 static MVMSpeshOperand emit_hll_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns **insert_after, MVMSpeshOperand guard_reg,
-        MVMHLLConfig *hll, MVMSpeshAnn *deopt_ann, MVMuint32 *reused_deopt_ann) {
+        MVMHLLConfig *hll, MVMSpeshAnn *deopt_ann, uint32_t *reused_deopt_ann) {
     /* Produce a new version for after the guarding. */
     MVMSpeshOperand guarded_reg = MVM_spesh_manipulate_split_version(tc, g,
             guard_reg, bb, (*insert_after)->next);
@@ -373,7 +373,7 @@ static void emit_load_attribute(MVMThreadContext *tc, MVMSpeshGraph *g,
 /* Emit a guard that a value is a given literal string. */
 static MVMSpeshOperand emit_literal_str_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns **insert_after, MVMSpeshOperand testee,
-        MVMString *expected, MVMSpeshAnn *deopt_ann, MVMuint32 *reused_deopt_ann) {
+        MVMString *expected, MVMSpeshAnn *deopt_ann, uint32_t *reused_deopt_ann) {
     /* Load the string literal value from a spesh slot. */
     MVMSpeshOperand cmp_str_reg = MVM_spesh_manipulate_get_temp_reg(tc, g, MVM_reg_str);
     emit_load_spesh_slot(tc, g, bb, insert_after, cmp_str_reg, (MVMCollectable *)expected);
@@ -475,7 +475,7 @@ MVMOpInfo * MVM_spesh_disp_initialize_resumption_op_info(MVMThreadContext *tc,
 static void insert_resume_inits(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         MVMSpeshIns **insert_after, MVMDispProgram *dp, MVMSpeshOperand *orig_args,
         MVMSpeshOperand *temporaries, int32_t deopt_idx) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < dp->num_resumptions; i++) {
         /* Allocate the instruction. */
         MVMDispProgramResumption *dpr = &(dp->resumptions[i]);
@@ -536,7 +536,7 @@ static void insert_resume_inits(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpesh
 static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMSpeshBB *bb, MVMSpeshIns *ins, MVMDispProgram *dp, MVMSpeshIns **next_ins) {
     /* First, validate it is a dispatch program we know how to compile. */
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < dp->num_ops; i++) {
         switch (dp->ops[i].code) {
             case MVMDispOpcodeGuardArgType:
@@ -592,7 +592,7 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
      * the first guard, and then clone it later if needed. */
     MVMSpeshAnn *deopt_ann = take_dispatch_annotation(tc, g, ins,
         MVM_SPESH_ANN_DEOPT_PRE_INS);
-    MVMuint32 reused_deopt_ann = 0;
+    uint32_t reused_deopt_ann = 0;
 
     /* Steal other annotations in order to put them onto any runbytecode
      * instruction we generate. */
@@ -603,9 +603,9 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
 
     /* Find the arguments that are the input to the dispatch and copy
      * them, since we'll mutate this list. */
-    MVMuint32 first_real_arg = find_disp_op_first_real_arg(tc, ins);
+    uint32_t first_real_arg = find_disp_op_first_real_arg(tc, ins);
     MVMSpeshOperand *orig_args = &ins->operands[first_real_arg];
-    MVMuint32 num_real_args = ins->info->num_operands - first_real_arg;
+    uint32_t num_real_args = ins->info->num_operands - first_real_arg;
     size_t args_size = num_real_args * sizeof(MVMSpeshOperand);
     MVMSpeshOperand *args = MVM_spesh_alloc(tc, g, args_size);
     memcpy(args, orig_args, args_size);
@@ -1136,11 +1136,11 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
             case MVMDispOpcodeCopyArgsTail:
                 callsite = dp->constants[op->copy_arg_tail.callsite_idx].cs;
                 if (op->copy_arg_tail.tail_args > 0) {
-                    MVMuint32 to_copy = op->copy_arg_tail.tail_args;
-                    MVMuint32 source_idx = num_real_args - to_copy;
-                    MVMuint32 target_idx = dp->first_args_temporary +
+                    uint32_t to_copy = op->copy_arg_tail.tail_args;
+                    uint32_t source_idx = num_real_args - to_copy;
+                    uint32_t target_idx = dp->first_args_temporary +
                             (callsite->flag_count - to_copy);
-                    MVMuint32 i;
+                    uint32_t i;
                     for (i = 0; i < to_copy; i++)
                         temporaries[target_idx++] = args[source_idx++];
                 }
@@ -1423,7 +1423,7 @@ static int translate_dispatch_program(MVMThreadContext *tc, MVMSpeshGraph *g,
             case MVMDispOpcodeResultCFunction: {
                 /* Determine the op we'll specialize to. */
                 MVMOpInfo const *base_op;
-                MVMuint32 c = op->code == MVMDispOpcodeResultCFunction;
+                uint32_t c = op->code == MVMDispOpcodeResultCFunction;
                 switch (ins->info->opcode) {
                     case MVM_OP_dispatch_v:
                         base_op = MVM_op_get_op(c ? MVM_OP_sp_runcfunc_v : MVM_OP_sp_runbytecode_v);
@@ -1579,14 +1579,14 @@ int MVM_spesh_disp_optimize(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
     }
     if (!ann)
         MVM_oops(tc, "Dispatch specialization could not find bytecode offset for dispatch instruction");
-    MVMuint32 bytecode_offset = ann->data.bytecode_offset;
+    uint32_t bytecode_offset = ann->data.bytecode_offset;
 
     /* Now find the inline cache entry, see what kind of entry it is, and
      * optimize appropriately. We return if we manage to translate it into
      * something better. */
     MVMDispInlineCache *cache = &(g->sf->body.inline_cache);
     MVMDispInlineCacheEntry *entry = cache->entries[bytecode_offset >> cache->bit_shift];
-    MVMuint32 kind = MVM_disp_inline_cache_get_kind(tc, entry);
+    uint32_t kind = MVM_disp_inline_cache_get_kind(tc, entry);
     switch (kind) {
         case MVM_INLINE_CACHE_KIND_INITIAL:
         case MVM_INLINE_CACHE_KIND_INITIAL_FLATTENING:
@@ -1610,21 +1610,21 @@ int MVM_spesh_disp_optimize(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
              * specialization. See if this is so. */
             MVM_VECTOR_DECL(OutcomeHitCount, outcome_hits);
             MVM_VECTOR_INIT(outcome_hits, 0);
-            MVMuint32 total_hits = 0;
-            MVMuint32 i;
+            uint32_t total_hits = 0;
+            uint32_t i;
             for (i = 0; i < (p ? p->num_type_stats : 0); i++) {
                 MVMSpeshStatsByType *ts = p->type_stats[i];
-                MVMuint32 j;
+                uint32_t j;
                 for (j = 0; j < ts->num_by_offset; j++) {
                     if (ts->by_offset[j].bytecode_offset == bytecode_offset) {
                         /* We found some stats at the offset of the dispatch. Count the
                          * hits. */
-                        MVMuint32 k;
+                        uint32_t k;
                         for (k = 0; k < ts->by_offset[j].num_dispatch_results; k++) {
                             MVMSpeshStatsDispatchResultCount *outcome_count =
                                     &(ts->by_offset[j].dispatch_results[k]);
-                            MVMuint32 l;
-                            MVMuint32 found = 0;
+                            uint32_t l;
+                            uint32_t found = 0;
                             for (l = 0; l < MVM_VECTOR_ELEMS(outcome_hits); l++) {
                                 if (outcome_hits[l].outcome == outcome_count->result_index) {
                                     outcome_hits[l].hits += outcome_count->count;
@@ -1669,7 +1669,7 @@ int MVM_spesh_disp_optimize(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
             if (selected_outcome >= 0) {
                 MVMDispInlineCacheEntryPolymorphicDispatch *pd =
                     (MVMDispInlineCacheEntryPolymorphicDispatch *)entry;
-                if ((MVMuint32)selected_outcome < pd->num_dps) {
+                if ((uint32_t)selected_outcome < pd->num_dps) {
                     if (translate_dispatch_program(tc, g, bb, ins,
                         pd->dps[selected_outcome], next_ins)) {
                         return 1;

@@ -34,8 +34,8 @@ struct MVMDispRegistryTable {
 
     /* The number of allocated dispatcher entries and the number of
      * registered dispatchers. */
-    MVMuint32 alloc_dispatchers;
-    MVMuint32 num_dispatchers;
+    uint32_t alloc_dispatchers;
+    uint32_t num_dispatchers;
 };
 
 void MVM_disp_registry_init(MVMThreadContext *tc);

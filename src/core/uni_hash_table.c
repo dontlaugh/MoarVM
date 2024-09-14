@@ -24,8 +24,8 @@ void MVM_uni_hash_demolish(MVMThreadContext *tc, MVMUniHashTable *hashtable) {
 
 MVM_STATIC_INLINE struct MVMUniHashTableControl *hash_allocate_common(MVMThreadContext *tc,
                                                                       MVMuint8 official_size_log2) {
-    MVMuint32 official_size = 1 << (MVMuint32)official_size_log2;
-    MVMuint32 max_items = official_size * MVM_UNI_HASH_LOAD_FACTOR;
+    uint32_t official_size = 1 << (uint32_t)official_size_log2;
+    uint32_t max_items = official_size * MVM_UNI_HASH_LOAD_FACTOR;
     MVMuint8 max_probe_distance_limit;
     if (MVM_HASH_MAX_PROBE_DISTANCE < max_items) {
         max_probe_distance_limit = MVM_HASH_MAX_PROBE_DISTANCE;
@@ -50,7 +50,7 @@ MVM_STATIC_INLINE struct MVMUniHashTableControl *hash_allocate_common(MVMThreadC
     MVMuint8 initial_probe_distance = (1 << (8 - MVM_HASH_INITIAL_BITS_IN_METADATA)) - 1;
     control->max_probe_distance = max_probe_distance_limit > initial_probe_distance ? initial_probe_distance : max_probe_distance_limit;
     control->max_probe_distance_limit = max_probe_distance_limit;
-    MVMuint8 bucket_right_shift = 8 * sizeof(MVMuint32) - official_size_log2;
+    MVMuint8 bucket_right_shift = 8 * sizeof(uint32_t) - official_size_log2;
     control->key_right_shift = bucket_right_shift - control->metadata_hash_bits;
 
     MVMuint8 *metadata = (MVMuint8 *)(control + 1);
@@ -61,13 +61,13 @@ MVM_STATIC_INLINE struct MVMUniHashTableControl *hash_allocate_common(MVMThreadC
 
 void MVM_uni_hash_build(MVMThreadContext *tc,
                         MVMUniHashTable *hashtable,
-                        MVMuint32 entries) {
-    MVMuint32 initial_size_base2;
+                        uint32_t entries) {
+    uint32_t initial_size_base2;
     if (!entries) {
         initial_size_base2 = UNI_MIN_SIZE_BASE_2;
     } else {
         /* Minimum size we need to allocate, given the load factor. */
-        MVMuint32 min_needed = entries * (1.0 / MVM_UNI_HASH_LOAD_FACTOR);
+        uint32_t min_needed = entries * (1.0 / MVM_UNI_HASH_LOAD_FACTOR);
         initial_size_base2 = MVM_round_up_log_base2(min_needed);
         if (initial_size_base2 < UNI_MIN_SIZE_BASE_2) {
             /* "Too small" - use our original defaults. */
@@ -78,12 +78,12 @@ void MVM_uni_hash_build(MVMThreadContext *tc,
     hashtable->table = hash_allocate_common(tc, initial_size_base2);
 }
 
-static MVMuint64 uni_hash_fsck_internal(struct MVMUniHashTableControl *control, MVMuint32 mode);
+static MVMuint64 uni_hash_fsck_internal(struct MVMUniHashTableControl *control, uint32_t mode);
 
 MVM_STATIC_INLINE struct MVMUniHashEntry *hash_insert_internal(MVMThreadContext *tc,
                                                                struct MVMUniHashTableControl *control,
                                                                const char *key,
-                                                               MVMuint32 hash_val) {
+                                                               uint32_t hash_val) {
     if (MVM_UNLIKELY(control->cur_items >= control->max_items)) {
         uni_hash_fsck_internal(control, 5);
         MVM_oops(tc, "oops, attempt to recursively call grow when adding %s",
@@ -112,7 +112,7 @@ MVM_STATIC_INLINE struct MVMUniHashEntry *hash_insert_internal(MVMThreadContext 
                 MVMuint8 *find_me_a_gap = ls.metadata;
                 MVMuint8 old_probe_distance = *ls.metadata;
                 do {
-                    MVMuint32 new_probe_distance = ls.metadata_increment + old_probe_distance;
+                    uint32_t new_probe_distance = ls.metadata_increment + old_probe_distance;
                     if (new_probe_distance >> ls.probe_distance_shift == ls.max_probe_distance) {
                         /* Optimisation from Martin Ankerl's implementation:
                            setting this to zero forces a resize on any insert,
@@ -126,7 +126,7 @@ MVM_STATIC_INLINE struct MVMUniHashEntry *hash_insert_internal(MVMThreadContext 
                     *find_me_a_gap = new_probe_distance;
                 } while (old_probe_distance);
 
-                MVMuint32 entries_to_move = find_me_a_gap - ls.metadata;
+                uint32_t entries_to_move = find_me_a_gap - ls.metadata;
                 size_t size_to_move = (size_t) ls.entry_size * entries_to_move;
                 /* When we had entries *ascending* this was
                  * memmove(entry_raw + sizeof(struct MVMUniHashEntry), entry_raw,
@@ -190,9 +190,9 @@ static struct MVMUniHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
                                                       struct MVMUniHashTableControl *control) {
     /* control->max_items may have been set to 0 to trigger a call into this
      * function. */
-    MVMuint32 max_items = MVM_uni_hash_max_items(control);
-    MVMuint32 max_probe_distance = control->max_probe_distance;
-    MVMuint32 max_probe_distance_limit = control->max_probe_distance_limit;
+    uint32_t max_items = MVM_uni_hash_max_items(control);
+    uint32_t max_probe_distance = control->max_probe_distance;
+    uint32_t max_probe_distance_limit = control->max_probe_distance_limit;
 
     /* We can hit both the probe limit and the max items on the same insertion.
      * In which case, upping the probe limit isn't going to save us :-)
@@ -202,13 +202,13 @@ static struct MVMUniHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
     if (control->cur_items < max_items
         && max_probe_distance < max_probe_distance_limit) {
         /* We hit the probe limit, but not the max items count. */
-        MVMuint32 new_probe_distance = 1 + 2 * max_probe_distance;
+        uint32_t new_probe_distance = 1 + 2 * max_probe_distance;
         if (new_probe_distance > max_probe_distance_limit) {
             new_probe_distance = max_probe_distance_limit;
         }
 
         MVMuint8 *metadata = MVM_uni_hash_metadata(control);
-        MVMuint32 in_use_items = MVM_uni_hash_official_size(control) + max_probe_distance;
+        uint32_t in_use_items = MVM_uni_hash_official_size(control) + max_probe_distance;
         /* not `in_use_items + 1` because because we don't need to shift the
          * sentinel. */
         size_t metadata_size = MVM_hash_round_size_up(in_use_items);
@@ -234,7 +234,7 @@ static struct MVMUniHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
         return NULL;
     }
 
-    MVMuint32 entries_in_use = MVM_uni_hash_official_size(control) + control->max_probe_distance - 1;
+    uint32_t entries_in_use = MVM_uni_hash_official_size(control) + control->max_probe_distance - 1;
     MVMuint8 *entry_raw_orig = MVM_uni_hash_entries(control);
     MVMuint8 *metadata_orig = MVM_uni_hash_metadata(control);
 
@@ -299,7 +299,7 @@ MVM_STATIC_INLINE void *MVM_uni_hash_lvalue_fetch(MVMThreadContext *tc,
             hashtable->table = control = new_control;
         }
     }
-    MVMuint32 hash_val = MVM_uni_hash_code(key, strlen(key));
+    uint32_t hash_val = MVM_uni_hash_code(key, strlen(key));
     return hash_insert_internal(tc, control, key, hash_val);
 }
 
@@ -314,7 +314,7 @@ void MVM_uni_hash_insert(MVMThreadContext *tc,
     struct MVMUniHashEntry *new_entry = MVM_uni_hash_lvalue_fetch(tc, hashtable, key);
     if (new_entry->key) {
         if (value != new_entry->value) {
-            MVMuint32 hash_val = MVM_uni_hash_code(key, strlen(key));
+            uint32_t hash_val = MVM_uni_hash_code(key, strlen(key));
 
             /* definately XXX - what should we do here? */
             MVM_oops(tc, "insert conflict, %s is %u, %i != %i", key, hash_val, value, new_entry->value);
@@ -328,13 +328,13 @@ void MVM_uni_hash_insert(MVMThreadContext *tc,
 /* This is not part of the public API, and subject to change at any point.
    (possibly in ways that are actually incompatible but won't generate compiler
    warnings.) */
-MVMuint64 MVM_uni_hash_fsck(MVMUniHashTable *hashtable, MVMuint32 mode) {
+MVMuint64 MVM_uni_hash_fsck(MVMUniHashTable *hashtable, uint32_t mode) {
     return uni_hash_fsck_internal(hashtable->table, mode);
 }
 
-static MVMuint64 uni_hash_fsck_internal(struct MVMUniHashTableControl *control, MVMuint32 mode) {
+static MVMuint64 uni_hash_fsck_internal(struct MVMUniHashTableControl *control, uint32_t mode) {
     const char *prefix_hashes = mode & 1 ? "# " : "";
-    MVMuint32 display = (mode >> 1) & 3;
+    uint32_t display = (mode >> 1) & 3;
     MVMuint64 errors = 0;
     MVMuint64 seen = 0;
 
@@ -342,11 +342,11 @@ static MVMuint64 uni_hash_fsck_internal(struct MVMUniHashTableControl *control, 
         return 0;
     }
 
-    MVMuint32 allocated_items = MVM_uni_hash_allocated_items(control);
+    uint32_t allocated_items = MVM_uni_hash_allocated_items(control);
     const MVMuint8 metadata_hash_bits = control->metadata_hash_bits;
     MVMuint8 *entry_raw = MVM_uni_hash_entries(control);
     MVMuint8 *metadata = MVM_uni_hash_metadata(control);
-    MVMuint32 bucket = 0;
+    uint32_t bucket = 0;
     MVMint64 prev_offset = 0;
     MVMuint8 bucket_right_shift
         = control->key_right_shift + control->metadata_hash_bits;
@@ -362,9 +362,9 @@ static MVMuint64 uni_hash_fsck_internal(struct MVMUniHashTableControl *control, 
             ++seen;
 
             struct MVMUniHashEntry *entry = (struct MVMUniHashEntry *) entry_raw;
-            MVMuint32 ideal_bucket = entry->hash_val >> bucket_right_shift;
+            uint32_t ideal_bucket = entry->hash_val >> bucket_right_shift;
             MVMint64 offset = 1 + bucket - ideal_bucket;
-            MVMuint32 actual_bucket = *metadata >> metadata_hash_bits;
+            uint32_t actual_bucket = *metadata >> metadata_hash_bits;
             char wrong_bucket = offset == actual_bucket ? ' ' : '!';
             char wrong_order;
             if (offset < 1) {

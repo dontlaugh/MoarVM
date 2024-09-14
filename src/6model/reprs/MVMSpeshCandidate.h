@@ -11,7 +11,7 @@ struct MVMSpeshCandidateBody {
     MVMuint8 discarded;
 
     /* Length of the specialized bytecode in bytes. */
-    MVMuint32 bytecode_size;
+    uint32_t bytecode_size;
 
     /* The specialized bytecode. */
     MVMuint8 *bytecode;
@@ -23,10 +23,10 @@ struct MVMSpeshCandidateBody {
     MVMCollectable **spesh_slots;
 
     /* Number of spesh slots. */
-    MVMuint32 num_spesh_slots;
+    uint32_t num_spesh_slots;
 
     /* The number of deoptimization mappings we have. */
-    MVMuint32 num_deopts;
+    uint32_t num_deopts;
 
     /* Deoptimization mappings. */
     int32_t *deopts;
@@ -40,12 +40,12 @@ struct MVMSpeshCandidateBody {
 
     /* Number of inlines and inlines table; see graph.h for description of
      * the table format. */
-    MVMuint32 num_inlines;
+    uint32_t num_inlines;
     MVMSpeshInline *inlines;
 
     /* Resume initializations and the number of them. */
     MVMSpeshResumeInit *resume_inits;
-    MVMuint32 num_resume_inits;
+    uint32_t num_resume_inits;
 
     /* The list of local types (only set up if we do inlines). */
     MVMuint16 *local_types;
@@ -61,11 +61,11 @@ struct MVMSpeshCandidateBody {
     MVMuint16 num_lexicals;
 
     /* Memory sizes to allocate for work/env, taking into account inlining. */
-    MVMuint32 work_size;
-    MVMuint32 env_size;
+    uint32_t work_size;
+    uint32_t env_size;
 
     /* Number of handlers. */
-    MVMuint32 num_handlers;
+    uint32_t num_handlers;
 
     /* JIT-code structure. */
     MVMJitCode *jitcode;

@@ -63,7 +63,7 @@ MVMuint64 MVM_REPR_DEFAULT_GET_UINT(MVMThreadContext *tc, MVMSTable *st, MVMObje
     MVM_exception_throw_adhoc(tc,
         "This representation (%s) cannot unbox to an unsigned native int (for type %s)", st->REPR->name, MVM_6model_get_stable_debug_name(tc, st));
 }
-void * MVM_REPR_DEFAULT_GET_BOXED_REF(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMuint32 repr_id) {
+void * MVM_REPR_DEFAULT_GET_BOXED_REF(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint32_t repr_id) {
     MVM_exception_throw_adhoc(tc,
         "This representation (%s) cannot unbox to other types (for type %s)", st->REPR->name, MVM_6model_get_stable_debug_name(tc, st));
 }
@@ -202,7 +202,7 @@ int MVM_repr_register_dynamic_repr(MVMThreadContext *tc, MVMREPROps *repr) {
 
     uv_mutex_lock(&tc->instance->mutex_repr_registry);
 
-    MVMuint32 idx = MVM_index_hash_fetch_nocheck(tc, &tc->instance->repr_hash, tc->instance->repr_names, name);
+    uint32_t idx = MVM_index_hash_fetch_nocheck(tc, &tc->instance->repr_hash, tc->instance->repr_names, name);
     if (idx != MVM_INDEX_HASH_NOT_FOUND) {
         uv_mutex_unlock(&tc->instance->mutex_repr_registry);
         return 0;
@@ -295,13 +295,13 @@ void MVM_repr_initialize_registry(MVMThreadContext *tc) {
 
 /* Get a representation's ID from its name. Note that the IDs may change so
  * it's best not to store references to them in e.g. the bytecode stream. */
-MVMuint32 MVM_repr_name_to_id(MVMThreadContext *tc, MVMString *name) {
+uint32_t MVM_repr_name_to_id(MVMThreadContext *tc, MVMString *name) {
     if (!MVM_str_hash_key_is_valid(tc, name)) {
         MVM_str_hash_key_throw_invalid(tc, name);
     }
 
     uv_mutex_lock(&tc->instance->mutex_repr_registry);
-    MVMuint32 idx = MVM_index_hash_fetch_nocheck(tc, &tc->instance->repr_hash, tc->instance->repr_names, name);
+    uint32_t idx = MVM_index_hash_fetch_nocheck(tc, &tc->instance->repr_hash, tc->instance->repr_names, name);
     if (idx == MVM_INDEX_HASH_NOT_FOUND) {
         char *c_name = MVM_string_ascii_encode_any(tc, name);
         char *waste[] = { c_name, NULL };
@@ -315,7 +315,7 @@ MVMuint32 MVM_repr_name_to_id(MVMThreadContext *tc, MVMString *name) {
 }
 
 /* Gets a representation by ID. */
-const MVMREPROps * MVM_repr_get_by_id(MVMThreadContext *tc, MVMuint32 id) {
+const MVMREPROps * MVM_repr_get_by_id(MVMThreadContext *tc, uint32_t id) {
     if (id >= tc->instance->num_reprs)
         MVM_exception_throw_adhoc(tc, "REPR lookup by invalid ID %" PRIu32, id);
 
@@ -324,6 +324,6 @@ const MVMREPROps * MVM_repr_get_by_id(MVMThreadContext *tc, MVMuint32 id) {
 
 /* Gets a representation by name. */
 const MVMREPROps * MVM_repr_get_by_name(MVMThreadContext *tc, MVMString *name) {
-    MVMuint32 id = MVM_repr_name_to_id(tc, name);
+    uint32_t id = MVM_repr_name_to_id(tc, name);
     return tc->instance->repr_vtables[id];
 }

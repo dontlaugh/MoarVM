@@ -471,8 +471,8 @@ MVMObject * MVM_nfa_from_statelist(MVMThreadContext *tc, MVMObject *states, MVMO
 
 /* Does a run of the NFA. Produces a list of integers indicating the
  * chosen ordering. */
-static int32_t in_done(MVMuint32 *done, MVMuint32 numdone, MVMuint32 st) {
-    MVMuint32 i = 0;
+static int32_t in_done(uint32_t *done, uint32_t numdone, uint32_t st) {
+    uint32_t i = 0;
     for (i = 0; i < numdone; i++)
         if (done[i] == st)
             return 1;
@@ -484,7 +484,7 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
     MVMint64  numcur  = 0;
     MVMint64  numnext = 0;
     MVMint64  numdone = 0;
-    MVMuint32 *done, *curst, *nextst;
+    uint32_t *done, *curst, *nextst;
     MVMint64  *fates, *longlit;
     MVMint64  i, fate_arr_len, num_states, total_fates, prev_fates, usedlonglit;
     MVMint64  orig_offset = offset;
@@ -498,10 +498,10 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
      * states" arrays. */
     num_states = nfa->num_states;
     if (tc->nfa_alloc_states < num_states) {
-        size_t alloc   = (num_states + 1) * sizeof(MVMuint32);
-        tc->nfa_done   = (MVMuint32 *)MVM_realloc(tc->nfa_done, alloc);
-        tc->nfa_curst  = (MVMuint32 *)MVM_realloc(tc->nfa_curst, alloc);
-        tc->nfa_nextst = (MVMuint32 *)MVM_realloc(tc->nfa_nextst, alloc);
+        size_t alloc   = (num_states + 1) * sizeof(uint32_t);
+        tc->nfa_done   = (uint32_t *)MVM_realloc(tc->nfa_done, alloc);
+        tc->nfa_curst  = (uint32_t *)MVM_realloc(tc->nfa_curst, alloc);
+        tc->nfa_nextst = (uint32_t *)MVM_realloc(tc->nfa_nextst, alloc);
         tc->nfa_alloc_states = num_states;
     }
     done   = tc->nfa_done;
@@ -534,7 +534,7 @@ static MVMint64 * nqp_nfa_run(MVMThreadContext *tc, MVMNFABody *nfa, MVMString *
 
     while (numnext && offset <= eos) {
         /* Swap next and current */
-        MVMuint32 *temp = curst;
+        uint32_t *temp = curst;
         curst   = nextst;
         nextst  = temp;
         numcur  = numnext;

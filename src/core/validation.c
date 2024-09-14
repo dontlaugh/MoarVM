@@ -12,15 +12,15 @@
 #define GET_I16(pc, idx)    *((MVMint16 *)(pc + idx))
 #define GET_UI16(pc, idx)   *((MVMuint16 *)(pc + idx))
 
-MVM_STATIC_INLINE MVMuint32 GET_UI32(const MVMuint8 *pc, int32_t idx) {
-    MVMuint32 retval;
+MVM_STATIC_INLINE uint32_t GET_UI32(const MVMuint8 *pc, int32_t idx) {
+    uint32_t retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
 }
 
 #define MSG(val, msg) "Bytecode validation error at offset %" PRIu32 \
     ", instruction %" PRIu32 ":\n" msg, \
-    (MVMuint32)((val)->cur_op - (val)->bc_start), (val)->cur_instr
+    (uint32_t)((val)->cur_op - (val)->bc_start), (val)->cur_instr
 
 enum {
     MARK_regular  = ' ',
@@ -32,9 +32,9 @@ typedef struct {
     MVMThreadContext *tc;
     MVMCompUnit      *cu;
     MVMStaticFrame   *frame;
-    MVMuint32         loc_count;
+    uint32_t         loc_count;
     MVMuint16        *loc_types;
-    MVMuint32         bc_size;
+    uint32_t         bc_size;
     MVMuint8         *bc_start;
     MVMuint8         *bc_end;
     MVMuint8         *src_cur_op;
@@ -43,7 +43,7 @@ typedef struct {
     MVMuint8         *cur_op;
     const MVMOpInfo  *cur_info;
     const char       *cur_mark;
-    MVMuint32         cur_instr;
+    uint32_t         cur_instr;
     MVMCallsite      *cur_call;
     MVMuint16         cur_arg;
     int32_t          acceptable_max_arity;
@@ -51,8 +51,8 @@ typedef struct {
     MVMCallsiteEntry  expected_named_arg;
     MVMuint16         remaining_args;
     MVMuint16         remaining_positionals;
-    MVMuint32         remaining_jumplabels;
-    MVMuint32         reg_type_var;
+    uint32_t         remaining_jumplabels;
+    uint32_t         reg_type_var;
 } Validator;
 
 
@@ -74,7 +74,7 @@ static void fail_illegal_mark(Validator *val) {
 }
 
 
-static void ensure_bytes(Validator *val, MVMuint32 count) {
+static void ensure_bytes(Validator *val, uint32_t count) {
     if (val->src_cur_op + count > val->src_bc_end)
         fail(val, MSG(val, "truncated stream"));
 #ifdef MVM_BIGENDIAN
@@ -151,7 +151,7 @@ MVM_STATIC_INLINE const MVMOpInfo * get_info(Validator *val, MVMuint16 opcode) {
 MVM_STATIC_INLINE void read_op(Validator *val) {
     MVMuint16  opcode;
     const MVMOpInfo *info;
-    MVMuint32  pos;
+    uint32_t  pos;
 
     ensure_bytes(val, 2);
 
@@ -180,10 +180,10 @@ static void unread_op(Validator *val) {
 
 
 static void validate_branch_targets(Validator *val) {
-    MVMuint32 pos, instr;
+    uint32_t pos, instr;
 
-    for (pos = 0, instr = (MVMuint32)-1; pos < val->bc_size; pos++) {
-        MVMuint32 flag = val->labels[pos];
+    for (pos = 0, instr = (uint32_t)-1; pos < val->bc_size; pos++) {
+        uint32_t flag = val->labels[pos];
 
         if (flag & MVM_BC_op_boundary)
             instr++;
@@ -201,9 +201,9 @@ static void validate_final_return(Validator *val) {
 }
 
 
-static void validate_literal_operand(Validator *val, MVMuint32 flags) {
-    MVMuint32 type = flags & MVM_operand_type_mask;
-    MVMuint32 size;
+static void validate_literal_operand(Validator *val, uint32_t flags) {
+    uint32_t type = flags & MVM_operand_type_mask;
+    uint32_t size;
 
     switch (type) {
         case MVM_operand_int8:     size = 1; break;
@@ -230,7 +230,7 @@ static void validate_literal_operand(Validator *val, MVMuint32 flags) {
     switch (type) {
         case MVM_operand_callsite: {
             MVMuint16 index = GET_UI16(val->cur_op, 0);
-            MVMuint32 count = val->cu->body.orig_callsites;
+            uint32_t count = val->cu->body.orig_callsites;
             if (index >= count)
                 fail(val, MSG(val, "callsite index %" PRIu16
                         " out of range 0..%" PRIu32), index, count - 1);
@@ -239,7 +239,7 @@ static void validate_literal_operand(Validator *val, MVMuint32 flags) {
 
         case MVM_operand_coderef: {
             MVMuint16 index = GET_UI16(val->cur_op, 0);
-            MVMuint32 count = val->cu->body.orig_frames;
+            uint32_t count = val->cu->body.orig_frames;
             if (index >= count)
                 fail(val, MSG(val, "coderef index %" PRIu16
                         " out of range 0..%" PRIu32), index, count - 1);
@@ -247,8 +247,8 @@ static void validate_literal_operand(Validator *val, MVMuint32 flags) {
         }
 
         case MVM_operand_str: {
-            MVMuint32 index = GET_UI32(val->cur_op, 0);
-            MVMuint32 count = val->cu->body.orig_strings;
+            uint32_t index = GET_UI32(val->cur_op, 0);
+            uint32_t count = val->cu->body.orig_strings;
             if (index >= count)
                 fail(val, MSG(val, "string index %" PRIu32
                         " out of range 0..%" PRIu32), index, count - 1);
@@ -256,7 +256,7 @@ static void validate_literal_operand(Validator *val, MVMuint32 flags) {
         }
 
         case MVM_operand_ins: {
-            MVMuint32 offset = GET_UI32(val->cur_op, 0);
+            uint32_t offset = GET_UI32(val->cur_op, 0);
             if (offset >= val->bc_size)
                 fail(val, MSG(val, "branch instruction offset %" PRIu32
                         " out of range 0..%" PRIu32), offset, val->bc_size - 1);
@@ -268,9 +268,9 @@ static void validate_literal_operand(Validator *val, MVMuint32 flags) {
 }
 
 
-static void validate_reg_operand(Validator *val, MVMuint32 flags) {
-    MVMuint32 operand_type = flags & MVM_operand_type_mask;
-    MVMuint32 reg_type;
+static void validate_reg_operand(Validator *val, uint32_t flags) {
+    uint32_t operand_type = flags & MVM_operand_type_mask;
+    uint32_t reg_type;
     MVMuint16 reg;
 
     ensure_bytes(val, 2);
@@ -300,10 +300,10 @@ next_operand:
 }
 
 
-static void validate_lex_operand(Validator *val, MVMuint32 flags) {
-    MVMuint32 operand_type = flags & MVM_operand_type_mask;
+static void validate_lex_operand(Validator *val, uint32_t flags) {
+    uint32_t operand_type = flags & MVM_operand_type_mask;
     MVMuint16 lex_index, frame_index, i;
-    MVMuint32 lex_count, lex_type;
+    uint32_t lex_count, lex_type;
     MVMStaticFrame *frame = val->frame;
 
     /* Two steps forward, two steps back to keep the error reporting happy,
@@ -351,8 +351,8 @@ static void validate_lex_operand(Validator *val, MVMuint32 flags) {
 }
 
 
-static void validate_operand(Validator *val, MVMuint32 flags) {
-    MVMuint32 rw = flags & MVM_operand_rw_mask;
+static void validate_operand(Validator *val, uint32_t flags) {
+    uint32_t rw = flags & MVM_operand_rw_mask;
 
     switch (rw) {
         case MVM_operand_literal:
@@ -485,7 +485,7 @@ static void validate_sequence(Validator *val) {
         case 'j': {
             ensure_op(val, MVM_OP_jumplist);
             validate_operands(val);
-            val->remaining_jumplabels = (MVMuint32)MVM_BC_get_I64(val->cur_op, -10);
+            val->remaining_jumplabels = (uint32_t)MVM_BC_get_I64(val->cur_op, -10);
             break;
         }
 

@@ -163,8 +163,8 @@ typedef enum {
 
 #ifdef MVM_USE_OVERFLOW_SERIALIZATION_INDEX
 struct MVMSerializationIndex {
-    MVMuint32 sc_idx;
-    MVMuint32 idx;
+    uint32_t sc_idx;
+    uint32_t idx;
 };
 #endif
 
@@ -195,8 +195,8 @@ struct MVMCollectable {
         struct MVMSerializationIndex *sci;
 #else
         struct {
-            MVMuint32 sc_idx;
-            MVMuint32 idx;
+            uint32_t sc_idx;
+            uint32_t idx;
         } sc;
 #endif
         /* Used to chain STables queued to be freed. */
@@ -205,7 +205,7 @@ struct MVMCollectable {
 
     /* Identifier of the thread that created the object. 0 if this is a
      * non-heap frame. */
-    MVMuint32 owner;
+    uint32_t owner;
 
     /* Collectable flags (see MVMCollectableFlags). */
     MVMuint8 flags1;
@@ -251,7 +251,7 @@ struct MVMAttributeIdentifier {
 /* How do we turn something of this type into a boolean? */
 struct MVMBoolificationSpec {
     MVMObject *method;
-    MVMuint32  mode;
+    uint32_t  mode;
 };
 
 /* Constant for incrementing the type cache ID for new STables. This leaves
@@ -274,7 +274,7 @@ struct MVMSTable {
 
     /* The size of an object of this type in bytes, including the
      * header. */
-    MVMuint32 size;
+    uint32_t size;
 
     /* The length of the type check cache. */
     MVMuint16 type_check_cache_length;
@@ -345,7 +345,7 @@ struct MVMSTable {
 
     /* We lazily deserialize HOW; this is the SC and index if needed. */
     MVMSerializationContext *HOW_sc;
-    MVMuint32                HOW_idx;
+    uint32_t                HOW_idx;
 
     /* A string associated with this STable for debugging purposes.
      * Usually the name of the class this belongs to. */
@@ -440,7 +440,7 @@ struct MVMREPROps_Boxing {
      * gets the reference to such things, using the representation ID to distinguish
      * them. */
     void * (*get_boxed_ref) (MVMThreadContext *tc, MVMSTable *st,
-        MVMObject *root, void *data, MVMuint32 repr_id);
+        MVMObject *root, void *data, uint32_t repr_id);
 };
 struct MVMREPROps_Positional {
     /* Gets the element and the specified index and places it in the passed
@@ -659,7 +659,7 @@ struct MVMREPROps {
     const char *name;
 
     /* The representation's ID. */
-    MVMuint32 ID;
+    uint32_t ID;
 
     /* Optional API, for representations that allocate additonal memory and
      * want to report its size for debugging purposes. */

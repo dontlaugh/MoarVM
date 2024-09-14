@@ -60,7 +60,7 @@ static void set_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
     MVMP6intREPRData *repr_data = (MVMP6intREPRData *)st->REPR_data;
     switch (repr_data->bits) {
         case 64: ((MVMP6intBody *)data)->value.u64 = value; break;
-        case 32: ((MVMP6intBody *)data)->value.u32 = (MVMuint32)value; break;
+        case 32: ((MVMP6intBody *)data)->value.u32 = (uint32_t)value; break;
         case 16: ((MVMP6intBody *)data)->value.u16 = (MVMuint16)value; break;
         default: ((MVMP6intBody *)data)->value.u8 = (MVMuint8)value; break;
     }

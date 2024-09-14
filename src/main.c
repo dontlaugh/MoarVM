@@ -163,7 +163,7 @@ int wmain(int argc, wchar_t *wargv[])
     char telemeh_inited = 0;
 #endif
 
-    MVMuint32 debugserverport = 0;
+    uint32_t debugserverport = 0;
     int start_suspended = 0;
 
     for (; (flag = parse_flag(argv[argi])) != NOT_A_FLAG; ++argi) {
@@ -240,7 +240,7 @@ int wmain(int argc, wchar_t *wargv[])
                     fprintf(stderr, "ERROR: debug server port out of range. We only accept ports above 1024 and below 65535. (got: %"PRIi64")\n", port);
                     return EXIT_FAILURE;
                 }
-                debugserverport = (MVMuint32)port;
+                debugserverport = (uint32_t)port;
                 break;
             }
 

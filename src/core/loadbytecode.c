@@ -37,7 +37,7 @@ static void run_comp_unit(MVMThreadContext *tc, MVMCompUnit *cu) {
 void MVM_load_bytecode_buffer(MVMThreadContext *tc, MVMObject *buf) {
     MVMCompUnit *cu;
     MVMuint8    *data_start;
-    MVMuint32    data_size;
+    uint32_t    data_size;
 
     /* Ensure the source is in the correct form. */
     if (
@@ -61,7 +61,7 @@ void MVM_load_bytecode_buffer(MVMThreadContext *tc, MVMObject *buf) {
 void MVM_load_bytecode_buffer_to_cu(MVMThreadContext *tc, MVMObject *buf, MVMRegister *res) {
     MVMCompUnit *cu;
     MVMuint8    *data_start;
-    MVMuint32    data_size;
+    uint32_t    data_size;
 
     /* Ensure the source is in the correct form. */
     if (

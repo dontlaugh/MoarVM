@@ -93,11 +93,11 @@ struct MVMCallsiteInterns {
 
     /* Number of callsites we have interned by each arity. Also freed at a safepoint
      * on growth. */
-    MVMuint32 *num_by_arity;
+    uint32_t *num_by_arity;
 
     /* The maximum interned arity so far (the element count of the above two
      * arrays). */
-    MVMuint32 max_arity;
+    uint32_t max_arity;
 };
 
 /* Functions relating to common callsites used within the VM. */
@@ -107,7 +107,7 @@ MVM_PUBLIC MVMCallsite * MVM_callsite_get_common(MVMThreadContext *tc, MVMCommon
 /* Other copying, interning, and cleanup. */
 MVMCallsite * MVM_callsite_copy(MVMThreadContext *tc, const MVMCallsite *cs);
 MVM_PUBLIC void MVM_callsite_intern(MVMThreadContext *tc, MVMCallsite **cs,
-        MVMuint32 force, MVMuint32 steal);
+        uint32_t force, uint32_t steal);
 void MVM_callsite_mark(MVMThreadContext *tc, MVMCallsite *cs, MVMGCWorklist *worklist,
         MVMHeapSnapshotState *snapshot);
 void MVM_callsite_mark_interns(MVMThreadContext *tc, MVMGCWorklist *worklist,
@@ -116,14 +116,14 @@ void MVM_callsite_destroy(MVMCallsite *cs);
 void MVM_callsite_cleanup_interns(MVMInstance *instance);
 
 /* Callsite transformations. */
-MVMCallsite * MVM_callsite_drop_positional(MVMThreadContext *tc, MVMCallsite *cs, MVMuint32 idx);
-MVMCallsite * MVM_callsite_drop_positionals(MVMThreadContext *tc, MVMCallsite *cs, MVMuint32 idx, MVMuint32 count);
-MVMCallsite * MVM_callsite_insert_positional(MVMThreadContext *tc, MVMCallsite *cs, MVMuint32 idx,
+MVMCallsite * MVM_callsite_drop_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx);
+MVMCallsite * MVM_callsite_drop_positionals(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx, uint32_t count);
+MVMCallsite * MVM_callsite_insert_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
         MVMCallsiteFlags flag);
-MVMCallsite * MVM_callsite_replace_positional(MVMThreadContext *tc, MVMCallsite *cs, MVMuint32 idx,
+MVMCallsite * MVM_callsite_replace_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
         MVMCallsiteFlags flag);
 /* Check if the callsite has nameds. */
-MVM_STATIC_INLINE MVMuint32 MVM_callsite_has_nameds(MVMThreadContext *tc, const MVMCallsite *cs) {
+MVM_STATIC_INLINE uint32_t MVM_callsite_has_nameds(MVMThreadContext *tc, const MVMCallsite *cs) {
     return cs->num_pos != cs->flag_count;
 }
 

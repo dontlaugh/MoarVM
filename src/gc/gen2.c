@@ -17,9 +17,9 @@ MVMGen2Allocator * MVM_gc_gen2_create(MVMInstance *i) {
 }
 
 /* Sets up a size class bin in the second generation. */
-static void setup_bin(MVMGen2Allocator *al, MVMuint32 bin) {
+static void setup_bin(MVMGen2Allocator *al, uint32_t bin) {
     /* Work out page size we want. */
-    MVMuint32 page_size = MVM_GEN2_PAGE_ITEMS * ((bin + 1) << MVM_GEN2_BIN_BITS);
+    uint32_t page_size = MVM_GEN2_PAGE_ITEMS * ((bin + 1) << MVM_GEN2_BIN_BITS);
 
     /* We'll just allocate a single page to start off with. */
     al->size_classes[bin].num_pages = 1;
@@ -35,12 +35,12 @@ static void setup_bin(MVMGen2Allocator *al, MVMuint32 bin) {
 }
 
 /* Adds a new page to a size class bin. */
-static void add_page(MVMGen2Allocator *al, MVMuint32 bin) {
+static void add_page(MVMGen2Allocator *al, uint32_t bin) {
     /* Work out page size. */
-    MVMuint32 page_size = MVM_GEN2_PAGE_ITEMS * ((bin + 1) << MVM_GEN2_BIN_BITS);
+    uint32_t page_size = MVM_GEN2_PAGE_ITEMS * ((bin + 1) << MVM_GEN2_BIN_BITS);
 
     /* Add the extra page. */
-    MVMuint32 cur_page = al->size_classes[bin].num_pages;
+    uint32_t cur_page = al->size_classes[bin].num_pages;
     al->size_classes[bin].num_pages++;
     al->size_classes[bin].pages = MVM_realloc(al->size_classes[bin].pages,
         sizeof(void *) * al->size_classes[bin].num_pages);
@@ -57,13 +57,13 @@ static void add_page(MVMGen2Allocator *al, MVMuint32 bin) {
 /* Allocates space using the second generation allocator and returns
  * a pointer to the allocated space. Does not zero the space or set
  * it up in any way. */
-void * MVM_gc_gen2_allocate(MVMGen2Allocator *al, MVMuint32 size) {
+void * MVM_gc_gen2_allocate(MVMGen2Allocator *al, uint32_t size) {
     void *result;
 
     /* Determine the bin. If we hit a bin exactly then it's off-by-one,
      * since the bins list is base-0. Otherwise we've some extra bits,
      * which round us up to the next bin, but that's a no-op. */
-    MVMuint32 bin = (size >> MVM_GEN2_BIN_BITS);
+    uint32_t bin = (size >> MVM_GEN2_BIN_BITS);
     if ((size & MVM_GEN2_BIN_MASK) == 0)
         bin--;
 
@@ -107,7 +107,7 @@ void * MVM_gc_gen2_allocate(MVMGen2Allocator *al, MVMuint32 size) {
 /* Allocates space using the second generation allocator and returns
  * a pointer to the allocated space. Promises the memory will be
  * zeroed, except that the MVMCollectable gen 2 flag will get set. */
-void * MVM_gc_gen2_allocate_zeroed(MVMGen2Allocator *al, MVMuint32 size) {
+void * MVM_gc_gen2_allocate_zeroed(MVMGen2Allocator *al, uint32_t size) {
     void *a = MVM_gc_gen2_allocate(al, size);
     memset(a, 0, size);
     ((MVMCollectable *)a)->flags2 = MVM_CF_SECOND_GEN;
@@ -116,7 +116,7 @@ void * MVM_gc_gen2_allocate_zeroed(MVMGen2Allocator *al, MVMuint32 size) {
 
 /* Frees all memory associated with the second generation. */
 void MVM_gc_gen2_destroy(MVMInstance *i, MVMGen2Allocator *al) {
-    MVMuint32 j, k;
+    uint32_t j, k;
 
     /* Remove all pages. */
     for (j = 0; j < MVM_GEN2_BINS; j++) {
@@ -141,11 +141,11 @@ void MVM_gc_gen2_destroy(MVMInstance *i, MVMGen2Allocator *al) {
 /* blindly move pages from one gen2 to another */
 void MVM_gc_gen2_transfer(MVMThreadContext *src, MVMThreadContext *dest) {
     MVMGen2Allocator *gen2 = src->gen2, *dest_gen2 = dest->gen2;
-    MVMuint32 bin, obj_size, page;
+    uint32_t bin, obj_size, page;
     char ***freelist_insert_pos;
 
     for (bin = 0; bin < MVM_GEN2_BINS; bin++) {
-        MVMuint32 orig_dest_num_pages = dest_gen2->size_classes[bin].num_pages;
+        uint32_t orig_dest_num_pages = dest_gen2->size_classes[bin].num_pages;
         char *cur_ptr, *end_ptr;
         /* If we've nothing allocated in this size class, skip it. */
         if (gen2->size_classes[bin].pages == NULL)
@@ -230,7 +230,7 @@ void MVM_gc_gen2_transfer(MVMThreadContext *src, MVMThreadContext *dest) {
         gen2->size_classes[bin].num_pages = 0;
     }
     { /* transfer the overflows */
-        MVMuint32 i;
+        uint32_t i;
         if (gen2->num_overflows + dest_gen2->num_overflows > dest_gen2->alloc_overflows) {
             dest_gen2->alloc_overflows = (
                 gen2->alloc_overflows > dest_gen2->alloc_overflows
@@ -255,7 +255,7 @@ void MVM_gc_gen2_transfer(MVMThreadContext *src, MVMThreadContext *dest) {
         gen2->overflows = NULL;
     }
     { /* copy the roots... */
-        MVMuint32 i, n = src->num_gen2roots;
+        uint32_t i, n = src->num_gen2roots;
         for ( i = 0; i < n; i++) {
             MVM_gc_root_gen2_add(dest, src->gen2roots[i]);
         }
@@ -270,9 +270,9 @@ void MVM_gc_gen2_transfer(MVMThreadContext *src, MVMThreadContext *dest) {
 void MVM_gc_gen2_compact_overflows(MVMGen2Allocator *al) {
     /* compact the overflow list to prevent it from growing without bounds */
     MVMCollectable **overflows     = al->overflows;
-    const MVMuint32  num_overflows = al->num_overflows;
-    MVMuint32        cursor = 0;
-    MVMuint32        live;
+    const uint32_t  num_overflows = al->num_overflows;
+    uint32_t        cursor = 0;
+    uint32_t        live;
 
     /* Find the first NULL object. */
     while (cursor < num_overflows && overflows[cursor])

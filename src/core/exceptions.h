@@ -32,13 +32,13 @@
 /* Information associated with an exception handler. */
 struct MVMFrameHandler {
     /* Start offset into the frame's bytecode for the handler, inclusive. */
-    MVMuint32 start_offset;
+    uint32_t start_offset;
 
     /* End offset into the frame's bytecode for the handler, exclusive. */
-    MVMuint32 end_offset;
+    uint32_t end_offset;
 
     /* Category mask or inline boundary indicator. */
-    MVMuint32 category_mask;
+    uint32_t category_mask;
 
     /* The kind of handler it is. */
     MVMuint16 action;
@@ -47,7 +47,7 @@ struct MVMFrameHandler {
     MVMuint16 block_reg;
 
     /* Offset into the frame's bytecode of the handler, for goto handlers. */
-    MVMuint32 goto_offset;
+    uint32_t goto_offset;
 
     /* Register containing a label in case we have a labeled loop. We need to
      * be able to check for its identity when handling e.g. `next LABEL`. */
@@ -82,10 +82,10 @@ struct MVMActiveHandler {
 MVMObject * MVM_exception_backtrace(MVMThreadContext *tc, MVMObject *ex_obj);
 MVMObject * MVM_exception_backtrace_strings(MVMThreadContext *tc, MVMObject *exObj);
 void MVM_dump_backtrace(MVMThreadContext *tc);
-void MVM_exception_throwcat(MVMThreadContext *tc, MVMuint8 mode, MVMuint32 cat, MVMRegister *resume_result);
+void MVM_exception_throwcat(MVMThreadContext *tc, MVMuint8 mode, uint32_t cat, MVMRegister *resume_result);
 void MVM_exception_die(MVMThreadContext *tc, MVMString *str, MVMRegister *rr);
 void MVM_exception_throwobj(MVMThreadContext *tc, MVMuint8 mode, MVMObject *exObj, MVMRegister *resume_result);
-void MVM_exception_throwpayload(MVMThreadContext *tc, MVMuint8 mode, MVMuint32 cat, MVMObject *payload, MVMRegister *resume_result);
+void MVM_exception_throwpayload(MVMThreadContext *tc, MVMuint8 mode, uint32_t cat, MVMObject *payload, MVMRegister *resume_result);
 void MVM_exception_resume(MVMThreadContext *tc, MVMObject *exObj);
 MVM_PUBLIC MVM_NO_RETURN void MVM_panic_allocation_failed(size_t len) MVM_NO_RETURN_ATTRIBUTE;
 MVM_PUBLIC MVM_NO_RETURN void MVM_panic(int32_t exitCode, const char *messageFormat, ...) MVM_NO_RETURN_ATTRIBUTE MVM_FORMAT(printf, 2, 3);

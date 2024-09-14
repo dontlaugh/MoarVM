@@ -33,7 +33,7 @@ void MVM_gc_root_add_permanent(MVMThreadContext *tc, MVMCollectable **obj_ref) {
 
 /* Adds the set of permanently registered roots to a GC worklist. */
 void MVM_gc_root_add_permanents_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
-    MVMuint32         i, num_roots;
+    uint32_t         i, num_roots;
     MVMCollectable ***permroots;
     num_roots = tc->instance->num_permroots;
     permroots = tc->instance->permroots;
@@ -66,7 +66,7 @@ void MVM_gc_root_add_permanents_to_worklist(MVMThreadContext *tc, MVMGCWorklist 
  * but that isn't permanent. */
 void MVM_gc_root_add_instance_roots_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
     MVMString                  **int_to_str_cache;
-    MVMuint32                    i;
+    uint32_t                    i;
 
     add_collectable(tc, worklist, snapshot, tc->instance->threads, "Thread list");
     add_collectable(tc, worklist, snapshot, tc->instance->compiler_registry, "Compiler registry");
@@ -257,14 +257,14 @@ void MVM_gc_root_temp_push_slow(MVMThreadContext *tc, MVMCollectable **obj_ref) 
  * removing all roots. This is done so that in nested interpreter runs
  * (at present, just nativecall callbacks) we don't clear things that
  * are pushed by the native call itself. */
-MVMuint32 MVM_gc_root_temp_mark(MVMThreadContext *tc) {
+uint32_t MVM_gc_root_temp_mark(MVMThreadContext *tc) {
     int32_t current = tc->mark_temproots;
     tc->mark_temproots = tc->num_temproots;
     return current;
 }
 
 /* Resets the temporary root stack mark to the provided height. */
-void MVM_gc_root_temp_mark_reset(MVMThreadContext *tc, MVMuint32 mark) {
+void MVM_gc_root_temp_mark_reset(MVMThreadContext *tc, uint32_t mark) {
     tc->mark_temproots = mark;
 }
 
@@ -278,12 +278,12 @@ void MVM_gc_root_temp_pop_all(MVMThreadContext *tc) {
  * they may be GC-able; check for this and make sure such roots do not get
  * added to the worklist. (Cheaper to do it here in the event we GC than to
  * do it on every stack push). */
-static MVMuint32 is_stack_frame(MVMThreadContext *tc, MVMCollectable **c) {
+static uint32_t is_stack_frame(MVMThreadContext *tc, MVMCollectable **c) {
     MVMCollectable *maybe_frame = *c;
     return maybe_frame && maybe_frame->flags1 == 0 && maybe_frame->owner == 0;
 }
 void MVM_gc_root_add_temps_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
-    MVMuint32         i, num_roots;
+    uint32_t         i, num_roots;
     MVMCollectable ***temproots;
     num_roots = tc->num_temproots;
     temproots = tc->temproots;
@@ -327,12 +327,12 @@ void MVM_gc_root_gen2_add(MVMThreadContext *tc, MVMCollectable *c) {
  * items (usually because all the referenced objects also got promoted). */
 void MVM_gc_root_add_gen2s_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist) {
     MVMCollectable **gen2roots = tc->gen2roots;
-    MVMuint32        num_roots = tc->num_gen2roots;
-    MVMuint32        i;
+    uint32_t        num_roots = tc->num_gen2roots;
+    uint32_t        i;
 
     /* We'll remove some entries from this list. The algorithm is simply to
      * slide all that stay towards the start of the array. */
-    MVMuint32 insert_pos = 0;
+    uint32_t insert_pos = 0;
 
     /* Guess that we'll end up with around num_roots entries, to avoid some
      * worklist growth reallocations. */
@@ -341,7 +341,7 @@ void MVM_gc_root_add_gen2s_to_worklist(MVMThreadContext *tc, MVMGCWorklist *work
     /* Visit each gen2 root and... */
     for (i = 0; i < num_roots; i++) {
         /* Count items on worklist before we mark it. */
-        MVMuint32 items_before_mark  = worklist->items;
+        uint32_t items_before_mark  = worklist->items;
 
         /* Put things it references into the worklist; since the worklist will
          * be set not to include gen2 things, only nursery things will make it
@@ -372,8 +372,8 @@ void MVM_gc_root_add_gen2s_to_worklist(MVMThreadContext *tc, MVMGCWorklist *work
 /* Adds inter-generational roots to a heap snapshot. */
 void MVM_gc_root_add_gen2s_to_snapshot(MVMThreadContext *tc, MVMHeapSnapshotState *snapshot) {
     MVMCollectable **gen2roots = tc->gen2roots;
-    MVMuint32        num_roots = tc->num_gen2roots;
-    MVMuint32        i;
+    uint32_t        num_roots = tc->num_gen2roots;
+    uint32_t        i;
     for (i = 0; i < num_roots; i++)
         MVM_profile_heap_add_collectable_rel_idx(tc, snapshot, gen2roots[i], i);
 }
@@ -382,9 +382,9 @@ void MVM_gc_root_add_gen2s_to_snapshot(MVMThreadContext *tc, MVMHeapSnapshotStat
  * collected. Applied after a full collection. */
 void MVM_gc_root_gen2_cleanup(MVMThreadContext *tc) {
     MVMCollectable **gen2roots    = tc->gen2roots;
-    MVMuint32        num_roots    = tc->num_gen2roots;
-    MVMuint32        i = 0;
-    MVMuint32        cur_survivor;
+    uint32_t        num_roots    = tc->num_gen2roots;
+    uint32_t        i = 0;
+    uint32_t        cur_survivor;
 
     /* Find the first collected object. */
     while (i < num_roots && gen2roots[i]->flags2 & MVM_CF_GEN2_LIVE)

@@ -7,16 +7,16 @@ typedef MVMuint64 MVMBitmap;
 /* also works for clang and friends */
 #define MVM_FFS(x) __builtin_ffsll(x)
 #elif defined(_MSC_VER)
-MVM_STATIC_INLINE MVMuint32 MVM_FFS(MVMBitmap x) {
-    MVMuint32 i = 0;
+MVM_STATIC_INLINE uint32_t MVM_FFS(MVMBitmap x) {
+    uint32_t i = 0;
     if (_BitScanForward64(&i, x) == 0)
         return 0;
     return i + 1;
 }
 #else
 /* fallback, note that i=0 if no bits are set */
-MVM_STATIC_INLINE MVMuint32 MVM_FFS(MVMBitmap x) {
-    MVMuint32 i = 0;
+MVM_STATIC_INLINE uint32_t MVM_FFS(MVMBitmap x) {
+    uint32_t i = 0;
     while (x) {
         if (x & (1 << i++))
             break;

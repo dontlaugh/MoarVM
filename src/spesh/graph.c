@@ -17,8 +17,8 @@ MVM_STATIC_INLINE int32_t GET_I32(const MVMuint8 *pc, int32_t idx) {
     return retval;
 }
 
-MVM_STATIC_INLINE MVMuint32 GET_UI32(const MVMuint8 *pc, int32_t idx) {
-    MVMuint32 retval;
+MVM_STATIC_INLINE uint32_t GET_UI32(const MVMuint8 *pc, int32_t idx) {
+    uint32_t retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
 }
@@ -29,7 +29,7 @@ MVM_STATIC_INLINE MVMuint64 GET_UI64(const MVMuint8 *pc, int32_t idx) {
     return retval;
 }
 
-MVM_STATIC_INLINE MVMuint32 GET_N32(const MVMuint8 *pc, int32_t idx) {
+MVM_STATIC_INLINE uint32_t GET_N32(const MVMuint8 *pc, int32_t idx) {
     MVMnum32 retval;
     memcpy(&retval, pc + idx, sizeof(retval));
     return retval;
@@ -56,7 +56,7 @@ void MVM_spesh_graph_grow_deopt_table(MVMThreadContext *tc, MVMSpeshGraph *g) {
 
 /* Records a de-optimization annotation and mapping pair. */
 int32_t MVM_spesh_graph_add_deopt_annotation(MVMThreadContext *tc, MVMSpeshGraph *g,
-                                          MVMSpeshIns *ins_node, MVMuint32 deopt_target,
+                                          MVMSpeshIns *ins_node, uint32_t deopt_target,
                                           int32_t type) {
     /* Add an annotations. */
     MVMSpeshAnn *ann      = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshAnn));
@@ -234,7 +234,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
      *    a basic block. It's possible to have both bits set. If it's part
      *    of a jumplist, it gets the third bit set also.
      * Anything that's just a zero has no instruction starting there. */
-    MVMuint32 *byte_to_ins_flags = MVM_calloc(g->bytecode_size, sizeof(MVMuint32));
+    uint32_t *byte_to_ins_flags = MVM_calloc(g->bytecode_size, sizeof(uint32_t));
 
     /* Instruction to basic block mapping. Initialized later. */
     MVMSpeshBB **ins_to_bb = NULL;
@@ -250,14 +250,14 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
     MVMCompUnit *cu       = sf->body.cu;
     MVMuint8    *pc       = g->bytecode;
     MVMuint8    *end      = g->bytecode + g->bytecode_size;
-    MVMuint32    ins_idx  = 0;
+    uint32_t    ins_idx  = 0;
     MVMuint8     next_bbs = 1; /* Next iteration (here, first) starts a BB. */
-    MVMuint32    num_osr_points = 0;
+    uint32_t    num_osr_points = 0;
 
     MVMBytecodeAnnotation *ann_ptr = MVM_bytecode_resolve_annotation(tc, &sf->body, sf->body.bytecode - pc);
 
     for (i = 0; i < g->num_handlers; i++) {
-        if (g->handlers[i].start_offset != (MVMuint32)-1 && g->handlers[i].goto_offset != (MVMuint32)-1) {
+        if (g->handlers[i].start_offset != (uint32_t)-1 && g->handlers[i].goto_offset != (uint32_t)-1) {
             byte_to_ins_flags[g->handlers[i].start_offset] |= MVM_CFG_BB_START;
             byte_to_ins_flags[g->handlers[i].end_offset] |= MVM_CFG_BB_START;
             byte_to_ins_flags[g->handlers[i].goto_offset] |= MVM_CFG_BB_START;
@@ -286,7 +286,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
          * a BB end. */
         else {
             if (byte_to_ins_flags[pc - g->bytecode] & MVM_CFG_BB_START) {
-                MVMuint32 hunt = pc - g->bytecode;
+                uint32_t hunt = pc - g->bytecode;
                 while (!byte_to_ins_flags[--hunt]);
                 byte_to_ins_flags[hunt] |= MVM_CFG_BB_END;
             }
@@ -353,7 +353,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
                 arg_size += 4;
                 break;
             case MVM_operand_literal: {
-                MVMuint32 type = flags & MVM_operand_type_mask;
+                uint32_t type = flags & MVM_operand_type_mask;
                 switch (type) {
                 case MVM_operand_int8:
                     ins_node->operands[i].lit_i8 = GET_I8(args, arg_size);
@@ -405,7 +405,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
                     break;
                 case MVM_operand_ins: {
                     /* Stash instruction offset. */
-                    MVMuint32 target = GET_UI32(args, arg_size);
+                    uint32_t target = GET_UI32(args, arg_size);
                     ins_node->operands[i].ins_offset = target;
 
                     /* This is a branching instruction, so it's a BB end. */
@@ -460,7 +460,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
         if (opcode == MVM_OP_osrpoint) {
             byte_to_ins_flags[pc - g->bytecode] |= MVM_CFG_BB_START;
             if (pc - g->bytecode > 0) {
-                MVMuint32 prev = pc - g->bytecode;
+                uint32_t prev = pc - g->bytecode;
                 while (!byte_to_ins_flags[--prev]);
                 byte_to_ins_flags[prev] |= MVM_CFG_BB_END;
             }
@@ -511,7 +511,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
         /* Start or got may be -1 if the code the handler covered became
          * dead. If so, mark the handler as removed. Ditto if end is
          * before start (would never match). */
-        if (g->handlers[i].start_offset == (MVMuint32)-1 || g->handlers[i].goto_offset == (MVMuint32)-1 ||
+        if (g->handlers[i].start_offset == (uint32_t)-1 || g->handlers[i].goto_offset == (uint32_t)-1 ||
                 g->handlers[i].start_offset > g->handlers[i].end_offset) {
             if (!g->unreachable_handlers)
                 g->unreachable_handlers = MVM_spesh_alloc(tc, g, g->num_handlers);
@@ -654,8 +654,8 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
             cur_bb->succ[0]  = cur_bb->linear_next;
             for (i = 0; i < g->num_handlers; i++) {
                 if (is_catch_handler(tc, g, i)) {
-                    MVMuint32 offset = g->handlers[i].goto_offset;
-                    if (offset != (MVMuint32)-1)
+                    uint32_t offset = g->handlers[i].goto_offset;
+                    if (offset != (uint32_t)-1)
                         cur_bb->succ[insert_pos++] = ins_to_bb[byte_to_ins_flags[offset] >> 3];
                 }
             }
@@ -678,7 +678,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
             if (cur_bb->first_ins->annotations) {
                 /* Process them in two passes in case we have two on the
                  * same instruction and disordered. */
-                MVMuint32 has_end = 0;
+                uint32_t has_end = 0;
                 MVMSpeshAnn *ann = cur_bb->first_ins->annotations;
                 while (ann) {
                     switch (ann->type) {
@@ -724,7 +724,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
                 case MVM_OP_goto: {
                     /* Unconditional branch, so one successor. */
                     MVMint64 num_bbs = 1 + num_active_handlers;
-                    MVMuint32   offset = cur_bb->last_ins->operands[0].ins_offset;
+                    uint32_t   offset = cur_bb->last_ins->operands[0].ins_offset;
                     MVMSpeshBB *tgt    = ins_to_bb[byte_to_ins_flags[offset] >> 3];
                     cur_bb->succ       = MVM_spesh_alloc(tc, g, num_bbs * sizeof(MVMSpeshBB *));
                     cur_bb->succ[0]    = tgt;
@@ -740,7 +740,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
                     cur_bb->succ = MVM_spesh_alloc(tc, g, num_bbs * sizeof(MVMSpeshBB *));
                     for (i = 0; i < cur_bb->last_ins->info->num_operands; i++) {
                         if (cur_bb->last_ins->info->operands[i] == MVM_operand_ins) {
-                            MVMuint32 offset = cur_bb->last_ins->operands[i].ins_offset;
+                            uint32_t offset = cur_bb->last_ins->operands[i].ins_offset;
                             cur_bb->succ[0] = ins_to_bb[byte_to_ins_flags[offset] >> 3];
                             cur_bb->num_succ++;
                             cur_bb->last_ins->operands[i].ins_bb = cur_bb->succ[0];
@@ -772,7 +772,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
                 cur_bb->handler_succ = MVM_spesh_alloc(tc, g, num_active_handlers * sizeof(MVMSpeshBB *));
                 for (i = 0; i < g->num_handlers; i++) {
                     if (active_handlers[i]) {
-                        MVMuint32 offset = g->handlers[i].goto_offset;
+                        uint32_t offset = g->handlers[i].goto_offset;
                         MVMSpeshBB *target = ins_to_bb[byte_to_ins_flags[offset] >> 3];
                         if (!already_succs(tc, cur_bb, target)) {
                             cur_bb->succ[cur_bb->num_succ] = target;
@@ -796,8 +796,8 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
         for (i = 0; i < num_existing_deopts; i ++) {
             if (existing_deopts[2 * i + 1] >= 0) {
                 // check last bit which is abused as PRE_INS marker and set deopt_ins = post_ins if it is set
-                MVMuint32 deopt = (MVMuint32)existing_deopts[2 * i + 1];
-                MVMuint32 bytecode_pos = MVM_spesh_deopt_bytecode_pos(deopt);
+                uint32_t deopt = (uint32_t)existing_deopts[2 * i + 1];
+                uint32_t bytecode_pos = MVM_spesh_deopt_bytecode_pos(deopt);
                 MVMSpeshIns *post_ins     = ins_flat[byte_to_ins_flags[bytecode_pos] >> 3];
                 MVMSpeshIns *deopt_ins;
                 MVMSpeshAnn *deopt_ann    = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshAnn));
@@ -838,7 +838,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
      * place we can map those into instructions, so do it here if needed. */
     if (deopt_usage_ins_out && deopt_usage_info) {
         MVM_VECTOR_DECL(MVMSpeshIns *, usage_ins);
-        MVMuint32 idx = 0;
+        uint32_t idx = 0;
         MVM_VECTOR_INIT(usage_ins, 32);
         while (1) {
             int32_t offset = deopt_usage_info[idx];
@@ -865,8 +865,8 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
  * them NULL, since zeroed memory is cheaper than copying a VMNull in to
  * place). */
 static int32_t is_handler_reg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 reg) {
-    MVMuint32 num_handlers = g->num_handlers;
-    MVMuint32 i;
+    uint32_t num_handlers = g->num_handlers;
+    uint32_t i;
     for (i = 0; i < num_handlers; i++) {
         if (g->handlers[i].action == MVM_EX_ACTION_INVOKE)
             if (g->handlers[i].block_reg == reg)
@@ -951,7 +951,7 @@ MVMSpeshBB ** MVM_spesh_graph_reverse_postorder(MVMThreadContext *tc, MVMSpeshGr
 static void iter_check(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo, int32_t *doms, int32_t iters) {
     if (iters > 100000) {
 #ifdef NDEBUG
-        MVMuint32 k;
+        uint32_t k;
         char *dump_msg = MVM_spesh_dump(tc, g);
         printf("%s", dump_msg);
         MVM_free(dump_msg);
@@ -985,7 +985,7 @@ static int32_t intersect(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rp
 
 /* Computes dominator information about the basic blocks. */
 static int32_t * compute_dominators(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo) {
-    MVMuint32 i, j, changed;
+    uint32_t i, j, changed;
 
     /* Create result list, with all initialized to undefined (use -1, as it's
      * not a valid basic block index). Start node dominates itself. */
@@ -1019,7 +1019,7 @@ static int32_t * compute_dominators(MVMThreadContext *tc, MVMSpeshGraph *g, MVMS
                 MVM_oops(tc, "Spesh: could not find processed initial dominator");
             }
             for (j = 0; j < b->num_pred; j++) {
-                if (j != (MVMuint32)chosen_pred) {
+                if (j != (uint32_t)chosen_pred) {
                     int32_t p_idx = b->pred[j]->rpo_idx;
                     if (doms[p_idx] != -1)
                         new_idom = intersect(tc, g, rpo, doms, p_idx, new_idom);
@@ -1054,11 +1054,11 @@ static void add_child(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *target
     target->num_children++;
 }
 static void add_children(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB **rpo, int32_t *doms) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < g->num_bbs; i++) {
         MVMSpeshBB *bb   = rpo[i];
-        MVMuint32   idom = doms[i];
-        if ((MVMuint32)idom != i)
+        uint32_t   idom = doms[i];
+        if ((uint32_t)idom != i)
             add_child(tc, g, rpo[idom], bb);
     }
 }
@@ -1162,7 +1162,7 @@ static SSAVarInfo * initialize_ssa_var_info(MVMThreadContext *tc, MVMSpeshGraph 
     return var_info;
 }
 
-MVMOpInfo *MVM_spesh_graph_get_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint32 nrargs) {
+MVMOpInfo *MVM_spesh_graph_get_phi(MVMThreadContext *tc, MVMSpeshGraph *g, uint32_t nrargs) {
     MVMOpInfo *result = NULL;
 
     /* Check number of args to phi isn't huge. */
@@ -1396,7 +1396,7 @@ static void ssa(MVMThreadContext *tc, MVMSpeshGraph *g) {
 
 /* Takes a static frame and creates a spesh graph for it. */
 MVMSpeshGraph * MVM_spesh_graph_create(MVMThreadContext *tc, MVMStaticFrame *sf,
-        MVMuint32 cfg_only, MVMuint32 insert_object_nulls) {
+        uint32_t cfg_only, uint32_t insert_object_nulls) {
     /* Create top-level graph object. */
     MVMSpeshGraph *g = MVM_calloc(1, sizeof(MVMSpeshGraph));
     g->sf            = sf;
@@ -1430,7 +1430,7 @@ MVMSpeshGraph * MVM_spesh_graph_create(MVMThreadContext *tc, MVMStaticFrame *sf,
 
 /* Takes a static frame and creates a spesh graph for it. */
 MVMSpeshGraph * MVM_spesh_graph_create_from_cand(MVMThreadContext *tc, MVMStaticFrame *sf,
-                                                 MVMSpeshCandidate *cand, MVMuint32 cfg_only,
+                                                 MVMSpeshCandidate *cand, uint32_t cfg_only,
                                                  MVMSpeshIns ***deopt_usage_ins_out) {
     /* Create top-level graph object. */
     MVMSpeshGraph *g     = MVM_calloc(1, sizeof(MVMSpeshGraph));
@@ -1540,7 +1540,7 @@ void MVM_spesh_graph_mark(MVMThreadContext *tc, MVMSpeshGraph *g, MVMGCWorklist 
         MVM_gc_worklist_add(tc, worklist, &(g->spesh_slots[i]));
 
     /* Mark inlines. */
-    for (MVMuint32 k = 0; k < g->num_inlines; k++)
+    for (uint32_t k = 0; k < g->num_inlines; k++)
         MVM_gc_worklist_add(tc, worklist, &(g->inlines[k].sf));
 
     /* Mark spesh candidate. */
@@ -1580,7 +1580,7 @@ void MVM_spesh_graph_describe(MVMThreadContext *tc, MVMSpeshGraph *g, MVMHeapSna
         MVM_profile_heap_add_collectable_rel_idx(tc, snapshot, g->spesh_slots[i], i);
 
     /* Mark inlines. */
-    for (MVMuint32 k = 0; k < g->num_inlines; k++)
+    for (uint32_t k = 0; k < g->num_inlines; k++)
         MVM_profile_heap_add_collectable_rel_idx(tc, snapshot, (MVMCollectable *)g->inlines[k].sf, k);
 }
 

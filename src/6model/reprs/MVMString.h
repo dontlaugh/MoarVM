@@ -29,7 +29,7 @@ typedef MVMint8  MVMGrapheme8;       /* Future use */
 #define MVM_STRING_IN_SITU_32       5
 
 /* String index data type, for when we talk about indexes. */
-typedef MVMuint32 MVMStringIndex;
+typedef uint32_t MVMStringIndex;
 
 /* Data type for a Unicode codepoint. */
 typedef int32_t MVMCodepoint;
@@ -51,7 +51,7 @@ struct MVMStringBody {
     } storage;
     MVMuint16 storage_type;
     MVMuint16 num_strands;
-    MVMuint32 num_graphs;
+    uint32_t num_graphs;
     MVMHashv  cached_hash_code;
 };
 
@@ -65,7 +65,7 @@ struct MVMStringStrand {
     MVMStringIndex end;
 
     /* Number of repetitions. */
-    MVMuint32 repetitions;
+    uint32_t repetitions;
 };
 
 /* The MVMString, with header and body. */

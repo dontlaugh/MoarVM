@@ -40,14 +40,14 @@ MVM_STATIC_INLINE void MVM_string_check_arg(MVMThreadContext *tc, const MVMStrin
             operation, s ? "a type object" : "null");
 }
 
-MVM_STATIC_INLINE MVMuint32 MVM_string_graphs(MVMThreadContext *tc, MVMString *s) {
+MVM_STATIC_INLINE uint32_t MVM_string_graphs(MVMThreadContext *tc, MVMString *s) {
     MVM_string_check_arg(tc, s, "chars");
     return s->body.num_graphs;
 }
-MVM_STATIC_INLINE MVMuint32 MVM_string_graphs_nocheck(MVMThreadContext *tc, MVMString *s) {
+MVM_STATIC_INLINE uint32_t MVM_string_graphs_nocheck(MVMThreadContext *tc, MVMString *s) {
     return s->body.num_graphs;
 }
-MVM_STATIC_INLINE MVMuint32 MVM_string_codes(MVMThreadContext *tc, MVMString *s) {
+MVM_STATIC_INLINE uint32_t MVM_string_codes(MVMThreadContext *tc, MVMString *s) {
     MVMGraphemeIter gi;
     MVMint64 codes = 0;
     MVM_string_check_arg(tc, s, "codes");

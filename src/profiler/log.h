@@ -8,7 +8,7 @@ struct MVMProfileThreadData {
     MVMuint8 is_static_confprog_installed;
 
     /* The thread ID of the thread responsible for spawning this thread. */
-    MVMuint32 parent_thread_id;
+    uint32_t parent_thread_id;
 
     /* The root of the call graph. */
     MVMProfileCallNode *call_graph;
@@ -36,12 +36,12 @@ struct MVMProfileThreadData {
      * or it can be completely normal. To differentiate, we have to count the
      * number of times we entered a frame without setting up a call graph node.
      */
-    MVMuint32 non_calltree_depth;
+    uint32_t non_calltree_depth;
 
     /* Garbage collection time measurements. */
     MVMProfileGC *gcs;
-    MVMuint32 num_gcs;
-    MVMuint32 alloc_gcs;
+    uint32_t num_gcs;
+    uint32_t alloc_gcs;
 
     /* Amount of time spent in spesh. */
     MVMuint64 spesh_time;
@@ -87,29 +87,29 @@ struct MVMProfileGC {
     AO_t gc_seq_num;
 
     /* Nursery statistics. */
-    MVMuint32 cleared_bytes;
-    MVMuint32 retained_bytes;
-    MVMuint32 promoted_bytes;
+    uint32_t cleared_bytes;
+    uint32_t retained_bytes;
+    uint32_t promoted_bytes;
 
     MVMuint64 promoted_unmanaged_bytes;
 
     /* Inter-generation links count */
-    MVMuint32 num_gen2roots;
+    uint32_t num_gen2roots;
 
     /* sum of num_gen2roots of all TCs that had work stolen by
      * this thread */
-    MVMuint32 num_stolen_gen2roots;
+    uint32_t num_stolen_gen2roots;
 
     MVMProfileDeallocationCount *deallocs;
-    MVMuint32 num_dealloc;
-    MVMuint32 alloc_dealloc; /* haha */
+    uint32_t num_dealloc;
+    uint32_t alloc_dealloc; /* haha */
 };
 
 /* Call graph node, which is kept per thread. */
 struct MVMProfileCallNode {
     /* The frame this data is for.
      * If this CallNode is for a native call, this is NULL. */
-    MVMuint32 sf_idx;
+    uint32_t sf_idx;
     /* The timestamp when we entered the node. */
     MVMuint64 cur_entry_time;
 
@@ -127,14 +127,14 @@ struct MVMProfileCallNode {
     MVMProfileCallNode **succ;
 
     /* Number of successors we have, and have allocated space for. */
-    MVMuint32 num_succ;
-    MVMuint32 alloc_succ;
+    uint32_t num_succ;
+    uint32_t alloc_succ;
 
     /* Allocations of different types, and the number of allocation
      * counts we have so far. */
     MVMProfileAllocationCount *alloc;
-    MVMuint32 num_alloc;
-    MVMuint32 alloc_alloc;
+    uint32_t num_alloc;
+    uint32_t alloc_alloc;
 
     /* The total inclusive time so far spent in this node. */
     MVMuint64 total_time;
@@ -171,7 +171,7 @@ struct MVMProfileCallNode {
 /* Allocation counts for a call node. */
 struct MVMProfileAllocationCount {
     /* The type we're counting allocations of. */
-    MVMuint32 type_idx;
+    uint32_t type_idx;
 
     /* The number of allocations we've counted. */
     /* a) in regularly interpreted code */
@@ -192,14 +192,14 @@ struct MVMProfileDeallocationCount {
 
     /* How often was this type freed from the nursery with
      * the "seen in nursery" flag not set? */
-    MVMuint32 deallocs_nursery_fresh;
+    uint32_t deallocs_nursery_fresh;
 
     /* How often was this type freed from the nursery with
      * the "seen in nursery" flag set? */
-    MVMuint32 deallocs_nursery_seen;
+    uint32_t deallocs_nursery_seen;
 
     /* How often was this type freed in the old generation? */
-    MVMuint32 deallocs_gen2;
+    uint32_t deallocs_gen2;
 };
 
 /* When a continuation is taken, we attach one of these to it. It carries the
@@ -232,7 +232,7 @@ void MVM_profile_log_continuation_invoke(MVMThreadContext *tc, const MVMProfileC
 void MVM_profile_log_thread_created(MVMThreadContext *tc, MVMThreadContext *child_tc);
 void MVM_profile_log_allocated(MVMThreadContext *tc, MVMObject *obj);
 void MVM_profile_log_scalar_replaced(MVMThreadContext *tc, MVMSTable *st);
-void MVM_profiler_log_gc_start(MVMThreadContext *tc, MVMuint32 full, MVMuint32 this_thread_responsible);
+void MVM_profiler_log_gc_start(MVMThreadContext *tc, uint32_t full, uint32_t this_thread_responsible);
 void MVM_profiler_log_gc_end(MVMThreadContext *tc);
 void MVM_profiler_log_gen2_roots(MVMThreadContext *tc, MVMuint64 amount, MVMThreadContext *other);
 void MVM_profiler_log_gc_deallocate(MVMThreadContext *tc, MVMObject *object);

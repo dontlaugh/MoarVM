@@ -113,9 +113,9 @@ void MVM_string_decodestream_discard_to(MVMThreadContext *tc, MVMDecodeStream *d
 #define RUN_DECODE_NOTHING_DECODED          0
 #define RUN_DECODE_STOPPER_NOT_REACHED      1
 #define RUN_DECODE_STOPPER_REACHED          2
-static MVMuint32 run_decode(MVMThreadContext *tc, MVMDecodeStream *ds, const MVMuint32 *stopper_chars, MVMDecodeStreamSeparators *sep_spec, int32_t eof) {
+static uint32_t run_decode(MVMThreadContext *tc, MVMDecodeStream *ds, const uint32_t *stopper_chars, MVMDecodeStreamSeparators *sep_spec, int32_t eof) {
     MVMDecodeStreamChars *prev_chars_tail = ds->chars_tail;
-    MVMuint32 reached_stopper;
+    uint32_t reached_stopper;
     switch (ds->encoding) {
     case MVM_encoding_type_utf8:
         reached_stopper = MVM_string_utf8_decodestream(tc, ds, stopper_chars, sep_spec);
@@ -222,7 +222,7 @@ static void reached_eof(MVMThreadContext *tc, MVMDecodeStream *ds) {
  * exclude parameter specifies a number of chars that should be taken from the
  * input buffer, but not included in the result string (for chomping a line
  * separator). */
-static MVMuint32 missing_chars(MVMThreadContext *tc, const MVMDecodeStream *ds, int32_t wanted) {
+static uint32_t missing_chars(MVMThreadContext *tc, const MVMDecodeStream *ds, int32_t wanted) {
     int32_t got = 0;
     MVMDecodeStreamChars *cur_chars = ds->chars_head;
     while (cur_chars && got < wanted) {
@@ -307,7 +307,7 @@ static MVMString * take_chars(MVMThreadContext *tc, MVMDecodeStream *ds, int32_t
 }
 MVMString * MVM_string_decodestream_get_chars(MVMThreadContext *tc, MVMDecodeStream *ds,
                                               int32_t chars, MVMint64 eof) {
-    MVMuint32 missing;
+    uint32_t missing;
 
     /* If we request nothing, give empty string. */
     if (chars == 0)
@@ -430,7 +430,7 @@ MVMString * MVM_string_decodestream_get_until_sep(MVMThreadContext *tc, MVMDecod
      * the separator, so we may need to loop a few times around this. */
     sep_loc = find_separator(tc, ds, sep_spec, &sep_length, 0);
     while (!sep_loc) {
-        MVMuint32 decode_outcome = run_decode(tc, ds, NULL, sep_spec, DECODE_NOT_EOF);
+        uint32_t decode_outcome = run_decode(tc, ds, NULL, sep_spec, DECODE_NOT_EOF);
         if (decode_outcome == RUN_DECODE_NOTHING_DECODED)
             break;
         if (decode_outcome == RUN_DECODE_STOPPER_REACHED)
@@ -707,7 +707,7 @@ void MVM_string_decode_stream_sep_from_strings(MVMThreadContext *tc, MVMDecodeSt
     sep_lengths = MVM_malloc(num_seps * sizeof(int32_t));
     graph_length = 0;
     for (i = 0; i < num_seps; i++) {
-        MVMuint32 num_graphs = MVM_string_graphs(tc, seps[i]);
+        uint32_t num_graphs = MVM_string_graphs(tc, seps[i]);
         if (num_graphs > 0xFFFF) {
             MVM_free(sep_lengths);
             MVM_exception_throw_adhoc(tc, "Line separator (%"PRIu32") too long, max allowed is 65535", num_graphs);

@@ -63,8 +63,8 @@ typedef struct {
     MVMuint8 *bytecode_root;
     MVMuint8 *bc_pointer;
 
-    MVMuint32  jumptarget_count;
-    MVMuint32 *jumptarget_queue;
+    uint32_t  jumptarget_count;
+    uint32_t *jumptarget_queue;
 
     MVMuint16  register_count;
     MVMuint16  register_alloc;
@@ -87,7 +87,7 @@ typedef union CPRegister {
     MVMint16           i16;
     MVMuint16          u16;
     int32_t           i32;
-    MVMuint32          u32;
+    uint32_t          u32;
     MVMint64           i64;
     MVMuint64          u64;
     MVMnum32           n32;
@@ -101,9 +101,9 @@ typedef union CPRegister {
 #define REGISTER_FEATURE_TOGGLE 2
 
 static MVMuint8 operand_size(MVMThreadContext *tc, MVMuint8 operand) {
-    MVMuint32 type = operand & MVM_operand_type_mask;
-    MVMuint32 kind = operand & MVM_operand_rw_mask;
-    MVMuint32 size;
+    uint32_t type = operand & MVM_operand_type_mask;
+    uint32_t kind = operand & MVM_operand_rw_mask;
+    uint32_t size;
 
     if (kind == MVM_operand_literal) {
         switch (type) {
@@ -256,9 +256,9 @@ static void validate_op(MVMThreadContext *tc, validatorstate *state) {
      */
     if (opcode == MVM_OP_const_s) {
         MVMuint16 reg_num = *((MVMuint16 *)state->bc_pointer);
-        MVMuint32 string_idx;
+        uint32_t string_idx;
         validate_operand(tc, state, 0, state->cur_op->operands[0]);
-        string_idx = *((MVMuint32 *)state->bc_pointer);
+        string_idx = *((uint32_t *)state->bc_pointer);
         validate_operand(tc, state, 1, state->cur_op->operands[1]);
 
         junkprint(stderr, "after validating const_s, %x, before %x, diff %x\n", state->bc_pointer, prev_op_bc_ptr, state->bc_pointer - prev_op_bc_ptr);
@@ -315,7 +315,7 @@ static void validate_op(MVMThreadContext *tc, validatorstate *state) {
     else if (opcode == MVM_OP_getattr_o) {
         MVMuint8 selected_struct_source = state->selected_struct_source; 
         MVMuint16 source_reg_num;
-        MVMuint32 string_idx;
+        uint32_t string_idx;
         MVMuint16 *hintptr;
 
         validate_operand(tc, state, 0, state->cur_op->operands[0]);
@@ -325,7 +325,7 @@ static void validate_op(MVMThreadContext *tc, validatorstate *state) {
 
         validate_operand(tc, state, 2, state->cur_op->operands[2]);
 
-        string_idx = *((MVMuint32 *)state->bc_pointer);
+        string_idx = *((uint32_t *)state->bc_pointer);
         validate_operand(tc, state, 3, state->cur_op->operands[3]);
 
         hintptr = (MVMuint16 *)state->bc_pointer;
@@ -608,7 +608,7 @@ MVMuint8 MVM_confprog_has_entrypoint(MVMThreadContext *tc, MVMuint8 entrypoint) 
 #define NEXT runloop
 #define GET_REG(pc, idx)    reg_base[*((MVMuint16 *)(pc + idx))]
 
-#define GET_UI32(pc, idx)   *((MVMuint32 *)(pc + idx))
+#define GET_UI32(pc, idx)   *((uint32_t *)(pc + idx))
 #define GET_UI16(pc, idx)   *((MVMuint16 *)(pc + idx))
 #define GET_I16(pc, idx)    *((MVMint16 *)(pc + idx))
 

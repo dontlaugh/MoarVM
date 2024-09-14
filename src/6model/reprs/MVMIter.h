@@ -8,7 +8,7 @@
 
 struct MVMIterBody {
     /* whether hash or array */
-    MVMuint32 mode;
+    uint32_t mode;
 
     /* array or hash being iterated */
     MVMObject *target;

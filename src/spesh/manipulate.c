@@ -394,7 +394,7 @@ void MVM_spesh_manipulate_release_temp_reg(MVMThreadContext *tc, MVMSpeshGraph *
  * MVMSpeshOperand representing the new version along with the local it's a
  * version of. */
 MVMSpeshOperand MVM_spesh_manipulate_new_version(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint16 orig) {
-    MVMuint32 i;
+    uint32_t i;
 
     /* Grow the facts table to hold the new version, bumping the versions
      * count along the way. */
@@ -429,7 +429,7 @@ MVMSpeshOperand MVM_spesh_manipulate_split_version(MVMThreadContext *tc, MVMSpes
     bbq[top++] = bb;
     while (top != 0) {
         /* Update instructions in this basic block. */
-        MVMuint32 i;
+        uint32_t i;
         MVMSpeshBB *cur_bb = bbq[--top];
         MVMSpeshIns *ins = cur_bb == bb ? at : cur_bb->first_ins;
         while (ins) {
@@ -463,7 +463,7 @@ MVMuint16 MVM_spesh_manipulate_get_unique_reg(MVMThreadContext *tc, MVMSpeshGrap
 /* Get the current version of an SSA temporary. */
 MVMuint16 MVM_spesh_manipulate_get_current_version(MVMThreadContext *tc, MVMSpeshGraph *g,
         MVMuint16 orig) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < g->num_temps; i++)
         if (g->temps[i].orig == orig)
             return g->temps[i].i;

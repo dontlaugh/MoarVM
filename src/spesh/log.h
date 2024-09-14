@@ -5,7 +5,7 @@ struct MVMSpeshLogGuard {
     MVMSpeshBB  *bb;
 
     /* Have we made use of the gurad? */
-    MVMuint32 used;
+    uint32_t used;
 };
 
 /* The default number of entries collected into a thread's spesh log buffer
@@ -45,8 +45,8 @@ void MVM_spesh_log_type(MVMThreadContext *tc, MVMObject *value);
 void MVM_spesh_log_type_at(MVMThreadContext *tc, MVMObject *value, MVMuint8 *prev_op);
 void MVM_spesh_log_decont(MVMThreadContext *tc, MVMuint8 *prev_op, MVMObject *value);
 void MVM_spesh_log_bytecode_target(MVMThreadContext *tc, int32_t cid,
-        MVMuint32 bytecode_offset, MVMCode *target);
+        uint32_t bytecode_offset, MVMCode *target);
 void MVM_spesh_log_return_type(MVMThreadContext *tc, MVMObject *value);
 void MVM_spesh_log_return_to_unlogged(MVMThreadContext *tc);
 void MVM_spesh_log_dispatch_resolution_for_correlation_id(MVMThreadContext *tc,
-        int32_t cid, MVMuint32 bytecode_offset, MVMuint16 result_index);
+        int32_t cid, uint32_t bytecode_offset, MVMuint16 result_index);

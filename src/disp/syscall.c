@@ -52,7 +52,7 @@ static MVMDispSysCall dispatcher_delegate = {
 static void dispatcher_track_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     MVMint64 idx = get_int_arg(arg_info, 1);
-    MVMObject *tracked = MVM_disp_program_record_track_arg(tc, capture, (MVMuint32)idx);
+    MVMObject *tracked = MVM_disp_program_record_track_arg(tc, capture, (uint32_t)idx);
     MVM_args_set_result_obj(tc, tracked, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall dispatcher_track_arg = {
@@ -152,7 +152,7 @@ static MVMDispSysCall dispatcher_track_how = {
 static void dispatcher_drop_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *capture = get_obj_arg(arg_info, 0);
     MVMint64 idx = get_int_arg(arg_info, 1);
-    MVMObject *derived = MVM_disp_program_record_capture_drop_args(tc, capture, (MVMuint32)idx, 1);
+    MVMObject *derived = MVM_disp_program_record_capture_drop_args(tc, capture, (uint32_t)idx, 1);
     MVM_args_set_result_obj(tc, derived, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall dispatcher_drop_arg = {
@@ -170,7 +170,7 @@ static void dispatcher_drop_n_args_impl(MVMThreadContext *tc, MVMArgs arg_info) 
     MVMObject *capture = get_obj_arg(arg_info, 0);
     MVMint64 idx   = get_int_arg(arg_info, 1);
     MVMint64 count = get_int_arg(arg_info, 2);
-    MVMObject *derived = MVM_disp_program_record_capture_drop_args(tc, capture, (MVMuint32)idx, (MVMuint32)count);
+    MVMObject *derived = MVM_disp_program_record_capture_drop_args(tc, capture, (uint32_t)idx, (uint32_t)count);
     MVM_args_set_result_obj(tc, derived, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall dispatcher_drop_n_args = {
@@ -189,7 +189,7 @@ static void dispatcher_insert_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMint64 idx = get_int_arg(arg_info, 1);
     MVMObject *tracked = get_obj_arg(arg_info, 2);
     MVMObject *derived = MVM_disp_program_record_capture_insert_arg(tc, capture,
-            (MVMuint32)idx, tracked);
+            (uint32_t)idx, tracked);
     MVM_args_set_result_obj(tc, derived, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall dispatcher_insert_arg = {
@@ -208,7 +208,7 @@ static void dispatcher_replace_arg_impl(MVMThreadContext *tc, MVMArgs arg_info) 
     MVMint64 idx = get_int_arg(arg_info, 1);
     MVMObject *tracked = get_obj_arg(arg_info, 2);
     MVMObject *derived = MVM_disp_program_record_capture_replace_arg(tc, capture,
-            (MVMuint32)idx, tracked);
+            (uint32_t)idx, tracked);
     MVM_args_set_result_obj(tc, derived, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall dispatcher_replace_arg = {
@@ -227,7 +227,7 @@ static void dispatcher_replace_arg_literal_obj_impl(MVMThreadContext *tc, MVMArg
     MVMint64 idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .o = get_obj_arg(arg_info, 2) };
     MVMObject *derived = MVM_disp_program_record_capture_replace_literal_arg(tc, capture,
-            (MVMuint32)idx, MVM_CALLSITE_ARG_OBJ, insertee);
+            (uint32_t)idx, MVM_CALLSITE_ARG_OBJ, insertee);
     MVM_args_set_result_obj(tc, derived, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall dispatcher_replace_arg_literal_obj = {
@@ -247,7 +247,7 @@ static void dispatcher_insert_arg_literal_obj_impl(MVMThreadContext *tc, MVMArgs
     MVMint64 idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .o = get_obj_arg(arg_info, 2) };
     MVMObject *derived = MVM_disp_program_record_capture_insert_constant_arg(tc,
-            capture, (MVMuint32)idx, MVM_CALLSITE_ARG_OBJ, insertee);
+            capture, (uint32_t)idx, MVM_CALLSITE_ARG_OBJ, insertee);
     MVM_args_set_result_obj(tc, derived, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall dispatcher_insert_arg_literal_obj = {
@@ -266,7 +266,7 @@ static void dispatcher_insert_arg_literal_str_impl(MVMThreadContext *tc, MVMArgs
     MVMint64 idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .s = get_str_arg(arg_info, 2) };
     MVMObject *derived = MVM_disp_program_record_capture_insert_constant_arg(tc,
-            capture, (MVMuint32)idx, MVM_CALLSITE_ARG_STR, insertee);
+            capture, (uint32_t)idx, MVM_CALLSITE_ARG_STR, insertee);
     MVM_args_set_result_obj(tc, derived, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall dispatcher_insert_arg_literal_str = {
@@ -285,7 +285,7 @@ static void dispatcher_insert_arg_literal_int_impl(MVMThreadContext *tc, MVMArgs
     MVMint64 idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .i64 = get_int_arg(arg_info, 2) };
     MVMObject *derived = MVM_disp_program_record_capture_insert_constant_arg(tc,
-            capture, (MVMuint32)idx, MVM_CALLSITE_ARG_INT, insertee);
+            capture, (uint32_t)idx, MVM_CALLSITE_ARG_INT, insertee);
     MVM_args_set_result_obj(tc, derived, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall dispatcher_insert_arg_literal_int = {
@@ -304,7 +304,7 @@ static void dispatcher_insert_arg_literal_num_impl(MVMThreadContext *tc, MVMArgs
     MVMint64 idx = get_int_arg(arg_info, 1);
     MVMRegister insertee = { .n64 = get_num_arg(arg_info, 2) };
     MVMObject *derived = MVM_disp_program_record_capture_insert_constant_arg(tc,
-            capture, (MVMuint32)idx, MVM_CALLSITE_ARG_NUM, insertee);
+            capture, (uint32_t)idx, MVM_CALLSITE_ARG_NUM, insertee);
     MVM_args_set_result_obj(tc, derived, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall dispatcher_insert_arg_literal_num = {
@@ -322,7 +322,7 @@ static void dispatcher_is_arg_literal_impl(MVMThreadContext *tc, MVMArgs arg_inf
     MVMObject *capture = get_obj_arg(arg_info, 0);
     MVMint64 idx = get_int_arg(arg_info, 1);
     MVMint64 literal = MVM_disp_program_record_capture_is_arg_literal(tc, capture,
-            (MVMuint32)idx);
+            (uint32_t)idx);
     MVM_args_set_result_int(tc, literal, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall dispatcher_is_arg_literal = {
@@ -1201,7 +1201,7 @@ static MVMDispSysCall set_cur_hll_config_key = {
 /* code-bytecode-size */
 static void code_bytecode_size_impl(MVMThreadContext *tc, MVMArgs arg_info) {
     MVMObject *obj = get_obj_arg(arg_info, 0);
-    MVMuint32 bytecode_size = ((MVMCode *)obj)->body.sf->body.bytecode_size;
+    uint32_t bytecode_size = ((MVMCode *)obj)->body.sf->body.bytecode_size;
     MVM_args_set_result_int(tc, bytecode_size, MVM_RETURN_CURRENT_FRAME);
 }
 static MVMDispSysCall code_bytecode_size = {

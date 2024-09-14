@@ -506,7 +506,7 @@ void MVM_vm_run_file(MVMInstance *instance, const char *filename) {
 }
 
 /* Loads bytecode from memory and runs it. */
-void MVM_vm_run_bytecode(MVMInstance *instance, MVMuint8 *bytes, MVMuint32 size) {
+void MVM_vm_run_bytecode(MVMInstance *instance, MVMuint8 *bytes, uint32_t size) {
     /* Map the compilation unit into memory and dissect it. */
     MVMThreadContext *tc = instance->main_thread;
     MVMCompUnit      *cu = MVM_cu_from_bytes(tc, bytes, size);

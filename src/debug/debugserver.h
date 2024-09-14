@@ -42,8 +42,8 @@ struct MVMDebugServerHandleTableEntry {
 };
 
 struct MVMDebugServerHandleTable {
-    MVMuint32 allocated;
-    MVMuint32 used;
+    uint32_t allocated;
+    uint32_t used;
 
     MVMuint64 next_id;
 
@@ -52,7 +52,7 @@ struct MVMDebugServerHandleTable {
 
 struct MVMDebugServerBreakpointInfo {
     MVMuint64 breakpoint_id;
-    MVMuint32 line_no;
+    uint32_t line_no;
 
     MVMuint8 shall_suspend;
     MVMuint8 send_backtrace;
@@ -60,20 +60,20 @@ struct MVMDebugServerBreakpointInfo {
 
 struct MVMDebugServerBreakpointFileTable {
     char *filename;
-    MVMuint32 filename_length;
-    MVMuint32 lines_active_alloc;
+    uint32_t filename_length;
+    uint32_t lines_active_alloc;
 
     MVMuint8 *lines_active;
 
     MVMDebugServerBreakpointInfo *breakpoints;
-    MVMuint32 breakpoints_alloc;
-    MVMuint32 breakpoints_used;
+    uint32_t breakpoints_alloc;
+    uint32_t breakpoints_used;
 };
 
 struct MVMDebugServerBreakpointTable {
     MVMDebugServerBreakpointFileTable *files;
-    MVMuint32 files_used;
-    MVMuint32 files_alloc;
+    uint32_t files_used;
+    uint32_t files_alloc;
 };
 
 /* This struct holds all data used for communication between
@@ -125,17 +125,17 @@ struct MVMDebugServerData {
 
     MVMDebugServerRequestData request_data;
 
-    MVMuint32 port;
-    MVMuint32 thread_id;
+    uint32_t port;
+    uint32_t thread_id;
 
     MVMuint64 event_id;
 
     MVMDebugServerHandleTable *handle_table;
 
     MVMDebugServerBreakpointTable *breakpoints;
-    MVMuint32 any_breakpoints_at_all;
-    MVMuint32 breakpoints_alloc;
-    MVMuint32 breakpoints_used;
+    uint32_t any_breakpoints_at_all;
+    uint32_t breakpoints_alloc;
+    uint32_t breakpoints_used;
     uv_mutex_t mutex_breakpoints;
 
     void *messagepack_data;
@@ -144,7 +144,7 @@ struct MVMDebugServerData {
     MVMuint8 debugspam_protocol;
 };
 
-MVM_PUBLIC void MVM_debugserver_init(MVMThreadContext *tc, MVMuint32 port);
+MVM_PUBLIC void MVM_debugserver_init(MVMThreadContext *tc, uint32_t port);
 MVM_PUBLIC void MVM_debugserver_mark_handles(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot);
 
 MVM_PUBLIC void MVM_debugserver_notify_thread_creation(MVMThreadContext *tc);
@@ -152,5 +152,5 @@ MVM_PUBLIC void MVM_debugserver_notify_thread_destruction(MVMThreadContext *tc);
 
 MVM_PUBLIC void MVM_debugserver_notify_unhandled_exception(MVMThreadContext *tc, MVMException *ex);
 
-MVM_PUBLIC void MVM_debugserver_register_line(MVMThreadContext *tc, char *filename, MVMuint32 filename_len, MVMuint32 line_no,  MVMuint32 *file_idx);
-MVM_PUBLIC int32_t MVM_debugserver_breakpoint_check(MVMThreadContext *tc, MVMuint32 file_idx, MVMuint32 line_no);
+MVM_PUBLIC void MVM_debugserver_register_line(MVMThreadContext *tc, char *filename, uint32_t filename_len, uint32_t line_no,  uint32_t *file_idx);
+MVM_PUBLIC int32_t MVM_debugserver_breakpoint_check(MVMThreadContext *tc, uint32_t file_idx, uint32_t line_no);

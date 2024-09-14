@@ -7,7 +7,7 @@
 #endif
 
 /* Creates a compilation unit from a byte array. */
-MVMCompUnit * MVM_cu_from_bytes(MVMThreadContext *tc, MVMuint8 *bytes, MVMuint32 size) {
+MVMCompUnit * MVM_cu_from_bytes(MVMThreadContext *tc, MVMuint8 *bytes, uint32_t size) {
     /* Create compilation unit data structure. Allocate it in gen2 always, so
      * it will never move (the JIT relies on this). */
     MVMCompUnit *cu;
@@ -63,7 +63,7 @@ MVMCompUnit * MVM_cu_map_from_file(MVMThreadContext *tc, const char *filename, i
         MVM_free((char *)filename);
 
     /* Turn it into a compilation unit. */
-    cu = MVM_cu_from_bytes(tc, (MVMuint8 *)block, (MVMuint32)size);
+    cu = MVM_cu_from_bytes(tc, (MVMuint8 *)block, (uint32_t)size);
     cu->body.handle = handle;
     cu->body.deallocate = MVM_DEALLOCATE_UNMAP;
     return cu;
@@ -92,7 +92,7 @@ MVMCompUnit * MVM_cu_map_from_file_handle(MVMThreadContext *tc, uv_file fd, MVMu
     block = ((char*)block) + pos;
 
     /* Turn it into a compilation unit. */
-    cu = MVM_cu_from_bytes(tc, (MVMuint8 *)block, (MVMuint32)size);
+    cu = MVM_cu_from_bytes(tc, (MVMuint8 *)block, (uint32_t)size);
     cu->body.handle = handle;
     cu->body.deallocate = MVM_DEALLOCATE_UNMAP;
     return cu;
@@ -101,7 +101,7 @@ MVMCompUnit * MVM_cu_map_from_file_handle(MVMThreadContext *tc, uv_file fd, MVMu
 /* Adds an extra callsite, needed due to an inlining, and returns its index. */
 MVMuint16 MVM_cu_callsite_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMCallsite *cs) {
     MVMuint16 found = 0;
-    MVMuint32 idx;
+    uint32_t idx;
 
     uv_mutex_lock(cu->body.inline_tweak_mutex);
 
@@ -131,9 +131,9 @@ MVMuint16 MVM_cu_callsite_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMCallsite
 }
 
 /* Adds an extra string, needed due to an inlining, and returns its index. */
-MVMuint32 MVM_cu_string_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMString *str) {
-    MVMuint32 found = 0;
-    MVMuint32 idx;
+uint32_t MVM_cu_string_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMString *str) {
+    uint32_t found = 0;
+    uint32_t idx;
 
     uv_mutex_lock(cu->body.inline_tweak_mutex);
 
@@ -165,27 +165,27 @@ MVMuint32 MVM_cu_string_add(MVMThreadContext *tc, MVMCompUnit *cu, MVMString *st
 
 /* Used when we try to read a string from the string heap, but it's not there.
  * Decodes it "on-demand" and stores it in the string heap. */
-static MVMuint32 read_uint32(MVMuint8 *src) {
+static uint32_t read_uint32(MVMuint8 *src) {
 #ifdef MVM_BIGENDIAN
-    MVMuint32 value;
+    uint32_t value;
     size_t i;
     MVMuint8 *destbytes = (MVMuint8 *)&value;
     for (i = 0; i < 4; i++)
          destbytes[4 - i - 1] = src[i];
     return value;
 #else
-    return *((MVMuint32 *)src);
+    return *((uint32_t *)src);
 #endif
 }
-static void compute_fast_table_upto(MVMThreadContext *tc, MVMCompUnit *cu, MVMuint32 end_bin) {
-    MVMuint32  cur_bin = cu->body.string_heap_fast_table_top;
+static void compute_fast_table_upto(MVMThreadContext *tc, MVMCompUnit *cu, uint32_t end_bin) {
+    uint32_t  cur_bin = cu->body.string_heap_fast_table_top;
     MVMuint8  *cur_pos = cu->body.string_heap_start + cu->body.string_heap_fast_table[cur_bin];
     MVMuint8  *limit   = cu->body.string_heap_read_limit;
     while (cur_bin < end_bin) {
-        MVMuint32 i;
+        uint32_t i;
         for (i = 0; i < MVM_STRING_FAST_TABLE_SPAN; i++) {
             if (cur_pos + 4 < limit) {
-                MVMuint32 bytes = read_uint32(cur_pos) >> 1;
+                uint32_t bytes = read_uint32(cur_pos) >> 1;
                 cur_pos += 4 + bytes + (bytes & 3 ? 4 - (bytes & 3) : 0);
             }
             else {
@@ -194,20 +194,20 @@ static void compute_fast_table_upto(MVMThreadContext *tc, MVMCompUnit *cu, MVMui
             }
         }
         cur_bin++;
-        cu->body.string_heap_fast_table[cur_bin] = (MVMuint32)
+        cu->body.string_heap_fast_table[cur_bin] = (uint32_t)
             (cur_pos - cu->body.string_heap_start);
     }
     MVM_barrier();
     cu->body.string_heap_fast_table_top = end_bin;
 }
-MVMString * MVM_cu_obtain_string(MVMThreadContext *tc, MVMCompUnit *cu, MVMuint32 idx) {
-    MVMuint32  cur_idx;
+MVMString * MVM_cu_obtain_string(MVMThreadContext *tc, MVMCompUnit *cu, uint32_t idx) {
+    uint32_t  cur_idx;
     MVMuint8  *cur_pos;
     MVMuint8  *limit = cu->body.string_heap_read_limit;
 
     /* Make sure we've enough entries in the fast table to jump close to where
      * the string will be. */
-    MVMuint32 fast_bin = idx / MVM_STRING_FAST_TABLE_SPAN;
+    uint32_t fast_bin = idx / MVM_STRING_FAST_TABLE_SPAN;
     if (fast_bin > cu->body.string_heap_fast_table_top)
         compute_fast_table_upto(tc, cu, fast_bin);
 
@@ -216,7 +216,7 @@ MVMString * MVM_cu_obtain_string(MVMThreadContext *tc, MVMCompUnit *cu, MVMuint3
     cur_pos = cu->body.string_heap_start + cu->body.string_heap_fast_table[fast_bin];
     while (cur_idx != idx) {
         if (cur_pos + 4 < limit) {
-            MVMuint32 bytes = read_uint32(cur_pos) >> 1;
+            uint32_t bytes = read_uint32(cur_pos) >> 1;
             cur_pos += 4 + bytes + (bytes & 3 ? 4 - (bytes & 3) : 0);
         }
         else {
@@ -228,9 +228,9 @@ MVMString * MVM_cu_obtain_string(MVMThreadContext *tc, MVMCompUnit *cu, MVMuint3
 
     /* Read the string. */
     if (cur_pos + 4 < limit) {
-        MVMuint32 ss = read_uint32(cur_pos);
-        MVMuint32 bytes = ss >> 1;
-        MVMuint32 decode_utf8 = ss & 1;
+        uint32_t ss = read_uint32(cur_pos);
+        uint32_t bytes = ss >> 1;
+        uint32_t decode_utf8 = ss & 1;
         cur_pos += 4;
         if (cur_pos + bytes < limit) {
             MVMString *s;

@@ -1,4 +1,4 @@
-#define MVM_BC_ILLEGAL_OFFSET ((MVMuint32)-1)
+#define MVM_BC_ILLEGAL_OFFSET ((uint32_t)-1)
 
 enum {
     MVM_BC_branch_target = 1 << 0,

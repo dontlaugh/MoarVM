@@ -18,7 +18,7 @@ struct MVMSerializationRoot {
     /* The number of dependencies, as well as a pointer to the
      * dependencies table. */
     char     *dependencies_table;
-    MVMuint32 num_dependencies;
+    uint32_t num_dependencies;
 
     /* The number of STables, as well as pointers to the STables
      * table and data chunk. */
@@ -41,7 +41,7 @@ struct MVMSerializationRoot {
      * the contexts table and data chunk. */
     char     *contexts_table;
     char     *contexts_data;
-    MVMuint32 num_contexts;
+    uint32_t num_contexts;
 
     /* The number of repossessions and pointer to repossessions table. */
     int32_t  num_repos;
@@ -62,9 +62,9 @@ struct MVMSerializationRoot {
 
 /* Indexes the deserializer still has to work on. */
 struct MVMDeserializeWorklist {
-    MVMuint32 *indexes;
-    MVMuint32  num_indexes;
-    MVMuint32  alloc_indexes;
+    uint32_t *indexes;
+    uint32_t  num_indexes;
+    uint32_t  alloc_indexes;
 };
 
 /* Represents the serialization reader and the various functions available
@@ -97,7 +97,7 @@ struct MVMSerializationReader {
     MVMObject *codes_list;
 
     /* Number of static code objects. */
-    MVMuint32 num_static_codes;
+    uint32_t num_static_codes;
 
     /* Whether we're already working on these worklists. */
     AO_t working;
@@ -117,7 +117,7 @@ struct MVMSerializationReader {
     /* The data, which we may want to free when the SC goes away; a flag
      * indicates when it should be. */
     char      *data;
-    MVMuint32  data_needs_free;
+    uint32_t  data_needs_free;
 };
 
 /* Represents the serialization writer and the various functions available
@@ -131,8 +131,8 @@ struct MVMSerializationWriter {
 
     /* Frames that we're to serialize, along with memory management. */
     MVMFrame **contexts_list;
-    MVMuint32 num_contexts;
-    MVMuint32 alloc_contexts;
+    uint32_t num_contexts;
+    uint32_t alloc_contexts;
 
     /* Current position in the stables, objects and contexts lists. */
     MVMuint64 stables_list_pos;
@@ -144,30 +144,30 @@ struct MVMSerializationWriter {
     MVMObject *seen_strings;
 
     /* Amount of memory allocated for various things. */
-    MVMuint32 dependencies_table_alloc;
-    MVMuint32 stables_table_alloc;
-    MVMuint32 stables_data_alloc;
-    MVMuint32 objects_table_alloc;
-    MVMuint32 objects_data_alloc;
-    MVMuint32 closures_table_alloc;
-    MVMuint32 contexts_table_alloc;
-    MVMuint32 contexts_data_alloc;
-    MVMuint32 repos_table_alloc;
-    MVMuint32 param_interns_data_alloc;
+    uint32_t dependencies_table_alloc;
+    uint32_t stables_table_alloc;
+    uint32_t stables_data_alloc;
+    uint32_t objects_table_alloc;
+    uint32_t objects_data_alloc;
+    uint32_t closures_table_alloc;
+    uint32_t contexts_table_alloc;
+    uint32_t contexts_data_alloc;
+    uint32_t repos_table_alloc;
+    uint32_t param_interns_data_alloc;
 
     /* Current offsets for the data chunks (also correspond to the amount of
      * data written in to them). */
-    MVMuint32 stables_data_offset;
-    MVMuint32 objects_data_offset;
-    MVMuint32 contexts_data_offset;
-    MVMuint32 param_interns_data_offset;
+    uint32_t stables_data_offset;
+    uint32_t objects_data_offset;
+    uint32_t contexts_data_offset;
+    uint32_t param_interns_data_offset;
 
     /* Where to find details related to the current buffer we're writing in
      * to: the buffer pointer itself, the current offset and the amount that
      * is allocated. These are all pointers back into this data structure. */
     char      **cur_write_buffer;
-    MVMuint32  *cur_write_offset;
-    MVMuint32  *cur_write_limit;
+    uint32_t  *cur_write_offset;
+    uint32_t  *cur_write_limit;
 };
 
 /* Core serialize and deserialize functions. */

@@ -18,7 +18,7 @@ struct MVMNFGState {
     uv_mutex_t update_mutex;
 
     /* Number of synthetics we have. */
-    MVMuint32 num_synthetics;
+    uint32_t num_synthetics;
 
     /* Cached CRLF grapheme index, since we need it so often. */
     MVMGrapheme32 crlf_grapheme;
@@ -86,7 +86,7 @@ MVMGrapheme32 MVM_nfg_codes_to_grapheme(MVMThreadContext *tc, MVMCodepoint *code
 MVMGrapheme32 MVM_nfg_codes_to_grapheme_utf8_c8(MVMThreadContext *tc, MVMCodepoint *codes, int32_t num_codes);
 MVMGrapheme32 MVM_nfg_crlf_grapheme(MVMThreadContext *tc);
 MVMNFGSynthetic * MVM_nfg_get_synthetic_info(MVMThreadContext *tc, MVMGrapheme32 synth);
-MVMuint32 MVM_nfg_get_case_change(MVMThreadContext *tc, MVMGrapheme32 codepoint, int32_t case_, MVMGrapheme32 **result);
+uint32_t MVM_nfg_get_case_change(MVMThreadContext *tc, MVMGrapheme32 codepoint, int32_t case_, MVMGrapheme32 **result);
 int32_t MVM_nfg_is_concat_stable(MVMThreadContext *tc, MVMString *a, MVMString *b);
 
 /* NFG subsystem initialization and cleanup. */

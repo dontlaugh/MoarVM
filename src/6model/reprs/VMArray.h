@@ -26,7 +26,7 @@ struct MVMArrayBody {
         MVMnum64   *n64;
         MVMnum32   *n32;
         MVMuint64  *u64;
-        MVMuint32  *u32;
+        uint32_t  *u32;
         MVMuint16  *u16;
         MVMuint8   *u8;
         void       *any;

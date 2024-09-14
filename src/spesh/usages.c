@@ -112,17 +112,17 @@ typedef struct {
     ActiveWrite *active_writes;
 
     /* Basic blocks that we have processed. */
-    MVMuint32 *bbs_seen;
+    uint32_t *bbs_seen;
 
     /* Basic blocks that have had all the preds processed. */
-    MVMuint32 *bbs_preds_seen;
+    uint32_t *bbs_preds_seen;
 
     /* Reads whose processing is pending on a pred being seen. */
     PendingRead *pending_reads;
 } DeoptAnalysisState;
 static void mark_read_done(MVMThreadContext *tc, MVMSpeshIns *ins, MVMSpeshFacts *facts) {
     MVMSpeshUseChainEntry *use_entry = facts->usage.users;
-    MVMuint32 found = 0;
+    uint32_t found = 0;
     while (use_entry) {
         if (!use_entry->deopt_read_processed && use_entry->user == ins) {
             use_entry->deopt_read_processed = 1;
@@ -175,7 +175,7 @@ static void process_deopt(MVMThreadContext *tc, DeoptAnalysisState *state, MVMSp
     ActiveWrite *prev_write = NULL;
     while (write) {
         MVMSpeshUseChainEntry *use_entry = write->writer->usage.users;
-        MVMuint32 has_unread = 0;
+        uint32_t has_unread = 0;
         while (use_entry) {
             if (!use_entry->deopt_read_processed) {
                 has_unread = 1;
@@ -211,7 +211,7 @@ static void process_deopt(MVMThreadContext *tc, DeoptAnalysisState *state, MVMSp
 }
 static void process_bb_for_deopt_usage(MVMThreadContext *tc, DeoptAnalysisState *state,
                                        MVMSpeshGraph *g, MVMSpeshBB *bb) {
-    MVMuint32 i, have_newly_processed_preds;
+    uint32_t i, have_newly_processed_preds;
     
     /* Walk the BB's instructions. */
     MVMSpeshIns *ins = bb->first_ins;
@@ -282,8 +282,8 @@ static void process_bb_for_deopt_usage(MVMThreadContext *tc, DeoptAnalysisState 
     for (i = 0; i < bb->num_succ; i++) {
         MVMSpeshBB *succ_bb = bb->succ[i];
         if (!state->bbs_preds_seen[succ_bb->idx]) {
-            MVMuint32 all_preds_seen = 1;
-            MVMuint32 j;
+            uint32_t all_preds_seen = 1;
+            uint32_t j;
             for (j = 0; j < succ_bb->num_pred; j++) {
                 if (!state->bbs_seen[succ_bb->pred[j]->idx]) {
                     all_preds_seen = 0;
@@ -328,8 +328,8 @@ static void process_bb_for_deopt_usage(MVMThreadContext *tc, DeoptAnalysisState 
 void MVM_spesh_usages_create_deopt_usage(MVMThreadContext *tc, MVMSpeshGraph *g) {
     DeoptAnalysisState state;
     memset(&state, 0, sizeof(DeoptAnalysisState));
-    state.bbs_seen = MVM_spesh_alloc(tc, g, sizeof(MVMuint32) * g->num_bbs);
-    state.bbs_preds_seen = MVM_spesh_alloc(tc, g, sizeof(MVMuint32) * g->num_bbs);
+    state.bbs_seen = MVM_spesh_alloc(tc, g, sizeof(uint32_t) * g->num_bbs);
+    state.bbs_preds_seen = MVM_spesh_alloc(tc, g, sizeof(uint32_t) * g->num_bbs);
     process_bb_for_deopt_usage(tc, &state, g, g->entry);
 }
 
@@ -364,17 +364,17 @@ void MVM_spesh_usages_add_unconditional_deopt_usage_by_reg(MVMThreadContext *tc,
  * if we don't see the annotation on a deopt instruction. This may be because
  * it serves as a "proxy" for all of the deopts that may take place inside of
  * an inlinee. */
-void MVM_spesh_usages_retain_deopt_index(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint32 idx) {
+void MVM_spesh_usages_retain_deopt_index(MVMThreadContext *tc, MVMSpeshGraph *g, uint32_t idx) {
     /* Just allocate it at the number of deopt addrs now; it'll only be
      * used for those in the immediate graph anyway. */
     if (!g->always_retained_deopt_idxs)
-        g->always_retained_deopt_idxs = MVM_spesh_alloc(tc, g, g->num_deopt_addrs * sizeof(MVMuint32));
+        g->always_retained_deopt_idxs = MVM_spesh_alloc(tc, g, g->num_deopt_addrs * sizeof(uint32_t));
     g->always_retained_deopt_idxs[g->num_always_retained_deopt_idxs++] = idx;
 }
 
 /* Remove usages of deopt points that won't casue deopt. */
 void MVM_spesh_usages_remove_unused_deopt(MVMThreadContext *tc, MVMSpeshGraph *g) {
-    MVMuint32 i, j;
+    uint32_t i, j;
 
     /* First, walk graph to find which deopt points are actually used. */
     MVMuint8 *deopt_used = MVM_spesh_alloc(tc, g, g->num_deopt_addrs);
@@ -429,33 +429,33 @@ void MVM_spesh_usages_remove_unused_deopt(MVMThreadContext *tc, MVMSpeshGraph *g
 
 /* Checks if the value is used, either by another instruction in the graph or
  * by being needed for deopt. */
-MVMuint32 MVM_spesh_usages_is_used(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check) {
+uint32_t MVM_spesh_usages_is_used(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, check);
     return facts->usage.deopt_users || facts->usage.handler_required || facts->usage.users;
 }
 
 /* Checks if the value is used due to being required for deopt. */
-MVMuint32 MVM_spesh_usages_is_used_by_deopt(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check) {
+uint32_t MVM_spesh_usages_is_used_by_deopt(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, check);
     return facts->usage.deopt_users != NULL;
 }
 
 /* Checks if the value is used due to being required for exception handling. */
-MVMuint32 MVM_spesh_usages_is_used_by_handler(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check) {
+uint32_t MVM_spesh_usages_is_used_by_handler(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, check);
     return facts->usage.handler_required;
 }
 
 /* Checks if there is precisely one known non-deopt user of the value. */
-MVMuint32 MVM_spesh_usages_used_once(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check) {
+uint32_t MVM_spesh_usages_used_once(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check) {
     MVMSpeshFacts *facts = MVM_spesh_get_facts(tc, g, check);
     return !facts->usage.deopt_users && !facts->usage.handler_required &&
         facts->usage.users && !facts->usage.users->next;
 }
 
 /* Gets the count of usages, excluding use for deopt or handler purposes. */
-MVMuint32 MVM_spesh_usages_count(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check) {
-    MVMuint32 count = 0;
+uint32_t MVM_spesh_usages_count(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshOperand check) {
+    uint32_t count = 0;
     MVMSpeshUseChainEntry *cur = MVM_spesh_get_facts(tc, g, check)->usage.users;
     while (cur) {
         count++;
@@ -470,7 +470,7 @@ void MVM_spesh_usages_check(MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB *cur_bb;
 
     /* Clear the "did we see this in the graph" flags. */
-    MVMuint32 i, j;
+    uint32_t i, j;
     for (i = 0; i < g->num_locals; i++) {
         for (j = 0; j < g->fact_counts[i]; j++) {
             MVMSpeshUseChainEntry *use_entry = g->facts[i][j].usage.users;
@@ -490,7 +490,7 @@ void MVM_spesh_usages_check(MVMThreadContext *tc, MVMSpeshGraph *g) {
             MVMint16 opcode = cur_ins->info->opcode;
             MVMuint8 is_phi = opcode == MVM_SSA_PHI;
             MVMuint8 is_inc_dec = MVM_spesh_is_inc_dec_op(opcode);
-            MVMuint32 i;
+            uint32_t i;
             for (i = 0; i < cur_ins->info->num_operands; i++) {
                 if ((is_phi && i > 0) || is_inc_dec ||
                         (!is_phi && (cur_ins->info->operands[i] & MVM_operand_rw_mask) == MVM_operand_read_reg)) {
@@ -498,7 +498,7 @@ void MVM_spesh_usages_check(MVMThreadContext *tc, MVMSpeshGraph *g) {
                     MVMuint16 version = is_inc_dec ? cur_ins->operands[i].reg.i - 1 : cur_ins->operands[i].reg.i;
                     MVMSpeshFacts *facts = &(g->facts[cur_ins->operands[i].reg.orig][version]);
                     MVMSpeshUseChainEntry *use_entry = facts->usage.users;
-                    MVMuint32 found = 0;
+                    uint32_t found = 0;
                     while (use_entry) {
                         if (!use_entry->seen_in_graph && use_entry->user == cur_ins) {
                             use_entry->seen_in_graph = 1;

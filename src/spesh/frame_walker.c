@@ -47,14 +47,14 @@ static void go_to_next_inline(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     }
     MVMJitCode *jitcode = cand->body.jitcode;
     if (jitcode) {
-        MVMuint32 idx = MVM_jit_code_get_active_inlines(tc, jitcode, fw->jit_position, fw->inline_idx + 1);
+        uint32_t idx = MVM_jit_code_get_active_inlines(tc, jitcode, fw->jit_position, fw->inline_idx + 1);
         if (idx < jitcode->num_inlines) {
             fw->inline_idx = idx;
             return;
         }
     }
     else {
-        MVMuint32 i;
+        uint32_t i;
         for (i = fw->inline_idx + 1; i < cand->body.num_inlines; i++) {
             if (fw->deopt_offset > cand->body.inlines[i].start && fw->deopt_offset <= cand->body.inlines[i].end) {
                 /* Found an applicable inline. */
@@ -82,7 +82,7 @@ static void go_to_first_inline(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MV
             void *current_position = prev && (extra = prev->extra) && extra->caller_jit_position
                 ? extra->caller_jit_position
                 : MVM_jit_code_get_current_position(tc, jitcode, f);
-            MVMuint32 idx = MVM_jit_code_get_active_inlines(tc, jitcode, current_position, 0);
+            uint32_t idx = MVM_jit_code_get_active_inlines(tc, jitcode, current_position, 0);
             if (idx < jitcode->num_inlines) {
                 fw->jit_position = current_position;
                 fw->inline_idx = idx;
@@ -114,7 +114,7 @@ static void go_to_first_inline(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MV
 }
 
 /* Moves one caller frame deeper, accounting for inlines. */
-static MVMuint32 move_one_caller(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+static uint32_t move_one_caller(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     MVMFrame *caller;
 
      /* Is there an inline to try and visit? If there is one, then
@@ -143,7 +143,7 @@ static MVMuint32 move_one_caller(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) 
 /* Moves to the next frame to visit. Returns non-zero if there was a next
  * frame to move to, and zero if there is not (and as such the iteration is
  * over). */
-MVMuint32 MVM_spesh_frame_walker_next(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+uint32_t MVM_spesh_frame_walker_next(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     if (!fw->started) {
         go_to_first_inline(tc, fw, NULL);
         fw->started = 1;
@@ -196,7 +196,7 @@ MVMuint32 MVM_spesh_frame_walker_next(MVMThreadContext *tc, MVMSpeshFrameWalker 
 }
 
 static void find_lex_info(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFrame **cur_frame_out,
-                          MVMStaticFrame **sf_out, MVMuint32 *base_index_out) {
+                          MVMStaticFrame **sf_out, uint32_t *base_index_out) {
     if (fw->visiting_outers) {
         *cur_frame_out = fw->cur_outer_frame;
         *sf_out = fw->cur_outer_frame->static_info;
@@ -220,15 +220,15 @@ static void find_lex_info(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMFram
  * Returns zero if there is no such lexical in that current frame. If there is
  * one, returns non-zero and populates found_out and found_kind_out. Will also
  * trigger vivification of the lexical if needed. */
-MVMuint32 MVM_spesh_frame_walker_get_lex(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
+uint32_t MVM_spesh_frame_walker_get_lex(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
                                          MVMString *name, MVMRegister **found_out,
-                                         MVMuint16 *found_kind_out, MVMuint32 vivify,
+                                         MVMuint16 *found_kind_out, uint32_t vivify,
                                          MVMFrame **found_frame) {
     MVMFrame *cur_frame;
     MVMStaticFrame *sf;
-    MVMuint32 base_index;
+    uint32_t base_index;
     find_lex_info(tc, fw, &cur_frame, &sf, &base_index);
-    MVMuint32 idx = MVM_get_lexical_by_name(tc, sf, name);
+    uint32_t idx = MVM_get_lexical_by_name(tc, sf, name);
     if (idx != MVM_INDEX_HASH_NOT_FOUND) {
         int32_t index = base_index + idx;
         MVMRegister *result = &cur_frame->env[index];
@@ -248,7 +248,7 @@ MVMuint32 MVM_spesh_frame_walker_get_lex(MVMThreadContext *tc, MVMSpeshFrameWalk
 }
 
 /* Walk one outer frame. Valid before we start iterating. */
-MVMuint32 MVM_spesh_frame_walker_move_outer(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+uint32_t MVM_spesh_frame_walker_move_outer(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     MVMFrame *outer;
     MVMSpeshCandidate *spesh_cand = fw->cur_caller_frame->spesh_cand;
     if (fw->inline_idx == MVM_SPESH_FRAME_WALKER_NO_INLINE || !spesh_cand) {
@@ -274,7 +274,7 @@ MVMuint32 MVM_spesh_frame_walker_move_outer(MVMThreadContext *tc, MVMSpeshFrameW
 }
 
 /* Walk one caller frame. Valid before we start iterating. */
-MVMuint32 MVM_spesh_frame_walker_move_caller(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
+uint32_t MVM_spesh_frame_walker_move_caller(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     fw->started = 1;
     if (move_one_caller(tc, fw)) {
         fw->traversed = 1;
@@ -286,7 +286,7 @@ MVMuint32 MVM_spesh_frame_walker_move_caller(MVMThreadContext *tc, MVMSpeshFrame
 }
 
 /* Walk one non-thunk outer frame. Valid before we start iterating. */
-MVMuint32 MVM_spesh_frame_walker_move_outer_skip_thunks(MVMThreadContext *tc,
+uint32_t MVM_spesh_frame_walker_move_outer_skip_thunks(MVMThreadContext *tc,
                                                         MVMSpeshFrameWalker *fw) {
     while (MVM_spesh_frame_walker_move_outer(tc, fw)) {
         if (!fw->cur_caller_frame->static_info->body.is_thunk)
@@ -296,7 +296,7 @@ MVMuint32 MVM_spesh_frame_walker_move_outer_skip_thunks(MVMThreadContext *tc,
 }
 
 /* Walk one non-thunk caller frame. Valid before we start iterating. */
-MVMuint32 MVM_spesh_frame_walker_move_caller_skip_thunks(MVMThreadContext *tc,
+uint32_t MVM_spesh_frame_walker_move_caller_skip_thunks(MVMThreadContext *tc,
                                                          MVMSpeshFrameWalker *fw) {
     while (MVM_spesh_frame_walker_move_caller(tc, fw)) {
         MVMSpeshCandidate *spesh_cand = fw->cur_caller_frame->spesh_cand;
@@ -323,16 +323,16 @@ MVMFrame * MVM_spesh_frame_walker_get_frame(MVMThreadContext *tc, MVMSpeshFrameW
 MVMObject * MVM_spesh_frame_walker_get_lexicals_hash(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     MVMFrame *frame;
     MVMStaticFrame *sf;
-    MVMuint32 base_index;
+    uint32_t base_index;
     MVMHLLConfig *hll = MVM_hll_current(tc);
     MVMObject *ctx_hash = MVM_repr_alloc_init(tc, hll->slurpy_hash_type);
     find_lex_info(tc, fw, &frame, &sf, &base_index);
     MVMROOT3(tc, ctx_hash, frame, sf) {
         MVMString **lexnames = sf->body.lexical_names_list;
-        MVMuint32 i;
+        uint32_t i;
         for (i = 0; i < sf->body.num_lexicals; i++) {
             MVMuint16 type = sf->body.lexical_types[i];
-            MVMuint32 idx = base_index + i;
+            uint32_t idx = base_index + i;
             switch (type) {
                 case MVM_reg_obj: {
                     MVMObject *obj = frame->env[idx].o;
@@ -423,9 +423,9 @@ MVMint64 MVM_spesh_frame_walker_get_lexical_primspec(MVMThreadContext *tc,
                                                      MVMSpeshFrameWalker *fw, MVMString *name) {
     MVMFrame *cur_frame;
     MVMStaticFrame *sf;
-    MVMuint32 base_index;
+    uint32_t base_index;
     find_lex_info(tc, fw, &cur_frame, &sf, &base_index);
-    MVMuint32 idx = MVM_get_lexical_by_name(tc, sf, name);
+    uint32_t idx = MVM_get_lexical_by_name(tc, sf, name);
     if (idx != MVM_INDEX_HASH_NOT_FOUND)
         return MVM_frame_translate_to_primspec(tc, sf->body.lexical_types[idx]);
     return -1;
@@ -448,7 +448,7 @@ MVMObject * MVM_spesh_frame_walker_get_code(MVMThreadContext *tc, MVMSpeshFrameW
 MVMuint64 MVM_spesh_frame_walker_get_lexical_count(MVMThreadContext *tc, MVMSpeshFrameWalker *fw) {
     MVMFrame *cur_frame;
     MVMStaticFrame *sf;
-    MVMuint32 base_index;
+    uint32_t base_index;
     find_lex_info(tc, fw, &cur_frame, &sf, &base_index);
     return sf->body.num_lexicals;
 }

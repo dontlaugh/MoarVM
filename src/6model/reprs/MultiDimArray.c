@@ -80,7 +80,7 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMMultiDimArrayREPRData *re
                         break;
                     case 32:
                         repr_data->slot_type = MVM_ARRAY_U32;
-                        repr_data->elem_size = sizeof(MVMuint32);
+                        repr_data->elem_size = sizeof(uint32_t);
                         break;
                     case 16:
                         repr_data->slot_type = MVM_ARRAY_U16;
@@ -151,7 +151,7 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMMultiDimArrayREPRData *re
                     break;
                 case 32:
                     repr_data->slot_type = MVM_ARRAY_U32;
-                    repr_data->elem_size = sizeof(MVMuint32);
+                    repr_data->elem_size = sizeof(uint32_t);
                     break;
                 case 16:
                     repr_data->slot_type = MVM_ARRAY_U16;
@@ -408,7 +408,7 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
                 body->slots.i64[i] = MVM_serialization_read_int(tc, reader);
                 break;
             case MVM_ARRAY_U32:
-                body->slots.i32[i] = (MVMuint32)MVM_serialization_read_int(tc, reader);
+                body->slots.i32[i] = (uint32_t)MVM_serialization_read_int(tc, reader);
                 break;
             case MVM_ARRAY_U16:
                 body->slots.i16[i] = (MVMuint16)MVM_serialization_read_int(tc, reader);
@@ -648,7 +648,7 @@ static void bind_pos_multidim(MVMThreadContext *tc, MVMSTable *st, MVMObject *ro
                 break;
             case MVM_ARRAY_U32:
                 if (kind == MVM_reg_uint64)
-                    body->slots.u32[flat_index] = (MVMuint32)value.u64;
+                    body->slots.u32[flat_index] = (uint32_t)value.u64;
                 else
                     MVM_exception_throw_adhoc(tc, "MultiDimArray: bindpos expected uint register");
                 break;

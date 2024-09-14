@@ -34,9 +34,9 @@ static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
 }
 
 static int32_t apply_traversals(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMuint8 *traversals,
-                                 MVMuint32 num_traversals) {
-    MVMuint32 i;
-    MVMuint32 could_move = 1;
+                                 uint32_t num_traversals) {
+    uint32_t i;
+    uint32_t could_move = 1;
     for (i = 0; i < num_traversals; i++) {
         switch (traversals[i]) {
             case MVM_CTX_TRAV_OUTER:
@@ -60,7 +60,7 @@ static int32_t apply_traversals(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, M
     return could_move;
 }
 
-static MVMuint32 setup_frame_walker(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMContextBody *data) {
+static uint32_t setup_frame_walker(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, MVMContextBody *data) {
     MVM_spesh_frame_walker_init(tc, fw, data->context, 0);
     return apply_traversals(tc, fw, data->traversals, data->num_traversals);
 }
@@ -131,8 +131,8 @@ static void bind_key(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void 
     MVMRegister *found;
     MVMuint16 got_kind;
     MVMFrame *found_frame;
-    MVMuint32 needs_root = kind == MVM_reg_obj || kind == MVM_reg_str;
-    MVMuint32 missing;
+    uint32_t needs_root = kind == MVM_reg_obj || kind == MVM_reg_str;
+    uint32_t missing;
     if (needs_root)
         MVM_gc_root_temp_push(tc, (MVMCollectable **)&(value.o));
     missing = !setup_frame_walker(tc, &fw, body) || !MVM_spesh_frame_walker_get_lex(tc, &fw,
@@ -320,9 +320,9 @@ MVMObject * MVM_context_from_frame_non_traversable(MVMThreadContext *tc, MVMFram
 
 /* Checks if we can perform a traversal and reach an existing frame. */
 static int32_t traversal_exists(MVMThreadContext *tc, MVMFrame *base, MVMuint8 *traversals,
-                                 MVMuint32 num_traversals) {
+                                 uint32_t num_traversals) {
     MVMSpeshFrameWalker fw;
-    MVMuint32 could_move;
+    uint32_t could_move;
     MVM_spesh_frame_walker_init(tc, &fw, base, 0);
     could_move = apply_traversals(tc, &fw, traversals, num_traversals);
     MVM_spesh_frame_walker_cleanup(tc, &fw);
@@ -338,7 +338,7 @@ MVMObject * MVM_context_apply_traversal(MVMThreadContext *tc, MVMContext *ctx, M
                 "Cannot move to outers or callers with non-traversable context");
 
     /* Create new traversals array with the latest one at the end. */
-    MVMuint32 new_num_traversals = ctx->body.num_traversals + 1;
+    uint32_t new_num_traversals = ctx->body.num_traversals + 1;
     MVMuint8 *new_traversals = MVM_malloc(new_num_traversals);
     if (ctx->body.num_traversals)
         memcpy(new_traversals, ctx->body.traversals, ctx->body.num_traversals);

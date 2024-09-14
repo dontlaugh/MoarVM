@@ -51,8 +51,8 @@ void MVM_jit_code_trampoline(MVMThreadContext *tc) {
 }
 
 
-MVMuint32 MVM_jit_code_get_active_deopt_idx(MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame) {
-    MVMuint32 i;
+uint32_t MVM_jit_code_get_active_deopt_idx(MVMThreadContext *tc, MVMJitCode *code, MVMFrame *frame) {
+    uint32_t i;
     void *current_position = MVM_jit_code_get_current_position(tc, code, frame);
     for (i = 0; i < code->num_deopts; i++) {
         if (code->labels[code->deopts[i].label] == current_position) {
@@ -62,7 +62,7 @@ MVMuint32 MVM_jit_code_get_active_deopt_idx(MVMThreadContext *tc, MVMJitCode *co
     return i;
 }
 
-MVMuint32 MVM_jit_code_get_active_handlers(MVMThreadContext *tc, MVMJitCode *code, void *current_position, MVMuint32 i) {
+uint32_t MVM_jit_code_get_active_handlers(MVMThreadContext *tc, MVMJitCode *code, void *current_position, uint32_t i) {
     for (; i < code->num_handlers; i++) {
         void *start_label = code->labels[code->handlers[i].start_label];
         void *end_label   = code->labels[code->handlers[i].end_label];
@@ -73,7 +73,7 @@ MVMuint32 MVM_jit_code_get_active_handlers(MVMThreadContext *tc, MVMJitCode *cod
     return i;
 }
 
-MVMuint32 MVM_jit_code_get_active_inlines(MVMThreadContext *tc, MVMJitCode *code, void *current_position, MVMuint32 i) {
+uint32_t MVM_jit_code_get_active_inlines(MVMThreadContext *tc, MVMJitCode *code, void *current_position, uint32_t i) {
     for (;i < code->num_inlines; i++) {
         void *inline_start = code->labels[code->inlines[i].start_label];
         void *inline_end   = code->labels[code->inlines[i].end_label];

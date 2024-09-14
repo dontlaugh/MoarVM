@@ -755,8 +755,8 @@ MVMObject * MVM_radix(MVMThreadContext *tc, MVMint64 radix, MVMString *str, MVMi
     MVMint64 zvalue = 0;
     MVMint64 chars  = MVM_string_graphs(tc, str);
     MVMint64 value  = zvalue;
-    MVMuint32 chars_converted = 0;
-    MVMuint32 chars_really_converted = chars_converted;
+    uint32_t chars_converted = 0;
+    uint32_t chars_really_converted = chars_converted;
     MVMint64   pos  = -1;
     MVMuint16  neg  = 0;
     MVMint64   ch;

@@ -20,7 +20,7 @@ union MVMRegister {
     MVMint16           i16;
     MVMuint16          u16;
     int32_t           i32;
-    MVMuint32          u32;
+    uint32_t          u32;
     MVMint64           i64;
     MVMuint64          u64;
     MVMnum32           n32;

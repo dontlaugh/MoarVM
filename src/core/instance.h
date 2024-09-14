@@ -153,8 +153,8 @@ struct MVMInstance {
      * that during a GC the world is stopped so reading is safe. We also
      * keep a list of names for these, for the purpose of heap debugging
      * and heap profiling. */
-    MVMuint32             num_permroots;
-    MVMuint32             alloc_permroots;
+    uint32_t             num_permroots;
+    uint32_t             alloc_permroots;
     MVMCollectable     ***permroots;
     const char          **permroot_descriptions;
     uv_mutex_t            mutex_permroots;
@@ -199,12 +199,12 @@ struct MVMInstance {
     MVMSTable *stables_to_free;
 
     /* Whether the current GC run is a full collection. */
-    MVMuint32 gc_full_collect;
+    uint32_t gc_full_collect;
 
     /* Are we in GC? Set by the coordinator at entry/exit of GC, and used by
      * native callback handling to decide if it should wait before trying to
      * lookup the current thread as the thread list may move under it. */
-    MVMuint32 in_gc;
+    uint32_t in_gc;
 
     /* How many bytes of data have we promoted from the nursery to gen2
      * since we last did a full collection? */
@@ -225,14 +225,14 @@ struct MVMInstance {
     uv_mutex_t mutex_free_at_safepoint;
 
     /* Whether the --full-cleanup flag was passed. */
-    MVMuint32 full_cleanup;
+    uint32_t full_cleanup;
 
     /************************************************************************
      * Object system
      ************************************************************************/
 
     /* Number of representations registered so far. */
-    MVMuint32 num_reprs;
+    uint32_t num_reprs;
 
     /* An array mapping representation IDs to REPR vtables. */
     const MVMREPROps **repr_vtables;
@@ -257,8 +257,8 @@ struct MVMInstance {
      * the weakhash and all SCs list. */
     MVMStrHashTable               sc_weakhash;
     MVMSerializationContextBody **all_scs;
-    MVMuint32                     all_scs_next_idx;
-    MVMuint32                     all_scs_alloc;
+    uint32_t                     all_scs_next_idx;
+    uint32_t                     all_scs_alloc;
     uv_mutex_t                    mutex_sc_registry;
 
     /* Mutex to serialize additions of type parameterizations. Global rather
@@ -288,7 +288,7 @@ struct MVMInstance {
      * as it may still be referenced. */
     MVMuint16 *identity_arg_map;
     MVMuint16 *small_identity_arg_map;
-    MVMuint32 identity_arg_map_alloc;
+    uint32_t identity_arg_map_alloc;
 
     /************************************************************************
      * Specializer (dynamic optimization)
@@ -323,7 +323,7 @@ struct MVMInstance {
 
     /* The latest statistics version (incremented each time a spesh log is
      * received by the worker thread). */
-    MVMuint32 spesh_stats_version;
+    uint32_t spesh_stats_version;
 
     /* Lock and condition variable for when something needs to wait for the
      * specialization worker to finish what it's doing before continuing.
@@ -331,7 +331,7 @@ struct MVMInstance {
      * frame bytecode changing to instrumented versions. */
     uv_mutex_t mutex_spesh_sync;
     uv_cond_t cond_spesh_sync;
-    MVMuint32 spesh_working;
+    uint32_t spesh_working;
 
     /************************************************************************
      * JIT compilation
@@ -527,24 +527,24 @@ struct MVMInstance {
      * entry to a frame then knows it should instrument or switch back to an
      * uninstrumented version. As a special case, when we start up this is set
      * to 1 which also triggers frame verification. */
-    MVMuint32 instrumentation_level;
+    uint32_t instrumentation_level;
 
     /* Whether instrumented profiling is turned on or not. */
-    MVMuint32 profiling;
+    uint32_t profiling;
 
     /* Heap snapshots, if we're doing heap snapshotting. */
     MVMHeapSnapshotCollection *heap_snapshots;
 
     /* Whether cross-thread write logging is turned on or not, and an output
      * mutex for it. */
-    MVMuint32  cross_thread_write_logging;
-    MVMuint32  cross_thread_write_logging_include_locked;
+    uint32_t  cross_thread_write_logging;
+    uint32_t  cross_thread_write_logging_include_locked;
     uv_mutex_t mutex_cross_thread_write_logging;
 
     /* Log file for coverage logging. */
-    MVMuint32  coverage_logging;
+    uint32_t  coverage_logging;
     FILE *coverage_log_fh;
-    MVMuint32  coverage_control;
+    uint32_t  coverage_control;
 
     /* The time it takes to run the profiler instrumentation. */
     MVMuint64 profiling_overhead;
@@ -555,7 +555,7 @@ struct MVMInstance {
 
     MVMDebugServerData *debugserver;
 
-    MVMuint32 speshworker_thread_id;
+    uint32_t speshworker_thread_id;
 
     /* Log file for dynamic var performance, if we're to log it. */
     FILE *dynvar_log_fh;

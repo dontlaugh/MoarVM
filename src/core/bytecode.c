@@ -27,39 +27,39 @@
 /* Describes the current reader state. */
 typedef struct {
     /* General info. */
-    MVMuint32 version;
+    uint32_t version;
 
     /* The string heap. */
     MVMuint8  *string_seg;
-    MVMuint32  expected_strings;
+    uint32_t  expected_strings;
 
     /* The SC dependencies segment. */
-    MVMuint32  expected_scs;
+    uint32_t  expected_scs;
     MVMuint8  *sc_seg;
 
     /* The extension ops segment. */
     MVMuint8 *extop_seg;
-    MVMuint32 expected_extops;
+    uint32_t expected_extops;
 
     /* The frame segment. */
-    MVMuint32  expected_frames;
+    uint32_t  expected_frames;
     MVMuint8  *frame_seg;
     MVMuint16 *frame_outer_fixups;
 
     /* The callsites segment. */
     MVMuint8  *callsite_seg;
-    MVMuint32  expected_callsites;
+    uint32_t  expected_callsites;
 
     /* The bytecode segment. */
-    MVMuint32  bytecode_size;
+    uint32_t  bytecode_size;
     MVMuint8  *bytecode_seg;
 
     /* The annotations segment */
     MVMuint8  *annotation_seg;
-    MVMuint32  annotation_size;
+    uint32_t  annotation_size;
 
     /* HLL name string index */
-    MVMuint32  hll_str_idx;
+    uint32_t  hll_str_idx;
 
     /* The limit we can not read beyond. */
     MVMuint8 *read_limit;
@@ -68,10 +68,10 @@ typedef struct {
     MVMStaticFrame **frames;
 
     /* Special frame indexes */
-    MVMuint32  mainline_frame;
-    MVMuint32  main_frame;
-    MVMuint32  load_frame;
-    MVMuint32  deserialize_frame;
+    uint32_t  mainline_frame;
+    uint32_t  main_frame;
+    uint32_t  load_frame;
+    uint32_t  deserialize_frame;
 
 } ReaderState;
 
@@ -88,8 +88,8 @@ static void memcpy_endian(void *dest, MVMuint8 *src, size_t size) {
 }
 
 /* Reads a uint32 from a buffer. */
-static MVMuint32 read_int32(MVMuint8 *buffer, size_t offset) {
-    MVMuint32 value;
+static uint32_t read_int32(MVMuint8 *buffer, size_t offset) {
+    uint32_t value;
     memcpy_endian(&value, buffer + offset, 4);
     return value;
 }
@@ -115,7 +115,7 @@ static void cleanup_all(ReaderState *rs) {
 
 /* Ensures we can read a certain amount of bytes without overrunning the end
  * of the stream. */
-MVM_STATIC_INLINE void ensure_can_read(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs, MVMuint8 *pos, MVMuint32 size) {
+MVM_STATIC_INLINE void ensure_can_read(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs, MVMuint8 *pos, uint32_t size) {
     if (pos + size > rs->read_limit) {
         cleanup_all(rs);
         MVM_exception_throw_adhoc(tc, "Read past end of bytecode stream");
@@ -125,7 +125,7 @@ MVM_STATIC_INLINE void ensure_can_read(MVMThreadContext *tc, MVMCompUnit *cu, Re
 /* Reads a string index, looks up the string and returns it. Bounds
  * checks the string heap index too. */
 static MVMString * get_heap_string(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs, MVMuint8 *buffer, size_t offset) {
-    MVMuint32 heap_index = read_int32(buffer, offset);
+    uint32_t heap_index = read_int32(buffer, offset);
     if (heap_index >= cu->body.num_strings) {
         if (rs)
             cleanup_all(rs);
@@ -139,7 +139,7 @@ static MVMString * get_heap_string(MVMThreadContext *tc, MVMCompUnit *cu, Reader
 static ReaderState * dissect_bytecode(MVMThreadContext *tc, MVMCompUnit *cu) {
     MVMCompUnitBody *cu_body = &cu->body;
     ReaderState *rs = NULL;
-    MVMuint32 version, offset, size;
+    uint32_t version, offset, size;
 
     /* Sanity checks. */
     if (cu_body->data_size < HEADER_SIZE)
@@ -259,7 +259,7 @@ static ReaderState * dissect_bytecode(MVMThreadContext *tc, MVMCompUnit *cu) {
 /* Loads the SC dependencies list. */
 static void deserialize_sc_deps(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs) {
     MVMCompUnitBody *cu_body = &cu->body;
-    MVMuint32 i, sh_idx;
+    uint32_t i, sh_idx;
     MVMuint8  *pos;
 
     /* Allocate SC lists in compilation unit. */
@@ -324,9 +324,9 @@ static void deserialize_sc_deps(MVMThreadContext *tc, MVMCompUnit *cu, ReaderSta
 /* Loads the extension op records. */
 static MVMExtOpRecord * deserialize_extop_records(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs) {
     MVMExtOpRecord *extops;
-    MVMuint32 num = rs->expected_extops;
+    uint32_t num = rs->expected_extops;
     MVMuint8 *pos;
-    MVMuint32 i;
+    uint32_t i;
 
     if (num == 0)
         return NULL;
@@ -335,7 +335,7 @@ static MVMExtOpRecord * deserialize_extop_records(MVMThreadContext *tc, MVMCompU
 
     pos = rs->extop_seg;
     for (i = 0; i < num; i++) {
-        MVMuint32 name_idx;
+        uint32_t name_idx;
         MVMuint16 operand_bytes = 0;
         MVMuint8 *operand_descriptor = extops[i].operand_descriptor;
 
@@ -466,7 +466,7 @@ static MVMExtOpRecord * deserialize_extop_records(MVMThreadContext *tc, MVMCompU
 static MVMStaticFrame ** deserialize_frames(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs) {
     MVMStaticFrame **frames;
     MVMuint8        *pos;
-    MVMuint32        bytecode_pos, bytecode_size, i, j;
+    uint32_t        bytecode_pos, bytecode_size, i, j;
 
     /* Allocate frames array. */
     if (rs->expected_frames == 0) {
@@ -494,7 +494,7 @@ static MVMStaticFrame ** deserialize_frames(MVMThreadContext *tc, MVMCompUnit *c
         bytecode_pos = read_int32(pos, 0);
         bytecode_size = read_int32(pos, 4);
         if (bytecode_pos >= rs->bytecode_size) {
-            MVMuint32 bytecode_size = rs->bytecode_size;
+            uint32_t bytecode_size = rs->bytecode_size;
             cleanup_all(rs);
             MVM_free(frames);
             MVM_exception_throw_adhoc(tc, "Frame has invalid bytecode start point %d (size %d)", bytecode_pos, bytecode_size);
@@ -521,8 +521,8 @@ static MVMStaticFrame ** deserialize_frames(MVMThreadContext *tc, MVMCompUnit *c
 
         /* Get annotations details */
         {
-            MVMuint32 annot_offset    = read_int32(pos, 26);
-            MVMuint32 num_annotations = read_int32(pos, 30);
+            uint32_t annot_offset    = read_int32(pos, 26);
+            uint32_t num_annotations = read_int32(pos, 30);
             if (annot_offset + num_annotations * 12 > rs->annotation_size) {
                 cleanup_all(rs);
                 MVM_free(frames);
@@ -553,10 +553,10 @@ static MVMStaticFrame ** deserialize_frames(MVMThreadContext *tc, MVMCompUnit *c
 
         /* Skip over the rest, making sure it's readable. */
         {
-            MVMuint32 skip = 2 * static_frame_body->num_locals +
+            uint32_t skip = 2 * static_frame_body->num_locals +
                              6 * static_frame_body->num_lexicals;
             MVMuint16 slvs = read_int16(pos, 40);
-            MVMuint32 num_local_debug_names = read_int32(pos, 50);
+            uint32_t num_local_debug_names = read_int32(pos, 50);
             pos += FRAME_HEADER_SIZE;
             ensure_can_read(tc, cu, rs, pos, skip);
             pos += skip;
@@ -598,7 +598,7 @@ static MVMStaticFrame ** deserialize_frames(MVMThreadContext *tc, MVMCompUnit *c
 /* Finishes up reading and exploding of a frame. */
 void MVM_bytecode_finish_frame(MVMThreadContext *tc, MVMCompUnit *cu,
                                MVMStaticFrame *sf, int32_t dump_only) {
-    MVMuint32 j, num_debug_locals;
+    uint32_t j, num_debug_locals;
     MVMuint8 *pos;
     MVMuint16 slvs;
 
@@ -789,7 +789,7 @@ void MVM_bytecode_finish_frame(MVMThreadContext *tc, MVMCompUnit *cu,
 
 /* Gets the SC reference for a given static lexical var for
  * vivification purposes */
-MVMuint8 MVM_bytecode_find_static_lexical_scref(MVMThreadContext *tc, MVMCompUnit *cu, MVMStaticFrame *sf, MVMuint16 index, MVMuint32 *sc, MVMuint32 *id) {
+MVMuint8 MVM_bytecode_find_static_lexical_scref(MVMThreadContext *tc, MVMCompUnit *cu, MVMStaticFrame *sf, MVMuint16 index, uint32_t *sc, uint32_t *id) {
     MVMuint16 slvs, i;
 
     MVMuint8 *pos = sf->body.frame_static_lex_pos;
@@ -810,8 +810,8 @@ MVMuint8 MVM_bytecode_find_static_lexical_scref(MVMThreadContext *tc, MVMCompUni
 }
 
 MVM_NO_RETURN static void report_deserialize_callsites_violation(MVMThreadContext *tc, ReaderState *rs,
-                                                                 MVMCallsite **callsites, MVMuint32 i, MVMuint32 j, const char *violation) {
-    MVMuint32 k;
+                                                                 MVMCallsite **callsites, uint32_t i, uint32_t j, const char *violation) {
+    uint32_t k;
     for (k = 0; k <= i; k++) {
         if (!callsites[k]->is_interned) {
             MVM_free(callsites[k]->arg_flags);
@@ -827,7 +827,7 @@ MVM_NO_RETURN static void report_deserialize_callsites_violation(MVMThreadContex
 static MVMCallsite ** deserialize_callsites(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs) {
     MVMCallsite **callsites;
     MVMuint8     *pos;
-    MVMuint32     i, j, elems;
+    uint32_t     i, j, elems;
 
     /* Allocate space for callsites. */
     if (rs->expected_callsites == 0)
@@ -838,9 +838,9 @@ static MVMCallsite ** deserialize_callsites(MVMThreadContext *tc, MVMCompUnit *c
     pos = rs->callsite_seg;
     for (i = 0; i < rs->expected_callsites; i++) {
         MVMuint8 has_flattening = 0;
-        MVMuint32 positionals = 0;
-        MVMuint32 nameds_slots = 0;
-        MVMuint32 nameds_non_flattening = 0;
+        uint32_t positionals = 0;
+        uint32_t nameds_slots = 0;
+        uint32_t nameds_non_flattening = 0;
 
         /* Ensure we can read at least an element count. */
         ensure_can_read(tc, cu, rs, pos, 2);
@@ -929,7 +929,7 @@ static MVMCallsite ** deserialize_callsites(MVMThreadContext *tc, MVMCompUnit *c
 
 /* Creates code objects to go with each of the static frames. */
 static void create_code_objects(MVMThreadContext *tc, MVMCompUnit *cu, ReaderState *rs) {
-    MVMuint32  i;
+    uint32_t  i;
     MVMObject *code_type;
     MVMCompUnitBody *cu_body = &cu->body;
 
@@ -963,7 +963,7 @@ void MVM_bytecode_unpack(MVMThreadContext *tc, MVMCompUnit *cu) {
     cu_body->orig_strings = rs->expected_strings;
     cu_body->string_heap_fast_table = MVM_calloc(
         (rs->expected_strings / MVM_STRING_FAST_TABLE_SPAN) + 1,
-        sizeof(MVMuint32));
+        sizeof(uint32_t));
     cu_body->string_heap_start = rs->string_seg;
     cu_body->string_heap_read_limit = rs->read_limit;
 
@@ -1014,14 +1014,14 @@ void MVM_bytecode_unpack(MVMThreadContext *tc, MVMCompUnit *cu) {
 }
 
 /* returns the annotation for that bytecode offset */
-MVMBytecodeAnnotation * MVM_bytecode_resolve_annotation(MVMThreadContext *tc, MVMStaticFrameBody *sfb, MVMuint32 offset) {
+MVMBytecodeAnnotation * MVM_bytecode_resolve_annotation(MVMThreadContext *tc, MVMStaticFrameBody *sfb, uint32_t offset) {
     MVMBytecodeAnnotation *ba = NULL;
-    MVMuint32 i;
+    uint32_t i;
 
     if (sfb->num_annotations && offset < sfb->bytecode_size) {
         MVMuint8 *cur_anno = sfb->annotations_data;
         for (i = 0; i < sfb->num_annotations; i++) {
-            MVMuint32 ann_offset = read_int32(cur_anno, 0);
+            uint32_t ann_offset = read_int32(cur_anno, 0);
             if (ann_offset > offset)
                 break;
             cur_anno += 12;
@@ -1040,7 +1040,7 @@ MVMBytecodeAnnotation * MVM_bytecode_resolve_annotation(MVMThreadContext *tc, MV
 }
 
 void MVM_bytecode_advance_annotation(MVMThreadContext *tc, MVMStaticFrameBody *sfb, MVMBytecodeAnnotation *ba) {
-    MVMuint32 i = ba->ann_index + 1;
+    uint32_t i = ba->ann_index + 1;
 
     MVMuint8 *cur_anno = sfb->annotations_data + ba->ann_offset;
     cur_anno += 12;

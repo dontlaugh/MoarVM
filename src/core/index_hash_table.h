@@ -64,7 +64,7 @@ struct MVMIndexHashTable {
 };
 
 struct MVMIndexHashEntry {
-    MVMuint32 index;
+    uint32_t index;
 };
 
 #define MVM_INDEX_HASH_NOT_FOUND 0xFFFFFFFF

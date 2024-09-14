@@ -5,10 +5,10 @@
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
 #define MVM_INDEX_HASH_LOAD_FACTOR 0.75
-MVM_STATIC_INLINE MVMuint32 MVM_index_hash_official_size(const struct MVMIndexHashTableControl *control) {
-    return 1 << (MVMuint32)control->official_size_log2;
+MVM_STATIC_INLINE uint32_t MVM_index_hash_official_size(const struct MVMIndexHashTableControl *control) {
+    return 1 << (uint32_t)control->official_size_log2;
 }
-MVM_STATIC_INLINE MVMuint32 MVM_index_hash_max_items(const struct MVMIndexHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_index_hash_max_items(const struct MVMIndexHashTableControl *control) {
     return MVM_index_hash_official_size(control) * MVM_INDEX_HASH_LOAD_FACTOR;
 }
 /* -1 because...
@@ -18,10 +18,10 @@ MVM_STATIC_INLINE MVMuint32 MVM_index_hash_max_items(const struct MVMIndexHashTa
  * probe distance of 2 is the first extra bucket beyond the official allocation
  * probe distance of 255 is the 254th beyond the official allocation.
  */
-MVM_STATIC_INLINE MVMuint32 MVM_index_hash_allocated_items(const struct MVMIndexHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_index_hash_allocated_items(const struct MVMIndexHashTableControl *control) {
     return MVM_index_hash_official_size(control) + control->max_probe_distance_limit - 1;
 }
-MVM_STATIC_INLINE MVMuint32 MVM_index_hash_kompromat(const struct MVMIndexHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_index_hash_kompromat(const struct MVMIndexHashTableControl *control) {
     return MVM_index_hash_official_size(control) + control->max_probe_distance  - 1;
 }
 MVM_STATIC_INLINE MVMuint8 *MVM_index_hash_metadata(const struct MVMIndexHashTableControl *control) {
@@ -56,7 +56,7 @@ void MVM_index_hash_demolish(MVMThreadContext *tc, MVMIndexHashTable *hashtable)
  */
 void MVM_index_hash_build(MVMThreadContext *tc,
                           MVMIndexHashTable *hashtable,
-                          MVMuint32 entries);
+                          uint32_t entries);
 
 MVM_STATIC_INLINE int MVM_index_hash_is_empty(MVMThreadContext *tc,
                                               MVMIndexHashTable *hashtable) {
@@ -88,7 +88,7 @@ MVM_STATIC_INLINE void MVM_index_hash_shallow_copy(MVMThreadContext *tc,
 void MVM_index_hash_insert_nocheck(MVMThreadContext *tc,
                                    MVMIndexHashTable *hashtable,
                                    MVMString **list,
-                                   MVMuint32 idx);
+                                   uint32_t idx);
 
 MVM_STATIC_INLINE struct MVM_hash_loop_state
 MVM_index_hash_create_loop_state(MVMThreadContext *tc,
@@ -116,7 +116,7 @@ MVM_index_hash_create_loop_state(MVMThreadContext *tc,
     return retval;
 }
 
-MVM_STATIC_INLINE MVMuint32 MVM_index_hash_fetch_nocheck(MVMThreadContext *tc,
+MVM_STATIC_INLINE uint32_t MVM_index_hash_fetch_nocheck(MVMThreadContext *tc,
                                                          MVMIndexHashTable *hashtable,
                                                          MVMString **list,
                                                          MVMString *want) {
@@ -158,7 +158,7 @@ MVM_STATIC_INLINE MVMuint32 MVM_index_hash_fetch_nocheck(MVMThreadContext *tc,
     }
 }
 
-MVM_STATIC_INLINE MVMuint32 MVM_index_hash_fetch(MVMThreadContext *tc,
+MVM_STATIC_INLINE uint32_t MVM_index_hash_fetch(MVMThreadContext *tc,
                                                  MVMIndexHashTable *hashtable,
                                                  MVMString **list,
                                                  MVMString *want) {

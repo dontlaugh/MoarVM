@@ -5,10 +5,10 @@
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
 #define MVM_FIXKEY_HASH_LOAD_FACTOR 0.75
-MVM_STATIC_INLINE MVMuint32 MVM_fixkey_hash_official_size(const struct MVMFixKeyHashTableControl *control) {
-    return 1 << (MVMuint32)control->official_size_log2;
+MVM_STATIC_INLINE uint32_t MVM_fixkey_hash_official_size(const struct MVMFixKeyHashTableControl *control) {
+    return 1 << (uint32_t)control->official_size_log2;
 }
-MVM_STATIC_INLINE MVMuint32 MVM_fixkey_hash_max_items(const struct MVMFixKeyHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_fixkey_hash_max_items(const struct MVMFixKeyHashTableControl *control) {
     return MVM_fixkey_hash_official_size(control) * MVM_FIXKEY_HASH_LOAD_FACTOR;
 }
 /* -1 because...
@@ -18,10 +18,10 @@ MVM_STATIC_INLINE MVMuint32 MVM_fixkey_hash_max_items(const struct MVMFixKeyHash
  * probe distance of 2 is the first extra bucket beyond the official allocation
  * probe distance of 255 is the 254th beyond the official allocation.
  */
-MVM_STATIC_INLINE MVMuint32 MVM_fixkey_hash_allocated_items(const struct MVMFixKeyHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_fixkey_hash_allocated_items(const struct MVMFixKeyHashTableControl *control) {
     return MVM_fixkey_hash_official_size(control) + control->max_probe_distance_limit - 1;
 }
-MVM_STATIC_INLINE MVMuint32 MVM_fixkey_hash_kompromat(const struct MVMFixKeyHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_fixkey_hash_kompromat(const struct MVMFixKeyHashTableControl *control) {
     return MVM_fixkey_hash_official_size(control) + control->max_probe_distance - 1;
 }
 MVM_STATIC_INLINE MVMuint8 *MVM_fixkey_hash_metadata(const struct MVMFixKeyHashTableControl *control) {
@@ -41,7 +41,7 @@ void MVM_fixkey_hash_demolish(MVMThreadContext *tc, MVMFixKeyHashTable *hashtabl
  * you wish.
  * entry_size == 0 is permitted as a special case (see fixkey_hash_table.h)
  */
-void MVM_fixkey_hash_build(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, MVMuint32 entry_size);
+void MVM_fixkey_hash_build(MVMThreadContext *tc, MVMFixKeyHashTable *hashtable, uint32_t entry_size);
 
 MVM_STATIC_INLINE int MVM_fixkey_hash_is_empty(MVMThreadContext *tc,
                                                MVMFixKeyHashTable *hashtable) {
@@ -163,10 +163,10 @@ MVM_STATIC_INLINE void MVM_fixkey_hash_foreach(MVMThreadContext *tc, MVMFixKeyHa
     if (!control)
         return;
 
-    MVMuint32 entries_in_use = MVM_fixkey_hash_kompromat(control);
+    uint32_t entries_in_use = MVM_fixkey_hash_kompromat(control);
     MVMuint8 *entry_raw = MVM_fixkey_hash_entries(control);
     MVMuint8 *metadata = MVM_fixkey_hash_metadata(control);
-    MVMuint32 bucket = 0;
+    uint32_t bucket = 0;
     while (bucket < entries_in_use) {
         if (*metadata) {
             MVMString ***indirection = (MVMString ***) entry_raw;

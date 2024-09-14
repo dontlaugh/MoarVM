@@ -58,15 +58,15 @@ int32_t MVM_jit_label_for_obj(MVMThreadContext *tc, MVMJitGraph *jg, void *obj) 
 }
 
 int32_t MVM_jit_label_is_for_graph(MVMThreadContext *tc, MVMJitGraph *jg, int32_t label) {
-    return label == 0 || (MVMuint32)label == jg->sg->num_bbs;
+    return label == 0 || (uint32_t)label == jg->sg->num_bbs;
 }
 
 int32_t MVM_jit_label_is_for_bb(MVMThreadContext *tc, MVMJitGraph *jg, int32_t label) {
-    return label > 0 && (MVMuint32)label < jg->sg->num_bbs;
+    return label > 0 && (uint32_t)label < jg->sg->num_bbs;
 }
 
 int32_t MVM_jit_label_is_for_ins(MVMThreadContext *tc, MVMJitGraph *jg, int32_t label) {
-    return (MVMuint32)label > jg->sg->num_bbs && (MVMuint32)label <= jg->sg->num_bbs + jg->obj_labels_num;
+    return (uint32_t)label > jg->sg->num_bbs && (uint32_t)label <= jg->sg->num_bbs + jg->obj_labels_num;
 }
 
 int32_t MVM_jit_label_is_internal(MVMThreadContext *tc, MVMJitGraph *jg, int32_t label) {

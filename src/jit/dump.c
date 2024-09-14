@@ -27,8 +27,8 @@ static void dump_tree(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
     MVMJitExprInfo *info   = MVM_JIT_EXPR_INFO(tree, node);
     const char *op_name = MVM_jit_expr_operator_name(tc, tree->nodes[node]);
     int32_t *links = MVM_JIT_EXPR_LINKS(tree, node);
-    MVMuint32 *depth = traverser->data;
-    MVMuint32 i, j;
+    uint32_t *depth = traverser->data;
+    uint32_t i, j;
     char indent[64];
     char nargs[80];
 
@@ -52,7 +52,7 @@ static void dump_tree(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
 
 static void ascend_tree(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
                         MVMJitExprTree *tree, int32_t node) {
-    MVMuint32 *depth = traverser->data;
+    uint32_t *depth = traverser->data;
     (*depth)--;
 }
 
@@ -108,14 +108,14 @@ void MVM_jit_dump_expr_tree(MVMThreadContext *tc, MVMJitExprTree *tree) {
 }
 
 void MVM_jit_dump_tile_list(MVMThreadContext *tc, MVMJitTileList *list) {
-    MVMuint32 i, j;
+    uint32_t i, j;
     FILE *f = tc->instance->spesh_log_fh;
     if (!f)
         return;
     fprintf(f, "JIT: Starting tile list log\n"
                "===========================\n\n");
     for (i = 0; i < list->blocks_num; i++) {
-        MVMuint32 start = list->blocks[i].start, end = list->blocks[i].end;
+        uint32_t start = list->blocks[i].start, end = list->blocks[i].end;
         fprintf(f, "Block{%d} [%d-%d)\n", i, start, end);
         for (j = start; j < end; j++) {
             MVMJitTile *tile = list->items[j];

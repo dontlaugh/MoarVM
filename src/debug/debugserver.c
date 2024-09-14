@@ -106,10 +106,10 @@ typedef struct {
     MVMuint16 type;
     MVMuint64 id;
 
-    MVMuint32 thread_id;
+    uint32_t thread_id;
 
     char *file;
-    MVMuint32 line;
+    uint32_t line;
 
     MVMuint8  suspend;
     MVMuint8  stacktrace;
@@ -119,11 +119,11 @@ typedef struct {
 
     MVMuint64 handle_id;
 
-    MVMuint32 frame_number;
+    uint32_t frame_number;
 
     char *name;
 
-    MVMuint32 argument_count;
+    uint32_t argument_count;
     argument_data *arguments;
 
     MVMuint8  parse_fail;
@@ -148,11 +148,11 @@ static void normalize_filename(char *name) {
         cur_bs = strchr(cur_bs + 1, '\\');
     }
 }
-MVM_PUBLIC void MVM_debugserver_register_line(MVMThreadContext *tc, char *filename, MVMuint32 filename_len, MVMuint32 line_no,  MVMuint32 *file_idx) {
+MVM_PUBLIC void MVM_debugserver_register_line(MVMThreadContext *tc, char *filename, uint32_t filename_len, uint32_t line_no,  uint32_t *file_idx) {
     MVMDebugServerData *debugserver = tc->instance->debugserver;
     MVMDebugServerBreakpointTable *table = debugserver->breakpoints;
     MVMDebugServerBreakpointFileTable *found = NULL;
-    MVMuint32 index = 0;
+    uint32_t index = 0;
 
     normalize_filename(filename);
     char *open_paren_pos = (char *)memchr(filename, '(', filename_len);
@@ -185,7 +185,7 @@ MVM_PUBLIC void MVM_debugserver_register_line(MVMThreadContext *tc, char *filena
 
     if (!found) {
         if (table->files_used++ >= table->files_alloc) {
-            MVMuint32 old_alloc = table->files_alloc;
+            uint32_t old_alloc = table->files_alloc;
             table->files_alloc *= 2;
             table->files = MVM_realloc_at_safepoint(tc, table->files,
                     old_alloc * sizeof(MVMDebugServerBreakpointFileTable),
@@ -216,7 +216,7 @@ MVM_PUBLIC void MVM_debugserver_register_line(MVMThreadContext *tc, char *filena
     }
 
     if (found->lines_active_alloc < line_no + 1) {
-        MVMuint32 old_size = found->lines_active_alloc;
+        uint32_t old_size = found->lines_active_alloc;
         found->lines_active_alloc *= 2;
         if (tc->instance->debugserver->debugspam_protocol)
             fprintf(stderr, "increasing line number table for %s from %u to %u slots\n", found->filename, old_size, found->lines_active_alloc);
@@ -255,10 +255,10 @@ static void stop_point_hit(MVMThreadContext *tc) {
     tc->debugserver_can_invoke_here = 0;
 }
 
-static MVMuint8 breakpoint_hit(MVMThreadContext *tc, MVMDebugServerBreakpointFileTable *file, MVMuint32 line_no) {
+static MVMuint8 breakpoint_hit(MVMThreadContext *tc, MVMDebugServerBreakpointFileTable *file, uint32_t line_no) {
     cmp_ctx_t *ctx = NULL;
     MVMDebugServerBreakpointInfo *info;
-    MVMuint32 index;
+    uint32_t index;
     MVMuint8 must_suspend = 0;
 
     if (tc->instance->debugserver && tc->instance->debugserver->messagepack_data) {
@@ -315,7 +315,7 @@ static void step_point_hit(MVMThreadContext *tc) {
     tc->step_mode_frame = NULL;
 }
 
-MVM_PUBLIC int32_t MVM_debugserver_breakpoint_check(MVMThreadContext *tc, MVMuint32 file_idx, MVMuint32 line_no) {
+MVM_PUBLIC int32_t MVM_debugserver_breakpoint_check(MVMThreadContext *tc, uint32_t file_idx, uint32_t line_no) {
     MVMDebugServerData *debugserver = tc->instance->debugserver;
     MVMuint8 shall_suspend = 0;
 
@@ -608,7 +608,7 @@ MVM_PUBLIC void MVM_debugserver_notify_unhandled_exception(MVMThreadContext *tc,
     }
 }
 
-static MVMuint8 is_thread_id_eligible(MVMInstance *vm, MVMuint32 id) {
+static MVMuint8 is_thread_id_eligible(MVMInstance *vm, uint32_t id) {
     if (id == vm->debugserver->thread_id || id == vm->speshworker_thread_id) {
         return 0;
     }
@@ -617,7 +617,7 @@ static MVMuint8 is_thread_id_eligible(MVMInstance *vm, MVMuint32 id) {
 
 /* Send replies to requests send by the client */
 
-static MVMThread *find_thread_by_id(MVMInstance *vm, MVMuint32 id) {
+static MVMThread *find_thread_by_id(MVMInstance *vm, uint32_t id) {
     MVMThread *cur_thread = 0;
 
     if (!is_thread_id_eligible(vm, id)) {
@@ -681,7 +681,7 @@ static int32_t request_thread_suspends(MVMThreadContext *dtc, cmp_ctx_t *ctx, re
 static void request_all_threads_suspend(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMInstance *vm = dtc->instance;
     MVMThread *cur_thread = 0;
-    MVMuint32 success = 1;
+    uint32_t success = 1;
 
     uv_mutex_lock(&vm->mutex_threads);
 
@@ -840,7 +840,7 @@ static void write_stacktrace_frames(MVMThreadContext *dtc, cmp_ctx_t *ctx, MVMTh
         MVMString *name     = cur_frame->static_info->body.name;
 
         MVMuint8 *cur_op = stack_size != 0 ? cur_frame->return_address : *(tc->interp_cur_op);
-        MVMuint32 offset = cur_op - MVM_frame_effective_bytecode(cur_frame);
+        uint32_t offset = cur_op - MVM_frame_effective_bytecode(cur_frame);
         MVMBytecodeAnnotation *annot = MVM_bytecode_resolve_annotation(tc, &cur_frame->static_info->body,
                                           offset > 0 ? offset - 1 : 0);
 
@@ -1038,7 +1038,7 @@ void MVM_debugserver_add_breakpoint(MVMThreadContext *tc, cmp_ctx_t *ctx, reques
     MVMDebugServerBreakpointTable *table = debugserver->breakpoints;
     MVMDebugServerBreakpointFileTable *found = NULL;
     MVMDebugServerBreakpointInfo *bp_info = NULL;
-    MVMuint32 index = 0;
+    uint32_t index = 0;
 
     if (tc->instance->debugserver->debugspam_protocol)
         fprintf(stderr, "asked to set a breakpoint for file %s line %"PRIu32" to send id %"PRIu64"\n", argument->file, argument->line, argument->id);
@@ -1056,7 +1056,7 @@ void MVM_debugserver_add_breakpoint(MVMThreadContext *tc, cmp_ctx_t *ctx, reques
         found->breakpoints = MVM_calloc(found->breakpoints_alloc, sizeof(MVMDebugServerBreakpointInfo));
     }
     if (found->breakpoints_used++ >= found->breakpoints_alloc) {
-        MVMuint32 old_alloc = found->breakpoints_alloc;
+        uint32_t old_alloc = found->breakpoints_alloc;
         found->breakpoints_alloc *= 2;
         found->breakpoints = MVM_realloc_at_safepoint(tc, found->breakpoints,
                 old_alloc * sizeof(MVMDebugServerBreakpointInfo),
@@ -1094,7 +1094,7 @@ void MVM_debugserver_clear_all_breakpoints(MVMThreadContext *tc, cmp_ctx_t *ctx,
     MVMDebugServerData *debugserver = tc->instance->debugserver;
     MVMDebugServerBreakpointTable *table = debugserver->breakpoints;
     MVMDebugServerBreakpointFileTable *found = NULL;
-    MVMuint32 index;
+    uint32_t index;
 
     uv_mutex_lock(&debugserver->mutex_breakpoints);
 
@@ -1118,9 +1118,9 @@ void MVM_debugserver_clear_breakpoint(MVMThreadContext *tc, cmp_ctx_t *ctx, requ
     MVMDebugServerData *debugserver = tc->instance->debugserver;
     MVMDebugServerBreakpointTable *table = debugserver->breakpoints;
     MVMDebugServerBreakpointFileTable *found = NULL;
-    MVMuint32 index = 0;
-    MVMuint32 bpidx = 0;
-    MVMuint32 num_cleared = 0;
+    uint32_t index = 0;
+    uint32_t bpidx = 0;
+    uint32_t num_cleared = 0;
 
     MVM_debugserver_register_line(tc, argument->file, strlen(argument->file), argument->line, &index);
 
@@ -1173,7 +1173,7 @@ static void release_all_handles(MVMThreadContext *dtc) {
 static MVMuint64 release_handles(MVMThreadContext *dtc, cmp_ctx_t *ctx, request_data *argument) {
     MVMDebugServerHandleTable *dht = dtc->instance->debugserver->handle_table;
 
-    MVMuint32 handle_index = 0;
+    uint32_t handle_index = 0;
     MVMuint16 id_index = 0;
     MVMuint16 handles_cleared = 0;
     for (handle_index = 0; handle_index < dht->used; handle_index++) {
@@ -1234,7 +1234,7 @@ static MVMuint64 allocate_and_send_handle(MVMThreadContext *dtc, cmp_ctx_t *ctx,
 
 static MVMObject *find_handle_target(MVMThreadContext *dtc, MVMuint64 id) {
     MVMDebugServerHandleTable *dht = dtc->instance->debugserver->handle_table;
-    MVMuint32 index;
+    uint32_t index;
 
     for (index = 0; index < dht->used; index++) {
         if (dht->entries[index].id == id)
@@ -1764,7 +1764,7 @@ static int32_t create_context_or_code_obj_debug_handle(MVMThreadContext *dtc, cm
     {
 
     MVMFrame *cur_frame = to_do->body.tc->cur_frame;
-    MVMuint32 frame_idx;
+    uint32_t frame_idx;
 
     for (frame_idx = 0;
             cur_frame && frame_idx < argument->frame_number;
@@ -1898,7 +1898,7 @@ static int32_t request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
     }
 
     static_info = frame->static_info;
-    MVMuint32 num_lexicals = static_info->body.num_lexicals;
+    uint32_t num_lexicals = static_info->body.num_lexicals;
     debug_locals = static_info->body.instrumentation
         ? &static_info->body.instrumentation->debug_locals
         : NULL;
@@ -1911,7 +1911,7 @@ static int32_t request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
             while (!MVM_str_hash_at_end(dtc, debug_locals, iterator)) {
                 MVMStaticFrameDebugLocal *debug_entry
                     = MVM_str_hash_current_nocheck(dtc, debug_locals, iterator);
-                MVMuint32 idx = MVM_get_lexical_by_name(dtc, static_info, debug_entry->hash_handle.key);
+                uint32_t idx = MVM_get_lexical_by_name(dtc, static_info, debug_entry->hash_handle.key);
                 if (idx != MVM_INDEX_HASH_NOT_FOUND)
                     lexcount++;
                 iterator = MVM_str_hash_next_nocheck(dtc, debug_locals, iterator);
@@ -1932,7 +1932,7 @@ static int32_t request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
 
         MVMString **lexical_names_list = static_info->body.lexical_names_list;
 
-        for (MVMuint32 j = 0; j < num_lexicals; j++) {
+        for (uint32_t j = 0; j < num_lexicals; j++) {
             MVMString *name = lexical_names_list[j];
             MVMuint16 lextype = static_info->body.lexical_types[j];
             MVMRegister *result = &frame->env[j];
@@ -1968,7 +1968,7 @@ static int32_t request_context_lexicals(MVMThreadContext *dtc, cmp_ctx_t *ctx, r
             while (!MVM_str_hash_at_end(dtc, debug_locals, iterator)) {
                 MVMStaticFrameDebugLocal *debug_entry
                     = MVM_str_hash_current_nocheck(dtc, debug_locals, iterator);
-                MVMuint32 idx = MVM_get_lexical_by_name(dtc, static_info, debug_entry->hash_handle.key);
+                uint32_t idx = MVM_get_lexical_by_name(dtc, static_info, debug_entry->hash_handle.key);
                 if (idx != MVM_INDEX_HASH_NOT_FOUND) {
                     char *c_key_name = MVM_string_utf8_encode_C_string(dtc, lexical_names_list[idx]);
                     MVMRegister *result = &frame->work[debug_entry->local_idx];
@@ -2049,7 +2049,7 @@ static int32_t request_object_attributes(MVMThreadContext *dtc, cmp_ctx_t *ctx, 
                 MVMP6opaqueNameMap *cur_map_entry = name_to_index_mapping;
 
                 while (cur_map_entry->class_key != NULL) {
-                    MVMuint32 i;
+                    uint32_t i;
                     MVMint64 slot;
                     char *class_name = MVM_6model_get_stable_debug_name(dtc, cur_map_entry->class_key->st);
 
@@ -2230,7 +2230,7 @@ static int32_t request_object_metadata(MVMThreadContext *dtc, cmp_ctx_t *ctx, re
         : dtc->instance->VMNull;
 
     MVMint64 slots = 2; /* Always have the repr name and debug name */
-    MVMuint32 repr_id;
+    uint32_t repr_id;
 
     if (MVM_is_null(dtc, target)) {
         return 1;
@@ -2789,7 +2789,7 @@ static bool is_valid_num(cmp_object_t *obj, MVMnum64 *result) {
 #define CHECK(operation, message) do { if(!(operation)) { data->parse_fail = 1; data->parse_fail_message = (message); if (tc->instance->debugserver->debugspam_protocol) fprintf(stderr, "CMP error: %s; %s\n", cmp_strerror(ctx), message); return 0; } } while(0)
 #define FIELD_FOUND(field, duplicated_message) do { if(data->fields_set & (field)) { data->parse_fail = 1; data->parse_fail_message = duplicated_message;  return 0; }; field_to_set = (field); } while (0)
 
-static MVMint8 skip_all_read_data(cmp_ctx_t *ctx, MVMuint32 size) {
+static MVMint8 skip_all_read_data(cmp_ctx_t *ctx, uint32_t size) {
     char dump[1024];
 
     while (size > 1024) {
@@ -2806,8 +2806,8 @@ static MVMint8 skip_all_read_data(cmp_ctx_t *ctx, MVMuint32 size) {
 
 static MVMint8 skip_whole_object(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *data) {
     cmp_object_t obj;
-    MVMuint32 obj_size = 0;
-    MVMuint32 index;
+    uint32_t obj_size = 0;
+    uint32_t index;
 
     CHECK(cmp_read_object(ctx, &obj), "couldn't skip object from unknown key");
 
@@ -2880,8 +2880,8 @@ static MVMint8 skip_whole_object(MVMThreadContext *tc, cmp_ctx_t *ctx, request_d
 }
 
 static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_data *data) {
-    MVMuint32 map_size = 0;
-    MVMuint32 i;
+    uint32_t map_size = 0;
+    uint32_t i;
     cmp_object_t obj;
 
     memset(data, 0, sizeof(request_data));
@@ -2904,7 +2904,7 @@ static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_d
 
     for (i = 0; i < map_size; i++) {
         char key_str[16];
-        MVMuint32 str_size = 16;
+        uint32_t str_size = 16;
 
         fields_set field_to_set = 0;
         int32_t   type_to_parse = 0;
@@ -3060,7 +3060,7 @@ static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_d
             data->arguments = MVM_malloc(arraysize * sizeof(argument_data));
             for (index = 0; index < arraysize; index++) {
                 char key_str[16];
-                MVMuint32 str_size = 15;
+                uint32_t str_size = 15;
                 uint32_t map_size;
                 uint32_t map_index;
 
@@ -3142,7 +3142,7 @@ static int32_t parse_message_map(MVMThreadContext *tc, cmp_ctx_t *ctx, request_d
                             kind = MVM_reg_num64;
                         }
                         else if (object.type == CMP_TYPE_STR32 || object.type == CMP_TYPE_STR16 || object.type == CMP_TYPE_STR8 || object.type == CMP_TYPE_FIXSTR) {
-                            MVMuint32 len = object.as.str_size;;
+                            uint32_t len = object.as.str_size;;
                             char *string_target;
                             string_target = MVM_calloc(len + 1, 1);
 
@@ -3434,7 +3434,7 @@ static void debugserver_worker(MVMThreadContext *tc, MVMArgs arg_info) {
         exit(1); \
     } \
 } while (0)
-MVM_PUBLIC void MVM_debugserver_init(MVMThreadContext *tc, MVMuint32 port) {
+MVM_PUBLIC void MVM_debugserver_init(MVMThreadContext *tc, uint32_t port) {
     MVMInstance *vm = tc->instance;
     MVMDebugServerData *debugserver = MVM_calloc(1, sizeof(MVMDebugServerData));
     MVMObject *worker_entry_point;
@@ -3487,7 +3487,7 @@ MVM_PUBLIC void MVM_debugserver_mark_handles(MVMThreadContext *tc, MVMGCWorklist
     MVMInstance *vm = tc->instance;
     if (vm->debugserver) {
         MVMDebugServerHandleTable *table = vm->debugserver->handle_table;
-        MVMuint32 idx;
+        uint32_t idx;
 
         if (table == NULL)
             return;

@@ -24,8 +24,8 @@ void MVM_ptr_hash_demolish(MVMThreadContext *tc, MVMPtrHashTable *hashtable) {
 
 MVM_STATIC_INLINE struct MVMPtrHashTableControl *hash_allocate_common(MVMThreadContext *tc,
                                                                       MVMuint8 official_size_log2) {
-    MVMuint32 official_size = 1 << (MVMuint32)official_size_log2;
-    MVMuint32 max_items = official_size * MVM_PTR_HASH_LOAD_FACTOR;
+    uint32_t official_size = 1 << (uint32_t)official_size_log2;
+    uint32_t max_items = official_size * MVM_PTR_HASH_LOAD_FACTOR;
     MVMuint8 max_probe_distance_limit;
     if (MVM_HASH_MAX_PROBE_DISTANCE < max_items) {
         max_probe_distance_limit = MVM_HASH_MAX_PROBE_DISTANCE;
@@ -88,7 +88,7 @@ MVM_STATIC_INLINE struct MVMPtrHashEntry *hash_insert_internal(MVMThreadContext 
                 MVMuint8 *find_me_a_gap = ls.metadata;
                 MVMuint8 old_probe_distance = *ls.metadata;
                 do {
-                    MVMuint32 new_probe_distance = ls.metadata_increment + old_probe_distance;
+                    uint32_t new_probe_distance = ls.metadata_increment + old_probe_distance;
                     if (new_probe_distance >> ls.probe_distance_shift == ls.max_probe_distance) {
                         /* Optimisation from Martin Ankerl's implementation:
                            setting this to zero forces a resize on any insert,
@@ -102,7 +102,7 @@ MVM_STATIC_INLINE struct MVMPtrHashEntry *hash_insert_internal(MVMThreadContext 
                     *find_me_a_gap = new_probe_distance;
                 } while (old_probe_distance);
 
-                MVMuint32 entries_to_move = find_me_a_gap - ls.metadata;
+                uint32_t entries_to_move = find_me_a_gap - ls.metadata;
                 size_t size_to_move = (size_t) ls.entry_size * entries_to_move;
                 /* When we had entries *ascending* this was
                  * memmove(entry_raw + sizeof(struct MVMPtrHashEntry), entry_raw,
@@ -165,9 +165,9 @@ static struct MVMPtrHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
                                                       struct MVMPtrHashTableControl *control) {
     /* control->max_items may have been set to 0 to trigger a call into this
      * function. */
-    MVMuint32 max_items = MVM_ptr_hash_max_items(control);
-    MVMuint32 max_probe_distance = control->max_probe_distance;
-    MVMuint32 max_probe_distance_limit = control->max_probe_distance_limit;
+    uint32_t max_items = MVM_ptr_hash_max_items(control);
+    uint32_t max_probe_distance = control->max_probe_distance;
+    uint32_t max_probe_distance_limit = control->max_probe_distance_limit;
 
     /* We can hit both the probe limit and the max items on the same insertion.
      * In which case, upping the probe limit isn't going to save us :-)
@@ -177,13 +177,13 @@ static struct MVMPtrHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
     if (control->cur_items < max_items
         && max_probe_distance < max_probe_distance_limit) {
         /* We hit the probe limit, but not the max items count. */
-        MVMuint32 new_probe_distance = 1 + 2 * max_probe_distance;
+        uint32_t new_probe_distance = 1 + 2 * max_probe_distance;
         if (new_probe_distance > max_probe_distance_limit) {
             new_probe_distance = max_probe_distance_limit;
         }
 
         MVMuint8 *metadata = MVM_ptr_hash_metadata(control);
-        MVMuint32 in_use_items = MVM_ptr_hash_official_size(control) + max_probe_distance;
+        uint32_t in_use_items = MVM_ptr_hash_official_size(control) + max_probe_distance;
         /* not `in_use_items + 1` because because we don't need to shift the
          * sentinel. */
         size_t metadata_size = MVM_hash_round_size_up(in_use_items);
@@ -209,7 +209,7 @@ static struct MVMPtrHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
         return NULL;
     }
 
-    MVMuint32 entries_in_use = MVM_ptr_hash_official_size(control) + control->max_probe_distance - 1;
+    uint32_t entries_in_use = MVM_ptr_hash_official_size(control) + control->max_probe_distance - 1;
     MVMuint8 *entry_raw_orig = MVM_ptr_hash_entries(control);
     MVMuint8 *metadata_orig = MVM_ptr_hash_metadata(control);
 
@@ -358,7 +358,7 @@ uintptr_t MVM_ptr_hash_fetch_and_delete(MVMThreadContext *tc,
                     /* Unlike MVMStrHashTable, resetting this here is merely an
                      * optimisation (to avoid a doubling), as we don't have a
                      * "control structure only" special case allocation. */
-                    MVMuint32 official_size = 1 << (MVMuint32)control->official_size_log2;
+                    uint32_t official_size = 1 << (uint32_t)control->official_size_log2;
                     control->max_items = official_size * MVM_PTR_HASH_LOAD_FACTOR;
                 }
 

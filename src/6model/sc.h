@@ -37,7 +37,7 @@ MVM_STATIC_INLINE MVMObject * MVM_sc_get_sc_object(MVMThreadContext *tc, MVMComp
 }
 void MVM_sc_disclaim(MVMThreadContext *tc, MVMSerializationContext *sc);
 
-MVM_STATIC_INLINE MVMuint32 MVM_sc_get_idx_of_sc(MVMCollectable *col) {
+MVM_STATIC_INLINE uint32_t MVM_sc_get_idx_of_sc(MVMCollectable *col) {
     assert(!(col->flags2 & MVM_CF_FORWARDER_VALID));
 #ifdef MVM_USE_OVERFLOW_SERIALIZATION_INDEX
     if (col->flags1 & MVM_CF_SERIALZATION_INDEX_ALLOCATED)
@@ -46,7 +46,7 @@ MVM_STATIC_INLINE MVMuint32 MVM_sc_get_idx_of_sc(MVMCollectable *col) {
     return col->sc_forward_u.sc.sc_idx;
 }
 
-MVM_STATIC_INLINE MVMuint32 MVM_sc_get_idx_in_sc(MVMCollectable *col) {
+MVM_STATIC_INLINE uint32_t MVM_sc_get_idx_in_sc(MVMCollectable *col) {
     assert(!(col->flags2 & MVM_CF_FORWARDER_VALID));
 #ifdef MVM_USE_OVERFLOW_SERIALIZATION_INDEX
     if (col->flags1 & MVM_CF_SERIALZATION_INDEX_ALLOCATED)
@@ -57,7 +57,7 @@ MVM_STATIC_INLINE MVMuint32 MVM_sc_get_idx_in_sc(MVMCollectable *col) {
     return col->sc_forward_u.sc.idx;
 }
 
-MVM_STATIC_INLINE void MVM_sc_set_idx_in_sc(MVMCollectable *col, MVMuint32 i) {
+MVM_STATIC_INLINE void MVM_sc_set_idx_in_sc(MVMCollectable *col, uint32_t i) {
     assert(!(col->flags2 & MVM_CF_FORWARDER_VALID));
 #ifdef MVM_USE_OVERFLOW_SERIALIZATION_INDEX
     if (col->flags1 & MVM_CF_SERIALZATION_INDEX_ALLOCATED) {
@@ -78,10 +78,10 @@ MVM_STATIC_INLINE void MVM_sc_set_idx_in_sc(MVMCollectable *col, MVMuint32 i) {
 
 /* Gets a collectable's SC. */
 MVM_STATIC_INLINE MVMSerializationContext * MVM_sc_get_collectable_sc(MVMThreadContext *tc, MVMCollectable *col) {
-    MVMuint32 sc_idx;
+    uint32_t sc_idx;
     assert(!(col->flags2 & MVM_CF_FORWARDER_VALID));
     sc_idx = MVM_sc_get_idx_of_sc(col);
-    assert(sc_idx != ~(MVMuint32)0);
+    assert(sc_idx != ~(uint32_t)0);
     return sc_idx > 0 ? tc->instance->all_scs[sc_idx]->sc : NULL;
 }
 
@@ -162,7 +162,7 @@ MVM_STATIC_INLINE MVMuint64 MVM_sc_get_object_count(MVMThreadContext *tc, MVMSer
 
 /* Given an SC and an object, push it onto the SC. */
 MVM_STATIC_INLINE void MVM_sc_push_object(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *obj) {
-    MVMuint32 idx = sc->body->num_objects;
+    uint32_t idx = sc->body->num_objects;
     MVM_sc_set_object(tc, sc, idx, obj);
     if (MVM_sc_get_idx_of_sc(&obj->header) == sc->body->sc_idx)
         MVM_sc_set_idx_in_sc(&obj->header, idx);
@@ -176,7 +176,7 @@ void MVM_SC_WB_OBJ(MVMThreadContext *tc, MVMObject *obj);
 
 MVM_STATIC_INLINE void MVM_SC_WB_ST(MVMThreadContext *tc, MVMSTable *st) {
     assert(!(st->header.flags2 & MVM_CF_FORWARDER_VALID));
-    assert(MVM_sc_get_idx_of_sc(&st->header) != ~(MVMuint32)0);
+    assert(MVM_sc_get_idx_of_sc(&st->header) != ~(uint32_t)0);
     if (MVM_sc_get_idx_of_sc(&st->header) > 0)
         MVM_sc_wb_hit_st(tc, st);
 }

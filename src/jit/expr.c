@@ -265,7 +265,7 @@ static int32_t MVM_jit_expr_add_const(MVMThreadContext *tc, MVMJitExprTree *tree
     case MVM_operand_str:
         /* string index really */
         constant = opr.lit_str_idx;
-        size = sizeof(MVMuint32);
+        size = sizeof(uint32_t);
         break;
     case MVM_operand_ins:
         operator = MVM_JIT_LABEL;
@@ -282,7 +282,7 @@ static int32_t MVM_jit_expr_add_const(MVMThreadContext *tc, MVMJitExprTree *tree
         break;
     case MVM_operand_uint32:
         constant = opr.lit_ui32;
-        size = sizeof(MVMuint32);
+        size = sizeof(uint32_t);
         break;
     default:
         MVM_oops(tc, "Can't add constant for operand type %d\n", (type & MVM_operand_type_mask) >> 3);
@@ -478,7 +478,7 @@ static void analyze_node(MVMThreadContext *tc, MVMJitTreeTraverser *traverser,
     int32_t         *args = MVM_JIT_EXPR_ARGS(tree, node);
     int32_t     cast_mode = MVM_JIT_NOOP;
     MVMint8      node_type = MVM_JIT_EXPR_INFO(tree, node)->type;
-    MVMuint32 node_size = 0;
+    uint32_t node_size = 0;
     int32_t i;
 
 
@@ -948,7 +948,7 @@ static void walk_tree(MVMThreadContext *tc, MVMJitExprTree *tree,
 /* TODO specify revisiting policy */
 void MVM_jit_expr_tree_traverse(MVMThreadContext *tc, MVMJitExprTree *tree,
                                 MVMJitTreeTraverser *traverser) {
-    MVMuint32 i;
+    uint32_t i;
     MVM_VECTOR_INIT(traverser->visits, tree->nodes_num);
     for (i = 0; i < tree->roots_num; i++) {
         /* TODO deal with nodes with multiple entries */

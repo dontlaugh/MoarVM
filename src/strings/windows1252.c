@@ -338,17 +338,17 @@ static MVMuint8 windows1251_cp_to_char(int32_t codepoint) {
 
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-MVMuint32 MVM_string_windows125X_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                         const MVMuint32 *stopper_chars,
+uint32_t MVM_string_windows125X_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                         const uint32_t *stopper_chars,
                                          MVMDecodeStreamSeparators *seps,
                                          const MVMuint16 *codetable) {
-    MVMuint32 count = 0, total = 0;
-    MVMuint32 bufsize;
+    uint32_t count = 0, total = 0;
+    uint32_t bufsize;
     MVMGrapheme32 *buffer = NULL;
     MVMDecodeStreamBytes *cur_bytes = NULL;
     MVMDecodeStreamBytes *last_accept_bytes = ds->bytes_head;
     int32_t last_accept_pos, last_was_cr;
-    MVMuint32 reached_stopper;
+    uint32_t reached_stopper;
     MVMStringIndex repl_length = ds->replacement ? MVM_string_graphs(tc, ds->replacement) : 0;
     MVMStringIndex repl_pos = 0;
 
@@ -461,15 +461,15 @@ MVMuint32 MVM_string_windows125X_decodestream(MVMThreadContext *tc, MVMDecodeStr
 }
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-MVMuint32 MVM_string_windows1252_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                         const MVMuint32 *stopper_chars,
+uint32_t MVM_string_windows1252_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                         const uint32_t *stopper_chars,
                                          MVMDecodeStreamSeparators *seps) {
     return MVM_string_windows125X_decodestream(tc, ds, stopper_chars, seps, windows1252_codepoints);
 }
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-MVMuint32 MVM_string_windows1251_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                         const MVMuint32 *stopper_chars,
+uint32_t MVM_string_windows1251_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                         const uint32_t *stopper_chars,
                                          MVMDecodeStreamSeparators *seps) {
     return MVM_string_windows125X_decodestream(tc, ds, stopper_chars, seps, windows1251_codepoints);
 }
@@ -568,9 +568,9 @@ char * MVM_string_windows125X_encode_substr(MVMThreadContext *tc, MVMString *str
         int32_t translate_newlines, MVMuint8(*cp_to_char)(int32_t), MVMint64 config) {
     /* Windows-1252 and Windows-1251 are single byte encodings, so each grapheme
      * will just become a single byte. */
-    MVMuint32 startu = (MVMuint32)start;
+    uint32_t startu = (uint32_t)start;
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
-    MVMuint32 lengthu = (MVMuint32)(length == -1 ? strgraphs - startu : length);
+    uint32_t lengthu = (uint32_t)(length == -1 ? strgraphs - startu : length);
     MVMuint8 *result  = NULL;
     size_t result_alloc;
     MVMuint8 *repl_bytes = NULL;
@@ -596,7 +596,7 @@ char * MVM_string_windows125X_encode_substr(MVMThreadContext *tc, MVMString *str
             *output_size = lengthu;
     }
     else {
-        MVMuint32 pos = 0;
+        uint32_t pos = 0;
         MVMCodepointIter ci;
         MVM_string_ci_init(tc, &ci, str, translate_newlines, 0);
         while (MVM_string_ci_has_more(tc, &ci)) {

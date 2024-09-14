@@ -68,6 +68,6 @@ struct MVMUniHashEntry {
     /* I figure that we can can store one 32 bit "thing" for "free" on 64 bit
      * architectures (alignment padding), and likely the hash is more likely
      * to vary (and hence speed up key equality testing) than key length. */
-    MVMuint32 hash_val;
+    uint32_t hash_val;
     int32_t value;
 };

@@ -829,7 +829,7 @@ MVM_PUBLIC MVMint64 MVM_repr_attribute_inited(MVMThreadContext *tc, MVMObject *o
         type, name, MVM_NO_HINT);
 }
 
-MVM_PUBLIC MVMint64    MVM_repr_compare_repr_id(MVMThreadContext *tc, MVMObject *object, MVMuint32 REPRId) {
+MVM_PUBLIC MVMint64    MVM_repr_compare_repr_id(MVMThreadContext *tc, MVMObject *object, uint32_t REPRId) {
     return object && REPR(object)->ID == REPRId ? 1 : 0;
 }
 

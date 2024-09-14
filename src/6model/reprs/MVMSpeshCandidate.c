@@ -25,7 +25,7 @@ const MVMREPROps * MVMSpeshCandidate_initialize(MVMThreadContext *tc) {
 static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
     MVMSpeshCandidateBody *body = (MVMSpeshCandidateBody *)data;
 
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < body->num_spesh_slots; i++)
         MVM_profile_heap_add_collectable_rel_const_cstr(tc, ss,
             (MVMCollectable *)body->spesh_slots[i],
@@ -44,7 +44,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 /* Called by the VM to mark any GCable items. */
 static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMSpeshCandidateBody *candidate = (MVMSpeshCandidateBody *)data;
-    MVMuint32 i;
+    uint32_t i;
     if (candidate->type_tuple) {
         for (i = 0; i < candidate->cs->flag_count; i++) {
             MVM_gc_worklist_add(tc, worklist, &(candidate->type_tuple[i].type));
@@ -69,7 +69,7 @@ static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
     MVM_free(candidate->body.deopts);
     MVM_spesh_pea_destroy_deopt_info(tc, &(candidate->body.deopt_pea));
     MVM_free(candidate->body.inlines);
-    for (MVMuint32 i = 0; i < candidate->body.num_resume_inits; i++)
+    for (uint32_t i = 0; i < candidate->body.num_resume_inits; i++)
         MVM_free(candidate->body.resume_inits[i].init_registers);
     MVM_free(candidate->body.resume_inits);
     MVM_free(candidate->body.local_types);
@@ -175,7 +175,7 @@ static const MVMREPROps SpeshCandidate_this_repr = {
  * lexicals. */
 static void calculate_work_env_sizes(MVMThreadContext *tc, MVMStaticFrame *sf,
                                      MVMSpeshCandidate *c) {
-    MVMuint32 jit_spill_size;
+    uint32_t jit_spill_size;
 
     jit_spill_size = (c->body.jitcode ? c->body.jitcode->spill_size: 0);
 
@@ -393,8 +393,8 @@ void MVM_spesh_candidate_add(MVMThreadContext *tc, MVMSpeshPlanned *p) {
 void MVM_spesh_candidate_discard_existing(MVMThreadContext *tc, MVMStaticFrame *sf) {
     MVMStaticFrameSpesh *spesh = sf->body.spesh;
     if (spesh) {
-        MVMuint32 num_candidates = spesh->body.num_spesh_candidates;
-        MVMuint32 i;
+        uint32_t num_candidates = spesh->body.num_spesh_candidates;
+        uint32_t i;
         for (i = 0; i < num_candidates; i++)
             spesh->body.spesh_candidates[i]->body.discarded = 1;
         MVM_spesh_arg_guard_discard(tc, sf);

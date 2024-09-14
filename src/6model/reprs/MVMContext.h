@@ -13,7 +13,7 @@ struct MVMContextBody {
     MVMuint8 *traversals;
 
     /* The number of traversal operations. */
-    MVMuint32 num_traversals;
+    uint32_t num_traversals;
 
     /* Is traversal (moving to caller or outer contexts) allowed? */
     MVMuint8 traversable;

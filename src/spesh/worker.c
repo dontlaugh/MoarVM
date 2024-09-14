@@ -87,8 +87,8 @@ static void worker(MVMThreadContext *tc, MVMArgs arg_info) {
                 }
                 MVMROOT(tc, sl) {
                     MVMThreadContext *stc;
-                    MVMuint32 i;
-                    MVMuint32 n;
+                    uint32_t i;
+                    uint32_t n;
                     MVMuint64 newly_seen;
                     MVMuint64 updated;
 

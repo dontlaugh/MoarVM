@@ -1,8 +1,8 @@
 #include "moar.h"
 
 typedef struct {
-    MVMuint32 items;
-    MVMuint32 alloc;
+    uint32_t items;
+    uint32_t alloc;
 
     MVMProfileCallNode **list;
 } NodeWorklist;
@@ -483,7 +483,7 @@ static void bind_extra_info(MVMThreadContext *tc, MVMObject *storage, MVMString 
 
 static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds, const MVMProfileCallNode *pcn, MVMObject *types_array);
 static MVMObject * dump_call_graph_node_loop(ProfTcPdsStruct *tcpds, const MVMProfileCallNode *pcn) {
-    MVMuint32 i;
+    uint32_t i;
     MVMuint64 exclusive_time = pcn->total_time;
     MVMuint64 overhead       = pcn->total_entries * tcpds->tc->instance->profiling_overhead;
     MVMObject *node_hash;
@@ -547,7 +547,7 @@ static void add_type_to_types_array(MVMThreadContext *tc, ProfDumpStrs *pds, MVM
 static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
                                         const MVMProfileCallNode *pcn, MVMObject *types_array) {
     MVMObject *node_hash  = new_hash(tc);
-    MVMuint32  i;
+    uint32_t  i;
     MVMuint64 absolute_start_time;
 
     /* Let's see if we're dealing with a native call or a regular moar call */
@@ -556,7 +556,7 @@ static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
         /* Try to resolve the code filename and line number. */
         MVMBytecodeAnnotation *annot = MVM_bytecode_resolve_annotation(tc,
             &(sf->body), 0);
-        MVMuint32 fshi = annot ? (int32_t)annot->filename_string_heap_index : 0;
+        uint32_t fshi = annot ? (int32_t)annot->filename_string_heap_index : 0;
 
         /* Add name of code object. */
         MVM_repr_bind_key_o(tc, node_hash, pds->name,
@@ -582,14 +582,14 @@ static MVMObject * dump_call_graph_node(MVMThreadContext *tc, ProfDumpStrs *pds,
 
         /* Add data about cache entries. */
         MVMDispInlineCache *ic = &(sf->body.inline_cache);
-        MVMuint32 monomorphic = 0;
-        MVMuint32 polymorphic = 0;
-        MVMuint32 megamorphic = 0;
-        MVMuint32 megamorphic_blowout = 0;
+        uint32_t monomorphic = 0;
+        uint32_t polymorphic = 0;
+        uint32_t megamorphic = 0;
+        uint32_t megamorphic_blowout = 0;
         for (i = 0; i < ic->num_entries; i++) {
             /* Skip entries that don't correspond to a bytecode operation. */
             MVMDispInlineCacheEntry *entry = ic->entries[i];
-            MVMuint32 count = 0;
+            uint32_t count = 0;
             switch (MVM_disp_inline_cache_try_get_kind(tc, entry)) {
                 case MVM_INLINE_CACHE_KIND_MONOMORPHIC_DISPATCH:
                 case MVM_INLINE_CACHE_KIND_MONOMORPHIC_DISPATCH_FLATTENING:
@@ -726,7 +726,7 @@ static MVMObject * dump_thread_data(MVMThreadContext *tc, ProfDumpStrs *pds,
     MVMObject *thread_hash = new_hash(tc);
     MVMObject *thread_gcs  = new_array(tc);
     MVMuint64 absolute_start_time;
-    MVMuint32  i;
+    uint32_t  i;
 
     ProfTcPdsStruct tcpds;
 
@@ -752,7 +752,7 @@ static MVMObject * dump_thread_data(MVMThreadContext *tc, ProfDumpStrs *pds,
 
     /* Add GCs. */
     for (i = 0; i < ptd->num_gcs; i++) {
-        MVMuint32 tid;
+        uint32_t tid;
 
         MVMObject *gc_hash = new_hash(tc);
 
@@ -967,10 +967,10 @@ MVMObject * MVM_profile_instrumented_end(MVMThreadContext *tc) {
 
 
 static void mark_gc_entries(MVMThreadContext *tc, MVMProfileThreadData *ptd, MVMGCWorklist *worklist) {
-    MVMuint32 gci;
+    uint32_t gci;
     for (gci = 0; gci < ptd->num_gcs; gci++) {
         MVMProfileGC *gc = &(ptd->gcs[gci]);
-        MVMuint32 ti;
+        uint32_t ti;
         for (ti = 0; ti < gc->num_dealloc; ti++) {
             MVM_gc_worklist_add(tc, worklist, &(gc->deallocs[ti].type));
         }
@@ -979,7 +979,7 @@ static void mark_gc_entries(MVMThreadContext *tc, MVMProfileThreadData *ptd, MVM
 void MVM_profile_instrumented_mark_data(MVMThreadContext *tc, MVMGCWorklist *worklist) {
     if (tc->prof_data) {
         MVMProfileThreadData *ptd = tc->prof_data;
-        MVMuint32 index;
+        uint32_t index;
 
         for (index = 0; index < MVM_VECTOR_ELEMS(ptd->staticframe_array); index++)
             MVM_gc_worklist_add(tc, worklist, &(ptd->staticframe_array[index]));
@@ -993,7 +993,7 @@ void MVM_profile_instrumented_mark_data(MVMThreadContext *tc, MVMGCWorklist *wor
 }
 
 static void MVM_profile_free_nodes(MVMThreadContext *tc, MVMProfileCallNode *node, MVMProfileCallNode ***seen, size_t *seen_num, size_t *seen_alloc) {
-    for (MVMuint32 i = 0; i < node->num_succ; i++) {
+    for (uint32_t i = 0; i < node->num_succ; i++) {
         int found = 0;
         for (size_t j = 0; j < *seen_num; j++)
             if (node->succ[i] == (*seen)[j]) {
@@ -1028,7 +1028,7 @@ void MVM_profile_instrumented_free_data(MVMThreadContext *tc) {
 
         MVM_VECTOR_DESTROY(ptd->staticframe_array);
         MVM_VECTOR_DESTROY(ptd->type_array);
-        for (MVMuint32 i = 0; i < ptd->num_gcs; i++)
+        for (uint32_t i = 0; i < ptd->num_gcs; i++)
             MVM_free(ptd->gcs[i].deallocs);
         MVM_free(ptd->gcs);
         MVM_free(ptd);
@@ -1038,7 +1038,7 @@ void MVM_profile_instrumented_free_data(MVMThreadContext *tc) {
 
 static void dump_callgraph_node(MVMThreadContext *tc, MVMProfileCallNode *n, MVMuint16 depth) {
     MVMuint16 dc = depth;
-    MVMuint32 idx;
+    uint32_t idx;
     char *name = NULL;
 
     for (dc = depth; dc > 0; dc--) {

@@ -5,8 +5,8 @@
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
 #define MVM_UNI_HASH_LOAD_FACTOR 0.75
-MVM_STATIC_INLINE MVMuint32 MVM_uni_hash_official_size(const struct MVMUniHashTableControl *control) {
-    return 1 << (MVMuint32)control->official_size_log2;
+MVM_STATIC_INLINE uint32_t MVM_uni_hash_official_size(const struct MVMUniHashTableControl *control) {
+    return 1 << (uint32_t)control->official_size_log2;
 }
 /* -1 because...
  * probe distance of 1 is the correct bucket.
@@ -15,10 +15,10 @@ MVM_STATIC_INLINE MVMuint32 MVM_uni_hash_official_size(const struct MVMUniHashTa
  * probe distance of 2 is the first extra bucket beyond the official allocation
  * probe distance of 255 is the 254th beyond the official allocation.
  */
-MVM_STATIC_INLINE MVMuint32 MVM_uni_hash_allocated_items(const struct MVMUniHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_uni_hash_allocated_items(const struct MVMUniHashTableControl *control) {
     return MVM_uni_hash_official_size(control) + control->max_probe_distance_limit - 1;
 }
-MVM_STATIC_INLINE MVMuint32 MVM_uni_hash_max_items(const struct MVMUniHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_uni_hash_max_items(const struct MVMUniHashTableControl *control) {
     return MVM_uni_hash_official_size(control) * MVM_UNI_HASH_LOAD_FACTOR;
 }
 MVM_STATIC_INLINE MVMuint8 *MVM_uni_hash_metadata(const struct MVMUniHashTableControl *control) {
@@ -35,7 +35,7 @@ void MVM_uni_hash_demolish(MVMThreadContext *tc, MVMUniHashTable *hashtable);
 
 void MVM_uni_hash_build(MVMThreadContext *tc,
                         struct MVMUniHashTable *hashtable,
-                        MVMuint32 entries);
+                        uint32_t entries);
 
 MVM_STATIC_INLINE int MVM_uni_hash_is_empty(MVMThreadContext *tc,
                                             MVMUniHashTable *hashtable) {
@@ -46,9 +46,9 @@ MVM_STATIC_INLINE int MVM_uni_hash_is_empty(MVMThreadContext *tc,
 /* Unicode names (etc) are not under the control of an external attacker [:-)]
  * so we don't need a cryptographic hash function here. I'm assuming that
  * 32 bit FNV1a is good enough and fast enough to be useful. */
-MVM_STATIC_INLINE MVMuint32 MVM_uni_hash_code(const char *key, size_t len) {
+MVM_STATIC_INLINE uint32_t MVM_uni_hash_code(const char *key, size_t len) {
     const char *const end = key + len;
-    MVMuint32 hash = 0x811c9dc5;
+    uint32_t hash = 0x811c9dc5;
     while (key < end) {
         hash ^= *key++;
         hash *= 0x01000193;
@@ -60,7 +60,7 @@ MVM_STATIC_INLINE MVMuint32 MVM_uni_hash_code(const char *key, size_t len) {
 
 MVM_STATIC_INLINE struct MVM_hash_loop_state
 MVM_uni_hash_create_loop_state(struct MVMUniHashTableControl *control,
-                               MVMuint32 hash_val) {
+                               uint32_t hash_val) {
     struct MVM_hash_loop_state retval;
     retval.entry_size = sizeof(struct MVMUniHashEntry);
     retval.metadata_increment = 1 << control->metadata_hash_bits;
@@ -97,7 +97,7 @@ MVM_STATIC_INLINE struct MVMUniHashEntry *MVM_uni_hash_fetch(MVMThreadContext *t
     }
 
     struct MVMUniHashTableControl *control = hashtable->table;
-    MVMuint32 hash_val = MVM_uni_hash_code(key, strlen(key));
+    uint32_t hash_val = MVM_uni_hash_code(key, strlen(key));
     struct MVM_hash_loop_state ls = MVM_uni_hash_create_loop_state(control,
                                                                    hash_val);
 

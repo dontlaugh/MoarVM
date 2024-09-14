@@ -20,11 +20,11 @@ struct MVMDispInlineCache {
     MVMDispInlineCacheEntry **entries;
 
     /* The number of entries, used when we need to GC-walk them. */
-    MVMuint32 num_entries;
+    uint32_t num_entries;
 
     /* The bit shift we should do on the instruction address in order to
      * find an entry for a instruciton. */
-    MVMuint32 bit_shift;
+    uint32_t bit_shift;
 };
 
 /* We always invoke an action using the cache by calling a function pointer.
@@ -35,7 +35,7 @@ typedef int MVMDispInlineCacheRunGetLexStatic(MVMThreadContext *tc,
 typedef void MVMDispInlineCacheRunDispatch(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *seen,
         MVMString *id, MVMCallsite *cs, MVMuint16 *arg_indices,
-        MVMRegister *source, MVMStaticFrame *sf, MVMuint32 bytecode_offset);
+        MVMRegister *source, MVMStaticFrame *sf, uint32_t bytecode_offset);
 
 #define MVM_INLINE_CACHE_KIND_INITIAL 0
 #define MVM_INLINE_CACHE_KIND_INITIAL_FLATTENING 1
@@ -76,8 +76,8 @@ struct MVMDispInlineCacheEntryMonomorphicDispatchFlattening {
 struct MVMDispInlineCacheEntryPolymorphicDispatch {
     MVMDispInlineCacheEntry base;
     MVMDispProgram **dps;
-    MVMuint32 num_dps;
-    MVMuint32 max_temporaries;
+    uint32_t num_dps;
+    uint32_t max_temporaries;
 };
 
 #define MVM_INLINE_CACHE_KIND_POLYMORPHIC_DISPATCH_FLATTENING 6
@@ -86,8 +86,8 @@ struct MVMDispInlineCacheEntryPolymorphicDispatchFlattening {
     MVMDispInlineCacheEntry base;
     MVMCallsite **flattened_css;
     MVMDispProgram **dps;
-    MVMuint32 num_dps; // Also the number of flattend callsites
-    MVMuint32 max_temporaries;
+    uint32_t num_dps; // Also the number of flattend callsites
+    uint32_t max_temporaries;
 };
 
 /* The maximum degree of polymorphism allowed at a given inline cache site. */
@@ -97,13 +97,13 @@ void MVM_disp_inline_cache_setup(MVMThreadContext *tc, MVMStaticFrame *sf);
 void MVM_disp_inline_cache_mark(MVMThreadContext *tc, MVMDispInlineCache *cache,
         MVMGCWorklist *worklist);
 MVMObject * MVM_disp_inline_cache_get_lex_resolution(MVMThreadContext *tc, MVMStaticFrame *sf,
-        MVMuint32 bytecode_offset);
-MVMuint32 MVM_disp_inline_cache_get_slot(MVMThreadContext *tc, MVMStaticFrame *sf,
-        MVMuint32 bytecode_offset);
-MVMuint32 MVM_disp_inline_cache_transition(MVMThreadContext *tc,
+        uint32_t bytecode_offset);
+uint32_t MVM_disp_inline_cache_get_slot(MVMThreadContext *tc, MVMStaticFrame *sf,
+        uint32_t bytecode_offset);
+uint32_t MVM_disp_inline_cache_transition(MVMThreadContext *tc,
         MVMDispInlineCacheEntry **entry_ptr, MVMDispInlineCacheEntry *entry,
         MVMStaticFrame *root, MVMDispDefinition *initial_disp,
         MVMCallsite *initial_cs, MVMDispProgram *dp);
 void MVM_disp_inline_cache_destroy(MVMThreadContext *tc, MVMDispInlineCache *cache);
-MVMuint32 MVM_disp_inline_cache_get_kind(MVMThreadContext *tc, MVMDispInlineCacheEntry *entry);
+uint32_t MVM_disp_inline_cache_get_kind(MVMThreadContext *tc, MVMDispInlineCacheEntry *entry);
 int32_t MVM_disp_inline_cache_try_get_kind(MVMThreadContext *tc, MVMDispInlineCacheEntry *entry);

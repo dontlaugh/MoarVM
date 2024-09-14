@@ -154,7 +154,7 @@ void MVM_code_location_out(MVMThreadContext *tc, MVMObject *code,
         MVMCodeBody          *body = &((MVMCode*)code)->body;
         MVMBytecodeAnnotation *ann = MVM_bytecode_resolve_annotation(tc, &body->sf->body, 0);
         MVMCompUnit            *cu = body->sf->body.cu;
-        MVMuint32          str_idx = ann ? ann->filename_string_heap_index : 0;
+        uint32_t          str_idx = ann ? ann->filename_string_heap_index : 0;
 
         *line_out = ann ? ann->line_number : 1;
         if (ann && str_idx < cu->body.num_strings) {

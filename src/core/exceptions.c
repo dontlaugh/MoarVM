@@ -79,8 +79,8 @@ typedef struct {
     int32_t         handler_out_of_dynamic_scope;
 } LocatedHandler;
 
-static int32_t handler_can_handle(MVMFrame *f, MVMFrameHandler *fh, MVMuint32 cat, MVMObject *payload) {
-    MVMuint32         category_mask = fh->category_mask;
+static int32_t handler_can_handle(MVMFrame *f, MVMFrameHandler *fh, uint32_t cat, MVMObject *payload) {
+    uint32_t         category_mask = fh->category_mask;
     MVMuint64       block_has_label = category_mask & MVM_EX_CAT_LABELED;
     MVMuint64           block_label = block_has_label ? (uintptr_t)(f->work[fh->label_reg].o) : 0;
     MVMuint64          thrown_label = payload ? (uintptr_t)payload : 0;
@@ -97,9 +97,9 @@ static int32_t handler_can_handle(MVMFrame *f, MVMFrameHandler *fh, MVMuint32 ca
  * concerned, then this just needs a scan of the table without any further
  * checks being needed. */
 static int32_t search_frame_handlers_dyn(MVMThreadContext *tc, MVMFrame *f,
-                                          MVMuint32 cat, MVMObject *payload,
+                                          uint32_t cat, MVMObject *payload,
                                           LocatedHandler *lh) {
-    MVMuint32  i;
+    uint32_t  i;
     if (f->spesh_cand && f->spesh_cand->body.jitcode && f->jit_entry_label) {
         MVMJitCode *jitcode = f->spesh_cand->body.jitcode;
         void *current_position = MVM_jit_code_get_current_position(tc, jitcode, f);
@@ -116,14 +116,14 @@ static int32_t search_frame_handlers_dyn(MVMThreadContext *tc, MVMFrame *f,
             }
         }
     } else {
-        MVMuint32 num_handlers = f->spesh_cand
+        uint32_t num_handlers = f->spesh_cand
             ? f->spesh_cand->body.num_handlers
             : f->static_info->body.num_handlers;
-        MVMuint32 pc;
+        uint32_t pc;
         if (f == tc->cur_frame)
-            pc = (MVMuint32)(*tc->interp_cur_op - *tc->interp_bytecode_start);
+            pc = (uint32_t)(*tc->interp_cur_op - *tc->interp_bytecode_start);
         else
-            pc = (MVMuint32)(f->return_address - MVM_frame_effective_bytecode(f));
+            pc = (uint32_t)(f->return_address - MVM_frame_effective_bytecode(f));
         for (i = 0; i < num_handlers; i++) {
             MVMFrameHandler  *fh = &(MVM_frame_effective_handlers(f)[i]);
             if (!handler_can_handle(f, fh, cat, payload))
@@ -167,13 +167,13 @@ static int32_t search_frame_handlers_dyn(MVMThreadContext *tc, MVMFrame *f,
  * frame's handlers, not anything it might have inlined into it.
  */
 static int32_t search_frame_handlers_lex(MVMThreadContext *tc, MVMFrame *f,
-                                          MVMuint32 cat, MVMObject *payload,
+                                          uint32_t cat, MVMObject *payload,
                                           LocatedHandler *lh,
-                                          MVMuint32 *skip_first_inlinee,
-                                          MVMuint32 skip_all_inlinees,
+                                          uint32_t *skip_first_inlinee,
+                                          uint32_t skip_all_inlinees,
                                           MVMFrame **next_outer) {
-    MVMuint32 i;
-    MVMuint32 skipping = *skip_first_inlinee;
+    uint32_t i;
+    uint32_t skipping = *skip_first_inlinee;
     MVMFrameHandler *fhs = MVM_frame_effective_handlers(f);
 
     /* When a LEAVE phaser is run during an unwind, there is no valid
@@ -229,14 +229,14 @@ static int32_t search_frame_handlers_lex(MVMThreadContext *tc, MVMFrame *f,
         }
     }
     else {
-        MVMuint32 num_handlers = f->spesh_cand
+        uint32_t num_handlers = f->spesh_cand
             ? f->spesh_cand->body.num_handlers
             : f->static_info->body.num_handlers;
-        MVMuint32 pc;
+        uint32_t pc;
         if (f == tc->cur_frame)
-            pc = (MVMuint32)(*tc->interp_cur_op - *tc->interp_bytecode_start);
+            pc = (uint32_t)(*tc->interp_cur_op - *tc->interp_bytecode_start);
         else
-            pc = (MVMuint32)(f->return_address - MVM_frame_effective_bytecode(f));
+            pc = (uint32_t)(f->return_address - MVM_frame_effective_bytecode(f));
         for (i = 0; i < num_handlers; i++) {
             MVMFrameHandler *fh = &(fhs[i]);
             if (skip_all_inlinees && fh->inlinee >= 0)
@@ -279,8 +279,8 @@ static int32_t search_frame_handlers_lex(MVMThreadContext *tc, MVMFrame *f,
 /* Searches for a handler of the specified category, relative to the given
  * starting frame, searching according to the chosen mode. */
 static LocatedHandler search_for_handler_from(MVMThreadContext *tc, MVMFrame *f,
-        MVMuint8 mode, MVMuint32 cat, MVMObject *payload) {
-    MVMuint32 skip_first_inlinee = 0;
+        MVMuint8 mode, uint32_t cat, MVMObject *payload) {
+    uint32_t skip_first_inlinee = 0;
     LocatedHandler lh;
     lh.frame = NULL;
     lh.handler = NULL;
@@ -349,7 +349,7 @@ static LocatedHandler search_for_handler_from(MVMThreadContext *tc, MVMFrame *f,
 static void unwind_after_handler(MVMThreadContext *tc, void *sr_data);
 static void cleanup_active_handler(MVMThreadContext *tc, void *sr_data);
 static void run_handler(MVMThreadContext *tc, LocatedHandler lh, MVMObject *ex_obj,
-                        MVMuint32 category, MVMObject *payload) {
+                        uint32_t category, MVMObject *payload) {
     switch (lh.handler->action) {
     case MVM_EX_ACTION_GOTO_WITH_PAYLOAD:
         if (payload)
@@ -430,7 +430,7 @@ static void run_handler(MVMThreadContext *tc, LocatedHandler lh, MVMObject *ex_o
 static void unwind_after_handler(MVMThreadContext *tc, void *sr_data) {
     MVMFrame     *frame;
     MVMException *exception;
-    MVMuint32     goto_offset;
+    uint32_t     goto_offset;
     MVMuint8     *abs_address;
     void         *jit_return_label;
 
@@ -489,11 +489,11 @@ char * MVM_exception_backtrace_line(MVMThreadContext *tc, MVMFrame *cur_frame,
      * we can update it if necessary, and the caller can cache it. */
     char *o = MVM_malloc(1024);
     MVMuint8 *cur_op = not_top ? cur_frame->return_address : throw_address;
-    MVMuint32 offset = cur_op - MVM_frame_effective_bytecode(cur_frame);
+    uint32_t offset = cur_op - MVM_frame_effective_bytecode(cur_frame);
     MVMBytecodeAnnotation *annot = MVM_bytecode_resolve_annotation(tc, &cur_frame->static_info->body,
                                         offset > 0 ? offset - 1 : 0);
 
-    MVMuint32 line_number = annot ? annot->line_number : 1;
+    uint32_t line_number = annot ? annot->line_number : 1;
     MVMuint16 string_heap_index = annot ? annot->filename_string_heap_index : 0;
     char *tmp1 = annot && string_heap_index < cur_frame->static_info->body.cu->body.num_strings
         ? MVM_string_utf8_encode_C_string(tc, MVM_cu_string(tc,
@@ -532,7 +532,7 @@ MVMObject * MVM_exception_backtrace(MVMThreadContext *tc, MVMObject *ex_obj) {
     MVMFrame *cur_frame;
     MVMSpeshFrameWalker fw;
     MVMObject *arr = NULL, *annotations = NULL, *row = NULL, *value = NULL;
-    MVMuint32 count = 0;
+    uint32_t count = 0;
     MVMString *k_file = NULL, *k_line = NULL, *k_sub = NULL, *k_anno = NULL;
     MVMuint8 *throw_address;
 
@@ -572,10 +572,10 @@ MVMObject * MVM_exception_backtrace(MVMThreadContext *tc, MVMObject *ex_obj) {
         do {
             cur_frame = MVM_spesh_frame_walker_current_frame(tc, &fw);
             MVMuint8             *cur_op = count ? cur_frame->return_address : throw_address;
-            MVMuint32             offset = cur_op - MVM_frame_effective_bytecode(cur_frame);
+            uint32_t             offset = cur_op - MVM_frame_effective_bytecode(cur_frame);
             MVMBytecodeAnnotation *annot = MVM_bytecode_resolve_annotation(tc, &cur_frame->static_info->body,
                                                 offset > 0 ? offset - 1 : 0);
-            MVMuint32             fshi   = annot ? (int32_t)annot->filename_string_heap_index : -1;
+            uint32_t             fshi   = annot ? (int32_t)annot->filename_string_heap_index : -1;
             MVMString      *filename_str;
 
             /* annotations hash will contain "file" and "line" */
@@ -631,7 +631,7 @@ MVMObject * MVM_exception_backtrace_strings(MVMThreadContext *tc, MVMObject *ex_
         cur_frame = ex->body.origin;
 
         MVMROOT2(tc, arr, cur_frame) {
-            MVMuint32 count = 0;
+            uint32_t count = 0;
             while (cur_frame != NULL) {
                 char *line = MVM_exception_backtrace_line(tc, cur_frame, count++,
                     ex->body.throw_address);
@@ -650,7 +650,7 @@ MVMObject * MVM_exception_backtrace_strings(MVMThreadContext *tc, MVMObject *ex_
 /* Dumps a backtrace relative to the current frame to stderr. */
 void MVM_dump_backtrace(MVMThreadContext *tc) {
     MVMFrame *cur_frame = tc->cur_frame;
-    MVMuint32 count = 0;
+    uint32_t count = 0;
     MVMROOT(tc, cur_frame) {
         while (cur_frame != NULL) {
             char *line = MVM_exception_backtrace_line(tc, cur_frame, count++,
@@ -663,7 +663,7 @@ void MVM_dump_backtrace(MVMThreadContext *tc) {
 }
 
 /* Panic over an unhandled exception throw by category. */
-static void panic_unhandled_cat(MVMThreadContext *tc, MVMuint32 cat) {
+static void panic_unhandled_cat(MVMThreadContext *tc, uint32_t cat) {
     /* If it's a control exception, try promoting it to a catch one. */
     if (cat != MVM_EX_CAT_CATCH) {
         MVM_exception_throw_adhoc(tc, "No exception handler located for %s",
@@ -736,7 +736,7 @@ static void invoke_lexical_handler_hll_error(MVMThreadContext *tc, MVMint64 cat,
  * be put into resume_result. Leaves the interpreter in a state where it
  * will next run the instruction of the handler. If there is no handler,
  * it will panic and exit with a backtrace. */
-void MVM_exception_throwcat(MVMThreadContext *tc, MVMuint8 mode, MVMuint32 cat, MVMRegister *resume_result) {
+void MVM_exception_throwcat(MVMThreadContext *tc, MVMuint8 mode, uint32_t cat, MVMRegister *resume_result) {
     LocatedHandler lh = search_for_handler_from(tc, tc->cur_frame, mode, cat, NULL);
     if (lh.frame == NULL) {
         if (use_lexical_handler_hll_error(tc, mode)) {
@@ -806,7 +806,7 @@ void MVM_exception_throwobj(MVMThreadContext *tc, MVMuint8 mode, MVMObject *ex_o
 
 /* Throws an exception of the specified category and with the specified payload.
  * If a goto or payload handler exists, then no exception object will be created. */
-void MVM_exception_throwpayload(MVMThreadContext *tc, MVMuint8 mode, MVMuint32 cat, MVMObject *payload, MVMRegister *resume_result) {
+void MVM_exception_throwpayload(MVMThreadContext *tc, MVMuint8 mode, uint32_t cat, MVMObject *payload, MVMRegister *resume_result) {
     LocatedHandler lh = search_for_handler_from(tc, tc->cur_frame, mode, cat, NULL);
     if (lh.frame == NULL) {
         if (use_lexical_handler_hll_error(tc, mode)) {

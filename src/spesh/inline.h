@@ -11,8 +11,8 @@
 struct MVMSpeshInline {
     /* Start and end position in the bytecode where we're inside of this
      * inline. */
-    MVMuint32 start;
-    MVMuint32 end;
+    uint32_t start;
+    uint32_t end;
 
     /* The static frame that was inlined. */
     MVMStaticFrame *sf;
@@ -34,7 +34,7 @@ struct MVMSpeshInline {
     MVMReturnType res_type;
 
     /* Deopt index used to find return address of the caller if we uninline. */
-    MVMuint32 return_deopt_idx;
+    uint32_t return_deopt_idx;
 
     /* If the inline became unreachable after being made, we'll mark it as
      * such, so we won't try and fix it up later. */
@@ -63,7 +63,7 @@ struct MVMSpeshInline {
 
 MVMSpeshGraph * MVM_spesh_inline_try_get_graph(MVMThreadContext *tc,
     MVMSpeshGraph *inliner, MVMStaticFrame *target_sf, MVMSpeshCandidate *cand,
-    MVMSpeshIns *runbytecode_ins, char **no_inline_reason, MVMuint32 *effective_size,
+    MVMSpeshIns *runbytecode_ins, char **no_inline_reason, uint32_t *effective_size,
     MVMOpInfo const **no_inline_info);
 MVMSpeshGraph * MVM_spesh_inline_try_get_graph_from_unspecialized(MVMThreadContext *tc,
     MVMSpeshGraph *inliner, MVMStaticFrame *target_sf, MVMSpeshIns *invoke_ins,
@@ -73,4 +73,4 @@ void MVM_spesh_inline(MVMThreadContext *tc, MVMSpeshGraph *inliner,
     MVMCallsite *cs, MVMSpeshOperand *args, MVMSpeshBB *runbytecode_bb,
     MVMSpeshIns *runbytecode_ins, MVMSpeshGraph *inlinee, MVMStaticFrame *inlinee_sf,
     MVMSpeshOperand code_ref_reg, MVMSpeshIns *resume_init, MVMuint16 bytecode_size);
-MVMuint32 MVM_spesh_inline_get_max_size(MVMThreadContext *tc, MVMStaticFrame *sf);
+uint32_t MVM_spesh_inline_get_max_size(MVMThreadContext *tc, MVMStaticFrame *sf);

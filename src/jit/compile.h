@@ -6,25 +6,25 @@ struct MVMJitCode {
     MVMStaticFrame *sf;
 
     MVMuint16 *local_types;
-    MVMuint32  num_locals;
+    uint32_t  num_locals;
 
     /* The basic idea here is that /all/ label names are indexes into the single
      * labels array. This isn't particularly efficient at runtime (because we
      * need a second dereference to figure the labels out), but very simple for
      * me now, and super-easy to optimise at a later date */
-    MVMuint32  num_labels;
+    uint32_t  num_labels;
     void     **labels;
     void      *exit_label;
 
-    MVMuint32      num_deopts;
-    MVMuint32      num_inlines;
-    MVMuint32      num_handlers;
+    uint32_t      num_deopts;
+    uint32_t      num_inlines;
+    uint32_t      num_handlers;
     MVMJitDeopt    *deopts;
     MVMJitInline  *inlines;
     MVMJitHandler *handlers;
 
-    MVMuint32      spill_size;
-    MVMuint32      seq_nr;
+    uint32_t      spill_size;
+    uint32_t      seq_nr;
 
     AO_t ref_cnt;
 };

@@ -1,12 +1,12 @@
 #include "moar.h"
 
-MVM_STATIC_INLINE int32_t is_named_used(MVMArgProcContext *ctx, MVMuint32 idx) {
+MVM_STATIC_INLINE int32_t is_named_used(MVMArgProcContext *ctx, uint32_t idx) {
     return ctx->named_used_size > 64
         ? ctx->named_used.byte_array[idx]
         : ctx->named_used.bit_field & ((MVMuint64)1 << idx);
 }
 
-MVM_STATIC_INLINE void mark_named_used(MVMArgProcContext *ctx, MVMuint32 idx) {
+MVM_STATIC_INLINE void mark_named_used(MVMArgProcContext *ctx, uint32_t idx) {
     if (ctx->named_used_size > 64)
         ctx->named_used.byte_array[idx] = 1;
     else
@@ -14,9 +14,9 @@ MVM_STATIC_INLINE void mark_named_used(MVMArgProcContext *ctx, MVMuint32 idx) {
 }
 
 /* An identity map is just an array { 0, 1, 2, ... }. */
-static MVMuint16 * create_identity_map(MVMThreadContext *tc, MVMuint32 size) {
+static MVMuint16 * create_identity_map(MVMThreadContext *tc, uint32_t size) {
     MVMuint16 *map = MVM_malloc(size * sizeof(MVMuint16));
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < size; i++)
         map[i] = i;
     return map;
@@ -69,8 +69,8 @@ MVMCallStackFlattening * MVM_args_perform_flattening(MVMThreadContext *tc, MVMCa
      * flatten the passed object. We also save the flatten counts, just in case,
      * so we do not end up doing a buffer overrun if the source gets mutated in
      * the meantime. */
-    MVMuint32 num_pos = 0;
-    MVMuint32 num_args = 0;
+    uint32_t num_pos = 0;
+    uint32_t num_args = 0;
     MVMuint16 i;
     MVMuint16 *flatten_counts = alloca(cs->flag_count * sizeof(MVMuint16));
     for (i = 0; i < cs->flag_count; i++) {
@@ -93,7 +93,7 @@ MVMCallStackFlattening * MVM_args_perform_flattening(MVMThreadContext *tc, MVMCa
             else {
                 /* Positional flattening. */
                 MVMObject *list = source[map[i]].o;
-                MVMuint32 repr = REPR(list)->ID;
+                uint32_t repr = REPR(list)->ID;
                 if ((repr != MVM_REPR_ID_VMArray && repr != MVM_REPR_ID_MultiDimArray)
                         || !IS_CONCRETE(list))
                     MVM_exception_throw_adhoc(tc,
@@ -139,7 +139,7 @@ MVMCallStackFlattening * MVM_args_perform_flattening(MVMThreadContext *tc, MVMCa
                  * our hit rate on the callsite intern cache (and in turn cause
                  * fake megamorphic blowups at callsites). Thus we sort the keys;
                  * by hash code shall suffice, since collisions are unlikely. */
-                MVMuint32 limit = flatten_counts[i];
+                uint32_t limit = flatten_counts[i];
                 if (limit == 0)
                     continue;
                 ArgNameAndValue *anv = alloca(limit * sizeof(ArgNameAndValue));
@@ -147,7 +147,7 @@ MVMCallStackFlattening * MVM_args_perform_flattening(MVMThreadContext *tc, MVMCa
                 MVMHashBody *body = &((MVMHash *)hash)->body;
                 MVMStrHashTable *hashtable = &(body->hashtable);
                 MVMStrHashIterator iterator = MVM_str_hash_first(tc, hashtable);
-                MVMuint32 seen = 0;
+                uint32_t seen = 0;
                 while (seen < limit && /* Defend against hash changes */
                         !MVM_str_hash_at_end(tc, hashtable, iterator)) {
                     MVMHashEntry *current = MVM_str_hash_current_nocheck(tc,
@@ -158,7 +158,7 @@ MVMCallStackFlattening * MVM_args_perform_flattening(MVMThreadContext *tc, MVMCa
                     iterator = MVM_str_hash_next(tc, hashtable, iterator);
                 }
                 qsort(anv, seen, sizeof(ArgNameAndValue), key_sort_by_hash);
-                MVMuint32 j;
+                uint32_t j;
                 for (j = 0; j < seen; j++) {
                     MVMString *arg_name = anv[j].name;
                     int32_t already_index = callsite_name_index(tc, record, cur_new_name,
@@ -261,7 +261,7 @@ MVMCallStackFlattening * MVM_args_perform_flattening(MVMThreadContext *tc, MVMCa
 void MVM_args_grow_identity_map(MVMThreadContext *tc, MVMCallsite *callsite) {
     uv_mutex_lock(&tc->instance->mutex_callsite_interns);
     assert(callsite->flag_count <= MVM_ARGS_LIMIT);
-    MVMuint32 full_size = MVM_ARGS_LIMIT + 1;
+    uint32_t full_size = MVM_ARGS_LIMIT + 1;
     if (tc->instance->identity_arg_map_alloc != full_size) { // Double-check under lock
         tc->instance->identity_arg_map = create_identity_map(tc, full_size);
         MVM_barrier();
@@ -271,7 +271,7 @@ void MVM_args_grow_identity_map(MVMThreadContext *tc, MVMCallsite *callsite) {
 }
 
 /* Marks a named used in the current callframe. */
-void MVM_args_marked_named_used(MVMThreadContext *tc, MVMuint32 idx) {
+void MVM_args_marked_named_used(MVMThreadContext *tc, uint32_t idx) {
     mark_named_used(&(tc->cur_frame->params), idx);
 }
 
@@ -496,61 +496,61 @@ static MVMObject * decont_arg(MVMThreadContext *tc, MVMObject *arg) {
     } \
 } while (0)
 
-MVMObject * MVM_args_get_required_pos_obj(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMuint32 pos) {
+MVMObject * MVM_args_get_required_pos_obj(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_REQUIRED, result);
     autobox_switch(tc, result);
     return result.arg.o;
 }
-MVMArgInfo MVM_args_get_optional_pos_obj(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMuint32 pos) {
+MVMArgInfo MVM_args_get_optional_pos_obj(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_OPTIONAL, result);
     autobox_switch(tc, result);
     return result;
 }
-MVMint64 MVM_args_get_required_pos_int(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMuint32 pos) {
+MVMint64 MVM_args_get_required_pos_int(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_REQUIRED, result);
     autounbox(tc, MVM_CALLSITE_ARG_INT, "integer", result);
     return result.arg.i64;
 }
-MVMArgInfo MVM_args_get_optional_pos_int(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMuint32 pos) {
+MVMArgInfo MVM_args_get_optional_pos_int(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_OPTIONAL, result);
     autounbox(tc, MVM_CALLSITE_ARG_INT, "integer", result);
     return result;
 }
-MVMnum64 MVM_args_get_required_pos_num(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMuint32 pos) {
+MVMnum64 MVM_args_get_required_pos_num(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_REQUIRED, result);
     autounbox(tc, MVM_CALLSITE_ARG_NUM, "number", result);
     return result.arg.n64;
 }
-MVMArgInfo MVM_args_get_optional_pos_num(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMuint32 pos) {
+MVMArgInfo MVM_args_get_optional_pos_num(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_OPTIONAL, result);
     autounbox(tc, MVM_CALLSITE_ARG_NUM, "number", result);
     return result;
 }
-MVMString * MVM_args_get_required_pos_str(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMuint32 pos) {
+MVMString * MVM_args_get_required_pos_str(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_REQUIRED, result);
     autounbox(tc, MVM_CALLSITE_ARG_STR, "string", result);
     return result.arg.s;
 }
-MVMArgInfo MVM_args_get_optional_pos_str(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMuint32 pos) {
+MVMArgInfo MVM_args_get_optional_pos_str(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_OPTIONAL, result);
     autounbox(tc, MVM_CALLSITE_ARG_STR, "string", result);
     return result;
 }
-MVMuint64 MVM_args_get_required_pos_uint(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMuint32 pos) {
+MVMuint64 MVM_args_get_required_pos_uint(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_REQUIRED, result);
     autounbox(tc, MVM_CALLSITE_ARG_UINT, "unsigned integer", result);
     return result.arg.u64;
 }
-MVMArgInfo MVM_args_get_optional_pos_uint(MVMThreadContext *tc, MVMArgProcContext *ctx, MVMuint32 pos) {
+MVMArgInfo MVM_args_get_optional_pos_uint(MVMThreadContext *tc, MVMArgProcContext *ctx, uint32_t pos) {
     MVMArgInfo result;
     args_get_pos(tc, ctx, pos, MVM_ARG_OPTIONAL, result);
     autounbox(tc, MVM_CALLSITE_ARG_UINT, "unsigned integer", result);
@@ -1165,7 +1165,7 @@ MVMObject * MVM_args_slurpy_named(MVMThreadContext *tc, MVMArgProcContext *ctx) 
     MVMuint16 arg_idx;
     for (arg_idx = cs->num_pos; arg_idx < cs->flag_count; arg_idx++) {
         /* Skip any args already used. */
-        MVMuint32 named_idx = arg_idx - cs->num_pos;
+        uint32_t named_idx = arg_idx - cs->num_pos;
         if (is_named_used(ctx, named_idx))
             continue;
 

@@ -294,7 +294,7 @@ static MVMuint64 zero_slots(MVMThreadContext *tc, MVMArrayBody *body,
             memset(&(body->slots.u64[elems]), 0, (ssize - elems) * sizeof(MVMuint64));
             break;
         case MVM_ARRAY_U32:
-            memset(&(body->slots.u32[elems]), 0, (ssize - elems) * sizeof(MVMuint32));
+            memset(&(body->slots.u32[elems]), 0, (ssize - elems) * sizeof(uint32_t));
             break;
         case MVM_ARRAY_U16:
             memset(&(body->slots.u16[elems]), 0, (ssize - elems) * sizeof(MVMuint16));
@@ -448,7 +448,7 @@ void MVM_VMArray_bind_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, 
         case MVM_ARRAY_U32:
             if (kind != MVM_reg_uint64 && kind != MVM_reg_int64)
                 MVM_exception_throw_adhoc(tc, "MVMArray: bindpos U32 expected int register");
-            body->slots.u32[body->start + real_index] = (MVMuint32)value.i64;
+            body->slots.u32[body->start + real_index] = (uint32_t)value.i64;
             break;
         case MVM_ARRAY_U16:
             if (kind != MVM_reg_uint64 && kind != MVM_reg_int64)
@@ -533,7 +533,7 @@ void MVM_VMArray_push(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void
         case MVM_ARRAY_U32:
             if (kind != MVM_reg_int64)
                 MVM_exception_throw_adhoc(tc, "MVMArray: push expected int register");
-            body->slots.u32[body->start + body->elems - 1] = (MVMuint32)value.i64;
+            body->slots.u32[body->start + body->elems - 1] = (uint32_t)value.i64;
             break;
         case MVM_ARRAY_U16:
             if (kind != MVM_reg_int64)
@@ -710,7 +710,7 @@ static void unshift(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *
         case MVM_ARRAY_U32:
             if (kind != MVM_reg_int64)
                 MVM_exception_throw_adhoc(tc, "MVMArray: unshift expected int register");
-            body->slots.u32[body->start] = (MVMuint32)value.i64;
+            body->slots.u32[body->start] = (uint32_t)value.i64;
             break;
         case MVM_ARRAY_U16:
             if (kind != MVM_reg_int64)
@@ -1137,7 +1137,7 @@ static void spec_to_repr_data(MVMThreadContext *tc, MVMArrayREPRData *repr_data,
                         break;
                     case 32:
                         repr_data->slot_type = MVM_ARRAY_U32;
-                        repr_data->elem_size = sizeof(MVMuint32);
+                        repr_data->elem_size = sizeof(uint32_t);
                         break;
                     case 16:
                         repr_data->slot_type = MVM_ARRAY_U16;
@@ -1306,7 +1306,7 @@ static void deserialize(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, vo
             break;
         case MVM_ARRAY_U32:
             for (i = 0; i < body->elems; i++)
-                body->slots.i32[i] = (MVMuint32)MVM_serialization_read_int(tc, reader);
+                body->slots.i32[i] = (uint32_t)MVM_serialization_read_int(tc, reader);
             break;
         case MVM_ARRAY_U16:
             for (i = 0; i < body->elems; i++)

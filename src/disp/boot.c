@@ -193,7 +193,7 @@ static void boot_syscall(MVMThreadContext *tc, MVMArgs arg_info) {
                 "Too many arguments to MoarVM syscall '%s'; got %d, need %d..%d",
                         c_name, cs->num_pos, syscall->min_args, syscall->max_args);
     }
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < cs->num_pos; i++) {
         /* Check we got the expected kind of argument. */
         if ((cs->arg_flags[i] & MVM_CALLSITE_ARG_TYPE_MASK) != syscall->expected_kinds[i]) {
@@ -209,8 +209,8 @@ static void boot_syscall(MVMThreadContext *tc, MVMArgs arg_info) {
         /* Add any guards. */
         if (syscall->expected_kinds[i] == MVM_CALLSITE_ARG_OBJ) {
             if (syscall->expected_reprs[i]) {
-                MVMuint32 expected = syscall->expected_reprs[i];
-                MVMuint32 got = REPR(MVM_capture_arg_pos_o(tc, args_capture, i))->ID;
+                uint32_t expected = syscall->expected_reprs[i];
+                uint32_t got = REPR(MVM_capture_arg_pos_o(tc, args_capture, i))->ID;
                 if (expected == got) {
                     MVMROOT2(tc, name, args_capture) {
                         MVM_disp_program_record_guard_type(tc,

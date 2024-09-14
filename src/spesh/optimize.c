@@ -9,7 +9,7 @@ static void optimize_bb(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
 
 /* Logging of whether we can or can't inline. */
 static void log_inline(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *target_sf,
-                       MVMSpeshGraph *inline_graph, MVMuint32 bytecode_size,
+                       MVMSpeshGraph *inline_graph, uint32_t bytecode_size,
                        char *no_inline_reason, int32_t unspecialized, const MVMOpInfo *no_inline_info) {
     if (tc->instance->spesh_inline_log) {
         char *c_name_i = MVM_string_utf8_encode_C_string(tc, target_sf->body.name);
@@ -62,7 +62,7 @@ MVMSpeshFacts * MVM_spesh_get_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMS
 
 /* Mark facts for an operand as being relied upon. */
 void MVM_spesh_use_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshFacts *facts) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < facts->num_log_guards; i++)
         g->log_guards[facts->log_guards[i]].used = 1;
 }
@@ -244,7 +244,7 @@ static void optimize_eqaddr(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns 
 }
 static void optimize_is_reprid(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMSpeshFacts *obj_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
-    MVMuint32 wanted_repr_id;
+    uint32_t wanted_repr_id;
     MVMuint64 result_value;
 
     if (!(obj_facts->flags & MVM_SPESH_FACT_KNOWN_TYPE)) {
@@ -636,8 +636,8 @@ static void optimize_decont(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *
                 MVMObject *out_type = NULL;
                 MVMuint16 primitive_type = repr_data->primitive_type;
                 MVMuint16 register_type = 0;
-                MVMuint32 box_op;
-                MVMuint32 unbox_op;
+                uint32_t box_op;
+                uint32_t unbox_op;
 
                 if (!hll)
                     hll = g->sf->body.cu->body.hll_config;
@@ -997,7 +997,7 @@ static void optimize_string_equality(MVMThreadContext *tc, MVMSpeshGraph *g, MVM
 
 /* Optimizes a hllbool instruction away if the value is known */
 static void optimize_hllbool(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
-    MVMuint32 for_op = ins->info->opcode == MVM_OP_hllboolfor ? 1 : 0;
+    uint32_t for_op = ins->info->opcode == MVM_OP_hllboolfor ? 1 : 0;
     MVMSpeshFacts *obj_facts = MVM_spesh_get_facts(tc, g, ins->operands[1]);
     if (obj_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
         MVMSpeshFacts *tgt_facts = MVM_spesh_get_facts(tc, g, ins->operands[0]);
@@ -1151,10 +1151,10 @@ static void optimize_getlex_per_invocant(MVMThreadContext *tc, MVMSpeshGraph *g,
         ann = ann->next;
     }
     if (ann) {
-        MVMuint32 i;
+        uint32_t i;
         for (i = 0; i < p->num_type_stats; i++) {
             MVMSpeshStatsByType *ts = p->type_stats[i];
-            MVMuint32 j;
+            uint32_t j;
             for (j = 0; j < ts->num_by_offset; j++) {
                 if (ts->by_offset[j].bytecode_offset == ann->data.bytecode_offset) {
                     if (ts->by_offset[j].num_types == 1) {
@@ -1172,7 +1172,7 @@ static void optimize_getlex_per_invocant(MVMThreadContext *tc, MVMSpeshGraph *g,
 
 /* Find the dispatch cache bytecode offset of the given instruction. Returns 0
  * if not found. */
-static MVMuint32 find_cache_offset(MVMThreadContext *tc, MVMSpeshIns *ins) {
+static uint32_t find_cache_offset(MVMThreadContext *tc, MVMSpeshIns *ins) {
     MVMSpeshAnn *ann = ins->annotations;
     while (ann) {
         if (ann->type == MVM_SPESH_ANN_CACHED)
@@ -1208,7 +1208,7 @@ static int32_t find_predeopt_index(MVMThreadContext *tc, MVMSpeshIns *ins) {
 /* Given an instruction, finds the deopt target on it. Panics if there is not
  * one there. */
 static void find_deopt_target_and_index(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
-        MVMuint32 *deopt_target_out, MVMuint32 *deopt_index_out) {
+        uint32_t *deopt_target_out, uint32_t *deopt_index_out) {
     MVMSpeshAnn *deopt_ann = ins->annotations;
     while (deopt_ann) {
         if (deopt_ann->type == MVM_SPESH_ANN_DEOPT_ONE_INS) {
@@ -1225,21 +1225,21 @@ static void find_deopt_target_and_index(MVMThreadContext *tc, MVMSpeshGraph *g, 
  * there is a relatively stable one. */
 static MVMSpeshStatsType * find_invokee_type_tuple(MVMThreadContext *tc,
         MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins,
-        MVMSpeshPlanned *p, MVMuint32 bytecode_offset, MVMCallsite *expect_cs) {
-    MVMuint32 i;
+        MVMSpeshPlanned *p, uint32_t bytecode_offset, MVMCallsite *expect_cs) {
+    uint32_t i;
     MVMSpeshStatsType *best_result = NULL;
-    MVMuint32 best_result_hits = 0;
-    MVMuint32 total_hits = 0;
+    uint32_t best_result_hits = 0;
+    uint32_t total_hits = 0;
     size_t tt_size = expect_cs->flag_count * sizeof(MVMSpeshStatsType);
 
     /* Now look for the best type tuple. */
     for (i = 0; i < p->num_type_stats; i++) {
         MVMSpeshStatsByType *ts = p->type_stats[i];
-        MVMuint32 j;
+        uint32_t j;
         for (j = 0; j < ts->num_by_offset; j++) {
             if (ts->by_offset[j].bytecode_offset == bytecode_offset) {
                 MVMSpeshStatsByOffset *by_offset = &(ts->by_offset[j]);
-                MVMuint32 k;
+                uint32_t k;
                 for (k = 0; k < by_offset->num_type_tuples; k++) {
                     MVMSpeshStatsTypeTupleCount *tt = &(by_offset->type_tuples[k]);
 
@@ -1274,22 +1274,22 @@ static MVMSpeshStatsType * find_invokee_type_tuple(MVMThreadContext *tc,
 /* Sees if any static frames were logged for the dispatch at this location,
  * and if so checks if there was a stable one. */
 static MVMStaticFrame * find_runbytecode_static_frame(MVMThreadContext *tc, MVMSpeshPlanned *p,
-        MVMSpeshIns *ins, MVMuint32 cache_offset) {
-    MVMuint32 i;
+        MVMSpeshIns *ins, uint32_t cache_offset) {
+    uint32_t i;
     MVMStaticFrame *best_result = NULL;
-    MVMuint32 best_result_hits = 0;
-    MVMuint32 total_hits = 0;
+    uint32_t best_result_hits = 0;
+    uint32_t total_hits = 0;
 
     /* Now look for a stable invokee. */
     if (!p)
         return NULL;
     for (i = 0; i < p->num_type_stats; i++) {
         MVMSpeshStatsByType *ts = p->type_stats[i];
-        MVMuint32 j;
+        uint32_t j;
         for (j = 0; j < ts->num_by_offset; j++) {
             if (ts->by_offset[j].bytecode_offset == cache_offset) {
                 MVMSpeshStatsByOffset *by_offset = &(ts->by_offset[j]);
-                MVMuint32 k;
+                uint32_t k;
                 for (k = 0; k < by_offset->num_invokes; k++) {
                     MVMSpeshStatsInvokeCount *ic = &(by_offset->invokes[k]);
 
@@ -1321,7 +1321,7 @@ static MVMStaticFrame * find_runbytecode_static_frame(MVMThreadContext *tc, MVMS
  * to the instruction, to ensure the guard keeps alive deopt usages of the
  * pre-deopt point if it ends up as the only one. Also produce a new deopt
  * index for the guard currently being produced and return it. */
-static MVMuint32 add_deopt_ann(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
+static uint32_t add_deopt_ann(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins,
         int32_t predeopt_index) {
     MVMSpeshAnn *ann = MVM_spesh_alloc(tc, g, sizeof(MVMSpeshAnn));
     ann->type = MVM_SPESH_ANN_DEOPT_SYNTH;
@@ -1412,10 +1412,10 @@ static void insert_arg_decont_type_guard(MVMThreadContext *tc, MVMSpeshGraph *g,
 /* Look through the call info and the type tuple, see what guards we are
  * missing, and insert them. */
 static void check_and_tweak_arg_guards(MVMThreadContext *tc, MVMSpeshGraph *g,
-        MVMSpeshBB *bb, MVMSpeshIns *ins, MVMuint32 predeopt_index,
+        MVMSpeshBB *bb, MVMSpeshIns *ins, uint32_t predeopt_index,
         MVMSpeshStatsType *type_tuple, MVMCallsite *cs, MVMSpeshOperand *args) {
-    MVMuint32 n = cs->flag_count;
-    MVMuint32 i;
+    uint32_t n = cs->flag_count;
+    uint32_t i;
     for (i = 0; i < n; i++) {
         if (cs->arg_flags[i] & MVM_CALLSITE_ARG_OBJ) {
             MVMObject *t_type = type_tuple[i].type;
@@ -1423,7 +1423,7 @@ static void check_and_tweak_arg_guards(MVMThreadContext *tc, MVMSpeshGraph *g,
             if (t_type) {
                 /* Add a guard unless the facts already match. */
                 MVMSpeshFacts *arg_facts = MVM_spesh_get_and_use_facts(tc, g, args[i]);
-                MVMuint32 need_guard = !arg_facts ||
+                uint32_t need_guard = !arg_facts ||
                     !(arg_facts->flags & MVM_SPESH_FACT_KNOWN_TYPE) ||
                     arg_facts->type != t_type ||
                     (type_tuple[i].type_concrete
@@ -1448,7 +1448,7 @@ static void optimize_runbytecode(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
     /* Make sure we can find the dispatch bytecode offset (used for both
      * looking up in the spesh log) and the pre-deopt index (for use with
      * any guards we add). */
-    MVMuint32 bytecode_offset = find_cache_offset(tc, ins);
+    uint32_t bytecode_offset = find_cache_offset(tc, ins);
     if (!bytecode_offset)
         return;
     int32_t predeopt_index = find_predeopt_index(tc, ins);
@@ -1481,7 +1481,7 @@ static void optimize_runbytecode(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
     /* Is the bytecode we're invoking a constant? */
     MVMSpeshFacts *coderef_facts = MVM_spesh_get_and_use_facts(tc, g, coderef_reg);
     MVMStaticFrame *target_sf = NULL;
-    MVMuint32 need_guardsf;
+    uint32_t need_guardsf;
     if (coderef_facts->flags & MVM_SPESH_FACT_KNOWN_VALUE) {
         /* Yes, so we know exactly what we'll be invoking. */
         target_sf = ((MVMCode *)coderef_facts->value.o)->body.sf;
@@ -1553,7 +1553,7 @@ static void optimize_runbytecode(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
         /* See if we'll be able to inline it. */
         char *no_inline_reason = NULL;
         const MVMOpInfo *no_inline_info = NULL;
-        MVMuint32 effective_size = 0;
+        uint32_t effective_size = 0;
         /* Do not try to inline calls from inlined basic blocks! Otherwise the new inlinees would
          * get added to the inlines table after the original inlinee which they are nested in and
          * the frame walker would find the outer inlinee first, giving wrong results */
@@ -1715,9 +1715,9 @@ static void optimize_prof_allocated(MVMThreadContext *tc, MVMSpeshGraph *g, MVMS
 static void optimize_throwcat(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
     /* First, see if we have any goto handlers for this category. */
     int32_t *handlers_found = MVM_malloc(g->num_handlers * sizeof(int32_t));
-    MVMuint32 num_found      = 0;
-    MVMuint32 category       = (MVMuint32)ins->operands[1].lit_i64;
-    MVMuint32  i;
+    uint32_t num_found      = 0;
+    uint32_t category       = (uint32_t)ins->operands[1].lit_i64;
+    uint32_t  i;
     for (i = 0; i < g->num_handlers; i++)
         if (g->handlers[i].action == MVM_EX_ACTION_GOTO)
             if (g->handlers[i].category_mask & category)
@@ -1748,7 +1748,7 @@ static void optimize_throwcat(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB
                     case MVM_SPESH_ANN_FH_GOTO:
                         if (ann->data.frame_handler_index < g->num_handlers) {
                             goto_bbs[ann->data.frame_handler_index] = search_bb;
-                            if (picked >= 0 && ann->data.frame_handler_index == (MVMuint32)picked)
+                            if (picked >= 0 && ann->data.frame_handler_index == (uint32_t)picked)
                                 goto search_over;
                         }
                         break;
@@ -1806,7 +1806,7 @@ static void optimize_throwcat(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB
 
 /* Updates rebless with rebless_sp, which will deopt from the current code. */
 static void tweak_rebless(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
-    MVMuint32 deopt_target, deopt_index;
+    uint32_t deopt_target, deopt_index;
     MVMSpeshOperand *new_operands = MVM_spesh_alloc(tc, g, 4 * sizeof(MVMSpeshOperand));
     new_operands[0] = ins->operands[0];
     new_operands[1] = ins->operands[1];
@@ -1863,7 +1863,7 @@ static void optimize_bigint_binary_op(MVMThreadContext *tc, MVMSpeshGraph *g, MV
     /* Check that input types and result type are consistent. */
     MVMObject *common_type = NULL;
     MVMSpeshFacts *facts[3];
-    MVMuint32 i;
+    uint32_t i;
     for (i = 1; i < 4; i++) {
         facts[i - 1] = MVM_spesh_get_facts(tc, g, ins->operands[i]);
         if (facts[i - 1]->flags & MVM_SPESH_FACT_KNOWN_TYPE) {
@@ -1940,9 +1940,9 @@ static void optimize_bigint_bool_op(MVMThreadContext *tc, MVMSpeshGraph *g, MVMS
 }
 
 static int eliminate_phi_dead_reads(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
-    MVMuint32 operand = 1;
-    MVMuint32 insert_pos = 1;
-    MVMuint32 num_operands = ins->info->num_operands;
+    uint32_t operand = 1;
+    uint32_t insert_pos = 1;
+    uint32_t num_operands = ins->info->num_operands;
     while (operand < ins->info->num_operands) {
         if (get_facts_direct(tc, g, ins->operands[operand])->dead_writer) {
             MVM_spesh_usages_delete_by_reg(tc, g, ins->operands[operand], ins);
@@ -1963,7 +1963,7 @@ static int eliminate_phi_dead_reads(MVMThreadContext *tc, MVMSpeshGraph *g, MVMS
     return 1;
 }
 static void analyze_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, MVMSpeshIns *ins) {
-    MVMuint32 operand;
+    uint32_t operand;
     int32_t common_flags;
     MVMObject *common_type;
     MVMObject *common_value;
@@ -1973,7 +1973,7 @@ static void analyze_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, 
 
     /* If we have facts that we merge that depended on log guards, then we need
      * to carry them forward. */
-    MVMuint32 total_log_guards = 0;
+    uint32_t total_log_guards = 0;
 
     if (!eliminate_phi_dead_reads(tc, g, bb, ins))
         return; /* PHI eliminated completely */
@@ -2048,7 +2048,7 @@ static void analyze_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, 
         /*fprintf(stderr, "\n");*/
 
         if (total_log_guards) {
-            MVMuint32 insert_pos = 0;
+            uint32_t insert_pos = 0;
             target_facts->num_log_guards = total_log_guards;
             target_facts->log_guards = MVM_spesh_alloc(tc, g, total_log_guards * sizeof(int32_t));
             for (operand = 1; operand < ins->info->num_operands; operand++) {
@@ -2443,7 +2443,7 @@ static MVMSpeshBB * find_bb_with_instruction_linearly_after(MVMThreadContext *tc
     }
     return NULL;
 }
-static MVMuint32 conflict_free(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
+static uint32_t conflict_free(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
         MVMSpeshIns *from, MVMSpeshIns *to, MVMuint16 reg, MVMuint16 allow_reads) {
     /* A conflict over reg exists if either from and to are a non-linear BB
      * sequence or if another version of reg is written between from and to. */
@@ -2452,7 +2452,7 @@ static MVMuint32 conflict_free(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshB
     while (cur_bb) {
         MVMSpeshIns *check = cur_bb == start_bb ? to->prev : cur_bb->last_ins;
         while (check) {
-            MVMuint32 i;
+            uint32_t i;
 
             /* If we found the instruction, no conflict. */
             if (check == from)
@@ -2511,7 +2511,7 @@ static void try_eliminate_set(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB
             /* Instruction is OK. Check there is no register use conflict. */
             if (conflict_free(tc, g, bb, ins, user, ins->operands[1].reg.orig, 1)) {
                 /* It will work. Find reading operand and update it. */
-                MVMuint32 i;
+                uint32_t i;
                 for (i = 1; i < user->info->num_operands; i++) {
                     if ((user->info->operands[i] & MVM_operand_rw_mask)
                             && user->operands[i].reg.orig == ins->operands[0].reg.orig
@@ -2706,7 +2706,7 @@ static void post_inline_visit_bb(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpes
         post_inline_visit_bb(tc, g, bb->children[i], pips);
 }
 static void post_inline_pass(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb) {
-    MVMuint32 i;
+    uint32_t i;
 
     /* Walk the basic blocks for the second pass. */
     PostInlinePassState pips;
@@ -2764,7 +2764,7 @@ static void eliminate_pointless_gotos(MVMThreadContext *tc, MVMSpeshGraph *g) {
 
 static void merge_bbs(MVMThreadContext *tc, MVMSpeshGraph *g) {
     MVMSpeshBB *bb = g->entry;
-    MVMuint32 orig_bbs = g->num_bbs;
+    uint32_t orig_bbs = g->num_bbs;
     if (!bb || !bb->linear_next) return; /* looks like there's only a single bb anyway */
     bb = bb->linear_next;
 

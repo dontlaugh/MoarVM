@@ -20,7 +20,7 @@ static void instrument_graph_with_breakpoints(MVMThreadContext *tc, MVMSpeshGrap
         MVMint64 line_number = -1;
         MVMint64 filename_string_index = -1;
 
-        MVMuint32 file_bp_idx;
+        uint32_t file_bp_idx;
 
         if (bbba) {
             line_number = bbba->line_number;
@@ -131,9 +131,9 @@ static void instrument_graph(MVMThreadContext *tc, MVMSpeshGraph *g) {
     /* Since we don't know the right size for the line report store
      * up front, we will have to realloc it along the way. After that
      * we havee to fix up the arguments to the coverage log instructions */
-    MVMuint32 fixup_alloc = g->num_bbs * 2;
-    MVMuint32 fixup_elems = 0;
-    MVMuint32 fixup_idx; /* for iterating over the fixup array */
+    uint32_t fixup_alloc = g->num_bbs * 2;
+    uint32_t fixup_elems = 0;
+    uint32_t fixup_idx; /* for iterating over the fixup array */
     MVMSpeshIns **to_fixup = MVM_malloc(fixup_alloc * sizeof(MVMSpeshIns*));
 
     while (bb) {
@@ -306,7 +306,7 @@ void MVM_breakpoint_instrument(MVMThreadContext *tc, MVMStaticFrame *sf) {
     line_numbers_instrument(tc, sf, 0);
 }
 
-void MVM_line_coverage_report(MVMThreadContext *tc, MVMString *filename, MVMuint32 line_number, MVMuint16 cache_slot, char *cache) {
+void MVM_line_coverage_report(MVMThreadContext *tc, MVMString *filename, uint32_t line_number, MVMuint16 cache_slot, char *cache) {
     if (tc->instance->coverage_control == 2 || (!tc->instance->coverage_control && cache[cache_slot] == 0)) {
         char *encoded_filename;
         char composed_line[256];

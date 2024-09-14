@@ -1624,8 +1624,8 @@ MVMObject * MVM_bigint_radix(MVMThreadContext *tc, MVMint64 radix, MVMString *st
     MVMint64 chars  = MVM_string_graphs(tc, str);
     MVMuint16  neg  = 0;
     MVMint64   ch;
-    MVMuint32  chars_converted = 0;
-    MVMuint32  chars_really_converted = chars_converted;
+    uint32_t  chars_converted = 0;
+    uint32_t  chars_really_converted = chars_converted;
 
     mp_int zvalue;
 

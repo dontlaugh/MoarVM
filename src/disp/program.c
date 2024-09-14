@@ -11,7 +11,7 @@
 
 #if MVM_DISP_DUMP_RECORDINGS
 static void dump_recording_capture(MVMThreadContext *tc,
-        MVMDispProgramRecordingCapture *capture, MVMuint32 indent,
+        MVMDispProgramRecordingCapture *capture, uint32_t indent,
         MVMDispProgramRecording *rec) {
     char *indent_str = alloca(indent + 1);
     memset(indent_str, ' ', indent);
@@ -40,7 +40,7 @@ static void dump_recording_capture(MVMThreadContext *tc,
     }
     if (capture->capture == rec->outcome_capture)
         fprintf(stderr, "%s  Used as args for invoke result\n", indent_str);
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->resume_inits); i++) {
         if (rec->resume_inits[i].capture == capture->capture) {
             char *disp_id = MVM_string_utf8_encode_C_string(tc, rec->resume_inits[i].disp->id);
@@ -52,7 +52,7 @@ static void dump_recording_capture(MVMThreadContext *tc,
         dump_recording_capture(tc, &(capture->captures[i]), indent + 2, rec);
 }
 static void dump_recording_values(MVMThreadContext *tc, MVMDispProgramRecording *rec) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *v = &(rec->values[i]);
         switch (v->source) {
@@ -121,13 +121,13 @@ static void dump_recording_values(MVMThreadContext *tc, MVMDispProgramRecording 
             }
         }
         if (rec->resume_kind != MVMDispProgramRecordingResumeNone)
-            for (MVMuint32 j = 0; j < MVM_VECTOR_ELEMS(rec->resumptions); j++)
+            for (uint32_t j = 0; j < MVM_VECTOR_ELEMS(rec->resumptions); j++)
                 if ((int32_t)i == rec->resumptions[j].new_resume_state_value)
                     fprintf(stderr, "      Used as new resume state for resumption %d\n", j);
     }
 };
 static void dump_recording(MVMThreadContext *tc, MVMCallStackDispatchRecord *record) {
-    MVMuint32 is_resume = record->rec.resume_kind != MVMDispProgramRecordingResumeNone;
+    uint32_t is_resume = record->rec.resume_kind != MVMDispProgramRecordingResumeNone;
 
     fprintf(stderr, "Dispatch recording%s\n", is_resume ? " (resume)" : "");
 
@@ -139,7 +139,7 @@ static void dump_recording(MVMThreadContext *tc, MVMCallStackDispatchRecord *rec
     fprintf(stderr, "  Captures:\n");
     dump_recording_capture(tc, &(record->rec.initial_capture), 4, &(record->rec));
     if (is_resume)
-        for (MVMuint32 i = 0; i < MVM_VECTOR_ELEMS(record->rec.resumptions); i++)
+        for (uint32_t i = 0; i < MVM_VECTOR_ELEMS(record->rec.resumptions); i++)
             dump_recording_capture(tc, &(record->rec.resumptions[i].initial_resume_capture), 4, &(record->rec));
     fprintf(stderr, "  Values:\n");
     dump_recording_values(tc, &(record->rec));
@@ -189,7 +189,7 @@ static void dump_program(MVMThreadContext *tc, MVMDispProgram *dp) {
     fprintf(stderr, "%s\n", backtrace_line);
     MVM_free(backtrace_line);
 
-    MVMuint32 i;
+    uint32_t i;
     fprintf(stderr, "  Ops:\n");
     for (i = 0; i < dp->num_ops; i++) {
         MVMDispProgramOp *op = &(dp->ops[i]);
@@ -462,7 +462,7 @@ static void dump_program(MVMThreadContext *tc, MVMDispProgram *dp) {
             MVM_free(c_id);
             if (res->init_values) {
                 fprintf(stderr, "      Initialization arguments:\n");
-                MVMuint32 j;
+                uint32_t j;
                 for (j = 0; j < res->init_callsite->flag_count; j++) {
                     MVMDispProgramResumptionInitValue iv = res->init_values[j];
                     switch (iv.source) {
@@ -506,7 +506,7 @@ static MVMFrame * find_calling_frame(MVMThreadContext *tc, MVMCallStackRecord *p
         MVM_oops(tc, "Cannot find calling frame during dispatch resumption recording");
     return MVM_callstack_iter_current_frame(tc, &iter);
 }
-static MVMuint32 calculate_inline_cache_size(MVMThreadContext *tc, MVMDispInlineCacheEntry *ice) {
+static uint32_t calculate_inline_cache_size(MVMThreadContext *tc, MVMDispInlineCacheEntry *ice) {
     switch (MVM_disp_inline_cache_get_kind(tc, ice)) {
         case MVM_INLINE_CACHE_KIND_INITIAL:
         case MVM_INLINE_CACHE_KIND_INITIAL_FLATTENING:
@@ -556,8 +556,8 @@ void MVM_disp_program_run_dispatch(MVMThreadContext *tc, MVMDispDefinition *disp
         MVMDispInlineCacheEntry *ic_entry, MVMStaticFrame *update_sf) {
 #if MVM_GC_DEBUG
     {
-        MVMuint32 i;
-        MVMuint32 found = 0;
+        uint32_t i;
+        uint32_t found = 0;
         for (i = 0; i < update_sf->body.inline_cache.num_entries; i++) {
             if (ic_entry_ptr == update_sf->body.inline_cache.entries + i) {
                 found = 1;
@@ -572,7 +572,7 @@ void MVM_disp_program_run_dispatch(MVMThreadContext *tc, MVMDispDefinition *disp
     /* Calculate the size of the current inline cache (must be done before we
      * hit a safepoint, otherwise we may use the current inline cache content
      * after it is freed). */
-    MVMuint32 inline_cache_size = calculate_inline_cache_size(tc, ic_entry);
+    uint32_t inline_cache_size = calculate_inline_cache_size(tc, ic_entry);
 
     /* Form an argument capture. */
     MVMObject *capture;
@@ -663,12 +663,12 @@ MVMHLLConfig * MVM_disp_program_record_get_hll(MVMThreadContext *tc) {
 typedef struct {
     MVM_VECTOR_DECL(MVMDispProgramRecordingCapture *, path);
 } CapturePath;
-static MVMuint32 find_capture(MVMThreadContext *tc, MVMDispProgramRecordingCapture *current,
+static uint32_t find_capture(MVMThreadContext *tc, MVMDispProgramRecordingCapture *current,
         MVMObject *searchee, CapturePath *p) {
     MVM_VECTOR_PUSH(p->path, current);
     if (current->capture == searchee)
         return 1;
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(current->captures); i++)
         if (find_capture(tc, &(current->captures[i]), searchee, p))
             return 1;
@@ -681,7 +681,7 @@ static void calculate_capture_path(MVMThreadContext *tc, MVMCallStackDispatchRec
         /* Not reachable from the initial capture, but what about the currently
          * active resume init capture? */
         if (record->rec.resume_kind != MVMDispProgramRecordingResumeNone) {
-            MVMuint32 cur = MVM_VECTOR_ELEMS(record->rec.resumptions) - 1;
+            uint32_t cur = MVM_VECTOR_ELEMS(record->rec.resumptions) - 1;
             if (find_capture(tc, &(record->rec.resumptions[cur].initial_resume_capture), capture, p))
                 return;
         }
@@ -700,10 +700,10 @@ static void ensure_known_capture(MVMThreadContext *tc, MVMCallStackDispatchRecor
 
 /* Ensures we have a constant recorded as a value. If there already is such
  * an entry, we re-use it and return its index. If not, we add a value entry. */
-static MVMuint32 value_index_constant(MVMThreadContext *tc, MVMDispProgramRecording *rec,
+static uint32_t value_index_constant(MVMThreadContext *tc, MVMDispProgramRecording *rec,
         MVMCallsiteFlags kind, MVMRegister value) {
     /* Look for an existing such value. */
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *v = &(rec->values[i]);
         if (v->source == MVMDispProgramRecordingLiteralValue && v->literal.kind == kind) {
@@ -745,10 +745,10 @@ static MVMuint32 value_index_constant(MVMThreadContext *tc, MVMDispProgramRecord
 }
 
 /* Ensures we have a values used entry for the specified argument index. */
-static MVMuint32 value_index_capture(MVMThreadContext *tc, MVMDispProgramRecording *rec,
-        MVMuint32 index) {
+static uint32_t value_index_capture(MVMThreadContext *tc, MVMDispProgramRecording *rec,
+        uint32_t index) {
     /* Look for an existing such value. */
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *v = &(rec->values[i]);
         if (v->source == MVMDispProgramRecordingCaptureValue && v->capture.index == index)
@@ -766,11 +766,11 @@ static MVMuint32 value_index_capture(MVMThreadContext *tc, MVMDispProgramRecordi
 
 /* Ensures we have a values used entry for the specified resume init capture
  * argument index. */
-static MVMuint32 value_index_resume_capture(MVMThreadContext *tc, MVMDispProgramRecording *rec,
-        MVMuint32 index) {
+static uint32_t value_index_resume_capture(MVMThreadContext *tc, MVMDispProgramRecording *rec,
+        uint32_t index) {
     /* Look for an existing such value. */
-    MVMuint32 level = MVM_VECTOR_ELEMS(rec->resumptions) - 1;
-    MVMuint32 i;
+    uint32_t level = MVM_VECTOR_ELEMS(rec->resumptions) - 1;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *v = &(rec->values[i]);
         if (v->source == MVMDispProgramRecordingResumeInitCaptureValue &&
@@ -789,10 +789,10 @@ static MVMuint32 value_index_resume_capture(MVMThreadContext *tc, MVMDispProgram
 }
 
 /* Ensures we have a values used entry for the specified attribute read. */
-static MVMuint32 value_index_attribute(MVMThreadContext *tc, MVMDispProgramRecording *rec,
-        MVMuint32 from_value, MVMuint32 offset, MVMCallsiteFlags kind) {
+static uint32_t value_index_attribute(MVMThreadContext *tc, MVMDispProgramRecording *rec,
+        uint32_t from_value, uint32_t offset, MVMCallsiteFlags kind) {
     /* Look for an existing such value. */
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *v = &(rec->values[i]);
         if (v->source == MVMDispProgramRecordingAttributeValue &&
@@ -814,10 +814,10 @@ static MVMuint32 value_index_attribute(MVMThreadContext *tc, MVMDispProgramRecor
 }
 
 /* Ensures we have a values used entry for the specified HOW read. */
-static MVMuint32 value_index_how(MVMThreadContext *tc, MVMDispProgramRecording *rec,
-        MVMuint32 from_value) {
+static uint32_t value_index_how(MVMThreadContext *tc, MVMDispProgramRecording *rec,
+        uint32_t from_value) {
     /* Look for an existing such value. */
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *v = &(rec->values[i]);
         if (v->source == MVMDispProgramRecordingHOWValue &&
@@ -835,10 +835,10 @@ static MVMuint32 value_index_how(MVMThreadContext *tc, MVMDispProgramRecording *
 }
 
 /* Ensures we have a values used entry for the specified unboxed int. */
-static MVMuint32 value_index_unbox_int(MVMThreadContext *tc, MVMDispProgramRecording *rec,
-        MVMuint32 from_value) {
+static uint32_t value_index_unbox_int(MVMThreadContext *tc, MVMDispProgramRecording *rec,
+        uint32_t from_value) {
     /* Look for an existing such value. */
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *v = &(rec->values[i]);
         if (v->source == MVMDispProgramRecordingUnboxValue &&
@@ -858,10 +858,10 @@ static MVMuint32 value_index_unbox_int(MVMThreadContext *tc, MVMDispProgramRecor
 }
 
 /* Ensures we have a values used entry for the specified unboxed num. */
-static MVMuint32 value_index_unbox_num(MVMThreadContext *tc, MVMDispProgramRecording *rec,
-        MVMuint32 from_value) {
+static uint32_t value_index_unbox_num(MVMThreadContext *tc, MVMDispProgramRecording *rec,
+        uint32_t from_value) {
     /* Look for an existing such value. */
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *v = &(rec->values[i]);
         if (v->source == MVMDispProgramRecordingUnboxValue &&
@@ -881,10 +881,10 @@ static MVMuint32 value_index_unbox_num(MVMThreadContext *tc, MVMDispProgramRecor
 }
 
 /* Ensures we have a values used entry for the specified unboxed str. */
-static MVMuint32 value_index_unbox_str(MVMThreadContext *tc, MVMDispProgramRecording *rec,
-        MVMuint32 from_value) {
+static uint32_t value_index_unbox_str(MVMThreadContext *tc, MVMDispProgramRecording *rec,
+        uint32_t from_value) {
     /* Look for an existing such value. */
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *v = &(rec->values[i]);
         if (v->source == MVMDispProgramRecordingUnboxValue &&
@@ -904,10 +904,10 @@ static MVMuint32 value_index_unbox_str(MVMThreadContext *tc, MVMDispProgramRecor
 }
 
 /* Ensures we have a values used entry for the specified lookup table read. */
-static MVMuint32 value_index_lookup(MVMThreadContext *tc, MVMDispProgramRecording *rec,
-        MVMuint32 lookup_index, MVMuint32 key_index) {
+static uint32_t value_index_lookup(MVMThreadContext *tc, MVMDispProgramRecording *rec,
+        uint32_t lookup_index, uint32_t key_index) {
     /* Look for an existing such value. */
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *v = &(rec->values[i]);
         if (v->source == MVMDispProgramRecordingLookupValue &&
@@ -927,10 +927,10 @@ static MVMuint32 value_index_lookup(MVMThreadContext *tc, MVMDispProgramRecordin
 }
 
 /* Ensures we have a values used entry for the resume state. */
-static MVMuint32 value_index_resume_state(MVMThreadContext *tc, MVMDispProgramRecording *rec) {
+static uint32_t value_index_resume_state(MVMThreadContext *tc, MVMDispProgramRecording *rec) {
     /* Look for an existing such value. */
-    MVMuint32 i;
-    MVMuint32 resumption_index = MVM_VECTOR_ELEMS(rec->resumptions) - 1;
+    uint32_t i;
+    uint32_t resumption_index = MVM_VECTOR_ELEMS(rec->resumptions) - 1;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *v = &(rec->values[i]);
         if (v->source == MVMDispProgramRecordingResumeStateValue &&
@@ -948,9 +948,9 @@ static MVMuint32 value_index_resume_state(MVMThreadContext *tc, MVMDispProgramRe
 }
 
 /* Resolves a tracked value to a value index, throwing if it's not found. */
-static MVMuint32 find_tracked_value_index(MVMThreadContext *tc,
+static uint32_t find_tracked_value_index(MVMThreadContext *tc,
         MVMDispProgramRecording *rec, MVMObject *tracked) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++)
         if (rec->values[i].tracked == tracked)
             return i;
@@ -960,7 +960,7 @@ static MVMuint32 find_tracked_value_index(MVMThreadContext *tc,
 /* Start tracking an argument from the specified capture. This allows us to
  * apply guards against it. */
 MVMObject * MVM_disp_program_record_track_arg(MVMThreadContext *tc, MVMObject *capture,
-        MVMuint32 index) {
+        uint32_t index) {
     /* Obtain the value from the capture. This ensures that it is in range. */
     MVMRegister value;
     MVMCallsiteFlags kind;
@@ -975,9 +975,9 @@ MVMObject * MVM_disp_program_record_track_arg(MVMThreadContext *tc, MVMObject *c
     /* Walk the capture path to resolve the index. We start at the deepest
      * point and work upward in the tree. */
     int32_t i;
-    MVMuint32 real_index = index;
+    uint32_t real_index = index;
     int32_t found_value_index = -1;
-    MVMuint32 is_resume_init_capture = 0;
+    uint32_t is_resume_init_capture = 0;
     for (i = MVM_VECTOR_ELEMS(p.path) - 1; i >= 0 && found_value_index < 0; i--) {
         switch (p.path[i]->transformation) {
             case MVMDispProgramRecordingInsert:
@@ -1049,7 +1049,7 @@ MVMObject * MVM_disp_program_record_track_attr(MVMThreadContext *tc, MVMObject *
 
     /* Resolve the tracked value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked_in);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked_in);
 
     /* Obtain the object and ensure it is a concrete P6opaque; also track its
      * type and concreteness since attr read safety depends on this. */
@@ -1089,8 +1089,8 @@ MVMObject * MVM_disp_program_record_track_attr(MVMThreadContext *tc, MVMObject *
 
     /* Ensure that we have this attribute read in the values table, and make
      * a tracked object if not. */
-    MVMuint32 result_value_index = value_index_attribute(tc, &(record->rec),
-            value_index, (MVMuint32)offset, attr_kind);
+    uint32_t result_value_index = value_index_attribute(tc, &(record->rec),
+            value_index, (uint32_t)offset, attr_kind);
     if (!record->rec.values[result_value_index].tracked)
         record->rec.values[result_value_index].tracked = MVM_tracked_create(tc,
                 attr_value, attr_kind);
@@ -1104,7 +1104,7 @@ MVMObject * MVM_disp_program_record_track_unbox_int(MVMThreadContext *tc, MVMObj
 
     /* Resolve the tracked value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked_in);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked_in);
 
     /* Obtain the object and ensure it is concrete; also track its
      * type and concreteness since unboxing safety depends on this. */
@@ -1120,7 +1120,7 @@ MVMObject * MVM_disp_program_record_track_unbox_int(MVMThreadContext *tc, MVMObj
 
     /* Ensure that we have this value read in the values table, and make
      * a tracked object if not. */
-    MVMuint32 result_value_index = value_index_unbox_int(tc, &(record->rec), value_index);
+    uint32_t result_value_index = value_index_unbox_int(tc, &(record->rec), value_index);
     if (!record->rec.values[result_value_index].tracked)
         record->rec.values[result_value_index].tracked = MVM_tracked_create(tc,
                 attr_value, MVM_CALLSITE_ARG_INT);
@@ -1134,7 +1134,7 @@ MVMObject * MVM_disp_program_record_track_unbox_num(MVMThreadContext *tc, MVMObj
 
     /* Resolve the tracked value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked_in);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked_in);
 
     /* Obtain the object and ensure it is concrete; also track its
      * type and concreteness since unboxing safety depends on this. */
@@ -1150,7 +1150,7 @@ MVMObject * MVM_disp_program_record_track_unbox_num(MVMThreadContext *tc, MVMObj
 
     /* Ensure that we have this value read in the values table, and make
      * a tracked object if not. */
-    MVMuint32 result_value_index = value_index_unbox_num(tc, &(record->rec), value_index);
+    uint32_t result_value_index = value_index_unbox_num(tc, &(record->rec), value_index);
     if (!record->rec.values[result_value_index].tracked)
         record->rec.values[result_value_index].tracked = MVM_tracked_create(tc,
                 attr_value, MVM_CALLSITE_ARG_NUM);
@@ -1164,7 +1164,7 @@ MVMObject * MVM_disp_program_record_track_unbox_str(MVMThreadContext *tc, MVMObj
 
     /* Resolve the tracked value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked_in);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked_in);
 
     /* Obtain the object and ensure it is concrete; also track its
      * type and concreteness since unboxing safety depends on this. */
@@ -1180,7 +1180,7 @@ MVMObject * MVM_disp_program_record_track_unbox_str(MVMThreadContext *tc, MVMObj
 
     /* Ensure that we have this value read in the values table, and make
      * a tracked object if not. */
-    MVMuint32 result_value_index = value_index_unbox_str(tc, &(record->rec), value_index);
+    uint32_t result_value_index = value_index_unbox_str(tc, &(record->rec), value_index);
     if (!record->rec.values[result_value_index].tracked)
         record->rec.values[result_value_index].tracked = MVM_tracked_create(tc,
                 attr_value, MVM_CALLSITE_ARG_STR);
@@ -1198,11 +1198,11 @@ MVMObject * MVM_disp_program_record_track_how(MVMThreadContext *tc, MVMObject *t
 
     /* Resolve the tracked value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked_in);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked_in);
 
     /* Ensure that we have this HOW read in the values table, and make a
      * tracked object if not. */
-    MVMuint32 result_value_index = value_index_how(tc, &(record->rec), value_index);
+    uint32_t result_value_index = value_index_how(tc, &(record->rec), value_index);
     if (!record->rec.values[result_value_index].tracked) {
         MVMRegister attr_value = { .o = STABLE(((MVMTracked *)tracked_in)->body.value.o)->HOW };
         record->rec.values[result_value_index].tracked = MVM_tracked_create(tc,
@@ -1214,21 +1214,21 @@ MVMObject * MVM_disp_program_record_track_how(MVMThreadContext *tc, MVMObject *t
 /* Record a guard of the current type of the specified tracked value. */
 void MVM_disp_program_record_guard_type(MVMThreadContext *tc, MVMObject *tracked) {
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked);
     record->rec.values[value_index].guard_type = 1;
 }
 
 /* Record a guard of the current concreteness of the specified tracked value. */
 void MVM_disp_program_record_guard_concreteness(MVMThreadContext *tc, MVMObject *tracked) {
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked);
     record->rec.values[value_index].guard_concreteness = 1;
 }
 
 /* Record a guard of the current value of the specified tracked value. */
 void MVM_disp_program_record_guard_literal(MVMThreadContext *tc, MVMObject *tracked) {
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked);
     record->rec.values[value_index].guard_literal = 1;
 }
 
@@ -1237,14 +1237,14 @@ void MVM_disp_program_record_guard_literal(MVMThreadContext *tc, MVMObject *trac
 void MVM_disp_program_record_guard_not_literal_obj(MVMThreadContext *tc,
        MVMObject *tracked, MVMObject *object) {
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked);
     MVM_VECTOR_PUSH(record->rec.values[value_index].not_literal_guards, object);
 }
 
 /* Record a guard of the HLL of the specified tracked value. */
 void MVM_disp_program_record_guard_hll(MVMThreadContext *tc, MVMObject *tracked) {
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked);
     record->rec.values[value_index].guard_hll = 1;
 }
 
@@ -1261,15 +1261,15 @@ MVMObject * MVM_disp_program_record_index_lookup_table(MVMThreadContext *tc,
     /* Add the lookup hash as a constant value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
     MVMRegister lookup_register = { .o = lookup_hash };
-    MVMuint32 lookup_index = value_index_constant(tc, &(record->rec), MVM_CALLSITE_ARG_OBJ,
+    uint32_t lookup_index = value_index_constant(tc, &(record->rec), MVM_CALLSITE_ARG_OBJ,
         lookup_register);
 
     /* Resolve the tracked key. */
-    MVMuint32 key_index = find_tracked_value_index(tc, &(record->rec), tracked_key);
+    uint32_t key_index = find_tracked_value_index(tc, &(record->rec), tracked_key);
 
     /* Ensure that we have this lookup in the values table, and make
      * a tracked object if not. */
-    MVMuint32 result_value_index = value_index_lookup(tc, &(record->rec), lookup_index,
+    uint32_t result_value_index = value_index_lookup(tc, &(record->rec), lookup_index,
         key_index);
     if (!record->rec.values[result_value_index].tracked) {
         MVMRegister resolved_register = { .o = resolved };
@@ -1297,8 +1297,8 @@ MVMObject * MVM_disp_program_record_index_tracked_lookup_table(MVMThreadContext 
 
     /* Resolve the tracked lookup and key. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 lookup_index = find_tracked_value_index(tc, &(record->rec), tracked_lookup_hash);
-    MVMuint32 key_index = find_tracked_value_index(tc, &(record->rec), tracked_key);
+    uint32_t lookup_index = find_tracked_value_index(tc, &(record->rec), tracked_lookup_hash);
+    uint32_t key_index = find_tracked_value_index(tc, &(record->rec), tracked_key);
 
     /* Enforce type and concreteness guards on the lookup table. */
     record->rec.values[lookup_index].guard_type = 1;
@@ -1306,7 +1306,7 @@ MVMObject * MVM_disp_program_record_index_tracked_lookup_table(MVMThreadContext 
 
     /* Ensure that we have this lookup in the values table, and make
      * a tracked object if not. */
-    MVMuint32 result_value_index = value_index_lookup(tc, &(record->rec), lookup_index,
+    uint32_t result_value_index = value_index_lookup(tc, &(record->rec), lookup_index,
         key_index);
     if (!record->rec.values[result_value_index].tracked) {
         MVMRegister resolved_register = { .o = resolved };
@@ -1319,11 +1319,11 @@ MVMObject * MVM_disp_program_record_index_tracked_lookup_table(MVMThreadContext 
 /* Record that we drop arguments from a capture. Also perform the drops,
  * resulting in a new capture without that argument. */
 MVMObject * MVM_disp_program_record_capture_drop_arg(MVMThreadContext *tc, MVMObject *capture,
-        MVMuint32 idx) {
+        uint32_t idx) {
     return MVM_disp_program_record_capture_drop_args(tc, capture, idx, 1);
 }
 MVMObject * MVM_disp_program_record_capture_drop_args(MVMThreadContext *tc, MVMObject *capture,
-        MVMuint32 idx, MVMuint32 count) {
+        uint32_t idx, uint32_t count) {
     /* Lookup the path to the incoming capture. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
 
@@ -1336,7 +1336,7 @@ MVMObject * MVM_disp_program_record_capture_drop_args(MVMThreadContext *tc, MVMO
      * final entry actually has a MVMCapture allocated for it.
      */
     MVMObject *new_capture = MVM_capture_drop_args(tc, capture, idx, count);
-    for (MVMuint32 dropped_offs = 0; dropped_offs < count; dropped_offs++) {
+    for (uint32_t dropped_offs = 0; dropped_offs < count; dropped_offs++) {
         MVMDispProgramRecordingCapture new_capture_record = {
             .capture = dropped_offs == count - 1 ? new_capture : NULL,
             .transformation = MVMDispProgramRecordingDrop,
@@ -1357,10 +1357,10 @@ MVMObject * MVM_disp_program_record_capture_drop_args(MVMThreadContext *tc, MVMO
 /* Record that we insert a tracked value into a capture. Also perform the insert
  * on the value that was read. */
 MVMObject * MVM_disp_program_record_capture_insert_arg(MVMThreadContext *tc,
-        MVMObject *capture, MVMuint32 idx, MVMObject *tracked) {
+        MVMObject *capture, uint32_t idx, MVMObject *tracked) {
     /* Lookup the index of the tracked value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked);
 
     /* Also look up the path to the incoming capture. */
     CapturePath p;
@@ -1388,10 +1388,10 @@ MVMObject * MVM_disp_program_record_capture_insert_arg(MVMThreadContext *tc,
 /* Record that we insert a tracked value into a capture. Also perform the insert
  * on the value that was read. */
 MVMObject * MVM_disp_program_record_capture_replace_arg(MVMThreadContext *tc,
-        MVMObject *capture, MVMuint32 idx, MVMObject *tracked) {
+        MVMObject *capture, uint32_t idx, MVMObject *tracked) {
     /* Lookup the index of the tracked value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked);
 
     /* Also look up the path to the incoming capture. */
     CapturePath p;
@@ -1434,7 +1434,7 @@ MVMObject * MVM_disp_program_record_capture_replace_arg(MVMThreadContext *tc,
 /* Record that we insert a tracked value into a capture. Also perform the insert
  * on the value that was read. */
 MVMObject * MVM_disp_program_record_capture_replace_literal_arg(MVMThreadContext *tc,
-        MVMObject *capture, MVMuint32 idx, MVMCallsiteFlags kind, MVMRegister value) {
+        MVMObject *capture, uint32_t idx, MVMCallsiteFlags kind, MVMRegister value) {
     /* Lookup the index of the tracked value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
 
@@ -1444,7 +1444,7 @@ MVMObject * MVM_disp_program_record_capture_replace_literal_arg(MVMThreadContext
     calculate_capture_path(tc, record, capture, &p);
 
     /* Obtain a new value index for the constant. */
-    MVMuint32 value_index = value_index_constant(tc, &(record->rec), kind, value);
+    uint32_t value_index = value_index_constant(tc, &(record->rec), kind, value);
 
     /* First, create an entry as if we had dropped the argument.
      * We save the work of creating the capture here, because it is not
@@ -1482,7 +1482,7 @@ MVMObject * MVM_disp_program_record_capture_replace_literal_arg(MVMThreadContext
  * insert, resulting in a new capture without a new argument inserted at the
  * given index. */
 MVMObject * MVM_disp_program_record_capture_insert_constant_arg(MVMThreadContext *tc,
-        MVMObject *capture, MVMuint32 idx, MVMCallsiteFlags kind, MVMRegister value) {
+        MVMObject *capture, uint32_t idx, MVMCallsiteFlags kind, MVMRegister value) {
     /* Lookup the path to the incoming capture. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
     CapturePath p;
@@ -1490,7 +1490,7 @@ MVMObject * MVM_disp_program_record_capture_insert_constant_arg(MVMThreadContext
     calculate_capture_path(tc, record, capture, &p);
 
     /* Obtain a new value index for the constant. */
-    MVMuint32 value_index = value_index_constant(tc, &(record->rec), kind, value);
+    uint32_t value_index = value_index_constant(tc, &(record->rec), kind, value);
 
     /* Calculate the new capture and add a record for it. */
     MVMObject *new_capture = MVM_capture_insert_arg(tc, capture, idx, kind, value);
@@ -1513,7 +1513,7 @@ MVMObject * MVM_disp_program_record_capture_insert_constant_arg(MVMThreadContext
  * that way in the callsite, or because it was a literal value that was
  * inserted into the capture. */
 MVMint64 MVM_disp_program_record_capture_is_arg_literal(MVMThreadContext *tc,
-        MVMObject *capture, MVMuint32 index) {
+        MVMObject *capture, uint32_t index) {
     /* Obtain the value from the capture to ensure it is in range. */
     MVMRegister value;
     MVMCallsiteFlags kind;
@@ -1527,7 +1527,7 @@ MVMint64 MVM_disp_program_record_capture_is_arg_literal(MVMThreadContext *tc,
 
     /* Walk the capture path to see where the argument came from. */
     int32_t i;
-    MVMuint32 real_index = index;
+    uint32_t real_index = index;
     for (i = MVM_VECTOR_ELEMS(p.path) - 1; i >= 0; i--) {
         switch (p.path[i]->transformation) {
             case MVMDispProgramRecordingInsert:
@@ -1536,7 +1536,7 @@ MVMint64 MVM_disp_program_record_capture_is_arg_literal(MVMThreadContext *tc,
                 if (p.path[i]->index == real_index) {
                     /* Yes, and so it will have a value index. We can then use
                      * that to see if it's literal. */
-                    MVMuint32 idx = p.path[i]->value_index;
+                    uint32_t idx = p.path[i]->value_index;
                     MVM_VECTOR_DESTROY(p.path);
                     return record->rec.values[idx].source == MVMDispProgramRecordingLiteralValue;
                 }
@@ -1583,7 +1583,7 @@ void MVM_disp_program_record_set_resume_init_args(MVMThreadContext *tc, MVMObjec
 
     /* Record the saving of the resume init state for this dispatcher, making
      * sure we didn't already do so. */
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(record->rec.resume_inits); i++)
         if (record->rec.resume_inits[i].disp == record->current_disp)
             MVM_exception_throw_adhoc(tc, "Already set resume init args for this dispatcher");
@@ -1625,7 +1625,7 @@ void MVM_disp_program_record_set_resume_state(MVMThreadContext *tc, MVMObject *t
 
     /* Find the index of the tracked value, and also make sure that it is an
      * object type. */
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked_obj);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked_obj);
     MVMTracked *tracked = (MVMTracked *)tracked_obj;
     if (tracked->body.kind != MVM_CALLSITE_ARG_OBJ)
         MVM_exception_throw_adhoc(tc,
@@ -1684,7 +1684,7 @@ MVMObject * MVM_disp_program_record_track_resume_state(MVMThreadContext *tc) {
 
     /* Ensure we have a value index for the resume state, and create a tracking
      * wrapper if needed. */
-    MVMuint32 value_index = value_index_resume_state(tc, &(record->rec));
+    uint32_t value_index = value_index_resume_state(tc, &(record->rec));
     if (!record->rec.values[value_index].tracked) {
         MVMDispProgramRecordingResumption *resumption = get_current_resumption(tc, record);
         MVMRegister value = { .o = *(resumption->resume_state_ptr) };
@@ -1817,7 +1817,7 @@ int32_t MVM_disp_program_record_next_resumption(MVMThreadContext *tc, MVMObject 
      * the next level dispatch. Return zero if there is none. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
     MVMDispResumptionData resume_data;
-    MVMuint32 have_next_resume = 0;
+    uint32_t have_next_resume = 0;
     switch (record->rec.resume_kind) {
         case MVMDispProgramRecordingResumeTopmost:
             have_next_resume = MVM_disp_resume_find_topmost(tc, &resume_data,
@@ -1850,7 +1850,7 @@ int32_t MVM_disp_program_record_next_resumption(MVMThreadContext *tc, MVMObject 
 /* Record that if this dispatch program invokes something, and it fails to
  * bind, we want that to map to a dispatch resumption, not to an invocation
  * of the bind failure handler. */
-void MVM_disp_program_record_resume_on_bind_failure(MVMThreadContext *tc, MVMuint32 flag) {
+void MVM_disp_program_record_resume_on_bind_failure(MVMThreadContext *tc, uint32_t flag) {
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
     if (record->rec.map_bind_outcome_to_resumption != MVMDispProgramRecordingBindControlNone)
         MVM_exception_throw_adhoc(tc, "Already configured bind control for this disaptch");
@@ -1860,8 +1860,8 @@ void MVM_disp_program_record_resume_on_bind_failure(MVMThreadContext *tc, MVMuin
 
 /* Record that if this dispatch program invokes something, we only want it to
  * run up until a signature binding outcome is determined. */
-void MVM_disp_program_record_resume_after_bind(MVMThreadContext *tc, MVMuint32 failure_flag,
-        MVMuint32 success_flag) {
+void MVM_disp_program_record_resume_after_bind(MVMThreadContext *tc, uint32_t failure_flag,
+        uint32_t success_flag) {
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
     if (record->rec.map_bind_outcome_to_resumption != MVMDispProgramRecordingBindControlNone)
         MVM_exception_throw_adhoc(tc, "Already configured bind control for this disaptch");
@@ -1894,7 +1894,7 @@ void MVM_disp_program_record_result_constant(MVMThreadContext *tc, MVMCallsiteFl
 void MVM_disp_program_record_result_tracked_value(MVMThreadContext *tc, MVMObject *tracked) {
     /* Look up the tracked value and note it as the outcome value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 value_index = find_tracked_value_index(tc, &(record->rec), tracked);
+    uint32_t value_index = find_tracked_value_index(tc, &(record->rec), tracked);
     record->rec.outcome_value = value_index;
 
     /* Put the return value in place. */
@@ -1978,7 +1978,7 @@ void MVM_disp_program_record_tracked_code(MVMThreadContext *tc, MVMObject *track
         MVMObject *capture) {
     /* Look up the tracked value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 code_index = find_tracked_value_index(tc, &(record->rec), tracked);
+    uint32_t code_index = find_tracked_value_index(tc, &(record->rec), tracked);
 
     /* Ensure it is a concrete MVMCode object and establish guards. */
     if (((MVMTracked *)tracked)->body.kind != MVM_CALLSITE_ARG_OBJ)
@@ -2011,7 +2011,7 @@ void MVM_disp_program_record_tracked_c_code(MVMThreadContext *tc, MVMObject *tra
         MVMObject *capture) {
     /* Look up the tracked value. */
     MVMCallStackDispatchRecord *record = MVM_callstack_find_topmost_dispatch_recording(tc);
-    MVMuint32 code_index = find_tracked_value_index(tc, &(record->rec), tracked);
+    uint32_t code_index = find_tracked_value_index(tc, &(record->rec), tracked);
 
     /* Ensure it is a concrete MVMCode object and establish guards. */
     if (((MVMTracked *)tracked)->body.kind != MVM_CALLSITE_ARG_OBJ)
@@ -2038,7 +2038,7 @@ void MVM_disp_program_record_tracked_c_code(MVMThreadContext *tc, MVMObject *tra
 
 /* Process a recorded program. */
 typedef struct {
-    MVMuint32 temp_idx;
+    uint32_t temp_idx;
     MVMRegister value;
 } fake_temp;
 typedef struct {
@@ -2054,21 +2054,21 @@ typedef struct {
      * if we ran the recorded dispatch program. */
     MVM_VECTOR_DECL(fake_temp, fake_temps);
     /* If we need to have further temporaries for an args buffer. */
-    MVMuint32 args_buffer_temps;
+    uint32_t args_buffer_temps;
 } compile_state;
-static MVMuint32 add_program_constant_int(MVMThreadContext *tc, compile_state *cs,
+static uint32_t add_program_constant_int(MVMThreadContext *tc, compile_state *cs,
         MVMint64 value) {
     MVMDispProgramConstant c = { .i64 = value };
     MVM_VECTOR_PUSH(cs->constants, c);
     return MVM_VECTOR_ELEMS(cs->constants) - 1;
 }
-static MVMuint32 add_program_constant_num(MVMThreadContext *tc, compile_state *cs,
+static uint32_t add_program_constant_num(MVMThreadContext *tc, compile_state *cs,
         MVMnum64 value) {
     MVMDispProgramConstant c = { .n64 = value };
     MVM_VECTOR_PUSH(cs->constants, c);
     return MVM_VECTOR_ELEMS(cs->constants) - 1;
 }
-static MVMuint32 add_program_constant_callsite(MVMThreadContext *tc, compile_state *cs,
+static uint32_t add_program_constant_callsite(MVMThreadContext *tc, compile_state *cs,
         MVMCallsite *value) {
     /* The callsite must be interned to be used in a dispatch program. */
     if (!value->is_interned)
@@ -2077,38 +2077,38 @@ static MVMuint32 add_program_constant_callsite(MVMThreadContext *tc, compile_sta
     MVM_VECTOR_PUSH(cs->constants, c);
     return MVM_VECTOR_ELEMS(cs->constants) - 1;
 }
-static MVMuint32 add_program_constant_hll(MVMThreadContext *tc, compile_state *cs,
+static uint32_t add_program_constant_hll(MVMThreadContext *tc, compile_state *cs,
         MVMHLLConfig *hll) {
     MVMDispProgramConstant c = { .hll = hll };
     MVM_VECTOR_PUSH(cs->constants, c);
     return MVM_VECTOR_ELEMS(cs->constants) - 1;
 }
-static MVMuint32 add_program_gc_constant(MVMThreadContext *tc, compile_state *cs,
+static uint32_t add_program_gc_constant(MVMThreadContext *tc, compile_state *cs,
         MVMCollectable *value) {
     MVM_ASSERT_NOT_FROMSPACE(tc, value);
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(cs->gc_constants); i++)
         if (cs->gc_constants[i] == value)
             return i;
     MVM_VECTOR_PUSH(cs->gc_constants, value);
     return MVM_VECTOR_ELEMS(cs->gc_constants) - 1;
 }
-static MVMuint32 add_program_constant_obj(MVMThreadContext *tc, compile_state *cs,
+static uint32_t add_program_constant_obj(MVMThreadContext *tc, compile_state *cs,
         MVMObject *value) {
     return add_program_gc_constant(tc, cs, (MVMCollectable *)value);
 }
-static MVMuint32 add_program_constant_str(MVMThreadContext *tc, compile_state *cs,
+static uint32_t add_program_constant_str(MVMThreadContext *tc, compile_state *cs,
         MVMString *value) {
     return add_program_gc_constant(tc, cs, (MVMCollectable *)value);
 }
-static MVMuint32 add_program_constant_stable(MVMThreadContext *tc, compile_state *cs,
+static uint32_t add_program_constant_stable(MVMThreadContext *tc, compile_state *cs,
         MVMSTable *value) {
     return add_program_gc_constant(tc, cs, (MVMCollectable *)value);
 }
-static MVMuint32 get_temp_holding_value(MVMThreadContext *tc, compile_state *cs,
-        MVMuint32 value_index) {
+static uint32_t get_temp_holding_value(MVMThreadContext *tc, compile_state *cs,
+        uint32_t value_index) {
     /* See if we already loaded it. */
-    MVMuint32 i;
+    uint32_t i;
     MVMDispProgramRecordingValue *v = &(cs->rec->values[value_index]);
     for (i = 0; i < MVM_VECTOR_ELEMS(cs->value_temps); i++)
         if (cs->value_temps[i] == v)
@@ -2156,7 +2156,7 @@ static MVMuint32 get_temp_holding_value(MVMThreadContext *tc, compile_state *cs,
         case MVMDispProgramRecordingAttributeValue: {
             /* We first need to make sure that we load the dependent value (we
              * surely will have due to it needing to be guarded). */
-            MVMuint32 from_temp = get_temp_holding_value(tc, cs, v->attribute.from_value);
+            uint32_t from_temp = get_temp_holding_value(tc, cs, v->attribute.from_value);
 
             /* Reading an attribute happens in two steps. First we copy the from
              * value into the target temporary. */
@@ -2213,8 +2213,8 @@ static MVMuint32 get_temp_holding_value(MVMThreadContext *tc, compile_state *cs,
         }
         case MVMDispProgramRecordingLookupValue: {
             /* Get the lookup and key loaded into temporaries. */
-            MVMuint32 lookup_temp = get_temp_holding_value(tc, cs, v->lookup.lookup_index);
-            MVMuint32 key_temp = get_temp_holding_value(tc, cs, v->lookup.key_index);
+            uint32_t lookup_temp = get_temp_holding_value(tc, cs, v->lookup.lookup_index);
+            uint32_t key_temp = get_temp_holding_value(tc, cs, v->lookup.key_index);
 
             /* Load the lookup into the target temporary; the op to do the lookup
              * will overwrite it. */
@@ -2245,7 +2245,7 @@ static void emit_capture_guards(MVMThreadContext *tc, compile_state *cs,
      * just take the bytecode file at its word. */
     MVMObject *capture_obj = cs->rec->initial_capture.capture;
     MVMCapture *initial_capture = (MVMCapture *)capture_obj;
-    MVMuint32 index = v->capture.index;
+    uint32_t index = v->capture.index;
     MVMCallsiteFlags cs_flag = initial_capture->body.callsite->arg_flags[index];
     if ((cs_flag & MVM_CALLSITE_ARG_LITERAL) && !(cs_flag & MVM_CALLSITE_ARG_OBJ))
         return;
@@ -2300,7 +2300,7 @@ static void emit_capture_guards(MVMThreadContext *tc, compile_state *cs,
                         MVM_VECTOR_PUSH(cs->ops, op);
                     }
                 }
-                MVMuint32 i;
+                uint32_t i;
                 for (i = 0; i < MVM_VECTOR_ELEMS(v->not_literal_guards); i++) {
                     MVMDispProgramOp op;
                     op.code = MVMDispOpcodeGuardArgNotLiteralObj;
@@ -2347,7 +2347,7 @@ static void emit_capture_guards(MVMThreadContext *tc, compile_state *cs,
     }
 }
 static void emit_loaded_value_guards(MVMThreadContext *tc, compile_state *cs,
-        MVMDispProgramRecordingValue *v, MVMuint32 temp, MVMRegister value,
+        MVMDispProgramRecordingValue *v, uint32_t temp, MVMRegister value,
         MVMCallsiteFlags kind) {
     switch (kind & MVM_CALLSITE_ARG_TYPE_MASK) {
         case MVM_CALLSITE_ARG_OBJ:
@@ -2393,7 +2393,7 @@ static void emit_loaded_value_guards(MVMThreadContext *tc, compile_state *cs,
                         MVM_VECTOR_PUSH(cs->ops, op);
                     }
                 }
-                MVMuint32 i;
+                uint32_t i;
                 for (i = 0; i < MVM_VECTOR_ELEMS(v->not_literal_guards); i++) {
                     MVMDispProgramOp op;
                     op.code = MVMDispOpcodeGuardTempNotLiteralObj;
@@ -2438,33 +2438,33 @@ static void emit_loaded_value_guards(MVMThreadContext *tc, compile_state *cs,
 }
 static void emit_resume_init_capture_guards(MVMThreadContext *tc, compile_state *cs,
         MVMDispProgramRecordingResumption *rec_res, MVMDispProgramRecordingValue *v,
-        MVMuint32 value_index) {
-    MVMuint32 temp = get_temp_holding_value(tc, cs, value_index);
+        uint32_t value_index) {
+    uint32_t temp = get_temp_holding_value(tc, cs, value_index);
     MVMRegister value = ((MVMTracked *)v->tracked)->body.value;
-    MVMuint32 index = v->capture.index;
+    uint32_t index = v->capture.index;
     MVMCallsiteFlags cs_flag = rec_res->resumption->init_callsite->arg_flags[index];
     emit_loaded_value_guards(tc, cs, v, temp, value, cs_flag);
 }
 static void emit_attribute_guards(MVMThreadContext *tc, compile_state *cs,
-        MVMDispProgramRecordingValue *v, MVMuint32 value_index) {
-    MVMuint32 temp = get_temp_holding_value(tc, cs, value_index);
+        MVMDispProgramRecordingValue *v, uint32_t value_index) {
+    uint32_t temp = get_temp_holding_value(tc, cs, value_index);
     MVMRegister value = ((MVMTracked *)v->tracked)->body.value;
     emit_loaded_value_guards(tc, cs, v, temp, value, v->attribute.kind);
 }
 static void emit_lookup_or_how_guards(MVMThreadContext *tc, compile_state *cs,
-        MVMDispProgramRecordingValue *v, MVMuint32 value_index) {
-    MVMuint32 temp = get_temp_holding_value(tc, cs, value_index);
+        MVMDispProgramRecordingValue *v, uint32_t value_index) {
+    uint32_t temp = get_temp_holding_value(tc, cs, value_index);
     MVMRegister value = ((MVMTracked *)v->tracked)->body.value;
     emit_loaded_value_guards(tc, cs, v, temp, value, MVM_CALLSITE_ARG_OBJ);
 }
 static void emit_resume_state_guards(MVMThreadContext *tc, compile_state *cs,
-        MVMDispProgramRecordingValue *v, MVMuint32 value_index) {
-    MVMuint32 temp = get_temp_holding_value(tc, cs, value_index);
+        MVMDispProgramRecordingValue *v, uint32_t value_index) {
+    uint32_t temp = get_temp_holding_value(tc, cs, value_index);
     MVMRegister value = ((MVMTracked *)v->tracked)->body.value;
     emit_loaded_value_guards(tc, cs, v, temp, value, MVM_CALLSITE_ARG_OBJ);
 }
 static void emit_args_ops(MVMThreadContext *tc, MVMCallStackDispatchRecord *record,
-        compile_state *cs, MVMuint32 callsite_idx) {
+        compile_state *cs, uint32_t callsite_idx) {
     /* Obtain the path to the capture we'll be invoking with. */
     CapturePath p;
     MVM_VECTOR_INIT(p.path, 8);
@@ -2474,8 +2474,8 @@ static void emit_args_ops(MVMThreadContext *tc, MVMCallStackDispatchRecord *reco
      * and the outcome capture. This is defined as the part of it left untouched
      * by any inserts and drops. We start by assuming all of it is untouched. */
     MVMCallsite *initial_callsite = ((MVMCapture *)cs->rec->initial_capture.capture)->body.callsite;
-    MVMuint32 untouched_tail_length = initial_callsite->flag_count;
-    MVMuint32 i;
+    uint32_t untouched_tail_length = initial_callsite->flag_count;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(p.path); i++) {
         MVMCapture *cur_capture = (MVMCapture *)p.path[i]->capture;
         int32_t skipped_drops = 0;
@@ -2505,7 +2505,7 @@ static void emit_args_ops(MVMThreadContext *tc, MVMCallStackDispatchRecord *reco
                  *
                  * If there have been any skipped drops, those are subtracted
                  * straight from the locally untouched tail length. */
-                MVMuint32 locally_untouched = cur_callsite->flag_count - (p.path[i]->index + 1) - skipped_drops;
+                uint32_t locally_untouched = cur_callsite->flag_count - (p.path[i]->index + 1) - skipped_drops;
                 if (locally_untouched < untouched_tail_length)
                     untouched_tail_length = locally_untouched;
                 break;
@@ -2525,7 +2525,7 @@ static void emit_args_ops(MVMThreadContext *tc, MVMCallStackDispatchRecord *reco
                  * It is as if we had only dropped the last argument, which is at the index
                  *  index + skipped
                  */
-                MVMuint32 locally_untouched = cur_callsite->flag_count -
+                uint32_t locally_untouched = cur_callsite->flag_count -
                     (p.path[i]->index + skipped_drops);
                 if (locally_untouched < untouched_tail_length)
                     untouched_tail_length = locally_untouched;
@@ -2563,8 +2563,8 @@ static void emit_args_ops(MVMThreadContext *tc, MVMCallStackDispatchRecord *reco
          * might trigger other reads (attribute chains). So we first make a pass
          * through to trigger loads of such values, and decide what we'll need to
          * do with each of the values. */
-        MVMuint32 num_to_produce = outcome_callsite->flag_count - untouched_tail_length;
-        MVMuint32 i;
+        uint32_t num_to_produce = outcome_callsite->flag_count - untouched_tail_length;
+        uint32_t i;
         typedef enum {
             SetFromTemporary,
             SetFromInitialCapture,
@@ -2572,7 +2572,7 @@ static void emit_args_ops(MVMThreadContext *tc, MVMCallStackDispatchRecord *reco
         } Action;
         typedef struct {
             Action action;
-            MVMuint32 index;
+            uint32_t index;
         } ArgProduction;
         ArgProduction *arg_prod = MVM_malloc(num_to_produce * sizeof(ArgProduction));
 
@@ -2580,9 +2580,9 @@ static void emit_args_ops(MVMThreadContext *tc, MVMCallStackDispatchRecord *reco
             /* Work out the source of this arg in the capture. For the rationale
              * for this algorithm, see MVM_disp_program_record_track_arg. */
             int32_t j;
-            MVMuint32 real_index = i;
+            uint32_t real_index = i;
             int32_t found_value_index = -1;
-            MVMuint32 from_resume_init_capture = 0;
+            uint32_t from_resume_init_capture = 0;
             for (j = MVM_VECTOR_ELEMS(p.path) - 1; j >= 0 && found_value_index < 0; j--) {
                 switch (p.path[j]->transformation) {
                     case MVMDispProgramRecordingInsert:
@@ -2627,7 +2627,7 @@ static void emit_args_ops(MVMThreadContext *tc, MVMCallStackDispatchRecord *reco
 
         /* We now have all temporaries other than the args buffer used. Emit
          * instructions to set that up. */
-        MVMuint32 args_base_temp = MVM_VECTOR_ELEMS(cs->value_temps);
+        uint32_t args_base_temp = MVM_VECTOR_ELEMS(cs->value_temps);
         for (i = 0; i < num_to_produce; i++) {
             MVMDispProgramOp op;
             switch (arg_prod[i].action) {
@@ -2667,13 +2667,13 @@ static void emit_args_ops(MVMThreadContext *tc, MVMCallStackDispatchRecord *reco
     MVM_VECTOR_DESTROY(p.path);
 }
 static void add_resume_init_temp_to_fake(MVMThreadContext *tc, compile_state *cs,
-        MVMDispProgramRecordingResumption *rec_res, MVMuint32 temp_idx,
-        MVMuint32 init_arg_idx) {
+        MVMDispProgramRecordingResumption *rec_res, uint32_t temp_idx,
+        uint32_t init_arg_idx) {
     /* Make sure we didn't already add the argument to fake; it's possible we
      * will end up overwriting it with the wrong value (because it could have
      * previously been set from a resumption other than the one we are now
      * in). */
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(cs->fake_temps); i++)
         if (cs->fake_temps[i].temp_idx == temp_idx)
             return;
@@ -2687,7 +2687,7 @@ static void add_resume_init_temp_to_fake(MVMThreadContext *tc, compile_state *cs
     MVM_VECTOR_PUSH(cs->fake_temps, fake);
 }
 static void add_lookup_temp_to_fake(MVMThreadContext *tc, compile_state *cs,
-        MVMDispProgramRecordingResumption *rec_res, MVMuint32 temp_idx,
+        MVMDispProgramRecordingResumption *rec_res, uint32_t temp_idx,
         MVMObject *lookup_value) {
     MVMRegister value = { .o = lookup_value };
     fake_temp fake = { .temp_idx = temp_idx, .value = value };
@@ -2709,9 +2709,9 @@ static void produce_resumption_init_values(MVMThreadContext *tc, compile_state *
     /* Go through the capture and source each value. */
     for (MVMuint16 i = 0; i < arg_count; i++) {
         int32_t j;
-        MVMuint32 real_index = i;
+        uint32_t real_index = i;
         int32_t found_value_index = -1;
-        MVMuint32 is_resume_init_capture = 0;
+        uint32_t is_resume_init_capture = 0;
         for (j = MVM_VECTOR_ELEMS(p.path) - 1; j >= 0 && found_value_index < 0; j--) {
             switch (p.path[j]->transformation) {
                 case MVMDispProgramRecordingInsert:
@@ -2817,8 +2817,8 @@ static void produce_resumption_init_values(MVMThreadContext *tc, compile_state *
 }
 static void emit_resume_inits(MVMThreadContext *tc, compile_state *cs,
         MVMCallStackDispatchRecord *record, MVMDispProgramRecordingResumption *rec_res,
-        MVMDispProgram *dp, MVMuint32 from_inc, MVMuint32 to_exc) {
-    for (MVMuint32 insert = from_inc, source = to_exc - 1; insert < to_exc; insert++, source--) {
+        MVMDispProgram *dp, uint32_t from_inc, uint32_t to_exc) {
+    for (uint32_t insert = from_inc, source = to_exc - 1; insert < to_exc; insert++, source--) {
         MVMDispProgramResumption *res = &(dp->resumptions[insert]);
         MVMDispProgramRecordingResumeInit *res_init =
             &(record->rec.resume_inits[source]);
@@ -2833,8 +2833,8 @@ static void emit_resume_inits(MVMThreadContext *tc, compile_state *cs,
     }
 }
 static void emit_value_guards(MVMThreadContext *tc, compile_state *cs,
-        MVMDispProgramRecordingResumption *rec_res, MVMuint32 from_inc, MVMuint32 to_exc) {
-    for (MVMuint32 i = from_inc; i < to_exc; i++) {
+        MVMDispProgramRecordingResumption *rec_res, uint32_t from_inc, uint32_t to_exc) {
+    for (uint32_t i = from_inc; i < to_exc; i++) {
         MVMDispProgramRecordingValue *v = &(cs->rec->values[i]);
         if (v->source == MVMDispProgramRecordingCaptureValue) {
             emit_capture_guards(tc, cs, v);
@@ -2886,7 +2886,7 @@ static void process_recording(MVMThreadContext *tc, MVMCallStackDispatchRecord *
      * guards against both, as well as resumption state operations. Thus we
      * need to work through all of the resumptions and process the guards that
      * relate to each of them. */
-    MVMuint32 is_resume = record->rec.resume_kind != MVMDispProgramRecordingResumeNone;
+    uint32_t is_resume = record->rec.resume_kind != MVMDispProgramRecordingResumeNone;
     if (is_resume) {
         /* Ensure the final number of values and resume inits in the final
          * resumption is correct. */
@@ -2894,9 +2894,9 @@ static void process_recording(MVMThreadContext *tc, MVMCallStackDispatchRecord *
         get_current_resumption(tc, record)->num_resume_inits = MVM_VECTOR_ELEMS(record->rec.resume_inits);
 
         /* Go through the resumptions. */
-        MVMuint32 start_value = 0;
-        MVMuint32 start_resume_init = 0;
-        for (MVMuint32 i = 0; i < MVM_VECTOR_ELEMS(record->rec.resumptions); i++) {
+        uint32_t start_value = 0;
+        uint32_t start_resume_init = 0;
+        for (uint32_t i = 0; i < MVM_VECTOR_ELEMS(record->rec.resumptions); i++) {
             /* Emit op to start the resumption or to move to the next one,
              * depending. */
             MVMDispProgramOp op;
@@ -2929,7 +2929,7 @@ static void process_recording(MVMThreadContext *tc, MVMCallStackDispatchRecord *
 
             /* Emit any update to the resume state. */
             if (rec_res->new_resume_state_value >= 0) {
-                MVMuint32 temp = get_temp_holding_value(tc, &cs, rec_res->new_resume_state_value);
+                uint32_t temp = get_temp_holding_value(tc, &cs, rec_res->new_resume_state_value);
                 MVMDispProgramOp op;
                 op.code = MVMDispOpcodeUpdateResumeState;
                 op.res_value.temp = temp;
@@ -2980,7 +2980,7 @@ static void process_recording(MVMThreadContext *tc, MVMCallStackDispatchRecord *
         case MVM_DISP_OUTCOME_VALUE: {
             /* Ensure the value is in a temporary, then emit the op to set the
              * result. */
-            MVMuint32 temp = get_temp_holding_value(tc, &cs, record->rec.outcome_value);
+            uint32_t temp = get_temp_holding_value(tc, &cs, record->rec.outcome_value);
             MVMDispProgramOp op;
             switch (record->outcome.result_kind) {
                 case MVM_reg_obj:
@@ -3007,8 +3007,8 @@ static void process_recording(MVMThreadContext *tc, MVMCallStackDispatchRecord *
             /* Make sure we load the invokee into a temporary before we go any
              * further. This is the last temporary we add before dealing with
              * args. Also put callsite into constant table. */
-            MVMuint32 temp_invokee = get_temp_holding_value(tc, &cs, record->rec.outcome_value);
-            MVMuint32 callsite_idx = add_program_constant_callsite(tc, &cs,
+            uint32_t temp_invokee = get_temp_holding_value(tc, &cs, record->rec.outcome_value);
+            uint32_t callsite_idx = add_program_constant_callsite(tc, &cs,
                     ((MVMCapture *)record->rec.outcome_capture)->body.callsite);
 
             /* Produce the args op(s), and then add the dispatch op. */
@@ -3025,8 +3025,8 @@ static void process_recording(MVMThreadContext *tc, MVMCallStackDispatchRecord *
             /* Make sure we load the invokee into a temporary before we go any
              * further. This is the last temporary we add before dealing with
              * args. Also put callsite into constant table. */
-            MVMuint32 temp_invokee = get_temp_holding_value(tc, &cs, record->rec.outcome_value);
-            MVMuint32 callsite_idx = add_program_constant_callsite(tc, &cs,
+            uint32_t temp_invokee = get_temp_holding_value(tc, &cs, record->rec.outcome_value);
+            uint32_t callsite_idx = add_program_constant_callsite(tc, &cs,
                     ((MVMCapture *)record->rec.outcome_capture)->body.callsite);
 
             /* Produce the args op(s), and then add the dispatch op. */
@@ -3053,7 +3053,7 @@ static void process_recording(MVMThreadContext *tc, MVMCallStackDispatchRecord *
     /* Fake up any required temporaries. */
     if (MVM_VECTOR_ELEMS(cs.fake_temps)) {
         record->temps = MVM_calloc(dp->num_temporaries, sizeof(MVMRegister));
-        for (MVMuint32 i = 0; i < MVM_VECTOR_ELEMS(cs.fake_temps); i++)
+        for (uint32_t i = 0; i < MVM_VECTOR_ELEMS(cs.fake_temps); i++)
             record->temps[cs.fake_temps[i].temp_idx] = cs.fake_temps[i].value;
     }
 
@@ -3066,7 +3066,7 @@ static void process_recording(MVMThreadContext *tc, MVMCallStackDispatchRecord *
     dump_program(tc, dp);
 
     /* Transition the inline cache to incorporate this dispatch program. */
-    MVMuint32 installed = record->rec.do_not_install
+    uint32_t installed = record->rec.do_not_install
         ? 0
         : MVM_disp_inline_cache_transition(tc, record->ic_entry_ptr,
             record->ic_entry, record->update_sf, record->initial_disp,
@@ -3089,7 +3089,7 @@ static void process_recording(MVMThreadContext *tc, MVMCallStackDispatchRecord *
 }
 
 /* Called when we have finished recording a dispatch program. */
-MVMuint32 MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatchRecord* record) {
+uint32_t MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatchRecord* record) {
     /* Set the result in place. */
     switch (record->outcome.kind) {
         case MVM_DISP_OUTCOME_FAILED:
@@ -3112,7 +3112,7 @@ MVMuint32 MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatch
              * run the resume callback. The capture is the same as the initial one
              * for this dispatch. */
             MVMDispResumptionData resume_data;
-            MVMuint32 found = record->rec.resume_kind == MVMDispProgramRecordingResumeTopmost
+            uint32_t found = record->rec.resume_kind == MVMDispProgramRecordingResumeTopmost
                 ? MVM_disp_resume_find_topmost(tc, &resume_data,
                     MVM_VECTOR_ELEMS(record->rec.resumptions))
                 : MVM_disp_resume_find_caller(tc, &resume_data,
@@ -3219,8 +3219,8 @@ MVMuint32 MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatch
 #define GET_ARG MVMRegister val = args->source[args->map[op.arg_guard.arg_idx]]
 #define MAX_RES_STATES 8
 MVMint64 MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
-        MVMCallStackDispatchRun *record, int32_t spesh_cid, MVMuint32 bytecode_offset,
-        MVMuint32 dp_index) {
+        MVMCallStackDispatchRun *record, int32_t spesh_cid, uint32_t bytecode_offset,
+        uint32_t dp_index) {
 #if MVM_CGOTO
 #include "labels.h"
 #endif
@@ -3232,7 +3232,7 @@ MVMint64 MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
     MVMuint8 num_resume_states = 0;
 
     MVMArgs *args = &(record->arg_info);
-    MVMuint32 i = 0 ;
+    uint32_t i = 0 ;
     MVMArgs invoke_args;
     MVMDispProgramOp op;
 #if !MVM_CGOTO
@@ -3552,12 +3552,12 @@ MVMint64 MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
                 invoke_args.callsite = dp->constants[op.copy_arg_tail.callsite_idx].cs;
                 invoke_args.source = record->temps + dp->first_args_temporary;
                 invoke_args.map = MVM_args_identity_map(tc, invoke_args.callsite);
-                MVMuint32 to_copy = op.copy_arg_tail.tail_args;
+                uint32_t to_copy = op.copy_arg_tail.tail_args;
                 if (to_copy > 0) {
-                    MVMuint32 source_idx = args->callsite->flag_count - to_copy;
-                    MVMuint32 target_idx = dp->first_args_temporary +
+                    uint32_t source_idx = args->callsite->flag_count - to_copy;
+                    uint32_t target_idx = dp->first_args_temporary +
                             (invoke_args.callsite->flag_count - to_copy);
-                    MVMuint32 i;
+                    uint32_t i;
                     for (i = 0; i < to_copy; i++)
                         record->temps[target_idx++] = args->source[args->map[source_idx++]];
                 }
@@ -3636,7 +3636,7 @@ rejection:
 /* GC mark a dispatch program's GC constants. */
 void MVM_disp_program_mark(MVMThreadContext *tc, MVMDispProgram *dp, MVMGCWorklist *worklist,
         MVMHeapSnapshotState *snapshot) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < dp->num_gc_constants; i++)
         add_collectable(tc, worklist, snapshot, dp->gc_constants[i],
                 "Dispatch program GC constant");
@@ -3646,13 +3646,13 @@ void MVM_disp_program_mark(MVMThreadContext *tc, MVMDispProgram *dp, MVMGCWorkli
 static void mark_recording_capture(MVMThreadContext *tc, MVMDispProgramRecordingCapture *cap,
         MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
     add_collectable(tc, worklist, snapshot, cap->capture, "Dispatch recording capture");
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(cap->captures); i++)
         mark_recording_capture(tc, &(cap->captures[i]), worklist, snapshot);
 }
 void MVM_disp_program_mark_recording(MVMThreadContext *tc, MVMDispProgramRecording *rec,
         MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
-    MVMuint32 i, j;
+    uint32_t i, j;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++) {
         MVMDispProgramRecordingValue *value = &(rec->values[i]);
         switch (value->source) {
@@ -3683,7 +3683,7 @@ void MVM_disp_program_mark_recording(MVMThreadContext *tc, MVMDispProgramRecordi
     }
     mark_recording_capture(tc, &(rec->initial_capture), worklist, snapshot);
     if (rec->resume_kind != MVMDispProgramRecordingResumeNone) {
-        for (MVMuint32 i = 0; i < MVM_VECTOR_ELEMS(rec->resumptions); i++) {
+        for (uint32_t i = 0; i < MVM_VECTOR_ELEMS(rec->resumptions); i++) {
             MVMDispProgramRecordingResumption *resumption = &(rec->resumptions[i]);
             mark_recording_capture(tc, &(resumption->initial_resume_capture), worklist, snapshot);
             if (resumption->initial_resume_args) {
@@ -3709,11 +3709,11 @@ void MVM_disp_program_mark_recording(MVMThreadContext *tc, MVMDispProgramRecordi
 /* Mark the temporaries of a running dispatch program. */
 static void mark_resumption_temps(MVMThreadContext *tc, MVMDispProgram *dp,
         MVMRegister *temps, MVMGCWorklist *worklist, MVMHeapSnapshotState *snapshot) {
-    for (MVMuint32 i = 0; i < dp->num_resumptions; i++) {
+    for (uint32_t i = 0; i < dp->num_resumptions; i++) {
         MVMDispProgramResumptionInitValue *init_values = dp->resumptions[i].init_values;
         if (init_values) {
             MVMCallsite *cs = dp->resumptions[i].init_callsite;
-            for (MVMuint32 j = 0; j < cs->flag_count; j++) {
+            for (uint32_t j = 0; j < cs->flag_count; j++) {
                 if (init_values[j].source == MVM_DISP_RESUME_INIT_TEMP) {
                     MVMCallsiteFlags flag = cs->arg_flags[j] & MVM_CALLSITE_ARG_TYPE_MASK;
                     if (flag == MVM_CALLSITE_ARG_OBJ || flag == MVM_CALLSITE_ARG_STR)
@@ -3729,9 +3729,9 @@ void MVM_disp_program_mark_run_temps(MVMThreadContext *tc, MVMDispProgram *dp,
         MVMHeapSnapshotState *snapshot) {
     if (dp->num_temporaries != dp->first_args_temporary) {
         /* Some of the temporaries form the result argument capture. */
-        for (MVMuint32 i = 0; i < cs->flag_count; i++) {
+        for (uint32_t i = 0; i < cs->flag_count; i++) {
             if (cs->arg_flags[i] & (MVM_CALLSITE_ARG_OBJ | MVM_CALLSITE_ARG_STR)) {
-                MVMuint32 temp_idx = dp->first_args_temporary + i;
+                uint32_t temp_idx = dp->first_args_temporary + i;
                 add_collectable(tc, worklist, snapshot, temps[temp_idx].o,
                         "Dispatch program temporary (arg)");
             }
@@ -3784,7 +3784,7 @@ void MVM_disp_program_destroy(MVMThreadContext *tc, MVMDispProgram *dp) {
     MVM_free(dp->constants);
     MVM_free(dp->gc_constants);
     MVM_free(dp->ops);
-    for (MVMuint32 i = 0; i < dp->num_resumptions; i++) {
+    for (uint32_t i = 0; i < dp->num_resumptions; i++) {
         MVMDispProgramResumption *resumption = &(dp->resumptions[i]);
         if (resumption->init_values) {
             MVM_free(resumption->init_values);
@@ -3796,13 +3796,13 @@ void MVM_disp_program_destroy(MVMThreadContext *tc, MVMDispProgram *dp) {
 
 /* Free the memory associated with a dispatch program recording. */
 static void destroy_recording_capture(MVMThreadContext *tc, MVMDispProgramRecordingCapture *cap) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(cap->captures); i++)
         destroy_recording_capture(tc, &(cap->captures[i]));
     MVM_VECTOR_DESTROY(cap->captures);
 }
 void MVM_disp_program_recording_destroy(MVMThreadContext *tc, MVMDispProgramRecording *rec) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < MVM_VECTOR_ELEMS(rec->values); i++)
         MVM_VECTOR_DESTROY(rec->values[i].not_literal_guards);
     MVM_VECTOR_DESTROY(rec->values);

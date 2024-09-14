@@ -24,7 +24,7 @@ struct MVMP6opaqueNameMap {
     MVMObject  *class_key;
     MVMString **names;
     MVMuint16  *slots;
-    MVMuint32   num_attrs;
+    uint32_t   num_attrs;
 };
 
 /* The P6opaque REPR data has the slot mapping, allocation size and
@@ -139,5 +139,5 @@ size_t MVM_p6opaque_attr_offset(MVMThreadContext *tc, MVMObject *type,
 void MVM_p6opaque_attr_offset_and_arg_type(MVMThreadContext *tc, MVMObject *type,
     MVMObject *class_handle, MVMString *name, size_t *offset_out, MVMCallsiteFlags *type_out);
 MVMuint16 MVM_p6opaque_get_bigint_offset(MVMThreadContext *tc, MVMSTable *st);
-MVMuint32 MVM_p6opaque_offset_to_attr_idx(MVMThreadContext *tc, MVMObject *type, size_t offset);
+uint32_t MVM_p6opaque_offset_to_attr_idx(MVMThreadContext *tc, MVMObject *type, size_t offset);
 void MVM_P6opaque_at_pos(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister *value, MVMuint16 kind);

@@ -74,7 +74,7 @@ MVMObject * MVM_proc_getenvhash(MVMThreadContext *tc) {
         return instance->env_hash;
     }
     else {
-        MVMuint32     pos = 0;
+        uint32_t     pos = 0;
         MVMString *needle = MVM_string_ascii_decode(tc, instance->VMString, STR_WITH_LEN("="));
 #ifndef _WIN32
         char      *env;
@@ -97,7 +97,7 @@ MVMObject * MVM_proc_getenvhash(MVMThreadContext *tc) {
             MVMString    *str = MVM_string_utf8_c8_decode(tc, instance->VMString, _env, strlen(_env));
 #endif
 
-            MVMuint32 index = MVM_string_index(tc, str, needle, 0);
+            uint32_t index = MVM_string_index(tc, str, needle, 0);
 
             MVMString *key, *val;
             MVMObject *box;
@@ -180,11 +180,11 @@ typedef struct {
     char             **env;
     char             **args;
     uv_stream_t       *stdin_handle;
-    MVMuint32          had_stdin_handle;
+    uint32_t          had_stdin_handle;
     int                stdin_to_close;
-    MVMuint32          seq_stdout;
-    MVMuint32          seq_stderr;
-    MVMuint32          seq_merge;
+    uint32_t          seq_stdout;
+    uint32_t          seq_stderr;
+    uint32_t          seq_merge;
     MVMint64           permit_stdout;
     MVMint64           permit_stderr;
     MVMint64           permit_merge;
@@ -555,7 +555,7 @@ static void on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) 
 
 /* Read functions for stdout/stderr/merged. */
 static void async_read(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf, SpawnInfo *si,
-                       MVMObject *callback, MVMuint32 seq_number, MVMint64 *permit) {
+                       MVMObject *callback, uint32_t seq_number, MVMint64 *permit) {
     MVMThreadContext *tc  = si->tc;
     MVMObject *arr;
     MVMAsyncTask *t;
@@ -959,13 +959,13 @@ static void spawn_gc_free(MVMThreadContext *tc, MVMObject *t, void *data) {
             MVM_free_null(si->cwd);
         }
         if (si->env) {
-            MVMuint32 i;
+            uint32_t i;
             char **_env = si->env;
             FREE_ENV();
             si->env = NULL;
         }
         if (si->args) {
-            MVMuint32 i = 0;
+            uint32_t i = 0;
             while (si->args[i])
                 MVM_free(si->args[i++]);
             MVM_free_null(si->args);

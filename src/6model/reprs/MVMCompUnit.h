@@ -42,15 +42,15 @@ typedef enum {
 struct MVMCompUnitBody {
     /* The start and size of the raw data for this compilation unit. */
     MVMuint8  *data_start;
-    MVMuint32  data_size;
+    uint32_t  data_size;
 
     /* Refers to the extops pointer below. Lives here for struct layout */
     MVMuint16       num_extops;
 
     /* The code objects for each frame, along with counts of frames. */
     MVMObject      **coderefs;
-    MVMuint32        num_frames;    /* Total, inc. added by inliner. */
-    MVMuint32        orig_frames;   /* Original from loading comp unit. */
+    uint32_t        num_frames;    /* Total, inc. added by inliner. */
+    uint32_t        orig_frames;   /* Original from loading comp unit. */
 
     /* Special frames. */
     MVMStaticFrame  *mainline_frame;
@@ -60,16 +60,16 @@ struct MVMCompUnitBody {
 
     /* The callsites in the compilation unit. */
     MVMCallsite **callsites;
-    MVMuint32     num_callsites;
-    MVMuint32     orig_callsites;
+    uint32_t     num_callsites;
+    uint32_t     orig_callsites;
 
     /* The extension ops used by the compilation unit. */
     MVMExtOpRecord *extops;
 
     /* The string heap and number of strings. */
     MVMString **strings;
-    MVMuint32   num_strings;
-    MVMuint32   orig_strings;
+    uint32_t   num_strings;
+    uint32_t   orig_strings;
 
     /* We decode strings on first use. Scanning through the string heap every
      * time to find where a string lives, however, would be extremely time
@@ -86,8 +86,8 @@ struct MVMCompUnitBody {
      * almost always be cheaper than unrequired synchronization every time. A
      * memory barrier before updating string_heap_fast_table_top makes sure we
      * never have its update getting moved ahead of writes into the table. */
-    MVMuint32 *string_heap_fast_table;
-    MVMuint32  string_heap_fast_table_top;
+    uint32_t *string_heap_fast_table;
+    uint32_t  string_heap_fast_table_top;
 
     /* Refers to serialized below. sneaked in here to optimize struct layout */
     int32_t  serialized_size;
@@ -102,7 +102,7 @@ struct MVMCompUnitBody {
     /* Array of the resolved serialization contexts, and how many we
      * have. A null in the list indicates not yet resolved */
     MVMSerializationContext **scs;
-    MVMuint32                 num_scs;
+    uint32_t                 num_scs;
 
     /* How we should deallocate data_start. */
     MVMDeallocate deallocate;

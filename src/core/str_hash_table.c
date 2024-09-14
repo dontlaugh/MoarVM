@@ -9,7 +9,7 @@
  * This one was not marked with any special copyright restriction.
  * What we need is to round the value rounded up to the next power of 2, and
  * then the log base 2 of that. Don't call this with v == 0. */
-MVMuint32 MVM_round_up_log_base2(MVMuint32 v) {
+uint32_t MVM_round_up_log_base2(uint32_t v) {
     static const uint8_t MultiplyDeBruijnBitPosition[32] = {
         1, 10, 2, 11, 14, 22, 3, 30, 12, 15, 17, 19, 23, 26, 4, 31,
         9, 13, 21, 29, 16, 18, 25, 8, 20, 28, 24, 7, 27, 6, 5, 32
@@ -111,8 +111,8 @@ void MVM_str_hash_demolish(MVMThreadContext *tc, MVMStrHashTable *hashtable) {
 MVM_STATIC_INLINE struct MVMStrHashTableControl *hash_allocate_common(MVMThreadContext *tc,
                                                                       MVMuint8 entry_size,
                                                                       MVMuint8 official_size_log2) {
-    MVMuint32 official_size = 1 << (MVMuint32)official_size_log2;
-    MVMuint32 max_items = official_size * MVM_STR_HASH_LOAD_FACTOR;
+    uint32_t official_size = 1 << (uint32_t)official_size_log2;
+    uint32_t max_items = official_size * MVM_STR_HASH_LOAD_FACTOR;
     MVMuint8 max_probe_distance_limit;
     if (MVM_HASH_MAX_PROBE_DISTANCE < max_items) {
         max_probe_distance_limit = MVM_HASH_MAX_PROBE_DISTANCE;
@@ -157,8 +157,8 @@ MVM_STATIC_INLINE struct MVMStrHashTableControl *hash_allocate_common(MVMThreadC
 
 void MVM_str_hash_build(MVMThreadContext *tc,
                         MVMStrHashTable *hashtable,
-                        MVMuint32 entry_size,
-                        MVMuint32 entries)
+                        uint32_t entry_size,
+                        uint32_t entries)
 {
     if (MVM_UNLIKELY(entry_size == 0 || entry_size > 255 || entry_size & 3)) {
         MVM_oops(tc, "Hash table entry_size %" PRIu32 " is invalid", entry_size);
@@ -176,8 +176,8 @@ void MVM_str_hash_build(MVMThreadContext *tc,
 #endif
     } else {
         /* Minimum size we need to allocate, given the load factor. */
-        MVMuint32 min_needed = entries * (1.0 / MVM_STR_HASH_LOAD_FACTOR);
-        MVMuint32 initial_size_base2 = MVM_round_up_log_base2(min_needed);
+        uint32_t min_needed = entries * (1.0 / MVM_STR_HASH_LOAD_FACTOR);
+        uint32_t initial_size_base2 = MVM_round_up_log_base2(min_needed);
         if (initial_size_base2 < STR_MIN_SIZE_BASE_2) {
             /* "Too small" - use our original defaults. */
             initial_size_base2 = STR_MIN_SIZE_BASE_2;
@@ -206,7 +206,7 @@ void MVM_str_hash_build(MVMThreadContext *tc,
     hashtable->table = control;
 }
 
-static MVMuint64 hash_fsck_internal(MVMThreadContext *tc, struct MVMStrHashTableControl *hashtable, MVMuint32 mode);
+static MVMuint64 hash_fsck_internal(MVMThreadContext *tc, struct MVMStrHashTableControl *hashtable, uint32_t mode);
 
 MVM_STATIC_INLINE struct MVMStrHashHandle *hash_insert_internal(MVMThreadContext *tc,
                                                                 struct MVMStrHashTableControl *control,
@@ -237,7 +237,7 @@ MVM_STATIC_INLINE struct MVMStrHashHandle *hash_insert_internal(MVMThreadContext
                 MVMuint8 *find_me_a_gap = ls.metadata;
                 MVMuint8 old_probe_distance = *ls.metadata;
                 do {
-                    MVMuint32 new_probe_distance = ls.metadata_increment + old_probe_distance;
+                    uint32_t new_probe_distance = ls.metadata_increment + old_probe_distance;
                     if (new_probe_distance >> ls.probe_distance_shift == ls.max_probe_distance) {
                         /* Optimisation from Martin Ankerl's implementation:
                            setting this to zero forces a resize on any insert,
@@ -251,7 +251,7 @@ MVM_STATIC_INLINE struct MVMStrHashHandle *hash_insert_internal(MVMThreadContext
                     *find_me_a_gap = new_probe_distance;
                 } while (old_probe_distance);
 
-                MVMuint32 entries_to_move = find_me_a_gap - ls.metadata;
+                uint32_t entries_to_move = find_me_a_gap - ls.metadata;
                 size_t size_to_move = (size_t) ls.entry_size * entries_to_move;
                 /* When we had entries *ascending* this was
                  * memmove(entry_raw + hashtable->entry_size, entry_raw,
@@ -344,9 +344,9 @@ static struct MVMStrHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
 
     /* control->max_items may have been set to 0 to trigger a call into this
      * function. */
-    MVMuint32 max_items = MVM_str_hash_max_items(control);
-    MVMuint32 max_probe_distance = control->max_probe_distance;
-    MVMuint32 max_probe_distance_limit = control->max_probe_distance_limit;
+    uint32_t max_items = MVM_str_hash_max_items(control);
+    uint32_t max_probe_distance = control->max_probe_distance;
+    uint32_t max_probe_distance_limit = control->max_probe_distance_limit;
 
     /* We can hit both the probe limit and the max items on the same insertion.
      * In which case, upping the probe limit isn't going to save us :-)
@@ -356,13 +356,13 @@ static struct MVMStrHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
     if (control->cur_items < max_items
         && max_probe_distance < max_probe_distance_limit) {
         /* We hit the probe limit, but not the max items count. */
-        MVMuint32 new_probe_distance = 1 + 2 * max_probe_distance;
+        uint32_t new_probe_distance = 1 + 2 * max_probe_distance;
         if (new_probe_distance > max_probe_distance_limit) {
             new_probe_distance = max_probe_distance_limit;
         }
 
         MVMuint8 *metadata = MVM_str_hash_metadata(control);
-        MVMuint32 in_use_items = MVM_str_hash_official_size(control) + max_probe_distance;
+        uint32_t in_use_items = MVM_str_hash_official_size(control) + max_probe_distance;
         /* not `in_use_items + 1` because because we don't need to shift the
          * sentinel. */
         size_t metadata_size = MVM_hash_round_size_up(in_use_items);
@@ -388,7 +388,7 @@ static struct MVMStrHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
         return NULL;
     }
 
-    MVMuint32 entries_in_use =  MVM_str_hash_kompromat(control);
+    uint32_t entries_in_use =  MVM_str_hash_kompromat(control);
     MVMuint8 *entry_raw_orig = MVM_str_hash_entries(control);
     MVMuint8 *metadata_orig = MVM_str_hash_metadata(control);
     MVMuint8 entry_size = control->entry_size;
@@ -651,7 +651,7 @@ void MVM_str_hash_delete_nocheck(MVMThreadContext *tc,
                      * distance has to be less than the limit.
                      *
                      * So here we are: */
-                    MVMuint32 official_size = 1 << (MVMuint32)control->official_size_log2;
+                    uint32_t official_size = 1 << (uint32_t)control->official_size_log2;
                     control->max_items = official_size * MVM_STR_HASH_LOAD_FACTOR;
                 }
 
@@ -697,9 +697,9 @@ void MVM_str_hash_delete_nocheck(MVMThreadContext *tc,
 }
 
 
-static MVMuint64 hash_fsck_internal(MVMThreadContext *tc, struct MVMStrHashTableControl *control, MVMuint32 mode) {
+static MVMuint64 hash_fsck_internal(MVMThreadContext *tc, struct MVMStrHashTableControl *control, uint32_t mode) {
     const char *prefix_hashes = mode & MVM_HASH_FSCK_PREFIX_HASHES ? "# " : "";
-    MVMuint32 display = mode & 3;
+    uint32_t display = mode & 3;
     MVMuint64 errors = 0;
     MVMuint64 seen = 0;
 
@@ -711,11 +711,11 @@ static MVMuint64 hash_fsck_internal(MVMThreadContext *tc, struct MVMStrHashTable
         return 0;
     }
 
-    MVMuint32 allocated_items = MVM_str_hash_allocated_items(control);
+    uint32_t allocated_items = MVM_str_hash_allocated_items(control);
     const MVMuint8 metadata_hash_bits = control->metadata_hash_bits;
     MVMuint8 *entry_raw = MVM_str_hash_entries(control);
     MVMuint8 *metadata = MVM_str_hash_metadata(control);
-    MVMuint32 bucket = 0;
+    uint32_t bucket = 0;
     MVMint64 prev_offset = 0;
     MVMuint8 bucket_right_shift
         = control->key_right_shift + control->metadata_hash_bits;
@@ -784,9 +784,9 @@ static MVMuint64 hash_fsck_internal(MVMThreadContext *tc, struct MVMStrHashTable
             } else {
                 /* OK, it is a concrete string (still). */
                 MVMuint64 hash_val = MVM_str_hash_code(tc, control->salt, key);
-                MVMuint32 ideal_bucket = hash_val >> bucket_right_shift;
+                uint32_t ideal_bucket = hash_val >> bucket_right_shift;
                 MVMint64 offset = 1 + bucket - ideal_bucket;
-                MVMuint32 actual_bucket = *metadata >> metadata_hash_bits;
+                uint32_t actual_bucket = *metadata >> metadata_hash_bits;
                 char wrong_bucket = offset == actual_bucket ? ' ' : '!';
                 char wrong_order;
                 if (offset < 1) {
@@ -873,6 +873,6 @@ static MVMuint64 hash_fsck_internal(MVMThreadContext *tc, struct MVMStrHashTable
 /* This is not part of the public API, and subject to change at any point.
    (possibly in ways that are actually incompatible but won't generate compiler
    warnings.) */
-MVMuint64 MVM_str_hash_fsck(MVMThreadContext *tc, MVMStrHashTable *hashtable, MVMuint32 mode) {
+MVMuint64 MVM_str_hash_fsck(MVMThreadContext *tc, MVMStrHashTable *hashtable, uint32_t mode) {
     return hash_fsck_internal(tc, hashtable->table, mode);
 }

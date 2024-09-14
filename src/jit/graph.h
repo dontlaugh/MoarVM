@@ -52,7 +52,7 @@ struct MVMJitPrimitive {
 
 struct MVMJitGuard {
     MVMSpeshIns * ins;
-    MVMuint32 deopt_idx;
+    uint32_t deopt_idx;
 };
 
 
@@ -186,10 +186,10 @@ struct MVMJitInvoke {
     MVMSpeshIns **arg_ins;
     MVMReturnType return_type;
     MVMint16      return_register;
-    MVMuint32     code_register_or_name;
+    uint32_t     code_register_or_name;
     MVMint16      spesh_cand_or_sf_slot;
     MVMint8       is_fast;
-    MVMuint32     resolve_offset;           /* Only for spesh resolve */
+    uint32_t     resolve_offset;           /* Only for spesh resolve */
     int32_t      reentry_label;
 };
 
@@ -227,7 +227,7 @@ struct MVMJitDispatch {
     int32_t      id;
     MVMCallsite  *callsite;
     MVMuint16     sf_slot;
-    MVMuint32     ice_slot;
+    uint32_t     ice_slot;
     MVMReturnType return_type;
     MVMint16      return_register;
     MVMSpeshOperand *map;
@@ -239,7 +239,7 @@ struct MVMJitIsType {
     MVMint16      obj_register;
     MVMint16      type_register;
     MVMuint16     sf_slot;
-    MVMuint32     ice_slot;
+    uint32_t     ice_slot;
     int32_t      reentry_label;
 };
 

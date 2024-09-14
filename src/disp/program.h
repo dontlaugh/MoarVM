@@ -121,13 +121,13 @@ struct MVMDispProgramRecordingValue {
     union {
         struct {
             /* The index within the initial arguments capture. */
-            MVMuint32 index;
+            uint32_t index;
         } capture;
         struct {
             /* The index within the resume initialization arguments capture. */
-            MVMuint32 index;
+            uint32_t index;
             /* The nesting level of the resume initialization. */
-            MVMuint32 resumption_level;
+            uint32_t resumption_level;
         } resume_capture;
         struct {
             /* The literal value and its kind. */
@@ -136,31 +136,31 @@ struct MVMDispProgramRecordingValue {
         } literal;
         struct {
             /* The value that we'll read from. */
-            MVMuint32 from_value;
+            uint32_t from_value;
             /* The offset of that object we'll read from. */
-            MVMuint32 offset;
+            uint32_t offset;
             /* The kind of value we'll read. */
             MVMCallsiteFlags kind;
         } attribute;
         struct {
             /* The value that we'll read the HOW of. */
-            MVMuint32 from_value;
+            uint32_t from_value;
         } how;
         struct {
             /* The value that we'll unbox. */
-            MVMuint32 from_value;
+            uint32_t from_value;
             /* The kind of value we'll unbox. */
             MVMCallsiteFlags kind;
         } unbox;
         struct {
             /* The value index of the lookup hash. */
-            MVMuint32 lookup_index;
+            uint32_t lookup_index;
             /* The value index of the lookup key. */
-            MVMuint32 key_index;
+            uint32_t key_index;
         } lookup;
         struct {
             /* The index of the resumption that this is the state of. */
-            MVMuint32 index;
+            uint32_t index;
         } resumption;
     };
 
@@ -196,10 +196,10 @@ struct MVMDispProgramRecordingCapture {
     MVMDispProgramRecordingTransformation transformation;
 
     /* The index involved in the insert or drop. */
-    MVMuint32 index;
+    uint32_t index;
 
     /* For inserts, the index of the value that was involved. */
-    MVMuint32 value_index;
+    uint32_t value_index;
 
     /* Tree of captures further derived from the this one. */
     MVM_VECTOR_DECL(MVMDispProgramRecordingCapture, captures);
@@ -245,16 +245,16 @@ struct MVMDispProgramRecordingResumption {
      * (before we defer to a next resumption). This is used so we can emit the
      * guards grouped by the resumption, so we only are considering a single
      * active resumption at a time. */
-    MVMuint32 num_values;
+    uint32_t num_values;
 
     /* The total number of new resumption initialization arguments set up at
      * the end of this resumption. */
-    MVMuint32 num_resume_inits;
+    uint32_t num_resume_inits;
 
     /* Did the resumption look for a further resumption to take place and not
      * find one? Used so we can produce a guard against that in the dispatch
      * program, so it won't falsely match. */
-    MVMuint32 no_next_resumption;
+    uint32_t no_next_resumption;
 };
 
 /* Recording state of a dispatch program, updated as we move through the record
@@ -277,7 +277,7 @@ struct MVMDispProgramRecording {
     MVMDispProgramRecordingResumeKind resume_kind;
 
     /* The inline cache size when we started recording this dispatch. */
-    MVMuint32 inline_cache_size;
+    uint32_t inline_cache_size;
 
     /* If we are doing a resume, the list of resumable dispatches we have
      * worked through  */
@@ -294,7 +294,7 @@ struct MVMDispProgramRecording {
     /* The index of the value that is the outcome of the dispatch. For a value
      * outcome, it's the value we'll produce. For the invocations, it's the
      * code or C function value. */
-    MVMuint32 outcome_value;
+    uint32_t outcome_value;
 
     /* For an invocation outcome, this is the capture that we shall invoke the
      * arguments with. Will be located within the capture tree somewhere. */
@@ -302,8 +302,8 @@ struct MVMDispProgramRecording {
 
     /* If it's an invocation outcome, do we want bind failure (and maybe also
      * success) mapped to a resumption, and if so, what flag should we pass? */
-    MVMuint32 bind_failure_resumption_flag;
-    MVMuint32 bind_success_resumption_flag;
+    uint32_t bind_failure_resumption_flag;
+    uint32_t bind_success_resumption_flag;
     MVMDispProgramRecordingBindControlKind map_bind_outcome_to_resumption;
 
     /* Flag indicating if we should install the dispatch program at the
@@ -324,26 +324,26 @@ struct MVMDispProgram {
 
     /* The number of GC-managed constants (for more efficient marking of
      * them). */
-    MVMuint32 num_gc_constants;
+    uint32_t num_gc_constants;
 
     /* The number of temporaries. Temporaries are used while evaluating
      * the dispatch program, and may also be used as an argument buffer
      * when we cannot just point into a tail of the original one. */
-    MVMuint32 num_temporaries;
+    uint32_t num_temporaries;
 
     /* The first of the temporaries that is used in order to store an
      * argument buffer. These live long enough that we need to mark
      * them using the callsite. Equals num_temporaries if there aren't
      * any. */
-    MVMuint32 first_args_temporary;
+    uint32_t first_args_temporary;
 
     /* Ops we execute to evaluate the dispatch program. */
-    MVMuint32 num_ops;
+    uint32_t num_ops;
     MVMDispProgramOp *ops;
 
     /* Resumptions, if any, ordered innermost first. */
     MVMDispProgramResumption *resumptions;
-    MVMuint32 num_resumptions;
+    uint32_t num_resumptions;
 };
 
 /* Various kinds of constant we use during a dispatch program, to let us keep
@@ -521,61 +521,61 @@ struct MVMDispProgramOp {
         } resume;
         struct {
             /* The callsite of the resumption initialization state. */
-            MVMuint32 callsite_idx;
+            uint32_t callsite_idx;
         } resume_init_callsite;
         struct {
             /* The argument index in the incoming capture. */
             MVMuint16 arg_idx;
             /* The thing to check it against (looked up in one of the constant
              * tables). */
-            MVMuint32 checkee;
+            uint32_t checkee;
         } arg_guard;
         struct {
             /* The temporary to guard. */
-            MVMuint32 temp;
+            uint32_t temp;
             /* The thing to check it against (looked up in one of the constant
              * tables). */
-            MVMuint32 checkee;
+            uint32_t checkee;
         } temp_guard;
         struct {
             /* The temporary to load into. */
-            MVMuint32 temp;
+            uint32_t temp;
             /* The index to load from. The thing we're indexing is part of
              * the instruction. For attribute loads, this is the offset into
              * the object to read (and we expect temp to start out containing
              * the object to read from, unlike any other load; this keeps our
              * union to 64 bits). */
-            MVMuint32 idx;
+            uint32_t idx;
         } load;
         struct {
             /* The flag to pass when we do a resume when there is a bind
              * failure. */
-            MVMuint32 failure_flag;
+            uint32_t failure_flag;
             /* The flag to pass when we do a resume when there is a bind
              * success. */
-            MVMuint32 success_flag;
+            uint32_t success_flag;
         } bind_control_resumption;
         struct {
             /* The number of args to skip when we use the tail of the incoming
              * capture. */
-            MVMuint32 skip_args;
+            uint32_t skip_args;
             /* The callsite index. */
-            MVMuint32 callsite_idx;
+            uint32_t callsite_idx;
         } use_arg_tail;
         struct {
             /* The number of args to copy from the tail of the incoming callsite
              * to the tail of the args temporaries area. */
-            MVMuint32 tail_args;
+            uint32_t tail_args;
             /* The callsite index. */
-            MVMuint32 callsite_idx;
+            uint32_t callsite_idx;
         } copy_arg_tail;
         struct {
             /* The temporary holding the result. */
-            MVMuint32 temp;
+            uint32_t temp;
         } res_value;
         struct {
             /* The temporary holding the thing to invoke. */
-            MVMuint32 temp_invokee;
+            uint32_t temp_invokee;
         } res_code;
     };
 };
@@ -626,7 +626,7 @@ MVMint64 MVM_disp_program_record_get_inline_cache_size(MVMThreadContext *tc);
 void MVM_disp_program_record_do_not_install(MVMThreadContext *tc);
 MVMHLLConfig * MVM_disp_program_record_get_hll(MVMThreadContext *tc);
 MVMObject * MVM_disp_program_record_track_arg(MVMThreadContext *tc, MVMObject *capture,
-        MVMuint32 index);
+        uint32_t index);
 MVMObject * MVM_disp_program_record_track_attr(MVMThreadContext *tc, MVMObject *tracked,
         MVMObject *class_handle, MVMString *name);
 MVMObject * MVM_disp_program_record_track_unbox_int(MVMThreadContext *tc, MVMObject *tracked);
@@ -644,19 +644,19 @@ MVMObject * MVM_disp_program_record_index_lookup_table(MVMThreadContext *tc,
 MVMObject * MVM_disp_program_record_index_tracked_lookup_table(MVMThreadContext *tc,
        MVMObject *tracked_lookup_hash, MVMObject *tracked_key);
 MVMObject * MVM_disp_program_record_capture_drop_arg(MVMThreadContext *tc, MVMObject *capture,
-        MVMuint32 index);
+        uint32_t index);
 MVMObject * MVM_disp_program_record_capture_drop_args(MVMThreadContext *tc, MVMObject *capture,
-        MVMuint32 index, MVMuint32 count);
+        uint32_t index, uint32_t count);
 MVMObject * MVM_disp_program_record_capture_insert_constant_arg(MVMThreadContext *tc,
-        MVMObject *capture, MVMuint32 index, MVMCallsiteFlags kind, MVMRegister value);
+        MVMObject *capture, uint32_t index, MVMCallsiteFlags kind, MVMRegister value);
 MVMint64 MVM_disp_program_record_capture_is_arg_literal(MVMThreadContext *tc,
-        MVMObject *capture, MVMuint32 index);
+        MVMObject *capture, uint32_t index);
 MVMObject * MVM_disp_program_record_capture_insert_arg(MVMThreadContext *tc,
-        MVMObject *capture, MVMuint32 index, MVMObject *tracked);
+        MVMObject *capture, uint32_t index, MVMObject *tracked);
 MVMObject * MVM_disp_program_record_capture_replace_arg(MVMThreadContext *tc,
-        MVMObject *capture, MVMuint32 idx, MVMObject *tracked);
+        MVMObject *capture, uint32_t idx, MVMObject *tracked);
 MVMObject * MVM_disp_program_record_capture_replace_literal_arg(MVMThreadContext *tc,
-        MVMObject *capture, MVMuint32 idx, MVMCallsiteFlags kind, MVMRegister value);
+        MVMObject *capture, uint32_t idx, MVMCallsiteFlags kind, MVMRegister value);
 void MVM_disp_program_record_set_resume_init_args(MVMThreadContext *tc, MVMObject *capture);
 MVMObject * MVM_disp_program_record_get_resume_init_args(MVMThreadContext *tc);
 void MVM_disp_program_record_set_resume_state(MVMThreadContext *tc, MVMObject *tracked);
@@ -668,9 +668,9 @@ void MVM_disp_program_record_resume_caller(MVMThreadContext *tc, MVMObject *capt
 void MVM_disp_program_record_delegate(MVMThreadContext *tc, MVMString *dispatcher_id,
         MVMObject *capture);
 int32_t MVM_disp_program_record_next_resumption(MVMThreadContext *tc, MVMObject *with_args);
-void MVM_disp_program_record_resume_on_bind_failure(MVMThreadContext *tc, MVMuint32 flag);
-void MVM_disp_program_record_resume_after_bind(MVMThreadContext *tc, MVMuint32 failure_flag,
-        MVMuint32 success_flag);
+void MVM_disp_program_record_resume_on_bind_failure(MVMThreadContext *tc, uint32_t flag);
+void MVM_disp_program_record_resume_after_bind(MVMThreadContext *tc, uint32_t failure_flag,
+        uint32_t success_flag);
 void MVM_disp_program_record_result_constant(MVMThreadContext *tc, MVMCallsiteFlags kind,
         MVMRegister value);
 void MVM_disp_program_record_result_tracked_value(MVMThreadContext *tc, MVMObject *tracked);
@@ -683,12 +683,12 @@ void MVM_disp_program_record_tracked_code(MVMThreadContext *tc, MVMObject *track
         MVMObject *capture);
 void MVM_disp_program_record_tracked_c_code(MVMThreadContext *tc, MVMObject *tracked,
         MVMObject *capture);
-MVMuint32 MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatchRecord* record);
+uint32_t MVM_disp_program_record_end(MVMThreadContext *tc, MVMCallStackDispatchRecord* record);
 
 /* Functions to run dispatch programs. */
 MVMint64 MVM_disp_program_run(MVMThreadContext *tc, MVMDispProgram *dp,
         MVMCallStackDispatchRun *disp_run, int32_t spesh_cid,
-        MVMuint32 bytecode_offset, MVMuint32 dp_index);
+        uint32_t bytecode_offset, uint32_t dp_index);
 
 /* Memory management of dispatch programs. */
 void MVM_disp_program_mark(MVMThreadContext *tc, MVMDispProgram *dp, MVMGCWorklist *worklist,

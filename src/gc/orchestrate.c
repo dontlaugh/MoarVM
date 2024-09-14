@@ -4,7 +4,7 @@
 /* If we have the job of doing GC for a thread, we add it to our work
  * list. */
 static void add_work(MVMThreadContext *tc, MVMThreadContext *stolen) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < tc->gc_work_count; i++)
         if (tc->gc_work[i].tc == stolen)
             return;
@@ -23,7 +23,7 @@ static void add_work(MVMThreadContext *tc, MVMThreadContext *stolen) {
  * GC run is starting. Those that are blocked are considered excluded from
  * the run, and are not counted. Returns the count of threads that should be
  * added to the finished countdown. */
-static MVMuint32 signal_one_thread(MVMThreadContext *tc, MVMThreadContext *to_signal) {
+static uint32_t signal_one_thread(MVMThreadContext *tc, MVMThreadContext *to_signal) {
     /* Loop here since we may not succeed first time (e.g. the status of the
      * thread may change between the two ways we try to twiddle it). */
     unsigned int had_suspend_request = 0;
@@ -68,9 +68,9 @@ static MVMuint32 signal_one_thread(MVMThreadContext *tc, MVMThreadContext *to_si
         }
     }
 }
-static MVMuint32 signal_all(MVMThreadContext *tc, MVMThread *threads) {
+static uint32_t signal_all(MVMThreadContext *tc, MVMThread *threads) {
     MVMThread *t = threads;
-    MVMuint32 count = 0;
+    uint32_t count = 0;
     while (t) {
         switch (MVM_load(&t->body.stage)) {
             case MVM_thread_stage_starting:
@@ -117,7 +117,7 @@ static int process_in_tray(MVMThreadContext *tc, MVMuint8 gen) {
 /* Called by a thread when it thinks it is done with GC. It may get some more
  * work yet, though. */
 static void clear_intrays(MVMThreadContext *tc, MVMuint8 gen) {
-    MVMuint32 did_work = 1;
+    uint32_t did_work = 1;
     while (did_work) {
         MVMThread *cur_thread;
         did_work = 0;
@@ -130,7 +130,7 @@ static void clear_intrays(MVMThreadContext *tc, MVMuint8 gen) {
     }
 }
 static void finish_gc(MVMThreadContext *tc, MVMuint8 gen, MVMuint8 is_coordinator) {
-    MVMuint32 i, did_work;
+    uint32_t i, did_work;
 
     /* Do any extra work that we have been passed. */
     GCDEBUG_LOG(tc, MVM_GC_DEBUG_ORCHESTRATE,
@@ -402,7 +402,7 @@ static int32_t is_full_collection(MVMThreadContext *tc) {
 
 static void run_gc(MVMThreadContext *tc, MVMuint8 what_to_do) {
     MVMuint8   gen;
-    MVMuint32  i, n;
+    uint32_t  i, n;
 
     MVMuint8 is_coordinator;
 
@@ -498,7 +498,7 @@ void MVM_gc_enter_from_allocator(MVMThreadContext *tc) {
 
     /* Try to start the GC run. */
     if (MVM_trycas(&tc->instance->gc_start, 0, 1)) {
-        MVMuint32 num_threads = 0;
+        uint32_t num_threads = 0;
 
         /* Stash us as the thread to blame for this GC run (used to give it a
          * potential nursery size boost). */

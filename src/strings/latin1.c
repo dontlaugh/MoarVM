@@ -67,16 +67,16 @@ MVMString * MVM_string_latin1_decode(MVMThreadContext *tc, const MVMObject *resu
 
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-MVMuint32 MVM_string_latin1_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                    const MVMuint32 *stopper_chars,
+uint32_t MVM_string_latin1_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                    const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps) {
-    MVMuint32 count = 0, total = 0;
-    MVMuint32 bufsize;
+    uint32_t count = 0, total = 0;
+    uint32_t bufsize;
     MVMGrapheme32 *buffer;
     MVMDecodeStreamBytes *cur_bytes;
     MVMDecodeStreamBytes *last_accept_bytes = ds->bytes_head;
     int32_t last_accept_pos, last_was_cr;
-    MVMuint32 reached_stopper;
+    uint32_t reached_stopper;
 
     /* If there's no buffers, we're done. */
     if (!ds->bytes_head)
@@ -160,7 +160,7 @@ char * MVM_string_latin1_encode_substr(MVMThreadContext *tc, MVMString *str, MVM
     /* Latin-1 is a single byte encoding, but \r\n is a 2-byte grapheme, so we
      * may have to resize as we go. */
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
-    MVMuint32 lengthu = (MVMuint32)(length == -1 ? strgraphs - (MVMuint32)start : length);
+    uint32_t lengthu = (uint32_t)(length == -1 ? strgraphs - (uint32_t)start : length);
     MVMuint8 *result;
     size_t result_alloc;
     MVMuint8 *repl_bytes = NULL;
@@ -186,7 +186,7 @@ char * MVM_string_latin1_encode_substr(MVMThreadContext *tc, MVMString *str, MVM
             *output_size = lengthu;
     }
     else {
-        MVMuint32 i = 0;
+        uint32_t i = 0;
         MVMCodepointIter ci;
         MVM_string_ci_init(tc, &ci, str, translate_newlines, 0);
         while (MVM_string_ci_has_more(tc, &ci)) {

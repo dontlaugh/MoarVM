@@ -7,7 +7,7 @@ struct MVMKnowHOWAttributeREPRBody {
     MVMObject *type;
 
     /* Whether the attribute serves as a box target. */
-    MVMuint32 box_target;
+    uint32_t box_target;
 };
 struct MVMKnowHOWAttributeREPR {
     MVMObject common;

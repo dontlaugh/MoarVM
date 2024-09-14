@@ -24,7 +24,7 @@ struct MVMCallStackRegion {
     char *alloc_limit;
 
 #if MVM_PTR_SIZE == 4
-    MVMuint32 thingy_to_ensure_8_byte_alignment;
+    uint32_t thingy_to_ensure_8_byte_alignment;
 #endif
 };
 
@@ -235,7 +235,7 @@ struct MVMCallStackDispatchRun {
     MVMArgs arg_info;
 
     /* The number of temporaries allocated. */
-    MVMuint32 num_temps;
+    uint32_t num_temps;
 
     /* Temporaries (actually allocated after this record, which is variable
      * length). */
@@ -253,7 +253,7 @@ struct MVMCallStackDispatchRun {
 
     /* The resumption nesting level, for when we have multiple resumable
      * dispatchers working within a single dispatch. */
-    MVMuint32 resumption_level;
+    uint32_t resumption_level;
 
     /* The dispatch program that was chosen (used to know how to mark the
      * temporaries, if needed). */
@@ -374,18 +374,18 @@ struct MVMCallStackSpecialReturn {
 /* Functions for working with the call stack. */
 void MVM_callstack_init(MVMThreadContext *tc);
 MVMCallStackRecord * MVM_callstack_allocate_nested_runloop(MVMThreadContext *tc);
-MVMCallStackFrame * MVM_callstack_allocate_frame(MVMThreadContext *tc, MVMuint32 work_size,
-        MVMuint32 env_size);
+MVMCallStackFrame * MVM_callstack_allocate_frame(MVMThreadContext *tc, uint32_t work_size,
+        uint32_t env_size);
 MVMCallStackHeapFrame * MVM_callstack_allocate_heap_frame(MVMThreadContext *tc,
-        MVMuint32 work_size);
-int32_t MVM_callstack_ensure_work_and_env_space(MVMThreadContext *tc, MVMuint32 needed_work,
-        MVMuint32 needed_env);
+        uint32_t work_size);
+int32_t MVM_callstack_ensure_work_and_env_space(MVMThreadContext *tc, uint32_t needed_work,
+        uint32_t needed_env);
 MVM_PUBLIC void * MVM_callstack_allocate_special_return(MVMThreadContext *tc,
         MVMSpecialReturn special_return, MVMSpecialReturn special_unwind,
         MVMSpecialReturnMark mark_data, size_t data_size);
 MVMCallStackDispatchRecord * MVM_callstack_allocate_dispatch_record(MVMThreadContext *tc);
 MVMCallStackDispatchRun * MVM_callstack_allocate_dispatch_run(MVMThreadContext *tc,
-        MVMuint32 num_temps);
+        uint32_t num_temps);
 MVMCallStackFlattening * MVM_callstack_allocate_flattening(MVMThreadContext *tc,
         MVMuint16 num_args, MVMuint16 num_pos);
 MVMCallStackBindControl * MVM_callstack_allocate_bind_control_failure_only(MVMThreadContext *tc,

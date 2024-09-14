@@ -45,7 +45,7 @@ struct MVMJitExprTree {
         uintptr_t u;
     }, constants);
 
-    MVMuint32 seq_nr;
+    uint32_t seq_nr;
 };
 
 struct MVMJitExprTemplate {

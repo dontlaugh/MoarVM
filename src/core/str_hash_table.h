@@ -415,8 +415,8 @@ struct MVMStrHashTableControl {
     MVMuint64 salt;
 #if HASH_DEBUG_ITER
     MVMuint64 ht_id;
-    MVMuint32 serial;
-    MVMuint32 last_delete_at;
+    uint32_t serial;
+    uint32_t last_delete_at;
 #endif
     /* If cur_items and max_items are *both* 0 then we only allocated a control
      * structure. All of the other entries in the struct are bogus, apart from
@@ -457,14 +457,14 @@ struct MVMStrHashHandle {
 };
 
 typedef struct {
-    MVMuint32 pos;
+    uint32_t pos;
 #if HASH_DEBUG_ITER
-    MVMuint32 serial;
+    uint32_t serial;
     MVMuint64 owner;
 #endif
 }  MVMStrHashIterator;
 
-MVMuint32 MVM_round_up_log_base2(MVMuint32 v);
+uint32_t MVM_round_up_log_base2(uint32_t v);
 
 #if HASH_DEBUG_ITER
 MVM_STATIC_INLINE int MVM_str_hash_iterator_target_deleted(MVMThreadContext *tc,
@@ -503,7 +503,7 @@ MVM_STATIC_INLINE int MVM_str_hash_at_end(MVMThreadContext *tc,
         MVM_oops(tc, "MVM_str_hash_at_end called with an iterator from a different hash table: %016" PRIx64 " != %016" PRIx64,
                  iterator.owner, ht_id);
     }
-    MVMuint32 serial = control ? control->serial : 0;
+    uint32_t serial = control ? control->serial : 0;
     if (iterator.serial != serial
         || MVM_str_hash_iterator_target_deleted(tc, hashtable, iterator)) {
         MVM_oops(tc, "MVM_str_hash_at_end called with an iterator with the wrong serial number: %u != %u",

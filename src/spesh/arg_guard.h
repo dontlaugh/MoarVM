@@ -6,10 +6,10 @@ struct MVMSpeshArgGuard {
     MVMSpeshArgGuardNode *nodes;
 
     /* How many nodes we have. */
-    MVMuint32 num_nodes;
+    uint32_t num_nodes;
 
     /* How many nodes are actually used. */
-    MVMuint32 used_nodes;
+    uint32_t used_nodes;
 };
 
 /* Operations we may perform when evaluating a guard. */
@@ -67,14 +67,14 @@ struct MVMSpeshArgGuardNode {
         /* Used by STABLE_CONC, STABLE_TYPE */
         MVMSTable *st;
         /* Used by DEREF_VALUE and DEREF_RW. */
-        MVMuint32 offset;
+        uint32_t offset;
         /* Used by RESULT. */
-        MVMuint32 result;
+        uint32_t result;
     };
 };
 
 void MVM_spesh_arg_guard_regenerate(MVMThreadContext *tc, MVMSpeshArgGuard **guard_ptr,
-        MVMSpeshCandidate **candidates, MVMuint32 num_spesh_candidates); 
+        MVMSpeshCandidate **candidates, uint32_t num_spesh_candidates); 
 int32_t MVM_spesh_arg_guard_run_types(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
     MVMCallsite *cs, MVMSpeshStatsType *types);
 int32_t MVM_spesh_arg_guard_run(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
@@ -85,5 +85,5 @@ void MVM_spesh_arg_guard_gc_mark(MVMThreadContext *tc, MVMSpeshArgGuard *ag,
     MVMGCWorklist *worklist);
 void MVM_spesh_arg_guard_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
                                      MVMSpeshArgGuard *ag);
-void MVM_spesh_arg_guard_destroy(MVMThreadContext *tc, MVMSpeshArgGuard *ag, MVMuint32 safe);
+void MVM_spesh_arg_guard_destroy(MVMThreadContext *tc, MVMSpeshArgGuard *ag, uint32_t safe);
 void MVM_spesh_arg_guard_discard(MVMThreadContext *tc, MVMStaticFrame *sf);

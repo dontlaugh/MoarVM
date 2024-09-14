@@ -1,5 +1,5 @@
-static MVMuint32 MVM_bithacks_count_bits(MVMuint64 value) {
-    MVMuint32 count;
+static uint32_t MVM_bithacks_count_bits(MVMuint64 value) {
+    uint32_t count;
 
     for (count = 0; value; count++)
         value &= value - 1;

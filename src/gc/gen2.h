@@ -16,10 +16,10 @@ struct MVMGen2SizeClass {
     char *alloc_limit;
 
     /* The current page number that we're allocating in. */
-    MVMuint32 cur_page;
+    uint32_t cur_page;
 
     /* The number of pages allocated. */
-    MVMuint32 num_pages;
+    uint32_t num_pages;
 };
 
 /* An "instance" of the fixed size allocator. */
@@ -35,10 +35,10 @@ struct MVMGen2Allocator {
     MVMCollectable **overflows;
 
     /* The number of objects in the overflow array. */
-    MVMuint32        num_overflows;
+    uint32_t        num_overflows;
 
     /* The amount of space allocated in the overflow array. */
-    MVMuint32        alloc_overflows;
+    uint32_t        alloc_overflows;
 };
 
 /* The number of bits we discard from the requested size when binning
@@ -66,8 +66,8 @@ struct MVMGen2Allocator {
 
 /* Functions. */
 MVMGen2Allocator * MVM_gc_gen2_create(MVMInstance *i);
-void * MVM_gc_gen2_allocate(MVMGen2Allocator *al, MVMuint32 size);
-void * MVM_gc_gen2_allocate_zeroed(MVMGen2Allocator *al, MVMuint32 size);
+void * MVM_gc_gen2_allocate(MVMGen2Allocator *al, uint32_t size);
+void * MVM_gc_gen2_allocate_zeroed(MVMGen2Allocator *al, uint32_t size);
 void MVM_gc_gen2_destroy(MVMInstance *i, MVMGen2Allocator *allocator);
 void MVM_gc_gen2_transfer(MVMThreadContext *src, MVMThreadContext *dest);
 void MVM_gc_gen2_compact_overflows(MVMGen2Allocator *allocator);

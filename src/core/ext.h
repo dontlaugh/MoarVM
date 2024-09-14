@@ -20,14 +20,14 @@ struct MVMExtOpRegistry {
     MVMOpInfo info;
     MVMExtOpSpesh *spesh;
     MVMExtOpFactDiscover *discover;
-    MVMuint32 no_jit;
-    MVMuint32 allocating;
+    uint32_t no_jit;
+    uint32_t allocating;
 };
 
 int MVM_ext_load(MVMThreadContext *tc, MVMString *lib, MVMString *ext);
 MVM_PUBLIC int MVM_ext_register_extop(MVMThreadContext *tc, const char *cname,
         MVMExtOpFunc func, MVMuint8 num_operands, MVMuint8 operands[],
-        MVMExtOpSpesh *spesh, MVMExtOpFactDiscover *discover, MVMuint32 flags);
+        MVMExtOpSpesh *spesh, MVMExtOpFactDiscover *discover, uint32_t flags);
 const MVMOpInfo * MVM_ext_resolve_extop_record(MVMThreadContext *tc,
         MVMExtOpRecord *record);
 const MVMOpInfo * MVM_ext_resolve_extop_record_in_cu(MVMThreadContext *tc,

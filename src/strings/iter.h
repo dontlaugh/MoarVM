@@ -24,7 +24,7 @@ struct MVMGraphemeIter {
     /* Repetition count, and the start index in the blob (only needed if we're
      * doing an iteration over a repetition). */
     MVMStringIndex start;
-    MVMuint32      repetitions;
+    uint32_t      repetitions;
 
     /* The next strand, if we're doing a strand-based iteration. */
     MVMStringStrand *next_strand;
@@ -78,9 +78,9 @@ static void MVM_string_gi_next_strand_rep(MVMThreadContext *tc, MVMGraphemeIter 
 }
 /* Sets the position of the iterator. (Can be optimized in many ways in the
  * repetitions and strands branches.) */
-MVM_STATIC_INLINE void MVM_string_gi_move_to(MVMThreadContext *tc, MVMGraphemeIter *gi, MVMuint32 pos) {
-    MVMuint32 remaining = pos;
-    MVMuint32 strand_graphs;
+MVM_STATIC_INLINE void MVM_string_gi_move_to(MVMThreadContext *tc, MVMGraphemeIter *gi, uint32_t pos) {
+    uint32_t remaining = pos;
+    uint32_t strand_graphs;
     MVMStringStrand *next = NULL;
 
     /* Find the appropriate strand. */
@@ -109,8 +109,8 @@ MVM_STATIC_INLINE void MVM_string_gi_move_to(MVMThreadContext *tc, MVMGraphemeIt
     }
     /* If we are here we are encountering a repetition */
     if (gi->repetitions) {
-        MVMuint32 rep_graphs = gi->end - gi->start;
-        MVMuint32 remaining_reps;
+        uint32_t rep_graphs = gi->end - gi->start;
+        uint32_t remaining_reps;
         /* If we aren't at the end of the repetition, move to the end */
         if (gi->pos < gi->end) {
             remaining -= gi->end - gi->pos;

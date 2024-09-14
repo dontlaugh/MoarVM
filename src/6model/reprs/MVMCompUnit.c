@@ -36,7 +36,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 /* Adds held objects to the GC worklist. */
 static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMCompUnitBody *body = (MVMCompUnitBody *)data;
-    MVMuint32 i;
+    uint32_t i;
 
     /* Add code refs to the worklists. */
     for (i = 0; i < body->num_frames; i++)
@@ -71,7 +71,7 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
 static void gc_free(MVMThreadContext *tc, MVMObject *obj) {
     MVMCompUnitBody *body = &((MVMCompUnit *)obj)->body;
 
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < body->num_callsites; i++) {
         MVMCallsite *cs = body->callsites[i];
         if (!cs->is_interned)
@@ -130,7 +130,7 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info) {
 static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data) {
     MVMCompUnitBody *body = (MVMCompUnitBody *)data;
     MVMuint64 size = 0;
-    MVMuint32 index;
+    uint32_t index;
 
     size += sizeof(MVMCallsite *) * body->num_callsites;
     for (index = 0; index < body->num_callsites; index++) {
@@ -170,7 +170,7 @@ static MVMuint64 unmanaged_size(MVMThreadContext *tc, MVMSTable *st, void *data)
 
 static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTable *st, void *data) {
     MVMCompUnitBody     *body      = (MVMCompUnitBody *)data;
-    MVMuint32 i;
+    uint32_t i;
 
     MVMuint64 cache_1 = 0;
     MVMuint64 cache_2 = 0;

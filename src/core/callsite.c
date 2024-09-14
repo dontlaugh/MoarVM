@@ -48,7 +48,7 @@ void MVM_callsite_initialize_common(MVMThreadContext *tc) {
     MVMCallsiteInterns *interns = tc->instance->callsite_interns;
     interns->max_arity = MVM_INTERN_ARITY_SOFT_LIMIT - 1;
     interns->by_arity = MVM_calloc(MVM_INTERN_ARITY_SOFT_LIMIT, sizeof(MVMCallsite **));
-    interns->num_by_arity = MVM_calloc(MVM_INTERN_ARITY_SOFT_LIMIT, sizeof(MVMuint32));
+    interns->num_by_arity = MVM_calloc(MVM_INTERN_ARITY_SOFT_LIMIT, sizeof(uint32_t));
 
     /* Intern callsites.
      * If you add a callsite to this list, remember to add it to the check in
@@ -125,8 +125,8 @@ static int32_t callsites_equal(MVMThreadContext *tc, MVMCallsite *cs1, MVMCallsi
 /* GC marks a callsite (really, just its named args). */
 void MVM_callsite_mark(MVMThreadContext *tc, MVMCallsite *cs, MVMGCWorklist *worklist,
         MVMHeapSnapshotState *snapshot) {
-    MVMuint32 num_names = MVM_callsite_num_nameds(tc, cs);
-    MVMuint32 i;
+    uint32_t num_names = MVM_callsite_num_nameds(tc, cs);
+    uint32_t i;
     for (i = 0; i < num_names; i++)
         if (worklist)
             MVM_gc_worklist_add(tc, worklist, &(cs->arg_names[i]));
@@ -148,7 +148,7 @@ void MVM_callsite_destroy(MVMCallsite *cs) {
 /* Copies the named args of one callsite into another. */
 static void copy_nameds(MVMThreadContext *tc, MVMCallsite *to, const MVMCallsite *from) {
     if (from->arg_names) {
-        MVMuint32 num_names = MVM_callsite_num_nameds(tc, from);
+        uint32_t num_names = MVM_callsite_num_nameds(tc, from);
         size_t memory_area = num_names * sizeof(MVMString *);
         to->arg_names = MVM_malloc(memory_area);
         memcpy(to->arg_names, from->arg_names, memory_area);
@@ -186,16 +186,16 @@ MVMCallsite * MVM_callsite_copy(MVMThreadContext *tc, const MVMCallsite *cs) {
  * just use it as the interned one. If steal is set to false, and we want
  * to intern the callsite, then we should make a copy of it and intern
  * that. */
-static MVMuint32 find_interned_callsite(MVMThreadContext *tc, MVMCallsite **cs_ptr,
-        MVMuint32 steal) {
+static uint32_t find_interned_callsite(MVMThreadContext *tc, MVMCallsite **cs_ptr,
+        uint32_t steal) {
     MVMCallsiteInterns *interns    = tc->instance->callsite_interns;
     MVMCallsite        *cs         = *cs_ptr;
-    MVMuint32           num_flags  = cs->flag_count;
-    MVMuint32           num_nameds = MVM_callsite_num_nameds(tc, cs);
+    uint32_t           num_flags  = cs->flag_count;
+    uint32_t           num_nameds = MVM_callsite_num_nameds(tc, cs);
     if (num_flags > interns->max_arity)
         return 0;
-    MVMuint32 i;
-    MVMuint32 n = interns->num_by_arity[num_flags];
+    uint32_t i;
+    uint32_t n = interns->num_by_arity[num_flags];
     MVM_barrier(); /* Ensure we read count before array, in case they change */
     MVMCallsite **arity_callsites = interns->by_arity[num_flags];
     for (i = 0; i < n; i++) {
@@ -215,11 +215,11 @@ static MVMuint32 find_interned_callsite(MVMThreadContext *tc, MVMCallsite **cs_p
     return 0;
 }
 MVM_PUBLIC void MVM_callsite_intern(MVMThreadContext *tc, MVMCallsite **cs_ptr,
-        MVMuint32 force, MVMuint32 steal) {
+        uint32_t force, uint32_t steal) {
     MVMCallsiteInterns *interns    = tc->instance->callsite_interns;
     MVMCallsite        *cs         = *cs_ptr;
-    MVMuint32           num_flags  = cs->flag_count;
-    MVMuint32           num_nameds = MVM_callsite_num_nameds(tc, cs);
+    uint32_t           num_flags  = cs->flag_count;
+    uint32_t           num_nameds = MVM_callsite_num_nameds(tc, cs);
 
     /* Can't intern anything with flattening. */
     if (cs->has_flattening) {
@@ -252,7 +252,7 @@ MVM_PUBLIC void MVM_callsite_intern(MVMThreadContext *tc, MVMCallsite **cs_ptr,
      * a match again, now we have the lock, to avoid any duplicates. */
     MVMuint64 cur_num_callsite_interns = (MVMuint64)MVM_load(
             &(tc->instance->num_callsite_interns));
-    MVMuint32 found = orig_num_callsite_interns != cur_num_callsite_interns &&
+    uint32_t found = orig_num_callsite_interns != cur_num_callsite_interns &&
         find_interned_callsite(tc, cs_ptr, steal);
 
     /* If it wasn't found, store it, either if we're below the soft limit or
@@ -261,8 +261,8 @@ MVM_PUBLIC void MVM_callsite_intern(MVMThreadContext *tc, MVMCallsite **cs_ptr,
         /* See if we need to grow the arity storage because we have a new,
          * larger, arity. */
         if (num_flags > interns->max_arity) {
-            MVMuint32 prev_elems = interns->max_arity + 1;
-            MVMuint32 new_elems = num_flags + 1;
+            uint32_t prev_elems = interns->max_arity + 1;
+            uint32_t new_elems = num_flags + 1;
             interns->by_arity = MVM_realloc_at_safepoint(tc,
                     interns->by_arity,
                     prev_elems * sizeof(MVMCallsite **),
@@ -270,15 +270,15 @@ MVM_PUBLIC void MVM_callsite_intern(MVMThreadContext *tc, MVMCallsite **cs_ptr,
             memset(interns->by_arity + prev_elems, 0, (new_elems - prev_elems) * sizeof(MVMCallsite *));
             interns->num_by_arity = MVM_realloc_at_safepoint(tc,
                     interns->num_by_arity,
-                    prev_elems * sizeof(MVMuint32),
-                    new_elems * sizeof(MVMuint32));
-            memset(interns->num_by_arity + prev_elems, 0, (new_elems - prev_elems) * sizeof(MVMuint32));
+                    prev_elems * sizeof(uint32_t),
+                    new_elems * sizeof(uint32_t));
+            memset(interns->num_by_arity + prev_elems, 0, (new_elems - prev_elems) * sizeof(uint32_t));
             MVM_barrier(); /* To make sure we updated the arrays above first. */
             interns->max_arity = num_flags;
         }
 
         /* See if we need to grow the storage for this arity.*/
-        MVMuint32 cur_size = interns->num_by_arity[num_flags];
+        uint32_t cur_size = interns->num_by_arity[num_flags];
         if (cur_size % MVM_INTERN_ARITY_GROW == 0) {
             interns->by_arity[num_flags] = cur_size != 0
                 ? MVM_realloc_at_safepoint(tc,
@@ -314,11 +314,11 @@ MVM_PUBLIC void MVM_callsite_intern(MVMThreadContext *tc, MVMCallsite **cs_ptr,
 void MVM_callsite_mark_interns(MVMThreadContext *tc, MVMGCWorklist *worklist,
         MVMHeapSnapshotState *snapshot) {
     MVMCallsiteInterns *interns = tc->instance->callsite_interns;
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i <= interns->max_arity; i++) {
-        MVMuint32 callsite_count = interns->num_by_arity[i];
+        uint32_t callsite_count = interns->num_by_arity[i];
         MVMCallsite **callsites = interns->by_arity[i];
-        MVMuint32 j;
+        uint32_t j;
         for (j = 0; j < callsite_count; j++)
             MVM_callsite_mark(tc, callsites[j], worklist, snapshot);
     }
@@ -340,12 +340,12 @@ static int is_common(MVMCallsite *cs) {
 }
 void MVM_callsite_cleanup_interns(MVMInstance *instance) {
     MVMCallsiteInterns *interns = instance->callsite_interns;
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i <= interns->max_arity; i++) {
-        MVMuint32 callsite_count = interns->num_by_arity[i];
+        uint32_t callsite_count = interns->num_by_arity[i];
         if (callsite_count) {
             MVMCallsite **callsites = interns->by_arity[i];
-            MVMuint32 j;
+            uint32_t j;
             for (j = 0; j < callsite_count; j++) {
                 MVMCallsite *callsite = callsites[j];
                 if (!is_common(callsite))
@@ -361,10 +361,10 @@ void MVM_callsite_cleanup_interns(MVMInstance *instance) {
 
 /* Produce a new callsite consisting of the current one with a positional
  * argument dropped. It will be interned if possible. */
-MVMCallsite * MVM_callsite_drop_positional(MVMThreadContext *tc, MVMCallsite *cs, MVMuint32 idx) {
+MVMCallsite * MVM_callsite_drop_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx) {
     return MVM_callsite_drop_positionals(tc, cs, idx, 1);
 }
-MVMCallsite * MVM_callsite_drop_positionals(MVMThreadContext *tc, MVMCallsite *cs, MVMuint32 idx, MVMuint32 count) {
+MVMCallsite * MVM_callsite_drop_positionals(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx, uint32_t count) {
     /* Can only do this with positional arguments and non-flattening callsite. */
     if (idx + count - 1 >= cs->num_pos)
         MVM_exception_throw_adhoc(tc, "Cannot drop positional in callsite: index out of range");
@@ -379,7 +379,7 @@ MVMCallsite * MVM_callsite_drop_positionals(MVMThreadContext *tc, MVMCallsite *c
     new_callsite->arg_flags = new_callsite->flag_count
         ? MVM_malloc(new_callsite->flag_count)
         : NULL;
-    MVMuint32 from, to = 0;
+    uint32_t from, to = 0;
     for (from = 0; from < cs->flag_count; from++) {
         if (from < idx || from >= idx + count) {
             new_callsite->arg_flags[to] = cs->arg_flags[from];
@@ -399,7 +399,7 @@ MVMCallsite * MVM_callsite_drop_positionals(MVMThreadContext *tc, MVMCallsite *c
 /* Produce a new callsite consisting of the current one with a positional
  * argument inserted. It will be interned if possible. */
 /* TODO figure out if we want interning here or not */
-MVMCallsite * MVM_callsite_insert_positional(MVMThreadContext *tc, MVMCallsite *cs, MVMuint32 idx,
+MVMCallsite * MVM_callsite_insert_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
         MVMCallsiteFlags flag) {
     /* Can only do this with positional arguments and non-flattening callsite. */
     if (idx > cs->num_pos)
@@ -413,7 +413,7 @@ MVMCallsite * MVM_callsite_insert_positional(MVMThreadContext *tc, MVMCallsite *
     new_callsite->flag_count = cs->flag_count + 1;
     new_callsite->arg_count = cs->arg_count + 1;
     new_callsite->arg_flags = MVM_malloc(new_callsite->flag_count);
-    MVMuint32 from, to = 0;
+    uint32_t from, to = 0;
     for (from = 0; from < cs->flag_count; from++) {
         if (from == idx) {
             new_callsite->arg_flags[to] = flag;
@@ -437,7 +437,7 @@ MVMCallsite * MVM_callsite_insert_positional(MVMThreadContext *tc, MVMCallsite *
 
 /* Produce a new callsite consisting of the current one with a positional
  * argument inserted. */
-MVMCallsite * MVM_callsite_replace_positional(MVMThreadContext *tc, MVMCallsite *cs, MVMuint32 idx,
+MVMCallsite * MVM_callsite_replace_positional(MVMThreadContext *tc, MVMCallsite *cs, uint32_t idx,
         MVMCallsiteFlags flag) {
     /* Can only do this with positional arguments and non-flattening callsite. */
     if (idx > cs->num_pos)
@@ -451,7 +451,7 @@ MVMCallsite * MVM_callsite_replace_positional(MVMThreadContext *tc, MVMCallsite 
     new_callsite->flag_count = cs->flag_count;
     new_callsite->arg_count = cs->arg_count;
     new_callsite->arg_flags = MVM_malloc(new_callsite->flag_count);
-    MVMuint32 i = 0;
+    uint32_t i = 0;
     for (i = 0; i < cs->flag_count; i++) {
         new_callsite->arg_flags[i] = cs->arg_flags[i];
     }

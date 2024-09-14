@@ -55,24 +55,24 @@ struct MVMSpeshLogEntry {
         struct {
             MVMObject *type;
             int32_t flags;
-            MVMuint32 bytecode_offset;
+            uint32_t bytecode_offset;
         } type;
 
         /* Observed invocation (INVOKE). */
         struct {
             MVMStaticFrame *sf;
             MVMint16 caller_is_outer;
-            MVMuint32 bytecode_offset;
+            uint32_t bytecode_offset;
         } invoke;
 
         /* Observed OSR point (OSR). */
         struct {
-            MVMuint32 bytecode_offset;
+            uint32_t bytecode_offset;
         } osr;
 
         /* Dispatch resolution (DISPATCH_RESOLUTION). */
         struct {
-            MVMuint32 bytecode_offset;
+            uint32_t bytecode_offset;
             MVMuint16 result_index;
         } dispatch;
     };
@@ -87,8 +87,8 @@ struct MVMSpeshLogBody {
     MVMSpeshLogEntry *entries;
 
     /* Number of log entries so far and limit. */
-    MVMuint32 used;
-    MVMuint32 limit;
+    uint32_t used;
+    uint32_t limit;
 
     /* If this was created due to a new compilation unit (heuristic to do
      * better at outer-loop OSR); we go over-quota for those, and this is

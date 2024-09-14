@@ -77,7 +77,7 @@ void MVM_sc_add_all_scs_entry(MVMThreadContext *tc, MVMSerializationContextBody 
             tc->instance->all_scs_next_idx++;
         }
         else {
-            MVMuint32 orig_alloc = tc->instance->all_scs_alloc;
+            uint32_t orig_alloc = tc->instance->all_scs_alloc;
             tc->instance->all_scs_alloc += 32;
             tc->instance->all_scs = MVM_realloc_at_safepoint(tc,
                 tc->instance->all_scs,
@@ -113,7 +113,7 @@ void MVM_sc_set_description(MVMThreadContext *tc, MVMSerializationContext *sc, M
 MVMint64 MVM_sc_find_object_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *obj) {
     MVMObject **roots;
     MVMint64    i, count;
-    MVMuint32   cached = MVM_sc_get_idx_in_sc(&obj->header);
+    uint32_t   cached = MVM_sc_get_idx_in_sc(&obj->header);
     if (cached != ~(unsigned)0 && MVM_sc_get_collectable_sc(tc, &obj->header) == sc)
         return cached;
     roots = sc->body->root_objects;
@@ -136,7 +136,7 @@ MVMint64 MVM_sc_find_object_idx_jit(MVMThreadContext *tc, MVMObject *sc, MVMObje
 /* Given an SC, looks up the index of an STable that is in its root set. */
 MVMint64 MVM_sc_find_stable_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMSTable *st) {
     MVMuint64 i;
-    MVMuint32 cached = MVM_sc_get_idx_in_sc(&st->header);
+    uint32_t cached = MVM_sc_get_idx_in_sc(&st->header);
     if (cached != ~(unsigned)0 && MVM_sc_get_collectable_sc(tc, &st->header) == sc)
         return cached;
     for (i = 0; i < sc->body->num_stables; i++)
@@ -150,7 +150,7 @@ MVMint64 MVM_sc_find_stable_idx(MVMThreadContext *tc, MVMSerializationContext *s
 MVMint64 MVM_sc_find_code_idx(MVMThreadContext *tc, MVMSerializationContext *sc, MVMObject *obj) {
     MVMObject *roots;
     MVMint64   i, count;
-    MVMuint32 cached = MVM_sc_get_idx_in_sc(&obj->header);
+    uint32_t cached = MVM_sc_get_idx_in_sc(&obj->header);
     if (cached != ~(unsigned)0 && MVM_sc_get_collectable_sc(tc, &obj->header) == sc)
         return cached;
     roots = sc->body->root_codes;
@@ -436,7 +436,7 @@ void MVM_sc_disclaim(MVMThreadContext *tc, MVMSerializationContext *sc) {
 /* SC repossession barrier. */
 void MVM_SC_WB_OBJ(MVMThreadContext *tc, MVMObject *obj) {
     assert(!(obj->header.flags2 & MVM_CF_FORWARDER_VALID));
-    assert(MVM_sc_get_idx_of_sc(&obj->header) != (MVMuint32)~0);
+    assert(MVM_sc_get_idx_of_sc(&obj->header) != (uint32_t)~0);
     if (MVM_sc_get_idx_of_sc(&obj->header) > 0 && !(obj->st->mode_flags & MVM_NEVER_REPOSSESS_TYPE))
         MVM_sc_wb_hit_obj(tc, obj);
 }

@@ -20,10 +20,10 @@ struct MVMSpeshGraph {
     MVMint8 *unreachable_handlers;
 
     /* The size of the bytecode we're building the graph out of. */
-    MVMuint32 bytecode_size;
+    uint32_t bytecode_size;
 
     /* Number of exception handlers. */
-    MVMuint32 num_handlers;
+    uint32_t num_handlers;
 
     /* The entry basic block. */
     MVMSpeshBB *entry;
@@ -57,8 +57,8 @@ struct MVMSpeshGraph {
      * integers afterwards, which are the return address in the specialized
      * bytecode. */
     int32_t *deopt_addrs;
-    MVMuint32 num_deopt_addrs;
-    MVMuint32 alloc_deopt_addrs;
+    uint32_t num_deopt_addrs;
+    uint32_t alloc_deopt_addrs;
 
     /* Bit field of named args used to put in place during deopt, since we
      * don't typically don't update the array in specialized code. */
@@ -66,8 +66,8 @@ struct MVMSpeshGraph {
 
     /* Deopt points that are considered to be always in use, even if they
      * are not on a deopting instruction. */
-    MVMuint32 *always_retained_deopt_idxs;
-    MVMuint32 num_always_retained_deopt_idxs;
+    uint32_t *always_retained_deopt_idxs;
+    uint32_t num_always_retained_deopt_idxs;
 
     /* Deopt information produced by escape analysis and scalar replacement. */
     MVMSpeshPEADeopt deopt_pea;
@@ -77,13 +77,13 @@ struct MVMSpeshGraph {
      * are within the bounds will show up each call frame that needs to
      * be created in deopt. */
     MVMSpeshInline *inlines;
-    MVMuint32 num_inlines;
+    uint32_t num_inlines;
 
     /* Table of information about resume initialization arguments, if any. */
     MVM_VECTOR_DECL(MVMSpeshResumeInit, resume_inits);
 
     /* Number of basic blocks we have. */
-    MVMuint32 num_bbs;
+    uint32_t num_bbs;
 
     /* The list of local types (only set up if we do inlines). */
     MVMuint16 *local_types;
@@ -118,7 +118,7 @@ struct MVMSpeshGraph {
     MVMuint8 specialized_on_invocant;
 
     /* Stored in comment annotations to give an ordering of comments */
-    MVMuint32 next_annotation_idx;
+    uint32_t next_annotation_idx;
 };
 
 /* A temporary register, added to support transformations. */
@@ -179,7 +179,7 @@ struct MVMSpeshBB {
 
     /* We cache the instruction pointer of the very first instruction so that
      * we can output a line number for every BB */
-    MVMuint32 initial_pc;
+    uint32_t initial_pc;
 
     /* Is this block an inlining of another one? */
     MVMint8 inlined;
@@ -216,16 +216,16 @@ union MVMSpeshOperand {
     MVMint64     lit_i64;
     MVMint64     lit_ui64;
     int32_t     lit_i32;
-    MVMuint32    lit_ui32;
+    uint32_t    lit_ui32;
     MVMint16     lit_i16;
     MVMuint16    lit_ui16;
     MVMint8      lit_i8;
     MVMnum64     lit_n64;
     MVMnum32     lit_n32;
-    MVMuint32    lit_str_idx;
+    uint32_t    lit_str_idx;
     MVMuint16    callsite_idx;
     MVMuint16    coderef_idx;
-    MVMuint32    ins_offset;
+    uint32_t    ins_offset;
     MVMSpeshBB  *ins_bb;
     struct {
         MVMuint16 idx;
@@ -248,17 +248,17 @@ struct MVMSpeshAnn {
     /* Order in which the annotation was created; only used
      * for comments right now, but put in front of the union
      * as there is a 4 byte hole here otherwise. */
-    MVMuint32 order;
+    uint32_t order;
 
     /* Data (meaning depends on type). */
     union {
-        MVMuint32 frame_handler_index;
+        uint32_t frame_handler_index;
         int32_t deopt_idx;
         int32_t inline_idx;
-        MVMuint32 bytecode_offset;
+        uint32_t bytecode_offset;
         struct {
-            MVMuint32 filename_string_index;
-            MVMuint32 line_number;
+            uint32_t filename_string_index;
+            uint32_t line_number;
         } lineno;
         char *comment;
         MVMSpeshOperand *temps_to_release;
@@ -285,26 +285,26 @@ struct MVMSpeshAnn {
 
 /* Functions to create/destroy the spesh graph. */
 MVMSpeshGraph * MVM_spesh_graph_create(MVMThreadContext *tc, MVMStaticFrame *sf,
-    MVMuint32 cfg_only, MVMuint32 insert_object_nulls);
+    uint32_t cfg_only, uint32_t insert_object_nulls);
 MVMSpeshGraph * MVM_spesh_graph_create_from_cand(MVMThreadContext *tc, MVMStaticFrame *sf,
-    MVMSpeshCandidate *cand, MVMuint32 cfg_only, MVMSpeshIns ***deopt_usage_ins_out);
+    MVMSpeshCandidate *cand, uint32_t cfg_only, MVMSpeshIns ***deopt_usage_ins_out);
 MVMSpeshBB * MVM_spesh_graph_linear_prev(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *search);
 void MVM_spesh_graph_grow_deopt_table(MVMThreadContext *tc, MVMSpeshGraph *g);
 int32_t MVM_spesh_graph_add_deopt_annotation(MVMThreadContext *tc, MVMSpeshGraph *g,
-    MVMSpeshIns *ins_node, MVMuint32 deopt_target, int32_t type);
+    MVMSpeshIns *ins_node, uint32_t deopt_target, int32_t type);
 MVMSpeshBB ** MVM_spesh_graph_reverse_postorder(MVMThreadContext *tc, MVMSpeshGraph *g);
 void MVM_spesh_graph_recompute_dominance(MVMThreadContext *tc, MVMSpeshGraph *g);
 void MVM_spesh_graph_mark(MVMThreadContext *tc, MVMSpeshGraph *g, MVMGCWorklist *worklist);
 void MVM_spesh_graph_describe(MVMThreadContext *tc, MVMSpeshGraph *g, MVMHeapSnapshotState *snapshot);
 void MVM_spesh_graph_destroy(MVMThreadContext *tc, MVMSpeshGraph *g);
 MVM_PUBLIC void * MVM_spesh_alloc(MVMThreadContext *tc, MVMSpeshGraph *g, size_t bytes);
-MVMOpInfo *MVM_spesh_graph_get_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMuint32 nrargs);
+MVMOpInfo *MVM_spesh_graph_get_phi(MVMThreadContext *tc, MVMSpeshGraph *g, uint32_t nrargs);
 void MVM_spesh_graph_place_phi(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb, int32_t n, MVMuint16 var);
 
 MVM_PUBLIC void MVM_spesh_graph_add_comment(MVMThreadContext *tc, MVMSpeshGraph *g,
     MVMSpeshIns *ins, const char *fmt, ...);
 
-MVM_STATIC_INLINE MVMuint32 MVM_spesh_is_inc_dec_op(MVMuint16 opcode) {
+MVM_STATIC_INLINE uint32_t MVM_spesh_is_inc_dec_op(MVMuint16 opcode) {
     return opcode == MVM_OP_inc_i || opcode == MVM_OP_dec_i ||
            opcode == MVM_OP_inc_u || opcode == MVM_OP_dec_u;
 }

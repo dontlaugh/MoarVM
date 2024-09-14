@@ -2,10 +2,10 @@
 
 #define line_length 1024
 MVM_FORMAT(printf, 4, 5)
-static void append_string(char **out, MVMuint32 *size,
-        MVMuint32 *length, char *str, ...) {
+static void append_string(char **out, uint32_t *size,
+        uint32_t *length, char *str, ...) {
     char string[line_length];
-    MVMuint32 len;
+    uint32_t len;
     va_list args;
     va_start(args, str);
 
@@ -55,7 +55,7 @@ static const char * get_typename(MVMuint16 type) {
 #define GET_I16(pc, idx)    *((MVMint16 *)((pc) + (idx)))
 #define GET_UI16(pc, idx)   *((MVMuint16 *)((pc) + (idx)))
 #define GET_I32(pc, idx)    *((int32_t *)((pc) + (idx)))
-#define GET_UI32(pc, idx)   *((MVMuint32 *)((pc) + (idx)))
+#define GET_UI32(pc, idx)   *((uint32_t *)((pc) + (idx)))
 #define GET_N32(pc, idx)    *((MVMnum32 *)((pc) + (idx)))
 
 enum {
@@ -67,39 +67,39 @@ static MVMStaticFrame * get_frame(MVMThreadContext *tc, MVMCompUnit *cu, int idx
     return ((MVMCode *)cu->body.coderefs[idx])->body.sf;
 }
 
-static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *frame, MVMSpeshCandidate *maybe_candidate, MVMuint8 *frame_cur_op, char ***frame_lexicals, char **oo, MVMuint32 *os, MVMuint32 *ol) {
+static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *frame, MVMSpeshCandidate *maybe_candidate, MVMuint8 *frame_cur_op, char ***frame_lexicals, char **oo, uint32_t *os, uint32_t *ol) {
     /* since "references" are not a thing in C, keep a local copy of these
      * and update the passed-in pointers at the end of the function */
     char *o = *oo;
-    MVMuint32 s = *os;
-    MVMuint32 l = *ol;
+    uint32_t s = *os;
+    uint32_t l = *ol;
 
-    MVMuint32 i, j;
+    uint32_t i, j;
 
     /* mostly stolen from validation.c */
     MVMStaticFrame *static_frame = frame;
-    MVMuint32 bytecode_size = maybe_candidate ? maybe_candidate->body.bytecode_size : static_frame->body.bytecode_size;
+    uint32_t bytecode_size = maybe_candidate ? maybe_candidate->body.bytecode_size : static_frame->body.bytecode_size;
     MVMuint8 *bytecode_start = maybe_candidate ? maybe_candidate->body.bytecode : static_frame->body.bytecode;
     MVMuint8 *bytecode_end = bytecode_start + bytecode_size;
     /* current position in the bytestream */
     MVMuint8 *cur_op = bytecode_start;
     /* positions in the bytestream that are starts of ops and goto targets */
     MVMuint8 *labels = MVM_calloc(1, bytecode_size);
-    MVMuint32 *jumps = MVM_calloc(1, sizeof(MVMuint32) * bytecode_size);
+    uint32_t *jumps = MVM_calloc(1, sizeof(uint32_t) * bytecode_size);
     char **lines = MVM_malloc(sizeof(char *) * bytecode_size);
-    MVMuint32 *linelocs = MVM_malloc(sizeof(MVMuint32) * bytecode_size);
-    MVMuint32 lineno = 0;
-    MVMuint32 lineloc;
+    uint32_t *linelocs = MVM_malloc(sizeof(uint32_t) * bytecode_size);
+    uint32_t lineno = 0;
+    uint32_t lineloc;
     MVMuint16 op_num;
     const MVMOpInfo *op_info;
-    MVMuint32 operand_size = 0;
+    uint32_t operand_size = 0;
     unsigned char op_rw;
     unsigned char op_type;
     unsigned char op_flags;
     MVMOpInfo tmp_extop_info;
     /* stash the outer output buffer */
-    MVMuint32 sP = s;
-    MVMuint32 lP = l;
+    uint32_t sP = s;
+    uint32_t lP = l;
     char *oP = o;
     char *tmpstr;
     char mark_this_line = 0;
@@ -299,7 +299,7 @@ static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *f
             else if (op_rw == MVM_operand_read_lex || op_rw == MVM_operand_write_lex) {
                 /* lexical operand */
                 MVMuint16 idx, frames;
-                MVMuint32 m;
+                uint32_t m;
                 MVMStaticFrame *applicable_frame = static_frame;
 
                 operand_size = 4;
@@ -335,11 +335,11 @@ static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *f
         lines[lineno++] = o;
     }
     {
-        MVMuint32 *linelabels = MVM_calloc(lineno, sizeof(MVMuint32));
-        MVMuint32 byte_offset = 0;
-        MVMuint32 line_number = 0;
-        MVMuint32 label_number = 1;
-        MVMuint32 *annotations = MVM_calloc(lineno, sizeof(MVMuint32));
+        uint32_t *linelabels = MVM_calloc(lineno, sizeof(uint32_t));
+        uint32_t byte_offset = 0;
+        uint32_t line_number = 0;
+        uint32_t label_number = 1;
+        uint32_t *annotations = MVM_calloc(lineno, sizeof(uint32_t));
 
         for (; byte_offset < bytecode_size; byte_offset++) {
             if (labels[byte_offset] & MVM_val_branch_target) {
@@ -357,7 +357,7 @@ static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *f
         i = 0;
         /* resolve annotation line numbers */
         for (j = 0; j < frame->body.num_annotations; j++) {
-            MVMuint32 ann_offset = GET_UI32(frame->body.annotations_data, j*12);
+            uint32_t ann_offset = GET_UI32(frame->body.annotations_data, j*12);
             for (; i < lineno; i++) {
                 if (linelocs[i] == ann_offset) {
                     annotations[i] = j + 1;
@@ -404,9 +404,9 @@ static void bytecode_dump_frame_internal(MVMThreadContext *tc, MVMStaticFrame *f
 
 
 char * MVM_bytecode_dump(MVMThreadContext *tc, MVMCompUnit *cu) {
-    MVMuint32 s = 1024;
-    MVMuint32 l = 0;
-    MVMuint32 i, j, k;
+    uint32_t s = 1024;
+    uint32_t l = 0;
+    uint32_t i, j, k;
     char *o = MVM_malloc(s * sizeof(char));
     char ***frame_lexicals = MVM_malloc(sizeof(char **) * cu->body.num_frames);
 
@@ -470,7 +470,7 @@ char * MVM_bytecode_dump(MVMThreadContext *tc, MVMCompUnit *cu) {
             MVM_bytecode_finish_frame(tc, cu, frame, 1);
         }
 
-        MVMuint32 num_lexicals = frame->body.num_lexicals;
+        uint32_t num_lexicals = frame->body.num_lexicals;
         if (num_lexicals) {
             MVMString **lexical_names_list = frame->body.lexical_names_list;
 
@@ -531,8 +531,8 @@ char * MVM_bytecode_dump(MVMThreadContext *tc, MVMCompUnit *cu) {
 
 #ifdef DEBUG_HELPERS
 void MVM_dump_bytecode_of(MVMThreadContext *tc, MVMFrame *frame, MVMSpeshCandidate *maybe_candidate) {
-    MVMuint32 s = 1024;
-    MVMuint32 l = 0;
+    uint32_t s = 1024;
+    uint32_t l = 0;
     char *o = MVM_malloc(s * sizeof(char));
     MVMuint8 *addr;
 
@@ -554,8 +554,8 @@ void MVM_dump_bytecode_of(MVMThreadContext *tc, MVMFrame *frame, MVMSpeshCandida
 }
 
 void MVM_dump_bytecode_staticframe(MVMThreadContext *tc, MVMStaticFrame *frame) {
-    MVMuint32 s = 1024;
-    MVMuint32 l = 0;
+    uint32_t s = 1024;
+    uint32_t l = 0;
     char *o = MVM_malloc(s * sizeof(char));
 
     bytecode_dump_frame_internal(tc, frame, NULL, NULL, NULL, &o, &s, &l);
@@ -604,7 +604,7 @@ void MVM_dump_bytecode_stackframe(MVMThreadContext *tc, int32_t depth) {
     if (effective_bytecode == sf->body.bytecode) {
         MVM_dump_bytecode_of(tc, frame, NULL);
     } else {
-        MVMuint32 spesh_cand_idx;
+        uint32_t spesh_cand_idx;
         MVMStaticFrameSpesh *spesh = sf->body.spesh;
         for (spesh_cand_idx = 0; spesh_cand_idx < spesh->body.num_spesh_candidates; spesh_cand_idx++) {
             MVMSpeshCandidate *cand = spesh->body.spesh_candidates[spesh_cand_idx];

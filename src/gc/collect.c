@@ -3,13 +3,13 @@
 /* Combines a piece of work that will be passed to another thread with the
  * ID of the target thread to pass it to. */
 typedef struct {
-    MVMuint32        target;
+    uint32_t        target;
     MVMGCPassedWork *work;
 } ThreadWork;
 
 /* Current chunks of work we're building up to pass. */
 typedef struct {
-    MVMuint32   num_target_threads;
+    uint32_t   num_target_threads;
     ThreadWork *target_work;
 } WorkToPass;
 
@@ -21,7 +21,7 @@ static void add_in_tray_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklis
 
 /* The size of the nursery that a new thread should get. The main thread will
  * get a full-size one right away. */
-MVMuint32 MVM_gc_new_thread_nursery_size(MVMInstance *i) {
+uint32_t MVM_gc_new_thread_nursery_size(MVMInstance *i) {
     return i->main_thread != NULL
         ? (MVM_NURSERY_SIZE < MVM_NURSERY_THREAD_START
             ? MVM_NURSERY_SIZE
@@ -67,7 +67,7 @@ void MVM_gc_collect(MVMThreadContext *tc, MVMuint8 what_to_do, MVMuint8 gen) {
     }
     else if (what_to_do == MVMGCWhatToDo_Finalizing) {
         /* Need to process the finalizing queue. */
-        MVMuint32 i;
+        uint32_t i;
         for (i = 0; i < tc->num_finalizing; i++)
             MVM_gc_worklist_add(tc, worklist, &(tc->finalizing[i]));
         GCDEBUG_LOG(tc, MVM_GC_DEBUG_COLLECT, "Thread %d run %d : processing %d items from finalizing \n", worklist->items);
@@ -78,7 +78,7 @@ void MVM_gc_collect(MVMThreadContext *tc, MVMuint8 what_to_do, MVMuint8 gen) {
          * the size of the current tospace becoming stashed as the size of
          * that fromspace. */
         void *old_fromspace = tc->nursery_fromspace;
-        MVMuint32 old_fromspace_size = tc->nursery_fromspace_size;
+        uint32_t old_fromspace_size = tc->nursery_fromspace_size;
         tc->nursery_fromspace = tc->nursery_tospace;
         tc->nursery_fromspace_size = tc->nursery_tospace_size;
 
@@ -165,7 +165,7 @@ static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, Work
     MVMGen2Allocator  *gen2;
     MVMCollectable   **item_ptr;
     MVMCollectable    *new_addr;
-    MVMuint32          gen2count;
+    uint32_t          gen2count;
 
     /* Grab the second generation allocator; we may move items into the
      * old generation. */
@@ -334,7 +334,7 @@ static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, Work
          * to nursery objects. If so, make sure it's in the gen2 roots. */
         if (to_gen2) {
             MVMCollectable **j;
-            MVMuint32 max = worklist->items, k;
+            uint32_t max = worklist->items, k;
 
             for (k = gen2count; k < max; k++) {
                 j = worklist->list[k];
@@ -348,7 +348,7 @@ static void process_worklist(MVMThreadContext *tc, MVMGCWorklist *worklist, Work
 /* Marks a collectable item (object, type object, STable). */
 void MVM_gc_mark_collectable(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMCollectable *new_addr) {
     MVMuint16 i;
-    MVMuint32 sc_idx;
+    uint32_t sc_idx;
 
     assert(!(new_addr->flags2 & MVM_CF_FORWARDER_VALID));
     /*assert(REPR(new_addr));*/
@@ -414,7 +414,7 @@ void MVM_gc_mark_collectable(MVMThreadContext *tc, MVMGCWorklist *worklist, MVMC
 }
 
 /* Adds a chunk of work to another thread's in-tray. */
-static void push_work_to_thread_in_tray(MVMThreadContext *tc, MVMuint32 target, MVMGCPassedWork *work) {
+static void push_work_to_thread_in_tray(MVMThreadContext *tc, uint32_t target, MVMGCPassedWork *work) {
     MVMGCPassedWork * volatile *target_tray;
 
     /* Locate the thread to pass the work to. */
@@ -450,8 +450,8 @@ static void push_work_to_thread_in_tray(MVMThreadContext *tc, MVMuint32 target, 
  * reach the pass threshold then does the passing. */
 static void pass_work_item(MVMThreadContext *tc, WorkToPass *wtp, MVMCollectable **item_ptr) {
     ThreadWork *target_info = NULL;
-    MVMuint32   target      = (*item_ptr)->owner;
-    MVMuint32   j;
+    uint32_t   target      = (*item_ptr)->owner;
+    uint32_t   j;
 
     /* Find any existing thread work passing list for the target. */
     if (target == 0)
@@ -491,7 +491,7 @@ static void pass_work_item(MVMThreadContext *tc, WorkToPass *wtp, MVMCollectable
 
 /* Passes all work for other threads that we've got left in our to-pass list. */
 static void pass_leftover_work(MVMThreadContext *tc, WorkToPass *wtp) {
-    MVMuint32 j;
+    uint32_t j;
     for (j = 0; j < wtp->num_target_threads; j++)
         if (wtp->target_work[j].work)
             push_work_to_thread_in_tray(tc, wtp->target_work[j].target,
@@ -518,7 +518,7 @@ static void add_in_tray_to_worklist(MVMThreadContext *tc, MVMGCWorklist *worklis
     /* Go through list, adding to worklist. */
     while (head) {
         MVMGCPassedWork *next = head->next;
-        MVMuint32 i;
+        uint32_t i;
         for (i = 0; i < head->num_items; i++)
             MVM_gc_worklist_add(tc, worklist, head->items[i]);
         MVM_free(head);
@@ -632,7 +632,7 @@ void MVM_gc_collect_free_stables(MVMThreadContext *tc) {
 void MVM_gc_collect_free_gen2_unmarked(MVMThreadContext *executing_thread, MVMThreadContext *tc, int32_t global_destruction) {
     /* Visit each of the size class bins. */
     MVMGen2Allocator *gen2 = tc->gen2;
-    MVMuint32 bin, obj_size, page, i;
+    uint32_t bin, obj_size, page, i;
     MVMuint8 do_prof_log = 0;
 
     char ***freelist_insert_pos;

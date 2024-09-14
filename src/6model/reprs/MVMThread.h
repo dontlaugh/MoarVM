@@ -32,7 +32,7 @@ struct MVMThreadBody {
 
     /* Copy of the VM-level thread ID (also stored in the ThreadContext while
      * the thread is alive). */
-    MVMuint32 thread_id;
+    uint32_t thread_id;
 
     /* Non-zero if the thread should not block shutdown of the VM (those with
      * zero in here will be joined when the main thread ends). */

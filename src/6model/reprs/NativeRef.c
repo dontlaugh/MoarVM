@@ -296,7 +296,7 @@ MVMObject * MVM_nativeref_lex_s(MVMThreadContext *tc, MVMuint16 outers, MVMuint1
 static MVMObject * lexref_by_name(MVMThreadContext *tc, MVMObject *type, MVMString *name, MVMint16 kind) {
     MVMFrame *cur_frame = tc->cur_frame;
     while (cur_frame != NULL) {
-        MVMuint32 idx = MVM_get_lexical_by_name(tc, cur_frame->static_info, name);
+        uint32_t idx = MVM_get_lexical_by_name(tc, cur_frame->static_info, name);
         if (idx != MVM_INDEX_HASH_NOT_FOUND) {
             MVMint16 lex_kind = cur_frame->static_info->body.lexical_types[idx];
             if (lex_kind == kind) {
@@ -619,7 +619,7 @@ void MVM_nativeref_write_lex_u(MVMThreadContext *tc, MVMObject *ref_obj, MVMuint
             var->u16 = (MVMuint16)value;
             break;
         case MVM_reg_uint32:
-            var->u32 = (MVMuint32)value;
+            var->u32 = (uint32_t)value;
             break;
         default:
             var->u64 = value;

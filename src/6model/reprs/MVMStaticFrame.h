@@ -44,7 +44,7 @@ struct MVMStaticFrameBody {
     /* Zero if the frame was never invoked. Above zero is the instrumentation
      * level the VM was atlast time the frame was invoked. See MVMInstance for
      * the VM instance wide field for this. */
-    MVMuint32 instrumentation_level;
+    uint32_t instrumentation_level;
 
     /* Has the frame's bytecode been validated? */
     MVMuint8 validated;
@@ -58,32 +58,32 @@ struct MVMStaticFrameBody {
     MVMStaticFrameSpesh *spesh;
 
     /* The size in bytes to allocate for the lexical environment. */
-    MVMuint32 env_size;
+    uint32_t env_size;
 
     /* The size in bytes to allocate for the work and arguments area. */
-    MVMuint32 work_size;
+    uint32_t work_size;
 
     /* Count of lexicals. */
-    MVMuint32 num_lexicals;
+    uint32_t num_lexicals;
 
     /* Count of annotations (see further down below */
-    MVMuint32              num_annotations;
+    uint32_t              num_annotations;
 
     /* Inital contents of the work area, copied into place to make sure we have
      * VMNulls in all the object slots. */
     MVMRegister *work_initial;
 
     /* The size of the bytecode. */
-    MVMuint32 bytecode_size;
+    uint32_t bytecode_size;
 
     /* Count of locals. */
-    MVMuint32 num_locals;
+    uint32_t num_locals;
 
     /* Frame exception handlers information. */
     MVMFrameHandler *handlers;
 
     /* The number of exception handlers this frame has. */
-    MVMuint32 num_handlers;
+    uint32_t num_handlers;
 
     /* Is the frame full deserialized? */
     MVMuint8 fully_deserialized;
@@ -139,8 +139,8 @@ struct MVMStaticFrameInstrumentation {
     MVMuint8        *uninstrumented_bytecode;
     MVMFrameHandler *instrumented_handlers;
     MVMFrameHandler *uninstrumented_handlers;
-    MVMuint32        uninstrumented_bytecode_size;
-    MVMuint32        instrumented_bytecode_size;
+    uint32_t        uninstrumented_bytecode_size;
+    uint32_t        instrumented_bytecode_size;
     MVMStrHashTable  debug_locals;
 
     MVMuint8         profiler_confprog_result;
@@ -160,4 +160,4 @@ const MVMREPROps * MVMStaticFrame_initialize(MVMThreadContext *tc);
 /* Debugging help. */
 char * MVM_staticframe_file_location(MVMThreadContext *tc, MVMStaticFrame *sf);
 
-MVMuint32 MVM_get_lexical_by_name(MVMThreadContext *tc, MVMStaticFrame *sf, MVMString *name);
+uint32_t MVM_get_lexical_by_name(MVMThreadContext *tc, MVMStaticFrame *sf, MVMString *name);

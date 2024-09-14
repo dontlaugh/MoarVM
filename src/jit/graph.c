@@ -462,7 +462,7 @@ static void * op_to_func(MVMThreadContext *tc, MVMint16 opcode) {
 }
 
 static void jg_append_guard(MVMThreadContext *tc, MVMJitGraph *jg,
-                             MVMSpeshIns *ins, MVMuint32 target_operand) {
+                             MVMSpeshIns *ins, uint32_t target_operand) {
     MVMJitNode   *node = MVM_spesh_alloc(tc, jg->sg, sizeof(MVMJitNode));
     int32_t deopt_idx;
     node->type = MVM_JIT_NODE_GUARD;
@@ -533,7 +533,7 @@ static int32_t consume_jumplist(MVMThreadContext *tc, MVMJitGraph *jg,
     return 1;
 }
 
-static MVMString* wrap_MVM_cu_string(MVMThreadContext *tc, MVMCompUnit *cu, MVMuint32 idx) {
+static MVMString* wrap_MVM_cu_string(MVMThreadContext *tc, MVMCompUnit *cu, uint32_t idx) {
     return MVM_cu_string(tc, cu, idx);
 }
 
@@ -1477,7 +1477,7 @@ skipdevirt:
         MVMint16 dst = ins->operands[0].reg.orig;
         MVMint16 obj = ins->operands[1].reg.orig;
         MVMint16 typ = ins->operands[2].reg.orig;
-        MVMuint32 str_idx = ins->operands[3].lit_str_idx;
+        uint32_t str_idx = ins->operands[3].lit_str_idx;
         MVMint16 hint = ins->operands[4].lit_i16;
         MVMJitCallArg args[] = { { MVM_JIT_INTERP_VAR, MVM_JIT_INTERP_TC },
                                  { MVM_JIT_REG_VAL, obj },
@@ -1530,7 +1530,7 @@ skipdevirt:
     case MVM_OP_bindattr_o: {
         MVMint16 obj = ins->operands[0].reg.orig;
         MVMint16 typ = ins->operands[1].reg.orig;
-        MVMuint32 str_idx = ins->operands[2].lit_str_idx;
+        uint32_t str_idx = ins->operands[2].lit_str_idx;
         MVMint16 val = ins->operands[3].reg.orig;
         MVMint16 hint = ins->operands[4].lit_i16;
         MVMuint16 kind = op == MVM_OP_bindattr_i ? MVM_reg_int64 :
@@ -2029,7 +2029,7 @@ static int32_t consume_ins(MVMThreadContext *tc, MVMJitGraph *jg,
     case MVM_OP_throwcatlex:
     case MVM_OP_throwcatlexotic: {
         MVMint16 regi     = ins->operands[0].reg.orig;
-        int32_t category = (MVMuint32)ins->operands[1].lit_i64;
+        int32_t category = (uint32_t)ins->operands[1].lit_i64;
         MVMJitCallArg args[] = { { MVM_JIT_INTERP_VAR, { MVM_JIT_INTERP_TC } },
                                  { MVM_JIT_LITERAL, {
                                    op == MVM_OP_throwcatdyn ? MVM_EX_THROW_DYN :
@@ -2045,7 +2045,7 @@ static int32_t consume_ins(MVMThreadContext *tc, MVMJitGraph *jg,
     case MVM_OP_throwpayloadlex:
     case MVM_OP_throwpayloadlexcaller: {
         MVMint16 regi     = ins->operands[0].reg.orig;
-        int32_t category = (MVMuint32)ins->operands[1].lit_i64;
+        int32_t category = (uint32_t)ins->operands[1].lit_i64;
         MVMint16 payload  = ins->operands[2].reg.orig;
         MVMJitCallArg args[] = { { MVM_JIT_INTERP_VAR, { MVM_JIT_INTERP_TC } },
                                  { MVM_JIT_LITERAL, { op == MVM_OP_throwpayloadlex
@@ -3599,7 +3599,7 @@ static int32_t consume_ins(MVMThreadContext *tc, MVMJitGraph *jg,
         MVMint16 dst     = ins->operands[0].reg.orig;
         MVMint16 obj     = ins->operands[1].reg.orig;
         MVMint16 class   = ins->operands[2].reg.orig;
-        MVMuint32 name   = ins->operands[3].lit_str_idx;
+        uint32_t name   = ins->operands[3].lit_str_idx;
         MVMJitCallArg args[] = { { MVM_JIT_INTERP_VAR, { MVM_JIT_INTERP_TC } },
                                  { MVM_JIT_REG_VAL, { obj } },
                                  { MVM_JIT_REG_VAL, { class } },
@@ -3718,7 +3718,7 @@ static int32_t consume_ins(MVMThreadContext *tc, MVMJitGraph *jg,
     }
     case MVM_OP_sp_getstringfrom: {
         MVMint16 spesh_idx = ins->operands[1].lit_i16;
-        MVMuint32 cu_idx = ins->operands[2].lit_str_idx;
+        uint32_t cu_idx = ins->operands[2].lit_str_idx;
         MVMJitCallArg args[] = { { MVM_JIT_INTERP_VAR, { MVM_JIT_INTERP_TC } },
                                  { MVM_JIT_SPESH_SLOT_VALUE, { spesh_idx } },
                                  { MVM_JIT_LITERAL, cu_idx } };
@@ -3986,7 +3986,7 @@ static int32_t consume_ins(MVMThreadContext *tc, MVMJitGraph *jg,
         int32_t id           = ins->operands[0 + start].lit_ui32;
         MVMCallsite *callsite = jg->sg->sf->body.cu->body.callsites[ins->operands[1 + start].lit_ui16];
         MVMuint16 sf_slot     = ins->operands[2 + start].lit_ui16;
-        MVMuint32 ice_slot    = ins->operands[3 + start].lit_ui32;
+        uint32_t ice_slot    = ins->operands[3 + start].lit_ui32;
 
         /* get label /after/ current (dispatch) ins, where we'll need to reenter the JIT */
         int32_t reentry_label = MVM_jit_label_after_ins(tc, jg, iter->bb, ins);
@@ -4140,7 +4140,7 @@ static int32_t consume_ins(MVMThreadContext *tc, MVMJitGraph *jg,
 static int32_t consume_bb(MVMThreadContext *tc, MVMJitGraph *jg,
                            MVMSpeshIterator *iter, MVMSpeshBB *bb) {
     MVMJitExprTree *tree = NULL;
-    MVMuint32 i;
+    uint32_t i;
     int32_t label = MVM_jit_label_before_bb(tc, jg, bb);
     jg_append_label(tc, jg, label);
 

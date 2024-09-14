@@ -132,7 +132,7 @@ MVM_PUBLIC void        MVM_repr_bind_attr_inso(MVMThreadContext *tc, MVMObject *
 MVM_PUBLIC MVMint64   MVM_repr_attribute_inited(MVMThreadContext *tc, MVMObject *object, MVMObject *type,
                                                 MVMString *name);
 
-MVM_PUBLIC MVMint64    MVM_repr_compare_repr_id(MVMThreadContext *tc, MVMObject *object, MVMuint32 REPRId);
+MVM_PUBLIC MVMint64    MVM_repr_compare_repr_id(MVMThreadContext *tc, MVMObject *object, uint32_t REPRId);
 
 MVM_PUBLIC MVMint64    MVM_repr_hint_for(MVMThreadContext *tc, MVMObject *object, MVMString *attrname);
 

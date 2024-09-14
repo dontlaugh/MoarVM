@@ -264,7 +264,7 @@ MVMGrapheme32 MVM_nfg_crlf_grapheme(MVMThreadContext *tc) {
  * safe point. */
 MVMNFGSynthetic * MVM_nfg_get_synthetic_info(MVMThreadContext *tc, MVMGrapheme32 synth) {
     MVMNFGState *nfg       = tc->instance->nfg;
-    MVMuint32     synth_idx = -synth - 1;
+    uint32_t     synth_idx = -synth - 1;
     if (synth >= 0)
         MVM_oops(tc, "MVM_nfg_get_synthetic_info illegally called on a non-synthetic codepoint.\nRequested codepoint %i.", synth);
     if (synth_idx >= nfg->num_synthetics)
@@ -280,7 +280,7 @@ static void compute_case_change(MVMThreadContext *tc, MVMGrapheme32 synth_g, MVM
     MVMGrapheme32          *result = NULL;
     const MVMCodepoint *result_cps = NULL;
     /* Transform the base character. */
-    MVMuint32 num_result_cps = MVM_unicode_get_case_change(tc,
+    uint32_t num_result_cps = MVM_unicode_get_case_change(tc,
         synth_info->codes[synth_info->base_index], case_, &result_cps);
     if (num_result_cps == 0 || (num_result_cps == 1 && result_cps[0] == synth_info->codes[synth_info->base_index])) {
         /* Base character does not change, so grapheme stays the same. We
@@ -350,7 +350,7 @@ static void compute_case_change(MVMThreadContext *tc, MVMGrapheme32 synth_g, MVM
             MVM_panic(1, "NFG: invalid case change %d", case_);
     }
 }
-MVMuint32 MVM_nfg_get_case_change(MVMThreadContext *tc, MVMGrapheme32 synth, int32_t case_, MVMGrapheme32 **result) {
+uint32_t MVM_nfg_get_case_change(MVMThreadContext *tc, MVMGrapheme32 synth, int32_t case_, MVMGrapheme32 **result) {
     MVMNFGSynthetic *synth_info = MVM_nfg_get_synthetic_info(tc, synth);
     switch (case_) {
     case MVM_unicode_case_change_type_upper:
@@ -479,7 +479,7 @@ static void nfg_trie_node_destroy(MVMThreadContext *tc, MVMNFGTrieNode *node) {
  * to a VM instance. */
 void MVM_nfg_destroy(MVMThreadContext *tc) {
     MVMNFGState *nfg = tc->instance->nfg;
-    MVMuint32 i;
+    uint32_t i;
 
     if (nfg->grapheme_lookup)
         nfg_trie_node_destroy(tc, nfg->grapheme_lookup);

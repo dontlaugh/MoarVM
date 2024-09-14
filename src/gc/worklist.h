@@ -19,10 +19,10 @@ struct MVMGCWorklist {
     MVMCollectable ***list;
 
     /* The number of items on the worklist. */
-    MVMuint32 items;
+    uint32_t items;
 
     /* The number of items the work list is allocated to hold. */
-    MVMuint32 alloc;
+    uint32_t alloc;
 
     /* Whether we should include gen2 entries. */
     MVMuint8 include_gen2;

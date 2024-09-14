@@ -86,7 +86,7 @@ static unsigned classify(MVMCodepoint cp) {
     return 0;
 }
 
-static MVMuint32 utf8_encode(MVMuint8 *bp, MVMCodepoint cp) {
+static uint32_t utf8_encode(MVMuint8 *bp, MVMCodepoint cp) {
     unsigned cc = classify(cp);
 
     if (!(cc & (CP_CHAR | CP_NONCHAR)))
@@ -187,7 +187,7 @@ typedef struct {
 
     /* Bad bytes from an earlier buffer, for the sake of streaming decode. */
     MVMuint8 prev_bad_bytes[4];
-    MVMuint32 num_prev_bad_bytes;
+    uint32_t num_prev_bad_bytes;
 } DecodeState;
 
 /* Appends a single grapheme to the buffer if it will not cause a mismatch
@@ -234,7 +234,7 @@ static int append_grapheme(MVMThreadContext *tc, DecodeState *state, MVMGrapheme
         for (i = state->orig_codes_unnormalized; i < state->orig_codes_pos; i++) {
             MVMCodepoint to_encode = state->orig_codes[i];
             MVMuint8 encoded[4];
-            MVMuint32 bytes = utf8_encode(encoded, to_encode);
+            uint32_t bytes = utf8_encode(encoded, to_encode);
             for (j = 0; j < bytes; j++)
                 state->result[state->result_pos++] = synthetic_for(tc, encoded[j]);
         }
@@ -409,8 +409,8 @@ MVMString * MVM_string_utf8_c8_decode(MVMThreadContext *tc, const MVMObject *res
 
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-MVMuint32 MVM_string_utf8_c8_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                     const MVMuint32 *stopper_chars,
+uint32_t MVM_string_utf8_c8_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                     const uint32_t *stopper_chars,
                                      MVMDecodeStreamSeparators *seps,
                                      int32_t eof) {
     /* Local state for decode loop. */
@@ -420,7 +420,7 @@ MVMuint32 MVM_string_utf8_c8_decodestream(MVMThreadContext *tc, MVMDecodeStream 
     DecodeState state;
     int expected_continuations = 0;
     int min_expected_codepoint = 0;
-    MVMuint32 reached_stopper = 0;
+    uint32_t reached_stopper = 0;
     int32_t result_graphs = 0;
 
     /* If there's no buffers, we're done. */
@@ -458,7 +458,7 @@ MVMuint32 MVM_string_utf8_c8_decodestream(MVMThreadContext *tc, MVMDecodeStream 
     reached_stopper = 0;
     while (cur_bytes && !reached_stopper) {
         /* Set up decode state for this buffer. */
-        const MVMuint32 bytes = cur_bytes->length;
+        const uint32_t bytes = cur_bytes->length;
         /* Space for graphemes we have + 1 grapheme we receive from last buffer */
         state.result = MVM_malloc((bytes + 1) * sizeof(MVMGrapheme32));
         state.orig_codes = MVM_realloc(state.orig_codes,
@@ -604,7 +604,7 @@ MVMuint32 MVM_string_utf8_c8_decodestream(MVMThreadContext *tc, MVMDecodeStream 
 static void emit_cp(MVMThreadContext *tc, MVMCodepoint cp, MVMuint8 **result,
                     size_t *result_pos, size_t *result_limit,
                     MVMuint8 *repl_bytes, MVMuint64 repl_length) {
-    MVMuint32 bytes;
+    uint32_t bytes;
     if (*result_pos >= *result_limit) {
         *result_limit *= 2;
         *result = MVM_realloc(*result, *result_limit + 4);

@@ -198,7 +198,7 @@ static void literal_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *i
 }
 static void getstringfrom_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshIns *ins) {
     MVMCompUnit *dep = (MVMCompUnit *)g->spesh_slots[ins->operands[1].lit_i16];
-    MVMuint32 idx = ins->operands[2].lit_ui32;
+    uint32_t idx = ins->operands[2].lit_ui32;
     MVMString *str = MVM_cu_string(tc, dep, idx);
     MVMSpeshFacts *tgt_facts = &g->facts[ins->operands[0].reg.orig][ins->operands[0].reg.i];
     tgt_facts->value.s = str;
@@ -273,18 +273,18 @@ static void log_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
      * able to do Basic Block Versioning inspired tricks, like producing two
      * different code paths ahead when there are a small number of options. */
     MVMObject *agg_type = NULL;
-    MVMuint32 agg_type_count = 0;
-    MVMuint32 agg_type_object = 0;
-    MVMuint32 agg_concrete = 0;
-    MVMuint32 i;
+    uint32_t agg_type_count = 0;
+    uint32_t agg_type_object = 0;
+    uint32_t agg_concrete = 0;
+    uint32_t i;
     for (i = 0; i < p->num_type_stats; i++) {
         MVMSpeshStatsByType *ts = p->type_stats[i];
-        MVMuint32 j;
+        uint32_t j;
         for (j = 0; j < ts->num_by_offset; j++) {
             if (ts->by_offset[j].bytecode_offset == logged_ann->data.bytecode_offset) {
                 /* Go over the logged types. */
-                MVMuint32 num_types = ts->by_offset[j].num_types;
-                MVMuint32 k;
+                uint32_t num_types = ts->by_offset[j].num_types;
+                uint32_t k;
                 for (k = 0; k < num_types; k++) {
                     /* If it's inconsistent with the aggregated type so far,
                      * then first check if the type we're now seeing is either
@@ -293,7 +293,7 @@ static void log_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
                      * disregard the previous one. Otherwise, tot up the type
                      * object vs. concrete. */
                     MVMObject *cur_type = ts->by_offset[j].types[k].type;
-                    MVMuint32 count = ts->by_offset[j].types[k].count;
+                    uint32_t count = ts->by_offset[j].types[k].count;
                     if (agg_type) {
                         if (agg_type != cur_type) {
                             if (count > 100 * agg_type_count) {
@@ -763,7 +763,7 @@ static void add_bb_facts(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshBB *bb,
  * instructions that install the block eliminated. This tweaks the usage of
  * them. */
 static void tweak_block_handler_usage(MVMThreadContext *tc, MVMSpeshGraph *g) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < g->sf->body.num_handlers; i++) {
         if (g->sf->body.handlers[i].action == MVM_EX_ACTION_INVOKE) {
             MVMSpeshOperand operand;
@@ -782,7 +782,7 @@ static void tweak_block_handler_usage(MVMThreadContext *tc, MVMSpeshGraph *g) {
 
 /* Kicks off fact discovery from the top of the (dominator) tree. */
 void MVM_spesh_facts_discover(MVMThreadContext *tc, MVMSpeshGraph *g, MVMSpeshPlanned *p,
-        MVMuint32 is_specialized) {
+        uint32_t is_specialized) {
     /* Set up normal usage information. */
     MVM_spesh_usages_create_usage(tc, g);
     tweak_block_handler_usage(tc, g);

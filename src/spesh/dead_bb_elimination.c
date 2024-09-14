@@ -124,7 +124,7 @@ void MVM_spesh_eliminate_dead_bbs(MVMThreadContext *tc, MVMSpeshGraph *g, int32_
 
     /* First pass: mark every basic block that is reachable from the
      * entrypoint. */
-    MVMuint32 orig_bbs = g->num_bbs;
+    uint32_t orig_bbs = g->num_bbs;
     MVMint8  *seen = MVM_calloc(1, g->num_bbs);
     mark_bb_seen(tc, g->entry, seen);
 

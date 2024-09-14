@@ -57,7 +57,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
         dest_body->local_types = NULL;
     }
 
-    MVMuint32 num_lexicals = src_body->num_lexicals;
+    uint32_t num_lexicals = src_body->num_lexicals;
     dest_body->num_lexicals = num_lexicals;
     if (num_lexicals) {
         MVMuint16 *lexical_types = MVM_malloc(sizeof(MVMuint16) * src_body->num_lexicals);
@@ -65,7 +65,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
                sizeof(MVMuint16) * src_body->num_lexicals);
 
         MVMString **lexical_names_list = MVM_malloc(sizeof(MVMString *) * src_body->num_lexicals);
-        for (MVMuint32 j = 0; j < num_lexicals; j++) {
+        for (uint32_t j = 0; j < num_lexicals; j++) {
             /* don't need to clone the string */
             MVM_ASSIGN_REF(tc, &(dest_root->header), lexical_names_list[j], src_body->lexical_names_list[j]);
         }
@@ -137,10 +137,10 @@ static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorkli
         return;
 
     /* lexical names */
-    MVMuint32 num_lexicals = body->num_lexicals;
+    uint32_t num_lexicals = body->num_lexicals;
     MVMString **lexical_names_list = body->lexical_names_list;
 
-    for (MVMuint32 j = 0; j < num_lexicals; j++) {
+    for (uint32_t j = 0; j < num_lexicals; j++) {
         MVM_gc_worklist_add(tc, worklist, &lexical_names_list[j]);
     }
 
@@ -283,10 +283,10 @@ static void describe_refs(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSTa
         return;
 
     /* lexical names */
-    MVMuint32 num_lexicals = body->num_lexicals;
+    uint32_t num_lexicals = body->num_lexicals;
     MVMString **lexical_names_list = body->lexical_names_list;
 
-    for (MVMuint32 j = 0; j < num_lexicals; j++) {
+    for (uint32_t j = 0; j < num_lexicals; j++) {
         MVM_profile_heap_add_collectable_rel_const_cstr_cached(tc, ss,
             (MVMCollectable *)lexical_names_list[j], "Lexical name", &nonstatic_cache_1);
     }
@@ -346,7 +346,7 @@ static const MVMREPROps MVMStaticFrame_this_repr = {
 char * MVM_staticframe_file_location(MVMThreadContext *tc, MVMStaticFrame *sf) {
     MVMBytecodeAnnotation *ann = MVM_bytecode_resolve_annotation(tc, &sf->body, 0);
     MVMCompUnit *cu = sf->body.cu;
-    MVMuint32          str_idx = ann ? ann->filename_string_heap_index : 0;
+    uint32_t          str_idx = ann ? ann->filename_string_heap_index : 0;
     int32_t           line_nr = ann ? ann->line_number : 1;
     MVMString        *filename = cu->body.filename;
     char        *filename_utf8 = "<unknown>";
@@ -364,7 +364,7 @@ char * MVM_staticframe_file_location(MVMThreadContext *tc, MVMStaticFrame *sf) {
 /* We could change this code (and bytecode.c) to lazily only build the lookup
  * hash on the first lookup. I don't have a feel for how often no lookups are
  * made, and hence whether the added complexity would be much of a saving. */
-MVMuint32 MVM_get_lexical_by_name(MVMThreadContext *tc, MVMStaticFrame *sf, MVMString *name) {
+uint32_t MVM_get_lexical_by_name(MVMThreadContext *tc, MVMStaticFrame *sf, MVMString *name) {
     /* deserialize_frames in bytecode.c doesn't create the lookup hash if there
      * are only a small number of lexicals in this frame. */
     if (MVM_index_hash_built(tc, &sf->body.lexical_names)) {
@@ -372,8 +372,8 @@ MVMuint32 MVM_get_lexical_by_name(MVMThreadContext *tc, MVMStaticFrame *sf, MVMS
     }
 
     MVMString **lexical_names_list = sf->body.lexical_names_list;
-    MVMuint32 num_lexicals = sf->body.num_lexicals;
-    for (MVMuint32 j = 0; j < num_lexicals; j++) {
+    uint32_t num_lexicals = sf->body.num_lexicals;
+    for (uint32_t j = 0; j < num_lexicals; j++) {
         if (MVM_string_equal(tc, name, lexical_names_list[j]))
             return j;
     }

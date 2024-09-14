@@ -5,11 +5,11 @@
  * and test with assertions enabled. The current choices permit certain
  * optimisation assumptions in parts of the code. */
 #define MVM_STR_HASH_LOAD_FACTOR 0.75
-MVM_STATIC_INLINE MVMuint32 MVM_str_hash_official_size(const struct MVMStrHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_str_hash_official_size(const struct MVMStrHashTableControl *control) {
     assert(!(control->cur_items == 0 && control->max_items == 0));
-    return 1 << (MVMuint32)control->official_size_log2;
+    return 1 << (uint32_t)control->official_size_log2;
 }
-MVM_STATIC_INLINE MVMuint32 MVM_str_hash_max_items(const struct MVMStrHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_str_hash_max_items(const struct MVMStrHashTableControl *control) {
     assert(!(control->cur_items == 0 && control->max_items == 0));
     return MVM_str_hash_official_size(control) * MVM_STR_HASH_LOAD_FACTOR;
 }
@@ -20,7 +20,7 @@ MVM_STATIC_INLINE MVMuint32 MVM_str_hash_max_items(const struct MVMStrHashTableC
  * probe distance of 2 is the first extra bucket beyond the official allocation
  * probe distance of 255 is the 254th beyond the official allocation.
  */
-MVM_STATIC_INLINE MVMuint32 MVM_str_hash_allocated_items(const struct MVMStrHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_str_hash_allocated_items(const struct MVMStrHashTableControl *control) {
     assert(!(control->cur_items == 0 && control->max_items == 0));
     return MVM_str_hash_official_size(control) + control->max_probe_distance_limit - 1;
 }
@@ -29,7 +29,7 @@ MVM_STATIC_INLINE MVMuint32 MVM_str_hash_allocated_items(const struct MVMStrHash
  * max_probe_distance - 1, whereas buckets are allocated up to
  * max_probe_distance_limit - 1. And if the hash is empty, it can't be using
  * any buckets. As the name is meant to imply, this function is private. */
-MVM_STATIC_INLINE MVMuint32 MVM_str_hash_kompromat(const struct MVMStrHashTableControl *control) {
+MVM_STATIC_INLINE uint32_t MVM_str_hash_kompromat(const struct MVMStrHashTableControl *control) {
     if (MVM_UNLIKELY(control->cur_items == 0))
         return 0;
     return MVM_str_hash_official_size(control) + control->max_probe_distance - 1;
@@ -76,8 +76,8 @@ void MVM_str_hash_demolish(MVMThreadContext *tc, MVMStrHashTable *hashtable);
 /* Call this before you use the hashtable, to initialise it. */
 void MVM_str_hash_build(MVMThreadContext *tc,
                         MVMStrHashTable *hashtable,
-                        MVMuint32 entry_size,
-                        MVMuint32 entries);
+                        uint32_t entry_size,
+                        uint32_t entries);
 
 MVM_STATIC_INLINE int MVM_str_hash_is_empty(MVMThreadContext *tc,
                                             MVMStrHashTable *hashtable) {
@@ -401,7 +401,7 @@ enum {
     MVM_HASH_FSCK_CHECK_FROMSPACE   = 0x10  /* O(n) test. */
 };
 
-MVMuint64 MVM_str_hash_fsck(MVMThreadContext *tc, MVMStrHashTable *hashtable, MVMuint32 mode);
+MVMuint64 MVM_str_hash_fsck(MVMThreadContext *tc, MVMStrHashTable *hashtable, uint32_t mode);
 
 /* iterators are stored as unsigned values, metadata index plus one.
  * This is clearly an internal implementation detail. Don't cheat.

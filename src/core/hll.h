@@ -71,7 +71,7 @@ struct MVMHLLConfig {
     MVMString *isinvokable_dispatcher;  /* object */
 
     /* The maximum code size that we'll inline. */
-    MVMuint32 max_inline_size;
+    uint32_t max_inline_size;
 };
 
 MVMHLLConfig * MVM_hll_get_config_for(MVMThreadContext *tc, MVMString *name);

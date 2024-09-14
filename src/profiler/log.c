@@ -60,7 +60,7 @@ void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, MVMuint64 m
 
         /* Try to locate the entry node, if it's in the call graph already. */
         MVMProfileCallNode *pcn = NULL;
-        MVMuint32 i;
+        uint32_t i;
         if (ptd->current_call)
             for (i = 0; i < ptd->current_call->num_succ; i++)
                 if (ptd->staticframe_array[ptd->current_call->succ[i]->sf_idx] == sf)
@@ -145,7 +145,7 @@ void MVM_profile_log_enter(MVMThreadContext *tc, MVMStaticFrame *sf, MVMuint64 m
         /* If we didn't find a call graph node, then create one and add it to the
          * graph. */
         if (!pcn) {
-            MVMuint32 search;
+            uint32_t search;
             if (was_entered_via_confprog)
                 ptd->current_call = ptd->call_graph;
             pcn = make_new_pcn(ptd, current_hrtime);
@@ -199,7 +199,7 @@ void MVM_profile_log_enter_native(MVMThreadContext *tc, MVMObject *nativecallsit
     MVMProfileCallNode *pcn = NULL;
     MVMuint64 current_hrtime = uv_hrtime();
     MVMNativeCallBody *callbody;
-    MVMuint32 i;
+    uint32_t i;
 
     /* We locate the right call node by looking at sf being NULL and the
      * native_target_name matching our intended target. */
@@ -233,7 +233,7 @@ void MVM_profile_log_enter_native(MVMThreadContext *tc, MVMObject *nativecallsit
 }
 
 /* Frame exit handler, used for unwind and normal exit. */
-static void log_exit(MVMThreadContext *tc, MVMuint32 unwind) {
+static void log_exit(MVMThreadContext *tc, uint32_t unwind) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
 
     /* Ensure we've a current frame. */
@@ -338,7 +338,7 @@ void MVM_profile_log_thread_created(MVMThreadContext *tc, MVMThreadContext *chil
 /* Logs one allocation, potentially scalar replaced. */
 static void log_one_allocation(MVMThreadContext *tc, MVMObject *obj, MVMProfileCallNode *pcn, MVMuint8 replaced) {
     MVMObject *what = STABLE(obj)->WHAT;
-    MVMuint32 i;
+    uint32_t i;
     MVMuint8 allocation_target;
     MVM_ASSERT_NOT_FROMSPACE(tc, what);
     if (replaced) {
@@ -380,7 +380,7 @@ static void log_one_allocation(MVMThreadContext *tc, MVMObject *obj, MVMProfileC
         }
     }
     {
-        MVMuint32 search;
+        uint32_t search;
         for (search = 0; search < MVM_VECTOR_ELEMS(tc->prof_data->type_array); search++) {
             if (tc->prof_data->type_array[search] == what) {
                 break;
@@ -408,7 +408,7 @@ void MVM_profile_log_allocated(MVMThreadContext *tc, MVMObject *obj) {
          * nursery; we may have generated some "allocated" log instructions
          * after operations that may or may not allocate what they return.
          */
-        MVMuint32 distance = (uintptr_t)tc->nursery_alloc - (uintptr_t)obj;
+        uint32_t distance = (uintptr_t)tc->nursery_alloc - (uintptr_t)obj;
 
         if (!obj) {
             return;
@@ -427,7 +427,7 @@ void MVM_profiler_log_gc_deallocate(MVMThreadContext *tc, MVMObject *object) {
         MVMProfileGC *pgc = &tc->prof_data->gcs[tc->prof_data->num_gcs];
         MVMObject *what = STABLE(object)->WHAT;
         MVMCollectable *item = (MVMCollectable *)object;
-        MVMuint32 i;
+        uint32_t i;
 
         MVMuint8 dealloc_target = 0;
 
@@ -484,7 +484,7 @@ void MVM_profile_log_scalar_replaced(MVMThreadContext *tc, MVMSTable *st) {
 }
 
 /* Logs the start of a GC run. */
-void MVM_profiler_log_gc_start(MVMThreadContext *tc, MVMuint32 full, MVMuint32 this_thread_responsible) {
+void MVM_profiler_log_gc_start(MVMThreadContext *tc, uint32_t full, uint32_t this_thread_responsible) {
     MVMProfileThreadData *ptd = get_thread_data(tc);
     MVMProfileGC *gc;
 

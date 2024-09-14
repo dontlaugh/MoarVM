@@ -4,7 +4,7 @@
 static int32_t have_existing_specialization(MVMThreadContext *tc, MVMStaticFrame *sf,
         MVMCallsite *cs, MVMSpeshStatsType *type_tuple) {
     MVMStaticFrameSpesh *sfs = sf->body.spesh;
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < sfs->body.num_spesh_candidates; i++) {
         if (sfs->body.spesh_candidates[i]->body.cs == cs) {
             /* Callsite matches. Is it a matching certain specialization? */
@@ -30,7 +30,7 @@ static int32_t have_existing_specialization(MVMThreadContext *tc, MVMStaticFrame
 static void add_planned(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMSpeshPlannedKind kind,
                         MVMStaticFrame *sf, MVMSpeshStatsByCallsite *cs_stats,
                         MVMSpeshStatsType *type_tuple, MVMSpeshStatsByType **type_stats,
-                        MVMuint32 num_type_stats) {
+                        uint32_t num_type_stats) {
     MVMSpeshPlanned *p;
     if (sf->body.bytecode_size > MVM_SPESH_MAX_BYTECODE_SIZE ||
         have_existing_specialization(tc, sf, cs_stats->cs, type_tuple)) {
@@ -55,7 +55,7 @@ static void add_planned(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMSpeshPlanne
     p->type_stats = type_stats;
     p->num_type_stats = num_type_stats;
     if (num_type_stats) {
-        MVMuint32 i;
+        uint32_t i;
         p->max_depth = type_stats[0]->max_depth;
         for (i = 1; i < num_type_stats; i++)
             if (type_stats[i]->max_depth > p->max_depth)
@@ -79,7 +79,7 @@ MVMSpeshStatsType * MVM_spesh_plan_copy_type_tuple(MVMThreadContext *tc,
  * of deciding what to specialize on. */
 typedef struct {
     MVMSpeshStatsType type;
-    MVMuint32 count;
+    uint32_t count;
 } ParamTypeCount;
 
 // TODO: rename, move
@@ -93,13 +93,13 @@ static void plan_for_cs(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame
                         MVMuint64 *in_osr_specialization) {
     /* First, make sure it even is possible to specialize something by type
      * in this code. */
-    MVMuint32 specializations = 0;
+    uint32_t specializations = 0;
     if (sf->body.specializable && by_cs->cs) {
         /* It is. We'll try and produce some specializations, looping until
          * no tuples that remain give us anything significant. */
-        MVMuint32 required_hits = (PERCENT_RELEVANT * (by_cs->hits + by_cs->osr_hits)) / 100;
+        uint32_t required_hits = (PERCENT_RELEVANT * (by_cs->hits + by_cs->osr_hits)) / 100;
         MVMuint8 *tuples_used = MVM_calloc(by_cs->num_by_type, 1);
-        MVMuint32 num_obj_args = 0, i;
+        uint32_t num_obj_args = 0, i;
         for (i = 0; i < by_cs->cs->flag_count; i++)
             if (by_cs->cs->arg_flags[i] & MVM_CALLSITE_ARG_OBJ)
                 num_obj_args++;
@@ -114,7 +114,7 @@ static void plan_for_cs(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame
             MVMSpeshStatsType *chosen_tuple = MVM_calloc(by_cs->cs->flag_count,
                     sizeof(MVMSpeshStatsType));
             MVMuint8 *chosen_position = MVM_calloc(by_cs->cs->flag_count, 1);
-            MVMuint32 param_idx, j, k, have_chosen;
+            uint32_t param_idx, j, k, have_chosen;
             MVM_VECTOR_DECL(ParamTypeCount, type_counts);
             MVM_VECTOR_INIT(type_counts, by_cs->num_by_type);
             for (param_idx = 0; param_idx < by_cs->cs->flag_count; param_idx++) {
@@ -236,11 +236,11 @@ static void plan_for_cs(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame
 static void plan_for_sf(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame *sf,
         MVMuint64 *in_certain_specialization, MVMuint64 *in_observed_specialization, MVMuint64 *in_osr_specialization) {
     MVMSpeshStats *ss = sf->body.spesh->body.spesh_stats;
-    MVMuint32 threshold = MVM_spesh_threshold(tc, sf);
+    uint32_t threshold = MVM_spesh_threshold(tc, sf);
     if (ss->hits >= threshold || ss->osr_hits >= MVM_SPESH_PLAN_SF_MIN_OSR) {
         /* The frame is hot enough; look through its callsites to see if any
          * of those are. */
-        MVMuint32 i;
+        uint32_t i;
         for (i = 0; i < ss->num_by_callsite; i++) {
             MVMSpeshStatsByCallsite *by_cs = &(ss->by_callsite[i]);
             if (by_cs->hits >= threshold || by_cs->osr_hits >= MVM_SPESH_PLAN_CS_MIN_OSR)
@@ -253,25 +253,25 @@ static void plan_for_sf(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMStaticFrame
  * but sometimes it's misleading, and we end up with a planned specialization
  * of a callee having a lower maximum than the caller. Boost the depth of any
  * callees in such a situation. */
-static void twiddle_stack_depths(MVMThreadContext *tc, MVMSpeshPlanned *planned, MVMuint32 num_planned) {
-    MVMuint32 i;
+static void twiddle_stack_depths(MVMThreadContext *tc, MVMSpeshPlanned *planned, uint32_t num_planned) {
+    uint32_t i;
     if (num_planned < 2)
         return;
     for (i = 0; i < num_planned; i++) {
         /* For each planned specialization, look for its calls. */
         MVMSpeshPlanned *p = &(planned[i]);
-        MVMuint32 j;
+        uint32_t j;
         for (j = 0; j < p->num_type_stats; j++) {
             MVMSpeshStatsByType *sbt = p->type_stats[j];
-            MVMuint32 k;
+            uint32_t k;
             for (k = 0; k < sbt->num_by_offset; k++) {
                 MVMSpeshStatsByOffset *sbo = &(sbt->by_offset[k]);
-                MVMuint32 l;
+                uint32_t l;
                 for (l = 0; l < sbo->num_invokes; l++) {
                     /* Found an invoke. If we plan a specialization for it,
                      * then bump its count. */
                     MVMStaticFrame *invoked_sf = sbo->invokes[l].sf;
-                    MVMuint32 m;
+                    uint32_t m;
                     for (m = 0; m < num_planned; m++)
                         if (planned[m].sf == invoked_sf)
                             planned[m].max_depth = p->max_depth + 1;
@@ -282,10 +282,10 @@ static void twiddle_stack_depths(MVMThreadContext *tc, MVMSpeshPlanned *planned,
 }
 
 /* Sorts the plan in descending order of maximum call depth. */
-static void sort_plan(MVMThreadContext *tc, MVMSpeshPlanned *planned, MVMuint32 n) {
+static void sort_plan(MVMThreadContext *tc, MVMSpeshPlanned *planned, uint32_t n) {
     if (n >= 2) {
         MVMSpeshPlanned pivot = planned[n / 2];
-        MVMuint32 i, j;
+        uint32_t i, j;
         for (i = 0, j = n - 1; ; i++, j--) {
             MVMSpeshPlanned temp;
             while (planned[i].max_depth > pivot.max_depth)
@@ -326,7 +326,7 @@ MVMSpeshPlan * MVM_spesh_plan(MVMThreadContext *tc, MVMObject *updated_static_fr
 
 /* Marks garbage-collectable objects held in the spesh plan. */
 void MVM_spesh_plan_gc_mark(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMGCWorklist *worklist) {
-    MVMuint32 i;
+    uint32_t i;
     if (!plan)
         return;
     for (i = 0; i < plan->num_planned; i++) {
@@ -334,7 +334,7 @@ void MVM_spesh_plan_gc_mark(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMGCWorkl
         MVM_gc_worklist_add(tc, worklist, &(p->sf));
         if (p->type_tuple) {
             MVMCallsite *cs = p->cs_stats->cs;
-            MVMuint32 j;
+            uint32_t j;
             for (j = 0; j < cs->flag_count; j++) {
                 if (cs->arg_flags[j] & MVM_CALLSITE_ARG_OBJ) {
                     MVM_gc_worklist_add(tc, worklist, &(p->type_tuple[j].type));
@@ -346,7 +346,7 @@ void MVM_spesh_plan_gc_mark(MVMThreadContext *tc, MVMSpeshPlan *plan, MVMGCWorkl
 }
 
 void MVM_spesh_plan_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss, MVMSpeshPlan *plan) {
-    MVMuint32 i;
+    uint32_t i;
     MVMuint64 cache_1 = 0;
     MVMuint64 cache_2 = 0;
     MVMuint64 cache_3 = 0;
@@ -358,7 +358,7 @@ void MVM_spesh_plan_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss, 
             (MVMCollectable*)(p->sf), "staticframe", &cache_1);
         if (p->type_tuple) {
             MVMCallsite *cs = p->cs_stats->cs;
-            MVMuint32 j;
+            uint32_t j;
             for (j = 0; j < cs->flag_count; j++) {
                 if (cs->arg_flags[j] & MVM_CALLSITE_ARG_OBJ) {
                     MVM_profile_heap_add_collectable_rel_const_cstr_cached(tc, ss,
@@ -373,7 +373,7 @@ void MVM_spesh_plan_gc_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss, 
 
 /* Frees all memory associated with a specialization plan. */
 void MVM_spesh_plan_destroy(MVMThreadContext *tc, MVMSpeshPlan *plan) {
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < plan->num_planned; i++) {
         MVM_free(plan->planned[i].type_stats);
         MVM_free(plan->planned[i].type_tuple);

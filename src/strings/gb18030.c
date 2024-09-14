@@ -110,15 +110,15 @@ MVMString * MVM_string_gb18030_decode(MVMThreadContext *tc, const MVMObject *res
     return result;
 }
 
-MVMuint32 MVM_string_gb18030_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                         const MVMuint32 *stopper_chars, MVMDecodeStreamSeparators *seps) {
-    MVMuint32 count = 0, total = 0;
-    MVMuint32 bufsize;
+uint32_t MVM_string_gb18030_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                         const uint32_t *stopper_chars, MVMDecodeStreamSeparators *seps) {
+    uint32_t count = 0, total = 0;
+    uint32_t bufsize;
     MVMGrapheme32 *buffer = NULL;
     MVMDecodeStreamBytes *cur_bytes = NULL;
     MVMDecodeStreamBytes *last_accept_bytes = ds->bytes_head;
     int32_t last_accept_pos, last_was_cr;
-    MVMuint32 reached_stopper;
+    uint32_t reached_stopper;
 
     int32_t last_was_first_byte, is_len4;
     int32_t last_codepoint;
@@ -267,9 +267,9 @@ char * MVM_string_gb18030_encode_substr(MVMThreadContext *tc, MVMString *str,
                                        MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement,
                                        int32_t translate_newlines) {
 
-    MVMuint32 startu = (MVMuint32)start;
+    uint32_t startu = (uint32_t)start;
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
-    MVMuint32 lengthu = (MVMuint32)(length == -1 ? strgraphs - startu : length);
+    uint32_t lengthu = (uint32_t)(length == -1 ? strgraphs - startu : length);
     MVMuint8 *result = NULL;
     size_t result_alloc;
     MVMuint8 *repl_bytes = NULL;
@@ -295,7 +295,7 @@ char * MVM_string_gb18030_encode_substr(MVMThreadContext *tc, MVMString *str,
             *output_size = lengthu;
     }
     else {
-        MVMuint32 out_pos = 0;
+        uint32_t out_pos = 0;
         MVMCodepointIter ci;
         MVM_string_ci_init(tc, &ci, str, translate_newlines, 0);
 

@@ -42,15 +42,15 @@ static void add_to_finalizing(MVMThreadContext *tc, MVMObject *obj) {
     tc->num_finalizing++;
 }
 static void walk_thread_finalize_queue(MVMThreadContext *tc, MVMuint8 gen) {
-    MVMuint32 collapse_pos = 0;
-    MVMuint32 i;
+    uint32_t collapse_pos = 0;
+    uint32_t i;
     for (i = 0; i < tc->num_finalize; i++) {
         /* See if it's dead, taking which generation we've marked into
          * account. */
-        MVMuint32 flags   = tc->finalize[i]->header.flags2;
-        MVMuint32 in_gen2 = flags & MVM_CF_SECOND_GEN;
+        uint32_t flags   = tc->finalize[i]->header.flags2;
+        uint32_t in_gen2 = flags & MVM_CF_SECOND_GEN;
         if (gen == MVMGCGenerations_Both || !in_gen2) {
-            MVMuint32 live = flags & (MVM_CF_GEN2_LIVE | MVM_CF_FORWARDER_VALID);
+            uint32_t live = flags & (MVM_CF_GEN2_LIVE | MVM_CF_FORWARDER_VALID);
             if (live) {
                 /* Alive, so just leave it in finalized queue, taking updated
                  * address if needed. */

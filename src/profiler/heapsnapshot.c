@@ -407,7 +407,7 @@ static void set_static_frame_index(MVMThreadContext *tc, MVMHeapSnapshotState *s
 /* Processes the work items, until we've none left. */
 static void process_collectable(MVMThreadContext *tc, MVMHeapSnapshotState *ss,
         MVMHeapSnapshotCollectable *col, MVMCollectable *c, MVMuint64 *sc_cache) {
-    MVMuint32 sc_idx = MVM_sc_get_idx_of_sc(c);
+    uint32_t sc_idx = MVM_sc_get_idx_of_sc(c);
     if (sc_idx > 0)
         add_reference_const_cstr_cached(tc, ss, "<SC>",
             get_collectable_idx(tc, ss,
@@ -431,13 +431,13 @@ static void process_gc_worklist(MVMThreadContext *tc, MVMHeapSnapshotState *ss, 
 }
 static void incorporate_type_stats(MVMThreadContext *tc, MVMHeapSnapshotStats *stats, MVMHeapSnapshotCollectable *col) {
     if (col->type_or_frame_index >= stats->type_stats_alloc) {
-        MVMuint32 prev_alloc = stats->type_stats_alloc;
+        uint32_t prev_alloc = stats->type_stats_alloc;
         while (col->type_or_frame_index >= stats->type_stats_alloc) {
             stats->type_stats_alloc += 512;
         }
         stats->type_counts   = MVM_recalloc(stats->type_counts,
-                sizeof(MVMuint32) * prev_alloc,
-                sizeof(MVMuint32) * stats->type_stats_alloc);
+                sizeof(uint32_t) * prev_alloc,
+                sizeof(uint32_t) * stats->type_stats_alloc);
         stats->type_size_sum = MVM_recalloc(stats->type_size_sum,
                 sizeof(MVMuint64) * prev_alloc,
                 sizeof(MVMuint64) * stats->type_stats_alloc);
@@ -447,13 +447,13 @@ static void incorporate_type_stats(MVMThreadContext *tc, MVMHeapSnapshotStats *s
 }
 static void incorporate_sf_stats(MVMThreadContext *tc, MVMHeapSnapshotStats *stats, MVMHeapSnapshotCollectable *col) {
     if (col->type_or_frame_index >= stats->sf_stats_alloc) {
-        MVMuint32 prev_alloc = stats->sf_stats_alloc;
+        uint32_t prev_alloc = stats->sf_stats_alloc;
         while (col->type_or_frame_index >= stats->sf_stats_alloc) {
             stats->sf_stats_alloc += 512;
         }
         stats->sf_counts   = MVM_recalloc(stats->sf_counts,
-                sizeof(MVMuint32) * prev_alloc,
-                sizeof(MVMuint32) * stats->sf_stats_alloc);
+                sizeof(uint32_t) * prev_alloc,
+                sizeof(uint32_t) * stats->sf_stats_alloc);
         stats->sf_size_sum = MVM_recalloc(stats->sf_size_sum,
                 sizeof(MVMuint64) * prev_alloc,
                 sizeof(MVMuint64) * stats->sf_stats_alloc);
@@ -823,8 +823,8 @@ static gzFile open_coll_file(MVMHeapSnapshotCollection *col, char *typename) {
 #endif
 
 #if MVM_HEAPSNAPSHOT_FORMAT == 3
-MVMuint32 get_new_toc_entry(MVMThreadContext *tc, MVMHeapDumpTableOfContents *toc) {
-    MVMuint32 i = toc->toc_entry_used++;
+uint32_t get_new_toc_entry(MVMThreadContext *tc, MVMHeapDumpTableOfContents *toc) {
+    uint32_t i = toc->toc_entry_used++;
 
     if (toc->toc_entry_used >= toc->toc_entry_alloc) {
         toc->toc_entry_alloc += 8;
@@ -933,7 +933,7 @@ static void serialize_attribute_stream(MVMThreadContext *tc, MVMHeapSnapshotColl
     /* Here would be the right place to seek backwards and write the total size. */
 
     if (col->second_level_toc) {
-        MVMuint32 toc_i = get_new_toc_entry(tc, col->second_level_toc);
+        uint32_t toc_i = get_new_toc_entry(tc, col->second_level_toc);
         col->second_level_toc->toc_words[toc_i] = name;
         col->second_level_toc->toc_positions[toc_i * 2]     = size_position;
         col->second_level_toc->toc_positions[toc_i * 2 + 1] = end_position;
@@ -966,7 +966,7 @@ void string_heap_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollect
 
     while (i < col->num_strings) {
         char *str = col->strings[i];
-        MVMuint32 output_size = strlen(str);
+        uint32_t output_size = strlen(str);
 
         while (result_buffer_insert_pos + output_size + 4 >= result_buffer + result_buffer_size) {
             size_t offset = result_buffer_insert_pos - result_buffer;
@@ -975,8 +975,8 @@ void string_heap_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollect
             result_buffer_insert_pos = result_buffer + offset;
         }
 
-        memcpy(result_buffer_insert_pos, &output_size, sizeof(MVMuint32));
-        result_buffer_insert_pos += sizeof(MVMuint32);
+        memcpy(result_buffer_insert_pos, &output_size, sizeof(uint32_t));
+        result_buffer_insert_pos += sizeof(uint32_t);
 
         memcpy(result_buffer_insert_pos, str, output_size);
         result_buffer_insert_pos += output_size;
@@ -1056,7 +1056,7 @@ void string_heap_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCollect
     end_position = ftell(fh);
 
     if (col->second_level_toc) {
-        MVMuint32 toc_i = get_new_toc_entry(tc, col->second_level_toc);
+        uint32_t toc_i = get_new_toc_entry(tc, col->second_level_toc);
         col->second_level_toc->toc_words[toc_i] = "strings";
         col->second_level_toc->toc_positions[toc_i * 2]     = size_position;
         col->second_level_toc->toc_positions[toc_i * 2 + 1] = end_position;
@@ -1205,7 +1205,7 @@ void write_toc_to_filehandle(MVMThreadContext *tc, MVMHeapSnapshotCollection *co
     MVMuint64 toc_start_pos;
     MVMuint64 toc_end_pos;
 
-    MVMuint32 i;
+    uint32_t i;
 
     char text[9] = {0};
 
@@ -1236,7 +1236,7 @@ void write_toc_to_filehandle(MVMThreadContext *tc, MVMHeapSnapshotCollection *co
     fwrite(&toc_start_pos, sizeof(MVMuint64), 1, fh);
 
     if (to_register) {
-        MVMuint32 new_i = get_new_toc_entry(tc, to_register);
+        uint32_t new_i = get_new_toc_entry(tc, to_register);
 
         to_register->toc_words[new_i] = "toc";
         to_register->toc_positions[new_i * 2]     = toc_start_pos;
@@ -1270,7 +1270,7 @@ typedef struct leaderboard {
 static void make_leaderboards(MVMThreadContext *tc, MVMHeapSnapshotCollection *col, MVMHeapSnapshot *hs) {
     MVMHeapSnapshotStats *stats = hs->stats;
     to_sort_entry *data_body;
-    MVMuint32 i;
+    uint32_t i;
     MVMuint8 which;
 
     leaderboard boards[4][LEADERBOARDS_TOP_SPOTS];
@@ -1292,7 +1292,7 @@ static void make_leaderboards(MVMThreadContext *tc, MVMHeapSnapshotCollection *c
             );
     /*fprintf(stderr, "{\n");*/
     for (which = 0; which < 4; which++) {
-        MVMuint32 size = which == 0 || which == 2 ? stats->type_stats_alloc : stats->sf_stats_alloc;
+        uint32_t size = which == 0 || which == 2 ? stats->type_stats_alloc : stats->sf_stats_alloc;
         for (i = 0; i < size; i++) {
             data_body[i].identity = i;
             data_body[i].value =
@@ -1449,8 +1449,8 @@ static void string_heap_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshot
 
 
 #if DUMP_EVERYTHING_RAW
-        MVMuint32 smaller_size = strlen(str);
-        gzfwrite(&smaller_size, sizeof(MVMuint32), 1, str_fh);
+        uint32_t smaller_size = strlen(str);
+        gzfwrite(&smaller_size, sizeof(uint32_t), 1, str_fh);
         gzfwrite(str, sizeof(MVMuint8), smaller_size, str_fh);
 #endif
     }
@@ -1518,14 +1518,14 @@ static void references_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapshotC
             entry->full_refs_size += sizeof(MVMuint64) * 2 + 2;
         }
         else if (maxval + 1 >= 1 << 16) {
-            MVMuint32 kind32, index32;
+            uint32_t kind32, index32;
             kind32  = kind;
             index32 = cindex;
             fputc('3', fh);
             fwrite(&descr, sizeof(MVMuint8), 1, fh);
-            fwrite(&kind32, sizeof(MVMuint32), 1, fh);
-            fwrite(&index32, sizeof(MVMuint32), 1, fh);
-            entry->full_refs_size += sizeof(MVMuint32) * 2 + 2;
+            fwrite(&kind32, sizeof(uint32_t), 1, fh);
+            fwrite(&index32, sizeof(uint32_t), 1, fh);
+            entry->full_refs_size += sizeof(uint32_t) * 2 + 2;
         }
         else if (maxval + 1 >= 1 << 8) {
             MVMuint16 kind16, index16;
@@ -1623,7 +1623,7 @@ static void collectables_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapsho
     fputs("coll", fh);
 
     fwrite(&s->num_collectables, sizeof(MVMuint64), 1, fh);
-    i = sizeof(MVMuint16) * 2 + sizeof(MVMuint32) * 2 + sizeof(MVMuint64) * 2;
+    i = sizeof(MVMuint16) * 2 + sizeof(uint32_t) * 2 + sizeof(MVMuint64) * 2;
     fwrite(&i, sizeof(MVMuint64), 1, fh);
 
     entry->collectables_size += s->num_collectables * i + 4 + sizeof(MVMuint64) * 2;
@@ -1652,7 +1652,7 @@ static void collectables_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapsho
 #endif
 
         fwrite(&coll->kind, sizeof(MVMuint16), 1, fh);
-        fwrite(&coll->type_or_frame_index, sizeof(MVMuint32), 1, fh);
+        fwrite(&coll->type_or_frame_index, sizeof(uint32_t), 1, fh);
         fwrite(&coll->collectable_size, sizeof(MVMuint16), 1, fh);
         fwrite(&coll->unmanaged_size, sizeof(MVMuint64), 1, fh);
         if (coll->num_refs)
@@ -1661,7 +1661,7 @@ static void collectables_to_filehandle_ver2(MVMThreadContext *tc, MVMHeapSnapsho
             MVMuint64 refs_start = 0;
             fwrite(&refs_start, sizeof(MVMuint64), 1, fh);
         }
-        fwrite(&coll->num_refs, sizeof(MVMuint32), 1, fh);
+        fwrite(&coll->num_refs, sizeof(uint32_t), 1, fh);
     }
 #if DUMP_EVERYTHING_RAW
     gzclose(kind_fh);
@@ -1753,7 +1753,7 @@ static void filemeta_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCol
     end_position = ftell(fh);
 
     {
-        MVMuint32 toc_i = get_new_toc_entry(tc, col->toplevel_toc);
+        uint32_t toc_i = get_new_toc_entry(tc, col->toplevel_toc);
         col->toplevel_toc->toc_words[toc_i] = "filemeta";
         col->toplevel_toc->toc_positions[toc_i * 2]     = size_position;
         col->toplevel_toc->toc_positions[toc_i * 2 + 1] = end_position;
@@ -1805,7 +1805,7 @@ static void snapmeta_to_filehandle_ver3(MVMThreadContext *tc, MVMHeapSnapshotCol
     end_position = ftell(fh);
 
     if (col->second_level_toc) {
-        MVMuint32 toc_i = get_new_toc_entry(tc, col->second_level_toc);
+        uint32_t toc_i = get_new_toc_entry(tc, col->second_level_toc);
         col->second_level_toc->toc_words[toc_i] = "snapmeta";
         col->second_level_toc->toc_positions[toc_i * 2]     = size_position;
         col->second_level_toc->toc_positions[toc_i * 2 + 1] = end_position;

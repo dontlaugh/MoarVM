@@ -22,7 +22,7 @@ MVM_STATIC_INLINE void set_obj_at_offset(MVMThreadContext *tc, MVMObject *root, 
 }
 
 /* Helper for aligning sizes */
-MVM_STATIC_INLINE void align_to(MVMuint64 *size, MVMuint32 align) {
+MVM_STATIC_INLINE void align_to(MVMuint64 *size, uint32_t align) {
     if (*size % align) {
         *size += align - *size % align;
     }
@@ -34,7 +34,7 @@ static MVMint64 try_get_slot(MVMThreadContext *tc, MVMP6opaqueREPRData *repr_dat
         MVMP6opaqueNameMap *cur_map_entry = repr_data->name_to_index_mapping;
         while (cur_map_entry->class_key != NULL) {
             if (cur_map_entry->class_key == class_key) {
-                MVMuint32 i;
+                uint32_t i;
                 for (i = 0; i < cur_map_entry->num_attrs; i++) {
                     if (MVM_string_equal(tc, cur_map_entry->names[i], name)) {
                         return cur_map_entry->slots[i];
@@ -171,7 +171,7 @@ static void gc_mark_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMGCWorklist
     if (repr_data->name_to_index_mapping) {
         MVMP6opaqueNameMap *cur_map_entry = repr_data->name_to_index_mapping;
         while (cur_map_entry->class_key != NULL) {
-            MVMuint32 i;
+            uint32_t i;
             for (i = 0; i < cur_map_entry->num_attrs; i++) {
                 MVM_gc_worklist_add(tc, worklist, &cur_map_entry->names[i]);
             }
@@ -647,7 +647,7 @@ static MVMuint64 get_uint(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, 
     }
 }
 
-static void * get_boxed_ref(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMuint32 repr_id) {
+static void * get_boxed_ref(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint32_t repr_id) {
     MVMP6opaqueREPRData *repr_data = (MVMP6opaqueREPRData *)st->REPR_data;
     data = MVM_p6opaque_real_data(tc, data);
     if (repr_data->unbox_slots) {
@@ -815,8 +815,8 @@ static void compose(MVMThreadContext *tc, MVMSTable *st, MVMObject *info_hash) {
             MVMint64 is_box_target = REPR(attr_info)->ass_funcs.exists_key(tc,
                 STABLE(attr_info), attr_info, OBJECT_BODY(attr_info), (MVMObject *)str_box_target);
             MVMint8 inlined = 0;
-            MVMuint32 bits;
-            MVMuint32 align;
+            uint32_t bits;
+            uint32_t align;
 
             /* Ensure we have a name. */
             if (MVM_is_null(tc, name_obj)) {
@@ -1048,7 +1048,7 @@ static void deserialize_stable_size(MVMThreadContext *tc, MVMSTable *st, MVMSeri
             const MVMStorageSpec *ss = st->REPR->get_storage_spec(tc, st);
             if (ss->inlineable) {
                 /* TODO: Review if/when we get sub-byte things. */
-                align_to(&cur_offset, (MVMuint32)ss->align);
+                align_to(&cur_offset, (uint32_t)ss->align);
                 cur_offset += ss->bits / 8;
             }
             else {
@@ -1104,7 +1104,7 @@ static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializ
     MVM_serialization_write_int(tc, writer, repr_data->unbox_str_slot);
 
     if (repr_data->unbox_slots) {
-        MVMuint32 num_written = 0;
+        uint32_t num_written = 0;
         MVM_serialization_write_int(tc, writer, 1);
         for (i = 0; i < MVM_REPR_MAX_COUNT; i++) {
             if (repr_data->unbox_slots[i] != MVM_P6OPAQUE_NO_UNBOX_SLOT) {
@@ -1128,8 +1128,8 @@ static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializ
     num_classes = i;
     MVM_serialization_write_int(tc, writer, num_classes);
     for (i = 0; i < num_classes; i++) {
-        const MVMuint32 num_attrs = repr_data->name_to_index_mapping[i].num_attrs;
-        MVMuint32 j;
+        const uint32_t num_attrs = repr_data->name_to_index_mapping[i].num_attrs;
+        uint32_t j;
         MVM_serialization_write_ref(tc, writer, repr_data->name_to_index_mapping[i].class_key);
         MVM_serialization_write_int(tc, writer, num_attrs);
         for (j = 0; j < num_attrs; j++) {
@@ -1145,7 +1145,7 @@ static void serialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializ
 /* Deserializes representation data. */
 static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerializationReader *reader) {
     MVMuint16 i, num_classes;
-    MVMuint32 j;
+    uint32_t j;
     MVMuint64 cur_offset;
     MVMint16 cur_initialize_slot, cur_gc_mark_slot, cur_gc_cleanup_slot;
 
@@ -1204,7 +1204,7 @@ static void deserialize_repr_data(MVMThreadContext *tc, MVMSTable *st, MVMSerial
     num_classes = (MVMuint16)MVM_serialization_read_int(tc, reader);
     repr_data->name_to_index_mapping = (MVMP6opaqueNameMap *)MVM_malloc((num_classes + 1) * sizeof(MVMP6opaqueNameMap));
     for (i = 0; i < num_classes; i++) {
-        MVMuint32 num_attrs = 0;
+        uint32_t num_attrs = 0;
 
         MVM_ASSIGN_REF(tc, &(st->header), repr_data->name_to_index_mapping[i].class_key,
             MVM_serialization_read_ref(tc, reader));
@@ -2356,9 +2356,9 @@ MVMuint16 MVM_p6opaque_get_bigint_offset(MVMThreadContext *tc, MVMSTable *st) {
 }
 
 /* Gets the attribute index given we know the slot offset. */
-MVMuint32 MVM_p6opaque_offset_to_attr_idx(MVMThreadContext *tc, MVMObject *type, size_t offset) {
+uint32_t MVM_p6opaque_offset_to_attr_idx(MVMThreadContext *tc, MVMObject *type, size_t offset) {
     MVMP6opaqueREPRData *repr_data = (MVMP6opaqueREPRData *)type->st->REPR_data;
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < repr_data->num_attributes; i++)
         if (repr_data->attribute_offsets[i] == offset)
             return i;
@@ -2387,7 +2387,7 @@ static void dump_p6opaque(MVMThreadContext *tc, MVMObject *obj, int nested) {
             MVMP6opaqueNameMap *cur_map_entry = name_to_index_mapping;
 
             while (cur_map_entry->class_key != NULL) {
-                MVMuint32 i;
+                uint32_t i;
                 MVMint64 slot;
                 if (cur_map_entry->num_attrs > 0) {
                     fprintf(stderr, "#`(from %s) ", MVM_6model_get_stable_debug_name(tc, cur_map_entry->class_key->st));

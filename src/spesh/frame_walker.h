@@ -7,7 +7,7 @@ struct MVMSpeshFrameWalker {
      * or deopt offset to look for them based on, together with the current inline
      * we are looking at. */
     void *jit_position;
-    MVMuint32 deopt_offset;
+    uint32_t deopt_offset;
     int32_t inline_idx;
 
     /* If we're doing a walk of outer frames too, the current outer frame that
@@ -39,15 +39,15 @@ void MVM_spesh_frame_walker_init(MVMThreadContext *tc, MVMSpeshFrameWalker *fw, 
         MVMuint8 visit_outers);
 void MVM_spesh_frame_walker_init_for_outers(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
     MVMFrame *start);
-MVMuint32 MVM_spesh_frame_walker_next(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
-MVMuint32 MVM_spesh_frame_walker_get_lex(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
+uint32_t MVM_spesh_frame_walker_next(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
+uint32_t MVM_spesh_frame_walker_get_lex(MVMThreadContext *tc, MVMSpeshFrameWalker *fw,
         MVMString *name, MVMRegister **found_out, MVMuint16 *found_kind_out,
-        MVMuint32 vivify, MVMFrame **found_frame);
-MVMuint32 MVM_spesh_frame_walker_move_outer(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
-MVMuint32 MVM_spesh_frame_walker_move_caller(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
-MVMuint32 MVM_spesh_frame_walker_move_outer_skip_thunks(MVMThreadContext *tc,
+        uint32_t vivify, MVMFrame **found_frame);
+uint32_t MVM_spesh_frame_walker_move_outer(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
+uint32_t MVM_spesh_frame_walker_move_caller(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
+uint32_t MVM_spesh_frame_walker_move_outer_skip_thunks(MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw);
-MVMuint32 MVM_spesh_frame_walker_move_caller_skip_thunks(MVMThreadContext *tc,
+uint32_t MVM_spesh_frame_walker_move_caller_skip_thunks(MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw);
 MVMFrame * MVM_spesh_frame_walker_get_frame(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
 MVMObject * MVM_spesh_frame_walker_get_lexicals_hash(MVMThreadContext *tc, MVMSpeshFrameWalker *fw);
@@ -66,7 +66,7 @@ MVM_STATIC_INLINE MVMFrame * MVM_spesh_frame_walker_current_frame(MVMThreadConte
 }
 
 /* Returns non-zero if we're currently visiting an inline, zero otherwise. */
-MVM_STATIC_INLINE MVMuint32 MVM_spesh_frame_walker_is_inline(MVMThreadContext *tc,
+MVM_STATIC_INLINE uint32_t MVM_spesh_frame_walker_is_inline(MVMThreadContext *tc,
         MVMSpeshFrameWalker *fw) {
     return fw->inline_idx != MVM_SPESH_FRAME_WALKER_NO_INLINE;
 }

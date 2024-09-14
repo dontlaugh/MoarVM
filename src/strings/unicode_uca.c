@@ -1,17 +1,17 @@
 /* This file generated from tools/Generate-Collation-Data.raku */
 #include "moar.h"
 struct collation_key {
-    MVMuint32 primary :16;
-    MVMuint32 tertiary :5;
-    MVMuint32 special :1;
-    MVMuint32 secondary :9;
+    uint32_t primary :16;
+    uint32_t tertiary :5;
+    uint32_t special :1;
+    uint32_t secondary :9;
 };
 struct sub_node {
-    MVMuint32 codepoint :18;
-    MVMuint32 collation_key_link :14;
-    MVMuint32 sub_node_link :13;
-    MVMuint32 sub_node_elems :13;
-    MVMuint32 collation_key_elems :5;
+    uint32_t codepoint :18;
+    uint32_t collation_key_link :14;
+    uint32_t sub_node_link :13;
+    uint32_t sub_node_elems :13;
+    uint32_t collation_key_elems :5;
 };
 typedef struct sub_node sub_node;
 #define main_nodes_elems 4828
@@ -19,7 +19,7 @@ typedef struct sub_node sub_node;
 #define codepoint_sequence_no_max 3
 #define special_collation_keys_elems 10704
 /* Data from PropList.txt */
-static MVMuint32 is_unified_ideograph (MVMCodepoint cp) {
+static uint32_t is_unified_ideograph (MVMCodepoint cp) {
     return
        (0x3400  <= cp && cp <= 0x4DBF ) /* 3400..4DBF Unified_Ideograph # Lo [6592] CJK UNIFIED IDEOGRAPH-3400..CJK UNIFIED IDEOGRAPH-4DBF */
     || (0x4E00  <= cp && cp <= 0x9FFF ) /* 4E00..9FFF Unified_Ideograph # Lo [20992] CJK UNIFIED IDEOGRAPH-4E00..CJK UNIFIED IDEOGRAPH-9FFF */
@@ -41,14 +41,14 @@ static MVMuint32 is_unified_ideograph (MVMCodepoint cp) {
 }
 
 /* Data from Blocks.txt */
-MVM_STATIC_INLINE MVMuint32 is_Assigned_Block_Nushu (MVMCodepoint cp) {
+MVM_STATIC_INLINE uint32_t is_Assigned_Block_Nushu (MVMCodepoint cp) {
     return
        (0x1B170 <= cp && cp <= 0x1B2FF) /* 1B170..1B2FF Nushu                              */
     ;
 }
 
 /* Data from Blocks.txt */
-MVM_STATIC_INLINE MVMuint32 is_Block_Tangut (MVMCodepoint cp) {
+MVM_STATIC_INLINE uint32_t is_Block_Tangut (MVMCodepoint cp) {
     return
        (0x17000 <= cp && cp <= 0x187FF) /* 17000..187FF Tangut                             */
     || (0x18800 <= cp && cp <= 0x18AFF) /* 18800..18AFF Tangut Components                  */
@@ -56,7 +56,7 @@ MVM_STATIC_INLINE MVMuint32 is_Block_Tangut (MVMCodepoint cp) {
 }
 
 /* Data from Blocks.txt */
-MVM_STATIC_INLINE MVMuint32 is_Block_CJK_Unified_Ideographs_OR_CJK_Compatibility_Ideographs (MVMCodepoint cp) {
+MVM_STATIC_INLINE uint32_t is_Block_CJK_Unified_Ideographs_OR_CJK_Compatibility_Ideographs (MVMCodepoint cp) {
     return
        (0x4E00  <= cp && cp <= 0x9FFF ) /* 4E00..9FFF CJK Unified Ideographs             */
     || (0xF900  <= cp && cp <= 0xFAFF ) /* F900..FAFF CJK Compatibility Ideographs       */

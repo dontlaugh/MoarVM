@@ -4,7 +4,7 @@ struct MVMSpeshCode {
     MVMuint8 *bytecode;
 
     /* The size of the produced bytecode. */
-    MVMuint32 bytecode_size;
+    uint32_t bytecode_size;
 
     /* Updated set of frame handlers. */
     MVMFrameHandler *handlers;

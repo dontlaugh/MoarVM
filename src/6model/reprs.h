@@ -49,8 +49,8 @@
 
 /* REPR related functions. */
 void MVM_repr_initialize_registry(MVMThreadContext *tc);
-MVMuint32 MVM_repr_name_to_id(MVMThreadContext *tc, MVMString *name);
-const MVMREPROps * MVM_repr_get_by_id(MVMThreadContext *tc, MVMuint32 id);
+uint32_t MVM_repr_name_to_id(MVMThreadContext *tc, MVMString *name);
+const MVMREPROps * MVM_repr_get_by_id(MVMThreadContext *tc, uint32_t id);
 const MVMREPROps * MVM_repr_get_by_name(MVMThreadContext *tc, MVMString *name);
 
 /* Core representation IDs (determined by the order we add them
@@ -191,7 +191,7 @@ void MVM_REPR_DEFAULT_SET_STR(MVMThreadContext *tc, MVMSTable *st, MVMObject *ro
 MVMString * MVM_REPR_DEFAULT_GET_STR(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data);
 void MVM_REPR_DEFAULT_SET_UINT(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMuint64 value);
 MVMuint64 MVM_REPR_DEFAULT_GET_UINT(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data);
-void * MVM_REPR_DEFAULT_GET_BOXED_REF(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMuint32 repr_id);
+void * MVM_REPR_DEFAULT_GET_BOXED_REF(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, uint32_t repr_id);
 
 /* Default positional indexing REPR function for a REPR that lacks it. */
 void MVM_REPR_DEFAULT_AT_POS(MVMThreadContext *tc, MVMSTable *st, MVMObject *root, void *data, MVMint64 index, MVMRegister *value, MVMuint16 kind);

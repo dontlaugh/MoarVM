@@ -9,7 +9,7 @@ void MVM_profile_start(MVMThreadContext *tc, MVMObject *config) {
         MVMString *kind = MVM_repr_get_str(tc,
             MVM_repr_at_key_o(tc, config, tc->instance->str_consts.kind));
         if (MVM_string_equal(tc, kind, tc->instance->str_consts.instrumented)) {
-            MVMuint32 i;
+            uint32_t i;
             MVMuint64 s, e;
             MVM_profile_instrumented_start(tc, config);
 

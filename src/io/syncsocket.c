@@ -121,8 +121,8 @@ static MVMint64 socket_read_bytes(MVMThreadContext *tc, MVMOSHandle *h, char **b
     /* Now assemble the result. */
     if (data->last_packet && use_last_packet) {
         /* Need to assemble it from two places. */
-        MVMuint32 last_available = use_last_packet_end - use_last_packet_start;
-        MVMuint32 available = last_available + data->last_packet_end;
+        uint32_t last_available = use_last_packet_end - use_last_packet_start;
+        uint32_t available = last_available + data->last_packet_end;
         if (bytes > available)
             bytes = available;
         *buf = MVM_malloc(bytes);

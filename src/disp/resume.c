@@ -9,19 +9,19 @@
  * use that for storage of resumption state, to find the original dispatch
  * args and temporaries, etc. */
 static void finish_resumption_data(MVMThreadContext *tc, MVMDispResumptionData *data,
-        MVMDispResumptionState *state, MVMuint32 offset) {
+        MVMDispResumptionState *state, uint32_t offset) {
     data->resumption = &(data->dp->resumptions[offset]);
 #if DUMP_RESUMPTIONS
     fprintf(stderr, "    choosing %s\n",
             MVM_string_utf8_encode_C_string(tc, data->resumption->disp->id));
 #endif
-    for (MVMuint32 i = 0; i < offset; i++)
+    for (uint32_t i = 0; i < offset; i++)
         state = state->next;
     data->state_ptr = &(state->state);
 }
-static MVMuint32 setup_resumption(MVMThreadContext *tc, MVMDispResumptionData *data,
+static uint32_t setup_resumption(MVMThreadContext *tc, MVMDispResumptionData *data,
         MVMDispProgram *dp, MVMArgs *arg_info, MVMDispResumptionState *state,
-        MVMRegister *temps, MVMuint32 *exhausted) {
+        MVMRegister *temps, uint32_t *exhausted) {
     /* Did the dispatch program set up any static resumptions, and are there at
      * least as many as we've already passed? */
     if (dp->num_resumptions > *exhausted) {
@@ -29,7 +29,7 @@ static MVMuint32 setup_resumption(MVMThreadContext *tc, MVMDispResumptionData *d
         if (!state->disp) {
             /* No state; set it up. */
             MVMDispResumptionState *prev = NULL;
-            for (MVMuint32 i = 0; i < dp->num_resumptions; i++) {
+            for (uint32_t i = 0; i < dp->num_resumptions; i++) {
                 /* For the innermost (or only) one, we write into the record.
                  * For more, we need to allocate. */
                 MVMDispResumptionState *target = prev
@@ -97,8 +97,8 @@ static void setup_deopted_resumption(MVMThreadContext *tc,  MVMDispResumptionDat
 static int32_t should_keep_searching(MVMThreadContext *tc, MVMDispProgram *dp) {
     return !dp || dp->num_resumptions == 0 || dp->ops[0].code == MVMDispOpcodeStartResumption;
 }
-static MVMuint32 find_internal(MVMThreadContext *tc, MVMDispResumptionData *data,
-        MVMuint32 exhausted, int32_t caller) {
+static uint32_t find_internal(MVMThreadContext *tc, MVMDispResumptionData *data,
+        uint32_t exhausted, int32_t caller) {
     /* Create iterator, which is over both dispatch records and frames. */
 #if DUMP_RESUMPTIONS
     fprintf(stderr, "looking for a resumption; exhausted = %d, caller = %d\n",
@@ -148,7 +148,7 @@ static MVMuint32 find_internal(MVMThreadContext *tc, MVMDispResumptionData *data
                                 frame, cand);
                         if (deopt_idx == -1)
                             MVM_oops(tc, "Failed to find deopt index when processing resume");
-                        MVMuint32 i;
+                        uint32_t i;
                         int32_t saw_dispatch_with_resumptions = 0;
                         for (i = 0; i < cand->body.num_resume_inits; i++) {
                             if (cand->body.resume_inits[i].deopt_idx == deopt_idx) {
@@ -168,13 +168,13 @@ static MVMuint32 find_internal(MVMThreadContext *tc, MVMDispResumptionData *data
 
                         /* Now walk any inlines to see if we're in any of those. */
                         if (cand->body.num_inlines) {
-                            MVMuint32 deopt_offset = MVM_spesh_deopt_bytecode_pos(
+                            uint32_t deopt_offset = MVM_spesh_deopt_bytecode_pos(
                                     cand->body.deopts[deopt_idx * 2 + 1]);
-                            MVMuint32 i;
+                            uint32_t i;
                             for (i = 0; i < cand->body.num_inlines; i++) {
                                 /* Check if we're in this inline. */
-                                MVMuint32 start = cand->body.inlines[i].start;
-                                MVMuint32 end = cand->body.inlines[i].end;
+                                uint32_t start = cand->body.inlines[i].start;
+                                uint32_t end = cand->body.inlines[i].end;
                                 if (!(deopt_offset > start && deopt_offset <= end))
                                     continue;
 
@@ -286,20 +286,20 @@ static MVMuint32 find_internal(MVMThreadContext *tc, MVMDispResumptionData *data
 }
 
 /* Looks down the callstack to find the dispatch that we are resuming. */
-MVMuint32 MVM_disp_resume_find_topmost(MVMThreadContext *tc, MVMDispResumptionData *data,
-                                       MVMuint32 exhausted) {
+uint32_t MVM_disp_resume_find_topmost(MVMThreadContext *tc, MVMDispResumptionData *data,
+                                       uint32_t exhausted) {
     return find_internal(tc, data, exhausted, 0);
 }
 
 /* Skip to our caller, and then find the current dispatch. */
-MVMuint32 MVM_disp_resume_find_caller(MVMThreadContext *tc, MVMDispResumptionData *data,
-                                      MVMuint32 exhausted) {
+uint32_t MVM_disp_resume_find_caller(MVMThreadContext *tc, MVMDispResumptionData *data,
+                                      uint32_t exhausted) {
     return find_internal(tc, data, exhausted, 1);
 }
 
 /* Get the resume initialization state argument at the specified index. */
 MVMRegister MVM_disp_resume_get_init_arg(MVMThreadContext *tc, MVMDispResumptionData *data,
-                                         MVMuint32 arg_idx) {
+                                         uint32_t arg_idx) {
     MVMDispProgramResumption *resumption = data->resumption;
     if (resumption->init_values) {
         MVMDispProgramResumptionInitValue *value = &(resumption->init_values[arg_idx]);

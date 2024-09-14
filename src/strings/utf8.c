@@ -356,21 +356,21 @@ static void encoding_error(MVMThreadContext *tc, MVMuint8 *bytes, int error_pos)
 
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-MVMuint32 MVM_string_utf8_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                  const MVMuint32 *stopper_chars,
+uint32_t MVM_string_utf8_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                  const uint32_t *stopper_chars,
                                   MVMDecodeStreamSeparators *seps) {
-    MVMuint32 count = 0, total = 0;
+    uint32_t count = 0, total = 0;
     int32_t state = 0;
     MVMCodepoint codepoint = 0;
     MVMCodepoint lag_codepoint = -1;
-    MVMuint32 bufsize;
+    uint32_t bufsize;
     MVMGrapheme32 *buffer           = NULL;
     MVMDecodeStreamBytes *cur_bytes = NULL;
     MVMDecodeStreamBytes *last_accept_bytes     = ds->bytes_head;
     MVMDecodeStreamBytes *lag_last_accept_bytes = NULL;
     int32_t last_accept_pos, lag_last_accept_pos = 0, ready, at_start;
-    MVMuint32 reached_stopper;
-    MVMuint32 can_fast_path;
+    uint32_t reached_stopper;
+    uint32_t can_fast_path;
 
     /* If there's no buffers, we're done. */
     if (!ds->bytes_head)

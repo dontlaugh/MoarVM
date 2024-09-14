@@ -3,13 +3,13 @@
 #include "moar.h"
 #define MVM_DEBUG_STRANDS 0
 #define MVM_string_KMP_max_pattern_length 8192
-/* Max value possible for MVMuint32 MVMStringBody.num_graphs */
+/* Max value possible for uint32_t MVMStringBody.num_graphs */
 #define MAX_GRAPHEMES     0xFFFFFFFFLL
 
 #if MVM_DEBUG_STRANDS
 static void check_strand_sanity(MVMThreadContext *tc, MVMString *s) {
     MVMGraphemeIter gi;
-    MVMuint32       len;
+    uint32_t       len;
     MVM_string_gi_init(tc, &gi, s);
     len = 0;
     while (MVM_string_gi_has_more(tc, &gi)) {
@@ -416,7 +416,7 @@ static void iterate_gi_into_string(MVMThreadContext *tc, MVMGraphemeIter *gi, MV
             graphs_so_far += graphs_this_strand; \
         } \
         else { \
-            MVMuint32 j = 0; \
+            uint32_t j = 0; \
             for (; j <= orig->body.storage.strands[i].repetitions; j++) { \
                 memcpy(graphs_so_far + result->body.storage.BLOB_TYPE, \
                     orig->body.storage.strands[i].blob_string->body.storage.BLOB_TYPE + orig->body.storage.strands[i].start, \
@@ -484,7 +484,7 @@ static MVMString * re_nfg(MVMThreadContext *tc, MVMString *in) {
     MVMCodepointIter ci;
     int32_t ready;
     MVMString *out = NULL;
-    MVMuint32 bufsize = in->body.num_graphs;
+    uint32_t bufsize = in->body.num_graphs;
 
     /* Create the output buffer. We used to believe it can't ever be bigger
      * than the initial estimate, but utf8-c8 showed us otherwise. */
@@ -903,7 +903,7 @@ static MVMString * string_from_strand_at_index(MVMThreadContext *tc, MVMString *
     return MVM_string_substring(tc, ss->blob_string, ss->start, ss->end - ss->start);
 }
 
-static MVMuint32 final_strand_match_with_repetition_count(MVMThreadContext *tc, MVMString *a, MVMString *b) {
+static uint32_t final_strand_match_with_repetition_count(MVMThreadContext *tc, MVMString *a, MVMString *b) {
     if (a->body.storage_type == MVM_STRING_STRAND) {
         MVMStringStrand *sa = &(a->body.storage.strands[a->body.num_strands - 1]);
         /* If the final strand of a eq b, we'll just increment the final strand of a's repetitions. */
@@ -934,13 +934,13 @@ static MVMuint32 final_strand_match_with_repetition_count(MVMThreadContext *tc, 
 /* Append one string to another. */
 MVMString * MVM_string_concatenate(MVMThreadContext *tc, MVMString *a, MVMString *b) {
     MVMString *result = NULL, *renormalized_section = NULL;
-    MVMuint32 renormalized_section_graphs = 0, consumed_a = 0, consumed_b = 0;
-    MVMuint32  agraphs, bgraphs;
+    uint32_t renormalized_section_graphs = 0, consumed_a = 0, consumed_b = 0;
+    uint32_t  agraphs, bgraphs;
     MVMuint64  total_graphs;
     int lost_strands          = 0;
     int is_concat_stable      = 0;
     int index_ss_b;
-    MVMuint32 matching_repetition_count;
+    uint32_t matching_repetition_count;
     MVM_string_check_arg(tc, a, "concatenate");
     MVM_string_check_arg(tc, b, "concatenate");
 
@@ -971,11 +971,11 @@ MVMString * MVM_string_concatenate(MVMThreadContext *tc, MVMString *a, MVMString
         else {
             MVMCodepointIter last_a_ci;
             MVMCodepointIter first_b_ci;
-            MVMuint32 a_codes = MVM_string_grapheme_ci_init(tc, &last_a_ci,  last_a_first_b[0], 1);
-            MVMuint32 b_codes = MVM_string_grapheme_ci_init(tc, &first_b_ci, last_a_first_b[1], 1);
+            uint32_t a_codes = MVM_string_grapheme_ci_init(tc, &last_a_ci,  last_a_first_b[0], 1);
+            uint32_t b_codes = MVM_string_grapheme_ci_init(tc, &first_b_ci, last_a_first_b[1], 1);
             /* MSVC doesn't allow variable length arrays so use alloca to allocate onto the stack */
             MVMCodepoint *last_a_first_b_codes = alloca((a_codes + b_codes) * sizeof(MVMCodepoint));
-            MVMuint32 i = 0;
+            uint32_t i = 0;
             for (; MVM_string_grapheme_ci_has_more(tc, &last_a_ci); i++) {
                 last_a_first_b_codes[i] = MVM_string_grapheme_ci_get_codepoint(tc, &last_a_ci);
             }
@@ -1008,7 +1008,7 @@ MVMString * MVM_string_concatenate(MVMThreadContext *tc, MVMString *a, MVMString
         result = (MVMString *)MVM_repr_alloc_init(tc, tc->instance->VMString);
 
         /* Total graphemes is trivial; just total up inputs. */
-        result->body.num_graphs = (MVMuint32)total_graphs;
+        result->body.num_graphs = (uint32_t)total_graphs;
 
         /* Result string will be made of strands. */
         result->body.storage_type = MVM_STRING_STRAND;
@@ -1157,7 +1157,7 @@ MVMString * MVM_string_concatenate(MVMThreadContext *tc, MVMString *a, MVMString
 
 MVMString * MVM_string_repeat(MVMThreadContext *tc, MVMString *a, MVMint64 count) {
     MVMString *result = NULL;
-    MVMuint32  agraphs;
+    uint32_t  agraphs;
     MVMuint64  total_graphs;
 
     MVM_string_check_arg(tc, a, "repeat");
@@ -1282,7 +1282,7 @@ MVMint64 MVM_string_equal_at(MVMThreadContext *tc, MVMString *a, MVMString *b, M
 
 /* ignoremark is 0 for normal operation and 1 for ignoring diacritics */
 MVM_STATIC_INLINE MVMint64 string_equal_at_ignore_case_INTERNAL_loop(MVMThreadContext *tc, void *Hs_or_gic, MVMString *needle_fc, MVMint64 H_start, MVMint64 H_graphs, MVMint64 n_fc_graphs, int ignoremark, int ignorecase, int is_gic) {
-    MVMuint32 H_fc_cps;
+    uint32_t H_fc_cps;
     /* An additional needle offset which is used only when codepoints expand
      * when casefolded. The offset is the number of additional codepoints that
      * have been seen so Haystack and needle stay aligned */
@@ -1682,7 +1682,7 @@ static MVMString * do_case_change(MVMThreadContext *tc, MVMString *s, int32_t ty
             }
             else if (0 <= g) {
                 const MVMCodepoint *result_cps;
-                MVMuint32 num_result_cps = MVM_unicode_get_case_change(tc,
+                uint32_t num_result_cps = MVM_unicode_get_case_change(tc,
                     g, type, &result_cps);
                 if (num_result_cps == 0) {
                     result_buf[i++] = g;
@@ -1723,7 +1723,7 @@ static MVMString * do_case_change(MVMThreadContext *tc, MVMString *s, int32_t ty
             }
             else {
                 MVMGrapheme32 *transformed;
-                MVMuint32 num_transformed = MVM_nfg_get_case_change(tc, g, type, &transformed);
+                uint32_t num_transformed = MVM_nfg_get_case_change(tc, g, type, &transformed);
                 if (num_transformed == 0) {
                     result_buf[i++] = g;
                 }
@@ -1732,7 +1732,7 @@ static MVMString * do_case_change(MVMThreadContext *tc, MVMString *s, int32_t ty
                     changed = 1;
                 }
                 else {
-                    MVMuint32 j;
+                    uint32_t j;
                     result_graphs += num_transformed - 1;
                     result_buf = MVM_realloc(result_buf,
                         result_graphs * sizeof(MVMGrapheme32));
@@ -1904,7 +1904,7 @@ MVMObject * MVM_string_encode_to_buf_config(MVMThreadContext *tc, MVMString *s, 
 
     /* Stash the encoded data in the VMArray. */
     if (((MVMArray *)buf)->body.slots.any) {
-        MVMuint32 prev_elems = ((MVMArray *)buf)->body.elems;
+        uint32_t prev_elems = ((MVMArray *)buf)->body.elems;
         MVM_repr_pos_set_elems(tc, buf, ((MVMArray *)buf)->body.elems + output_size / elem_size);
         memmove(((MVMArray *)buf)->body.slots.i8 + prev_elems, (MVMint8 *)encoded, output_size);
         MVM_free(encoded);
@@ -2262,7 +2262,7 @@ MVMString * MVM_string_join(MVMThreadContext *tc, MVMString *separator, MVMObjec
 /* Returning nonzero means it found the char at the position specified in 'a' in 'Haystack'.
  * For character enumerations in regexes. */
 MVMint64 MVM_string_char_at_in_string(MVMThreadContext *tc, MVMString *a, MVMint64 offset, MVMString *Haystack) {
-    MVMuint32     H_graphs;
+    uint32_t     H_graphs;
     MVMGrapheme32 search;
 
     MVM_string_check_arg(tc, a, "char_at_in_string");
@@ -3014,7 +3014,7 @@ MVMString * MVM_string_chr(MVMThreadContext *tc, MVMint64 cp) {
 /* Takes a string and computes a hash code for it, storing it in the hash code
  * cache field of the string. */
 typedef union {
-    MVMuint32 graphs[2];
+    uint32_t graphs[2];
     MVMuint64 u64;
 } MVMJenHashGraphemeView;
 

@@ -29,10 +29,10 @@ struct MVMSerializationContextBody {
     MVMObject *rep_scs;
 
     MVMuint64  num_param_intern_lookup;
-    MVMuint32 *param_intern_lookup;
+    uint32_t *param_intern_lookup;
 
     MVMuint64  num_param_intern_st_lookup;
-    MVMuint32 *param_intern_st_lookup;
+    uint32_t *param_intern_st_lookup;
 
     /* Some things we deserialize are not directly in an SC root set, but
      * rather are owned by others. This is mostly thanks to Parrot legacy,
@@ -45,10 +45,10 @@ struct MVMSerializationContextBody {
     MVMSerializationContext *sc;
 
     /* SC's index in the all_scs list in instance. */
-    MVMuint32 sc_idx;
+    uint32_t sc_idx;
 
     /* Set to be true once some compilation unit claims the SC during resolution. */
-    MVMuint32 claimed;
+    uint32_t claimed;
 
     /* Reference to the SerializationReader we'll use to deserialize objects,
      * if this is an SC that we loaded. */

@@ -32,7 +32,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
 /* Called by the VM to mark any GCable items. */
 static void gc_mark(MVMThreadContext *tc, MVMSTable *st, void *data, MVMGCWorklist *worklist) {
     MVMSpeshLogBody *log = (MVMSpeshLogBody *)data;
-    MVMuint32 i;
+    uint32_t i;
     MVM_gc_worklist_add(tc, worklist, &(log->thread));
     if (!log->entries)
         return;

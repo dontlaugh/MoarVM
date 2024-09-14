@@ -1,7 +1,7 @@
 #include "moar.h"
 
 /* Allocates a dispatcher table. */
-static MVMDispRegistryTable * allocate_table(MVMThreadContext *tc, MVMuint32 num_entries) {
+static MVMDispRegistryTable * allocate_table(MVMThreadContext *tc, uint32_t num_entries) {
     MVMDispRegistryTable *table = MVM_calloc(1, sizeof(MVMDispRegistryTable));
     table->num_dispatchers = 0;
     table->alloc_dispatchers = num_entries;
@@ -26,7 +26,7 @@ static void grow_registry_if_needed(MVMThreadContext *tc) {
     if ((double)current_table->num_dispatchers / (double)current_table->alloc_dispatchers >= 0.75) {
         /* Copy entries to new table. */
         MVMDispRegistryTable *new_table = allocate_table(tc, current_table->alloc_dispatchers * 2);
-        MVMuint32 i;
+        uint32_t i;
         for (i = 0; i < current_table->alloc_dispatchers; i++)
             if (current_table->dispatchers[i])
                 add_to_table(tc, new_table, current_table->dispatchers[i]);
@@ -172,7 +172,7 @@ void MVM_disp_registry_describe(MVMThreadContext *tc, MVMHeapSnapshotState *ss) 
 void MVM_disp_registry_destroy(MVMThreadContext *tc) {
     MVMDispRegistry *reg = &(tc->instance->disp_registry);
     MVMDispRegistryTable *table = reg->table;
-    MVMuint32 i;
+    uint32_t i;
     for (i = 0; i < table->alloc_dispatchers; i++)
         if (table->dispatchers[i])
             MVM_free(table->dispatchers[i]);

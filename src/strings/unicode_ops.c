@@ -50,11 +50,11 @@ struct collation_stack {
 typedef struct collation_stack collation_stack;
 
 struct collation_key_s {
-    MVMuint32 primary, secondary, tertiary, index;
+    uint32_t primary, secondary, tertiary, index;
 };
 union collation_key_u {
     struct collation_key_s s;
-    MVMuint32              a[4];
+    uint32_t              a[4];
 };
 struct level_eval_s2 {
     int32_t Less, Same, More;
@@ -75,10 +75,10 @@ typedef union level_eval_u level_eval;
 #define collation_zero 1
 struct ring_buffer {
     MVMCodepoint codes[codepoint_sequence_no_max];
-    MVMuint32    count;
+    uint32_t    count;
     int32_t  location;
     MVMCodepoint codes_out[codepoint_sequence_no_max];
-    MVMuint32    codes_out_count;
+    uint32_t    codes_out_count;
 };
 typedef struct ring_buffer ring_buffer;
 #ifdef COLLATION_DEBUG
@@ -165,7 +165,7 @@ static void cleanup_stack (MVMThreadContext *tc, collation_stack *stack) {
         MVM_free_null(stack->keys);
     }
 }
-static void push_key_to_stack(collation_stack *stack, MVMuint32 primary, MVMuint32 secondary, MVMuint32 tertiary) {\
+static void push_key_to_stack(collation_stack *stack, uint32_t primary, uint32_t secondary, uint32_t tertiary) {\
     stack->stack_top++;
     if (stack->stack_size <= stack->stack_top) {
         stack->keys = MVM_realloc(stack->keys,
@@ -242,7 +242,7 @@ static void collation_push_MVM_values (MVMThreadContext *tc, MVMCodepoint cp, co
     /* For some reason some Tangut Block items return values, so test that too.
      * Eventually we might want to restructure this code here */
     if (is_Block_Tangut(cp) || MVM_coll_key.s.primary <= 0 || MVM_coll_key.s.secondary <= 0 || MVM_coll_key.s.tertiary <= 0) {
-        MVMuint32 AAAA, BBBB;
+        uint32_t AAAA, BBBB;
 #ifdef COLLATION_DEBUG
         char *block_pushed = NULL;
 #endif
@@ -778,7 +778,7 @@ MVMString * MVM_unicode_get_name(MVMThreadContext *tc, MVMint64 codepoint) {
             for (i = 0; i < name_len; i++) {
                 if (name[i] == '>') {
                     snprintf(new_name + i - remove_brack, new_length - (i - remove_brack) ,
-                        "-%.4"PRIX32"", (MVMuint32)codepoint);
+                        "-%.4"PRIX32"", (uint32_t)codepoint);
                     if (!remove_brack) {
                         new_name[new_length-1] = '>';
                     }
@@ -835,7 +835,7 @@ MVMint64 MVM_unicode_codepoint_has_property_value(MVMThreadContext *tc, MVMint64
  * codepoints argument will be set to a pointer to a buffer where those code
  * points can be read from. The caller must not mutate the buffer, nor free
  * it. */
-MVMuint32 MVM_unicode_get_case_change(MVMThreadContext *tc, MVMCodepoint codepoint, int32_t case_,
+uint32_t MVM_unicode_get_case_change(MVMThreadContext *tc, MVMCodepoint codepoint, int32_t case_,
                                       const MVMCodepoint **result) {
     if (case_ == MVM_unicode_case_change_type_fold) {
         int32_t folding_index = MVM_unicode_get_property_int(tc,
@@ -882,7 +882,7 @@ MVMuint32 MVM_unicode_get_case_change(MVMThreadContext *tc, MVMCodepoint codepoi
 }
 
 static void generate_property_codes_by_names_aliases(MVMThreadContext *tc) {
-    MVMuint32 num_names = num_unicode_property_keypairs;
+    uint32_t num_names = num_unicode_property_keypairs;
 
     uv_mutex_lock(&tc->instance->mutex_property_codes_hash_setup);
     if (MVM_uni_hash_is_empty(tc, &tc->instance->property_codes_by_names_aliases)) {
@@ -897,7 +897,7 @@ static void generate_property_codes_by_names_aliases(MVMThreadContext *tc) {
     uv_mutex_unlock(&tc->instance->mutex_property_codes_hash_setup);
 }
 static void generate_property_codes_by_seq_names(MVMThreadContext *tc) {
-    MVMuint32 num_names = num_unicode_seq_keypairs;
+    uint32_t num_names = num_unicode_seq_keypairs;
 
     uv_mutex_lock(&tc->instance->mutex_property_codes_hash_setup);
     if (MVM_uni_hash_is_empty(tc, &tc->instance->property_codes_by_seq_names)) {
@@ -927,7 +927,7 @@ void MVM_unicode_init(MVMThreadContext *tc) {
     /* A bit of a hack - we're relying on the implementation detail that zeroes
      * is a valid start state for the hash. */
     MVMUniHashTable *hash_array = MVM_calloc(MVM_NUM_PROPERTY_CODES, sizeof(MVMUniHashTable));
-    MVMuint32 index = 0;
+    uint32_t index = 0;
     for ( ; index < num_unicode_property_value_keypairs; index++) {
         int32_t property_code = unicode_property_value_keypairs[index].value >> 24;
         MVM_uni_hash_insert(tc, &hash_array[property_code],

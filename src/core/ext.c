@@ -51,7 +51,7 @@ int MVM_ext_load(MVMThreadContext *tc, MVMString *lib, MVMString *ext) {
 
 int MVM_ext_register_extop(MVMThreadContext *tc, const char *cname,
         MVMExtOpFunc func, MVMuint8 num_operands, MVMuint8 operands[],
-        MVMExtOpSpesh *spesh, MVMExtOpFactDiscover *discover, MVMuint32 flags) {
+        MVMExtOpSpesh *spesh, MVMExtOpFactDiscover *discover, uint32_t flags) {
     /* This MVMString ends up being permarooted, so if we create it in gen2 we
      * save some GC work */
     MVM_gc_allocate_gen2_default_set(tc);

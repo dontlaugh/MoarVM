@@ -16,7 +16,7 @@ struct MVMP6intBody {
         MVMint16  i16;
         MVMint8   i8;
         MVMuint64 u64;
-        MVMuint32 u32;
+        uint32_t u32;
         MVMuint16 u16;
         MVMuint8  u8;
     } value;

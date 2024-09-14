@@ -22,10 +22,10 @@ struct MVMSpeshPlan {
     MVMSpeshPlanned *planned;
 
     /* Number of planned specializations. */
-    MVMuint32 num_planned;
+    uint32_t num_planned;
 
     /* The number of specialization plans space is allocated for. */
-    MVMuint32 alloc_planned;
+    uint32_t alloc_planned;
 };
 
 /* Kinds of specializations we might decide to produce. */
@@ -50,7 +50,7 @@ struct MVMSpeshPlanned {
     /* The maximum stack depth this was seen at; used to sort the plan so we
      * can specialize deepest first, in hope of having callees specialized
      * ahead of callers. */
-    MVMuint32 max_depth;
+    uint32_t max_depth;
 
     /* The static frame with the code to specialize. */
     MVMStaticFrame *sf;
@@ -71,7 +71,7 @@ struct MVMSpeshPlanned {
 
     /* Number of entries in the type_stats array. (For an observed type
      * specialization, this would be 1.) */
-    MVMuint32 num_type_stats;
+    uint32_t num_type_stats;
 };
 
 MVMSpeshPlan * MVM_spesh_plan(MVMThreadContext *tc, MVMObject *updated_static_frames, MVMuint64 *certain_specialization, MVMuint64 *observed_specialization, MVMuint64 *osr_specialization);

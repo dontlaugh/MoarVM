@@ -5,21 +5,21 @@ struct MVMSpeshStats {
     MVMSpeshStatsByCallsite *by_callsite;
 
     /* The number of entries in by_callsite. */
-    MVMuint32 num_by_callsite;
+    uint32_t num_by_callsite;
 
     /* The number of entries in static_values. */
-    MVMuint32 num_static_values;
+    uint32_t num_static_values;
 
     /* Total calls across all callsites. */
-    MVMuint32 hits;
+    uint32_t hits;
 
     /* Total OSR hits across all callsites. */
-    MVMuint32 osr_hits;
+    uint32_t osr_hits;
 
     /* The latest version of the statistics when this was updated. Used to
      * help decide when to throw out data that is no longer evolving, to
      * reduce memory use. */
-    MVMuint32 last_update;
+    uint32_t last_update;
 };
 
 /* Statistics by callsite. */
@@ -31,16 +31,16 @@ struct MVMSpeshStatsByCallsite {
     MVMSpeshStatsByType *by_type;
 
     /* The number of entries in by_type. Zero if cs == NULL. */
-    MVMuint32 num_by_type;
+    uint32_t num_by_type;
 
     /* Total calls to this callsite. */
-    MVMuint32 hits;
+    uint32_t hits;
 
     /* Total OSR hits for this callsite. */
-    MVMuint32 osr_hits;
+    uint32_t osr_hits;
 
     /* The maximum callstack depth we observed this at. */
-    MVMuint32 max_depth;
+    uint32_t max_depth;
 };
 
 /* Statistics by type. */
@@ -50,19 +50,19 @@ struct MVMSpeshStatsByType {
     MVMSpeshStatsType *arg_types;
 
     /* Total calls with this callsite/type combination. */
-    MVMuint32 hits;
+    uint32_t hits;
 
     /* Total OSR hits for this callsite/type combination. */
-    MVMuint32 osr_hits;
+    uint32_t osr_hits;
 
     /* Logged type and logged value counts, by bytecode offset. */
     MVMSpeshStatsByOffset *by_offset;
 
     /* Number of stats by offset we have. */
-    MVMuint32 num_by_offset;
+    uint32_t num_by_offset;
 
     /* The maximum callstack depth we observed this at. */
-    MVMuint32 max_depth;
+    uint32_t max_depth;
 };
 
 /* Type statistics. */
@@ -85,25 +85,25 @@ struct MVMSpeshStatsType {
 /* Statistics by bytecode offset. */
 struct MVMSpeshStatsByOffset {
     /* The bytecode offset these types/values were recorded at. */
-    MVMuint32 bytecode_offset;
+    uint32_t bytecode_offset;
 
     /* Number of types recorded, with counts. */
-    MVMuint32 num_types;
+    uint32_t num_types;
     MVMSpeshStatsTypeCount *types;
 
     /* Number of invocation targets recorded, with counts. */
     MVMSpeshStatsInvokeCount *invokes;
-    MVMuint32 num_invokes;
+    uint32_t num_invokes;
 
     /* Number of type tuples recorded, with counts. (Type tuples are actually
      * recorded by the callee, and then also accumulated at the callsite of
      * the caller.) */
-    MVMuint32 num_type_tuples;
+    uint32_t num_type_tuples;
     MVMSpeshStatsTypeTupleCount *type_tuples;
 
     /* Number of times spesh dispatch results were recorded. */
     MVMSpeshStatsDispatchResultCount *dispatch_results;
-    MVMuint32 num_dispatch_results;
+    uint32_t num_dispatch_results;
 };
 
 /* Counts of a given type that has shown up at a bytecode offset. */
@@ -113,7 +113,7 @@ struct MVMSpeshStatsTypeCount {
     MVMuint8 type_concrete;
 
     /* The number of times we've seen it. */
-    MVMuint32 count;
+    uint32_t count;
 };
 
 /* Counts of a given static frame that was invoked at a bytecode offset. */
@@ -122,10 +122,10 @@ struct MVMSpeshStatsInvokeCount {
     MVMStaticFrame *sf;
 
     /* The number of times the caller frame was also the outer frame. */
-    MVMuint32 caller_is_outer_count;
+    uint32_t caller_is_outer_count;
 
     /* The number of times we've seen it. */
-    MVMuint32 count;
+    uint32_t count;
 };
 
 /* Counts of a given type tuple has shown up at the callsite at a bytecode
@@ -138,16 +138,16 @@ struct MVMSpeshStatsTypeTupleCount {
     MVMSpeshStatsType *arg_types;
 
     /* The number of times we've seen it. */
-    MVMuint32 count;
+    uint32_t count;
 };
 
 /* Counts of a given dispatch result index. */
 struct MVMSpeshStatsDispatchResultCount {
     /* The index of the dispatch result in the inline cache entry. */
-    MVMuint32 result_index;
+    uint32_t result_index;
 
     /* The number of times we've seen it. */
-    MVMuint32 count;
+    uint32_t count;
 };
 
 /* Static values table entry. */
@@ -156,7 +156,7 @@ struct MVMSpeshStatsStatic {
     MVMObject *value;
 
     /* The bytecode offset it was recorded at. */
-    MVMuint32 bytecode_offset;
+    uint32_t bytecode_offset;
 };
 
 /* The maximum number of spesh stats updates before we consider a frame's
@@ -171,11 +171,11 @@ struct MVMSpeshSimStack {
     MVMSpeshSimStackFrame *frames;
 
     /* Current frame index and allocated space. */
-    MVMuint32 used;
-    MVMuint32 limit;
+    uint32_t used;
+    uint32_t limit;
 
     /* Current stack depth. */
-    MVMuint32 depth;
+    uint32_t depth;
 };
 
 /* This is the model of a frame on the simulated stack. */
@@ -187,10 +187,10 @@ struct MVMSpeshSimStackFrame {
     MVMSpeshStats *ss;
 
     /* Correlation ID. */
-    MVMuint32 cid;
+    uint32_t cid;
 
     /* Callsite stats index (not pointer in case of realloc). */
-    MVMuint32 callsite_idx;
+    uint32_t callsite_idx;
 
     /* Type stats index (not pointer in case of realloc); -1 if not yet set.
      * This is resolved once using arg_types, and then remembered, so we can
@@ -202,21 +202,21 @@ struct MVMSpeshSimStackFrame {
 
     /* Spesh log entries for types and values, for later processing. */
     MVMSpeshLogEntry **offset_logs;
-    MVMuint32 offset_logs_used;
-    MVMuint32 offset_logs_limit;
+    uint32_t offset_logs_used;
+    uint32_t offset_logs_limit;
 
     /* Type tuples observed at a given callsite offset, for later
      * processing. */
     MVMSpeshSimCallType *call_type_info;
-    MVMuint32 call_type_info_used;
-    MVMuint32 call_type_info_limit;
+    uint32_t call_type_info_used;
+    uint32_t call_type_info_limit;
 
     /* Number of times we crossed an OSR point. */
-    MVMuint32 osr_hits;
+    uint32_t osr_hits;
 
     /* The last bytecode offset and static frame seen in an invoke recording;
      * used for producing callsite type stats based on callee type tuples. */
-    MVMuint32 last_invoke_offset;
+    uint32_t last_invoke_offset;
     MVMStaticFrame *last_invoke_sf;
 };
 
@@ -224,7 +224,7 @@ struct MVMSpeshSimStackFrame {
  * This is kept as a flat view, and then folded in when the caller's sim
  * frame (see next) is popped. */
 struct MVMSpeshSimCallType {
-    MVMuint32 bytecode_offset;
+    uint32_t bytecode_offset;
     MVMCallsite *cs;
     MVMSpeshStatsType *arg_types;
 };

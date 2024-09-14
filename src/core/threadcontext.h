@@ -69,7 +69,7 @@ struct MVMThreadContext {
      ************************************************************************/
 
     /* Internal ID of the thread. */
-    MVMuint32 thread_id;
+    uint32_t thread_id;
 
     /* Thread object representing the thread. */
     MVMThread *thread_obj;
@@ -108,15 +108,15 @@ struct MVMThreadContext {
 
     /* The current sizes of the nursery fromspace/tospace for this thread, in
      * bytes. Used to handle growing it over time depending on usage. */
-    MVMuint32 nursery_fromspace_size;
-    MVMuint32 nursery_tospace_size;
+    uint32_t nursery_fromspace_size;
+    uint32_t nursery_tospace_size;
 
     /* Non-zero is we should allocate in gen2; incremented/decremented as we
      * enter/leave a region wanting gen2 allocation. */
-    MVMuint32 allocate_in_gen2;
+    uint32_t allocate_in_gen2;
 
     /* Number of bytes promoted to gen2 in current GC run. */
-    MVMuint32 gc_promoted_bytes;
+    uint32_t gc_promoted_bytes;
 
     /* Temporarily rooted objects. This is generally used by code written in
      * C that wants to keep references to objects. Since those may change
@@ -124,26 +124,26 @@ struct MVMThreadContext {
      * them; this ensures the GC will not swallow them but also that they
      * will get updated if a GC run happens. Note that this is used as a
      * stack and is also thread-local, so it's cheap to push/pop. */
-    MVMuint32             num_temproots;
-    MVMuint32             mark_temproots;
-    MVMuint32             alloc_temproots;
+    uint32_t             num_temproots;
+    uint32_t             mark_temproots;
+    uint32_t             alloc_temproots;
     MVMCollectable     ***temproots;
 
     /* Nursery collectables (maybe STables) rooted because something in
      * generation 2 is pointing at them. */
-    MVMuint32             num_gen2roots;
-    MVMuint32             alloc_gen2roots;
+    uint32_t             num_gen2roots;
+    uint32_t             alloc_gen2roots;
     MVMCollectable      **gen2roots;
 
     /* Finalize queue objects, which need to have a finalizer invoked once
      * they are no longer referenced from anywhere except this queue. */
-    MVMuint32             num_finalize;
-    MVMuint32             alloc_finalize;
+    uint32_t             num_finalize;
+    uint32_t             alloc_finalize;
     MVMObject           **finalize;
 
     /* List of objects we're in the process of finalizing. */
-    MVMuint32             num_finalizing;
-    MVMuint32             alloc_finalizing;
+    uint32_t             num_finalizing;
+    uint32_t             alloc_finalizing;
     MVMObject           **finalizing;
 
     /* The GC's cross-thread in-tray of processing work. */
@@ -152,8 +152,8 @@ struct MVMThreadContext {
     /* Threads we will do GC work for this run (ourself plus any that we stole
      * work from because they were blocked). */
     MVMWorkThread   *gc_work;
-    MVMuint32        gc_work_size;
-    MVMuint32        gc_work_count;
+    uint32_t        gc_work_size;
+    uint32_t        gc_work_count;
 
     /************************************************************************
      * Interpreter state
@@ -240,7 +240,7 @@ struct MVMThreadContext {
     AO_t num_compunit_extra_logs;
 
     /* The current specialization correlation ID, used in logging. */
-    MVMuint32 spesh_cid;
+    uint32_t spesh_cid;
 
 #if MVM_GC_DEBUG
     /* Whether we are currently in the specializer. Used to catch GC runs that
@@ -282,9 +282,9 @@ struct MVMThreadContext {
     mp_int *temp_bigints[MVM_NUM_TEMP_BIGINTS];
 
     /* NFA evaluator memory cache, to avoid many allocations; see NFA.c. */
-    MVMuint32 *nfa_done;
-    MVMuint32 *nfa_curst;
-    MVMuint32 *nfa_nextst;
+    uint32_t *nfa_done;
+    uint32_t *nfa_curst;
+    uint32_t *nfa_nextst;
     MVMint64   nfa_alloc_states;
     MVMint64 *nfa_fates;
     MVMint64  nfa_fates_len;
@@ -301,8 +301,8 @@ struct MVMThreadContext {
     /* Debug server stepping mode and settings */
     MVMDebugSteppingMode step_mode;
     MVMFrame *step_mode_frame;
-    MVMuint32 step_mode_file_idx;
-    MVMuint32 step_mode_line_no;
+    uint32_t step_mode_file_idx;
+    uint32_t step_mode_line_no;
     MVMuint64 step_message_id;
 
     /* Whether the debugserver could request an invocation here.
@@ -310,8 +310,8 @@ struct MVMThreadContext {
      * necessary things to cur_op and such. */
     MVMuint8  debugserver_can_invoke_here;
 
-    MVMuint32 cur_file_idx;
-    MVMuint32 cur_line_no;
+    uint32_t cur_file_idx;
+    uint32_t cur_line_no;
 
     int nested_interpreter;
 

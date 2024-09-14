@@ -18,11 +18,11 @@ MVM_STATIC_INLINE void init_utf16_decoder_state(MVMDecodeStream *ds, int setting
     *((int32_t*)ds->decoder_state) = setting;
 }
 #define utf16_decoder_state(ds) (*((int32_t*)(ds)->decoder_state))
-MVMuint32 MVM_string_utf16_decodestream_main(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                    const MVMuint32 *stopper_chars,
+uint32_t MVM_string_utf16_decodestream_main(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                    const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps, int endianess);
-MVMuint32 MVM_string_utf16_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                    const MVMuint32 *stopper_chars,
+uint32_t MVM_string_utf16_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                    const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps) {
     if (!ds->decoder_state) {
 #       ifdef MVM_BIGENDIAN
@@ -33,14 +33,14 @@ MVMuint32 MVM_string_utf16_decodestream(MVMThreadContext *tc, MVMDecodeStream *d
     }
     return MVM_string_utf16_decodestream_main(tc, ds, stopper_chars, seps, UTF16_DECODE_AUTO_ENDIAN);
 }
-MVMuint32 MVM_string_utf16le_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                    const MVMuint32 *stopper_chars,
+uint32_t MVM_string_utf16le_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                    const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps) {
     init_utf16_decoder_state(ds, UTF16_DECODE_LITTLE_ENDIAN);
     return MVM_string_utf16_decodestream_main(tc, ds, stopper_chars, seps, UTF16_DECODE_LITTLE_ENDIAN);
 }
-MVMuint32 MVM_string_utf16be_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                    const MVMuint32 *stopper_chars,
+uint32_t MVM_string_utf16be_decodestream(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                    const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps) {
     init_utf16_decoder_state(ds, UTF16_DECODE_BIG_ENDIAN);
     return MVM_string_utf16_decodestream_main(tc, ds, stopper_chars, seps, UTF16_DECODE_BIG_ENDIAN);
@@ -48,16 +48,16 @@ MVMuint32 MVM_string_utf16be_decodestream(MVMThreadContext *tc, MVMDecodeStream 
 /* mostly from YAML-LibYAML */
 /* Decodes using a decodestream. Decodes as far as it can with the input
  * buffers, or until a stopper is reached. */
-MVMuint32 MVM_string_utf16_decodestream_main(MVMThreadContext *tc, MVMDecodeStream *ds,
-                                    const MVMuint32 *stopper_chars,
+uint32_t MVM_string_utf16_decodestream_main(MVMThreadContext *tc, MVMDecodeStream *ds,
+                                    const uint32_t *stopper_chars,
                                     MVMDecodeStreamSeparators *seps, int endianess) {
-    MVMuint32 count = 0, total = 0;
-    MVMuint32 bufsize;
+    uint32_t count = 0, total = 0;
+    uint32_t bufsize;
     MVMGrapheme32 *buffer;
     MVMDecodeStreamBytes *cur_bytes;
     MVMDecodeStreamBytes *last_accept_bytes = ds->bytes_head;
     int32_t last_accept_pos;
-    MVMuint32 reached_stopper;
+    uint32_t reached_stopper;
     int low, high;
     /* Set to 1 to remove the BOM even when big endian or little endian are
      * explicitly specified. */
@@ -126,8 +126,8 @@ MVMuint32 MVM_string_utf16_decodestream_main(MVMThreadContext *tc, MVMDecodeStre
             }
         }
         while (pos + 1 < cur_bytes->length) {
-            MVMuint32 value = (bytes[pos+high] << 8) + bytes[pos+low];
-            MVMuint32 value2;
+            uint32_t value = (bytes[pos+high] << 8) + bytes[pos+low];
+            uint32_t value2;
 
             if ((value & 0xFC00) == 0xDC00) {
                 MVM_free(buffer);
@@ -251,8 +251,8 @@ static MVMString * MVM_string_utf16_decode_main(MVMThreadContext *tc,
     MVM_unicode_normalizer_init(tc, &norm, MVM_NORMALIZE_NFG);
 
     for (; utf16 < utf16_end; utf16 += 2) {
-        MVMuint32 value = (utf16[high] << 8) + utf16[low];
-        MVMuint32 value2;
+        uint32_t value = (utf16[high] << 8) + utf16[low];
+        uint32_t value2;
         MVMGrapheme32 g;
 
         if ((value & 0xFC00) == 0xDC00) {
@@ -321,7 +321,7 @@ char * MVM_string_utf16_encode_substr(MVMThreadContext *tc, MVMString *str, MVMu
 
 char * MVM_string_utf16_encode_substr_main(MVMThreadContext *tc, MVMString *str, MVMuint64 *output_size, MVMint64 start, MVMint64 length, MVMString *replacement, int32_t translate_newlines, int endianess) {
     MVMStringIndex strgraphs = MVM_string_graphs(tc, str);
-    MVMuint32 lengthu = (MVMuint32)(length == -1 ? strgraphs - start : length);
+    uint32_t lengthu = (uint32_t)(length == -1 ? strgraphs - start : length);
     MVMuint16 *result;
     MVMuint16 *result_pos;
     MVMCodepointIter ci;

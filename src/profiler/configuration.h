@@ -18,7 +18,7 @@
 #define MVM_CONFPROG_HEAPSNAPSHOT_RESULT_SNAPSHOT_WITH_STATS 3
 
 struct MVMConfigurationProgramEntryPoint {
-    MVMuint32 offset;
+    uint32_t offset;
 };
 
 struct MVMConfigurationProgram {
@@ -29,7 +29,7 @@ struct MVMConfigurationProgram {
     MVMuint8 *reg_types;
     MVMuint16 reg_count;
 
-    MVMuint32 bytecode_length;
+    uint32_t bytecode_length;
 
     MVMint16 entrypoints[MVM_PROGRAM_ENTRYPOINT_COUNT];
 

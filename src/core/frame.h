@@ -67,8 +67,8 @@ struct MVMFrame {
     MVMuint8 flags;
 
     /* The allocated work/env sizes. */
-    MVMuint32 allocd_work;
-    MVMuint32 allocd_env;
+    uint32_t allocd_work;
+    uint32_t allocd_env;
 
     /* The current spesh correlation ID, if we're interpreting code and
      * recording logs. Zero if interpreting unspecialized and not recording.
@@ -119,7 +119,7 @@ struct MVMFrameExtra {
 /* Checks if a frame is allocated on a call stack or on the heap. If it is on
  * the call stack, then it will have zeroed flags (since heap-allocated frames
  * always have the "I'm a heap frame" bit set - MVM_CF_FRAME). */
-MVM_STATIC_INLINE MVMuint32 MVM_FRAME_IS_ON_CALLSTACK(MVMThreadContext *tc, MVMFrame *frame) {
+MVM_STATIC_INLINE uint32_t MVM_FRAME_IS_ON_CALLSTACK(MVMThreadContext *tc, MVMFrame *frame) {
     return frame->header.flags1 == 0;
 }
 
@@ -148,7 +148,7 @@ void MVM_frame_setup_deopt(MVMThreadContext *tc, MVMFrame *frame, MVMStaticFrame
 MVM_PUBLIC MVMuint64 MVM_frame_try_return(MVMThreadContext *tc);
 MVM_PUBLIC MVMuint64 MVM_frame_try_return_no_exit_handlers(MVMThreadContext *tc);
 void MVM_frame_unwind_to(MVMThreadContext *tc, MVMFrame *frame, MVMuint8 *abs_addr,
-                         MVMuint32 rel_addr, MVMObject *return_value, void *jit_return_label);
+                         uint32_t rel_addr, MVMObject *return_value, void *jit_return_label);
 MVM_PUBLIC void MVM_frame_destroy(MVMThreadContext *tc, MVMFrame *frame);
 MVM_PUBLIC MVMObject * MVM_frame_get_code_object(MVMThreadContext *tc, MVMCode *code);
 MVM_PUBLIC void MVM_frame_capturelex(MVMThreadContext *tc, MVMObject *code);

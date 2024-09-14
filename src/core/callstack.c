@@ -94,7 +94,7 @@ static MVMCallStackRecord * allocate_record(MVMThreadContext *tc, MVMuint8 kind,
 }
 
 /* Gets the actual size of a record (including any dynamically sized parts). */
-static MVMuint32 to_8_bytes(MVMuint32 num) {
+static uint32_t to_8_bytes(uint32_t num) {
     return (num + 8 - 1) & -8;
 }
 static size_t record_size(MVMCallStackRecord *record) {
@@ -178,8 +178,8 @@ void * MVM_callstack_allocate_special_return(MVMThreadContext *tc,
 }
 
 /* Allocates a bytecode frame record on the callstack. */
-MVMCallStackFrame * MVM_callstack_allocate_frame(MVMThreadContext *tc, MVMuint32 work_size,
-        MVMuint32 env_size) {
+MVMCallStackFrame * MVM_callstack_allocate_frame(MVMThreadContext *tc, uint32_t work_size,
+        uint32_t env_size) {
     /* Allocate frame with space for registers initialized. */
     tc->stack_top = allocate_record(tc, MVM_CALLSTACK_RECORD_FRAME,
             sizeof(MVMCallStackFrame) + work_size + env_size);
@@ -205,7 +205,7 @@ MVMCallStackFrame * MVM_callstack_allocate_frame(MVMThreadContext *tc, MVMuint32
 
 /* Allocates a bytecode frame record on the callstack. */
 MVMCallStackHeapFrame * MVM_callstack_allocate_heap_frame(MVMThreadContext *tc,
-        MVMuint32 work_size) {
+        uint32_t work_size) {
     MVMFrame *frame = MVM_gc_allocate_frame(tc);
     size_t frame_size_aligned = to_8_bytes(sizeof(MVMCallStackHeapFrame));
     tc->stack_top = allocate_record(tc, MVM_CALLSTACK_RECORD_HEAP_FRAME,
@@ -219,18 +219,18 @@ MVMCallStackHeapFrame * MVM_callstack_allocate_heap_frame(MVMThreadContext *tc,
 
 /* Sees if we can allocate work space (extra registers) for the purposes of
  * OSR. */
-int32_t MVM_callstack_ensure_work_and_env_space(MVMThreadContext *tc, MVMuint32 needed_work,
-        MVMuint32 needed_env) {
+int32_t MVM_callstack_ensure_work_and_env_space(MVMThreadContext *tc, uint32_t needed_work,
+        uint32_t needed_env) {
     /* Call this to ensure we really do have a frame on the top of the stack,
      * rather than just reading tc->cur_frame. */
     MVMFrame *cur_frame = MVM_callstack_current_frame(tc);
 
     /* Calculate the new work and environment sizes, ensuring we only ever
      * grow them. */
-    MVMuint32 new_work_size = needed_work > cur_frame->allocd_work
+    uint32_t new_work_size = needed_work > cur_frame->allocd_work
         ? needed_work
         : cur_frame->allocd_work;
-    MVMuint32 new_env_size = needed_env > cur_frame->allocd_env
+    uint32_t new_env_size = needed_env > cur_frame->allocd_env
         ? needed_env
         : cur_frame->allocd_env;
 
@@ -240,9 +240,9 @@ int32_t MVM_callstack_ensure_work_and_env_space(MVMThreadContext *tc, MVMuint32 
     if (MVM_FRAME_IS_ON_CALLSTACK(tc, cur_frame)) {
         /* Work out how much space we need for work and environment; bail if
          * we don't have that much. */
-        MVMuint32 have = cur_frame->allocd_work + cur_frame->allocd_env;
-        MVMuint32 need = new_work_size + new_env_size;
-        MVMuint32 diff = need - have;
+        uint32_t have = cur_frame->allocd_work + cur_frame->allocd_env;
+        uint32_t need = new_work_size + new_env_size;
+        uint32_t diff = need - have;
         if (region->alloc_limit - region->alloc < diff)
             return 0;
 
@@ -257,9 +257,9 @@ int32_t MVM_callstack_ensure_work_and_env_space(MVMThreadContext *tc, MVMuint32 
     }
     else {
         /* Work out how much extra space we need for work, if any. */
-        MVMuint32 have = cur_frame->allocd_work;
-        MVMuint32 need = new_work_size;
-        MVMuint32 diff = need - have;
+        uint32_t have = cur_frame->allocd_work;
+        uint32_t need = new_work_size;
+        uint32_t diff = need - have;
         if (region->alloc_limit - region->alloc < diff)
             return 0;
 
@@ -296,7 +296,7 @@ MVMCallStackDispatchRecord * MVM_callstack_allocate_dispatch_record(MVMThreadCon
 
 /* Allocates a dispatch run record on the callstack. */
 MVMCallStackDispatchRun * MVM_callstack_allocate_dispatch_run(MVMThreadContext *tc,
-        MVMuint32 num_temps) {
+        uint32_t num_temps) {
     size_t record_size = to_8_bytes(sizeof(MVMCallStackDispatchRun));
     tc->stack_top = allocate_record(tc, MVM_CALLSTACK_RECORD_DISPATCH_RUN,
             record_size + num_temps * sizeof(MVMRegister));
@@ -564,7 +564,7 @@ static void handle_end_of_dispatch_record(MVMThreadContext *tc) {
      * record stays around, but we tweak its kind so we don't enter
      * the end of recording logic again. */
     MVMCallStackDispatchRecord *disp_record = (MVMCallStackDispatchRecord *)tc->stack_top;
-    MVMuint32 remove_dispatch_frame = MVM_disp_program_record_end(tc, disp_record);
+    uint32_t remove_dispatch_frame = MVM_disp_program_record_end(tc, disp_record);
     if (remove_dispatch_frame) {
         assert((char *)disp_record == (char *)tc->stack_top);
         MVM_disp_program_recording_destroy(tc, &(disp_record->rec));
@@ -603,7 +603,7 @@ static void exit_heap_frame(MVMThreadContext *tc, MVMFrame *returner) {
 
     /* Heap promoted frames can stay around, but we may or may not need to
      * clear up ->extra and ->caller. */
-    MVMuint32 need_caller;
+    uint32_t need_caller;
     if (returner->extra) {
         MVMFrameExtra *e = returner->extra;
         need_caller = e->caller_info_needed;

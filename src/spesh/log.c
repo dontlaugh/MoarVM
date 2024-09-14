@@ -122,7 +122,7 @@ void MVM_spesh_log_entry(MVMThreadContext *tc, int32_t cid, MVMStaticFrame *sf,
 
         /* Log each parameter in the args buffer. */
         if (cs->is_interned) {
-            MVMuint32 i;
+            uint32_t i;
             for (i = 0; i < cs->flag_count; i++) {
                 if (!tc->spesh_log)
                     break;
@@ -187,7 +187,7 @@ void MVM_spesh_log_decont(MVMThreadContext *tc, MVMuint8 *prev_op, MVMObject *va
 /* Log the target of an invocation; we log the static frame and whether the
  * outer of the code object is the current frame. */
 void MVM_spesh_log_bytecode_target(MVMThreadContext *tc, int32_t cid,
-        MVMuint32 bytecode_offset, MVMCode *target) {
+        uint32_t bytecode_offset, MVMCode *target) {
     MVMSpeshLog *sl = tc->spesh_log;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);
     entry->kind = MVM_SPESH_LOG_INVOKE;
@@ -231,7 +231,7 @@ void MVM_spesh_log_return_to_unlogged(MVMThreadContext *tc) {
 
 /* Log the result of a dispatch. */
 void MVM_spesh_log_dispatch_resolution_for_correlation_id(MVMThreadContext *tc,
-        int32_t cid, MVMuint32 bytecode_offset, MVMuint16 result_index) {
+        int32_t cid, uint32_t bytecode_offset, MVMuint16 result_index) {
     MVMSpeshLog *sl = tc->spesh_log;
     MVMSpeshLogEntry *entry = &(sl->body.entries[sl->body.used]);
     entry->kind = MVM_SPESH_LOG_DISPATCH_RESOLUTION;

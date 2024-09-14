@@ -24,8 +24,8 @@ void MVM_index_hash_demolish(MVMThreadContext *tc, MVMIndexHashTable *hashtable)
 
 MVM_STATIC_INLINE struct MVMIndexHashTableControl *hash_allocate_common(MVMThreadContext *tc,
                                                                         MVMuint8 official_size_log2) {
-    MVMuint32 official_size = 1 << (MVMuint32)official_size_log2;
-    MVMuint32 max_items = official_size * MVM_INDEX_HASH_LOAD_FACTOR;
+    uint32_t official_size = 1 << (uint32_t)official_size_log2;
+    uint32_t max_items = official_size * MVM_INDEX_HASH_LOAD_FACTOR;
     MVMuint8 max_probe_distance_limit;
     if (MVM_HASH_MAX_PROBE_DISTANCE < max_items) {
         max_probe_distance_limit = MVM_HASH_MAX_PROBE_DISTANCE;
@@ -71,13 +71,13 @@ MVM_STATIC_INLINE struct MVMIndexHashTableControl *hash_allocate_common(MVMThrea
 
 void MVM_index_hash_build(MVMThreadContext *tc,
                           MVMIndexHashTable *hashtable,
-                          MVMuint32 entries) {
-    MVMuint32 initial_size_base2;
+                          uint32_t entries) {
+    uint32_t initial_size_base2;
     if (!entries) {
         initial_size_base2 = INDEX_MIN_SIZE_BASE_2;
     } else {
         /* Minimum size we need to allocate, given the load factor. */
-        MVMuint32 min_needed = entries * (1.0 / MVM_INDEX_HASH_LOAD_FACTOR);
+        uint32_t min_needed = entries * (1.0 / MVM_INDEX_HASH_LOAD_FACTOR);
         initial_size_base2 = MVM_round_up_log_base2(min_needed);
         if (initial_size_base2 < INDEX_MIN_SIZE_BASE_2) {
             /* "Too small" - use our original defaults. */
@@ -91,7 +91,7 @@ void MVM_index_hash_build(MVMThreadContext *tc,
 MVM_STATIC_INLINE void hash_insert_internal(MVMThreadContext *tc,
                                             struct MVMIndexHashTableControl *control,
                                             MVMString **list,
-                                            MVMuint32 idx) {
+                                            uint32_t idx) {
     if (MVM_UNLIKELY(control->cur_items >= control->max_items)) {
         MVM_oops(tc, "oops, attempt to recursively call grow when adding %i",
                  idx);
@@ -118,7 +118,7 @@ MVM_STATIC_INLINE void hash_insert_internal(MVMThreadContext *tc,
                 MVMuint8 *find_me_a_gap = ls.metadata;
                 MVMuint8 old_probe_distance = *ls.metadata;
                 do {
-                    MVMuint32 new_probe_distance = ls.metadata_increment + old_probe_distance;
+                    uint32_t new_probe_distance = ls.metadata_increment + old_probe_distance;
                     if (new_probe_distance >> ls.probe_distance_shift == ls.max_probe_distance) {
                         /* Optimisation from Martin Ankerl's implementation:
                            setting this to zero forces a resize on any insert,
@@ -132,7 +132,7 @@ MVM_STATIC_INLINE void hash_insert_internal(MVMThreadContext *tc,
                     *find_me_a_gap = new_probe_distance;
                 } while (old_probe_distance);
 
-                MVMuint32 entries_to_move = find_me_a_gap - ls.metadata;
+                uint32_t entries_to_move = find_me_a_gap - ls.metadata;
                 size_t size_to_move = (size_t) ls.entry_size * entries_to_move;
                 /* When we had entries *ascending* this was
                  * memmove(entry_raw + sizeof(struct MVMIndexHashEntry), entry_raw,
@@ -198,9 +198,9 @@ static struct MVMIndexHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
                                                         MVMString **list) {
     /* control->max_items may have been set to 0 to trigger a call into this
      * function. */
-    MVMuint32 max_items = MVM_index_hash_max_items(control);
-    MVMuint32 max_probe_distance = control->max_probe_distance;
-    MVMuint32 max_probe_distance_limit = control->max_probe_distance_limit;
+    uint32_t max_items = MVM_index_hash_max_items(control);
+    uint32_t max_probe_distance = control->max_probe_distance;
+    uint32_t max_probe_distance_limit = control->max_probe_distance_limit;
 
     /* We can hit both the probe limit and the max items on the same insertion.
      * In which case, upping the probe limit isn't going to save us :-)
@@ -210,13 +210,13 @@ static struct MVMIndexHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
     if (control->cur_items < max_items
         && max_probe_distance < max_probe_distance_limit) {
         /* We hit the probe limit, but not the max items count. */
-        MVMuint32 new_probe_distance = 1 + 2 * max_probe_distance;
+        uint32_t new_probe_distance = 1 + 2 * max_probe_distance;
         if (new_probe_distance > max_probe_distance_limit) {
             new_probe_distance = max_probe_distance_limit;
         }
 
         MVMuint8 *metadata = MVM_index_hash_metadata(control);
-        MVMuint32 in_use_items = MVM_index_hash_official_size(control) + max_probe_distance;
+        uint32_t in_use_items = MVM_index_hash_official_size(control) + max_probe_distance;
         /* not `in_use_items + 1` because because we don't need to shift the
          * sentinel. */
         size_t metadata_size = MVM_hash_round_size_up(in_use_items);
@@ -242,7 +242,7 @@ static struct MVMIndexHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
         return NULL;
     }
 
-    MVMuint32 entries_in_use =  MVM_index_hash_kompromat(control);
+    uint32_t entries_in_use =  MVM_index_hash_kompromat(control);
     MVMuint8 *entry_raw_orig = MVM_index_hash_entries(control);
     MVMuint8 *metadata_orig = MVM_index_hash_metadata(control);
 
@@ -282,7 +282,7 @@ static struct MVMIndexHashTableControl *maybe_grow_hash(MVMThreadContext *tc,
 void MVM_index_hash_insert_nocheck(MVMThreadContext *tc,
                                    MVMIndexHashTable *hashtable,
                                    MVMString **list,
-                                   MVMuint32 idx) {
+                                   uint32_t idx) {
     struct MVMIndexHashTableControl *control = hashtable->table;
     assert(control);
     assert(MVM_index_hash_entries(control) != NULL);
