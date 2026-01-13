@@ -576,7 +576,91 @@ if m_dep.found()
   moar_deps += m_dep
 endif
 
+# ============================================================================
+# Code Generation
+# ============================================================================
+
+# TODO: Port these Perl/Raku scripts to Python for better Meson integration
+# For now, we wrap the existing scripts as an incremental migration step
+
+# Find Perl and Raku interpreters
+perl = find_program('perl', required: true)
+# Raku is optional - only needed for update_ops which we'll handle separately
+raku = find_program('raku', 'perl6', required: false)
+
+# JIT code generation (only if JIT is enabled)
+jit_gen_files = []
+
+if jit_enabled
+  # Expression template compiler for JIT
+  # Generates src/jit/core_templates.h from .expr files
+  expr_files = files(
+    'src/jit/core_templates.expr',
+    'src/jit/macro.expr',
+    'src/jit/unsafe.expr',
+  )
+
+  core_templates_h = custom_target('core_templates.h',
+    input: expr_files,
+    output: 'core_templates.h',
+    command: [
+      perl,
+      '-I@SOURCE_ROOT@/tools/lib',
+      '@SOURCE_ROOT@/tools/expr-template-compiler.pl',
+      '-o', '@OUTPUT@',
+      '@INPUT0@',  # core_templates.expr (main input)
+    ],
+    depend_files: files(
+      'tools/lib/sexpr.pm',
+      'tools/lib/expr_ops.pm',
+      'tools/lib/oplist.pm',
+      'src/jit/expr_ops.h',
+    ),
+  )
+  jit_gen_files += core_templates_h
+
+  # Tile table generator for JIT (x64 specific)
+  if host_cpu == 'x86_64'
+    tile_pattern_h = custom_target('tile_pattern.h',
+      input: 'src/jit/x64/tile_pattern.tile',
+      output: 'tile_pattern.h',
+      command: [
+        perl,
+        '-I@SOURCE_ROOT@/tools/lib',
+        '@SOURCE_ROOT@/tools/tiler-table-generator.pl',
+        '-o', '@OUTPUT@',
+        '@INPUT@',
+      ],
+      depend_files: files(
+        'tools/lib/sexpr.pm',
+        'tools/lib/expr_ops.pm',
+        'tools/lib/oplist.pm',
+      ),
+    )
+    jit_gen_files += tile_pattern_h
+  endif
+endif
+
+# Op code generation
+# TODO: This requires Raku. For now, we'll skip automatic regeneration
+# and rely on pre-generated files checked into the repository.
+# When we port to Python, this will be integrated properly.
+if raku.found()
+  message('Raku found - op code regeneration available')
+  # Note: update_ops.raku is typically run manually, not during build
+else
+  message('Raku not found - using pre-generated op code files')
+  message('Run tools/update_ops.raku manually if you modify src/core/oplist')
+endif
+
+# ============================================================================
+# Pkg-config File Generation
+# ============================================================================
+
+# This will be completed once we have the library target in Phase 4
+# For now, prepare the module
+pkg = import('pkgconfig')
+
 # Subsequent phases will add:
-# - Code generation (Phase 3)
 # - Source compilation (Phase 4)
 # - Installation rules (Phase 6)
