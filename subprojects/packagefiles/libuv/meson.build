@@ -1,10 +1,13 @@
 project('libuv', 'c', version: '1.x')
 
-# This is a minimal stub - libuv should use CMake but we'll build minimal version
-# In production, install cmake and use method=cmake in wrap file
-
 cc = meson.get_compiler('c')
 host_system = host_machine.system()
+
+# Required defines for POSIX types (pthread_rwlock_t, SSIZE_MAX, lstat, etc.)
+uv_c_args = ['-D_GNU_SOURCE']
+
+# Thread library
+thread_dep = dependency('threads')
 
 uv_sources = files(
   'src/fs-poll.c',
@@ -52,11 +55,14 @@ uv_inc = include_directories('include', 'src')
 libuv_lib = static_library('uv',
   uv_sources,
   include_directories: uv_inc,
+  c_args: uv_c_args,
+  dependencies: [thread_dep],
 )
 
 libuv_dep = declare_dependency(
   link_with: libuv_lib,
   include_directories: include_directories('include'),
+  dependencies: [thread_dep],
 )
 
 meson.override_dependency('libuv', libuv_dep)
