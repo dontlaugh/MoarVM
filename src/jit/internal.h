@@ -68,6 +68,9 @@ void MVM_jit_spill_memory_release(MVMThreadContext *tc, MVMJitCompiler *compiler
 
 
 
+/* Include config.h to get MVM_JIT_ARCH and MVM_JIT_PLATFORM definitions */
+#include "gen/config.h"
+
 /* Although we use these only symbolically, we need to assign a temporary value
  * in order to to distinguish between them */
 #define MVM_JIT_ARCH_X64 1

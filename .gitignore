@@ -88,3 +88,18 @@ tools/lib/MAST/Ops.pm
 # utility code
 tools/repr_size_table
 tools/repr_size_table.exe
+
+# Meson build directory
+builddir/
+
+# Meson subprojects (cloned dependencies - fetched via wrap files)
+subprojects/cmp/
+subprojects/dynasm/
+subprojects/dyncall/
+subprojects/libatomic_ops/
+subprojects/libtommath/
+subprojects/libuv/
+subprojects/mimalloc/
+subprojects/rapidhash/
+subprojects/ryu/
+subprojects/.wraplock

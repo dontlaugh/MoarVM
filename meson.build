@@ -31,6 +31,9 @@ is_clang = cc.get_id() == 'clang'
 # Filesystem module
 fs = import('fs')
 
+# System dependencies (needed for feature detection)
+thread_dep = dependency('threads')
+
 # Build options
 opt_jit = get_option('jit')
 opt_static = get_option('static')
@@ -95,9 +98,10 @@ else
       return 0;
     }
     ''', name: 'fallthrough attribute')
-    cdata.set('fallthrough', '__attribute__((fallthrough))')
+    # Include semicolon - fallthrough attribute must be on empty statement
+    cdata.set('fallthrough', '__attribute__((fallthrough));')
   else
-    cdata.set('fallthrough', '')
+    cdata.set('fallthrough', ';')
   endif
 
   # DLL visibility attributes
@@ -277,8 +281,18 @@ can_cgoto = cc.compiles('''
   }
   ''', name: 'computed goto')
 
-# Compiler optimization hints
-if cc.has_function_attribute('expect')
+# Compiler optimization hints (__builtin_expect)
+has_builtin_expect = cc.compiles('''
+  int main(void) {
+    int x = 5;
+    if (__builtin_expect(x > 0, 1)) {
+      return 0;
+    }
+    return 1;
+  }
+  ''', name: '__builtin_expect')
+
+if has_builtin_expect
   cdata.set('expect_likely', '__builtin_expect((condition), 1)')
   cdata.set('expect_unlikely', '__builtin_expect((condition), 0)')
   cdata.set('expect_condition', '__builtin_expect((condition), (expection))')
@@ -301,9 +315,11 @@ cdata.set('vectorizerspecifier', vectorizer_specifier)
 # Platform-specific settings
 cdata.set('translate_newline_output', is_windows ? 1 : 0)
 
-# PTY support (will be refined with libuv detection)
+# PTY support
+# When using system libuv, we don't have MoarVM's libuv patches for PTY
+# So on Unix systems, we do PTY ourselves using forkpty()
 cdata.set('has_libuv_pty', 0)
-cdata.set('do_pty_ourself', 0)
+cdata.set('do_pty_ourself', (not is_windows) ? 1 : 0)
 
 # Mimalloc decision (will be set based on option and stdatomic)
 use_mimalloc = false
@@ -313,18 +329,19 @@ endif
 cdata.set('use_mimalloc', use_mimalloc ? 1 : 0)
 
 # JIT configuration (architecture and platform)
+# These must be the macro names for proper token concatenation in register.h
 jit_enabled = false
-jit_arch = 0
-jit_platform = 0
+jit_arch = 'MVM_JIT_ARCH_NONE'
+jit_platform = 'MVM_JIT_PLATFORM_NONE'
 
 if opt_jit.enabled() or (opt_jit.auto() and host_cpu == 'x86_64')
   if host_cpu == 'x86_64'
     jit_enabled = true
-    jit_arch = 1  # X64
+    jit_arch = 'MVM_JIT_ARCH_X64'
     if is_windows
-      jit_platform = 1  # WIN32
+      jit_platform = 'MVM_JIT_PLATFORM_WIN32'
     else
-      jit_platform = 2  # POSIX
+      jit_platform = 'MVM_JIT_PLATFORM_POSIX'
     endif
   else
     if opt_jit.enabled()
@@ -338,8 +355,15 @@ cdata.set('jit_platform', jit_platform)
 
 # Compiler flags
 add_project_arguments(cc.get_supported_arguments([
+  '-D_GNU_SOURCE',
   '-D_REENTRANT',
   '-D_FILE_OFFSET_BITS=64',
+  # libtommath compatibility (newer versions renamed these)
+  '-Dmp_get_mag_ull=mp_get_mag_u64',
+  '-Dmp_expt_u32=mp_expt_n',
+  '-DMP_YES=MP_OKAY',
+  '-DMP_NO=MP_ERR',
+  '-Dmp_bool=mp_err',
 ]), language: 'c')
 
 # Platform-specific defines
@@ -358,6 +382,7 @@ if not is_msvc
     '-Wextra',
     '-Wno-unused-parameter',
     '-Wno-unused-function',
+    '-Wno-int-conversion',  # For MVM_UNLIKELY with pointer arguments
   ]
 endif
 add_project_arguments(cc.get_supported_arguments(warning_flags), language: 'c')
@@ -420,22 +445,36 @@ message('  Version:          ' + meson.project_version())
 message('  Host system:      ' + host_system)
 message('  Host CPU:         ' + host_cpu)
 message('  Compiler:         ' + cc.get_id() + ' ' + cc.version())
-message('  JIT:              ' + opt_jit.to_string())
-message('  Static library:   ' + opt_static.to_string())
-message('  Sanitizers:       ASAN=' + opt_asan.to_string() +
-                            ' UBSAN=' + opt_ubsan.to_string() +
-                            ' TSAN=' + opt_tsan.to_string())
+message('  JIT:              ' + (jit_enabled ? 'enabled' : 'disabled'))
+message('  Static library:   ' + (opt_static ? 'yes' : 'no'))
+message('  Sanitizers:       ASAN=' + (opt_asan ? 'yes' : 'no') +
+                            ' UBSAN=' + (opt_ubsan ? 'yes' : 'no') +
+                            ' TSAN=' + (opt_tsan ? 'yes' : 'no'))
 
 # ============================================================================
 # Configuration File Generation
 # ============================================================================
 
 # Generate config.h
-config_h = configure_file(
+# Note: Source expects gen/config.h, so we generate to a temp name
+# and use a custom target to place it in the gen/ subdirectory
+config_h_tmp = configure_file(
   input: 'build/config.h.in',
-  output: 'config.h',
+  output: 'config.h.tmp',
   configuration: cdata,
   install: false
+)
+
+# Create gen/config.h in build directory
+# The output must be declared without path, so we use 'gen_config.h' as output name
+# and a shell command to put it in the right place
+config_h = custom_target('gen_config_h',
+  input: config_h_tmp,
+  output: 'gen_config.h',  # Placeholder, actual file goes to gen/config.h
+  command: ['sh', '-c', 'mkdir -p gen && cp "@INPUT@" gen/config.h && cp "@INPUT@" "@OUTPUT@"'],
+  build_by_default: true,
+  install: true,
+  install_dir: get_option('includedir') / 'moar',
 )
 
 # Prepare backend configuration data for config.c
@@ -549,6 +588,10 @@ else
   mimalloc_dep = declare_dependency()
 endif
 
+# zstd for heap snapshot compression
+# Required dependency - install libzstd-dev/zstd-devel on your system
+zstd_dep = dependency('libzstd', required: true)
+
 # Collect all dependencies
 moar_deps = [
   thread_dep,
@@ -562,6 +605,7 @@ moar_deps = [
   mimalloc_dep,
   sha1_dep,
   freebsd_dep,
+  zstd_dep,
 ]
 
 if is_windows
@@ -603,15 +647,14 @@ if jit_enabled
     'src/jit/unsafe.expr',
   )
 
+  # Generate core_templates.h directly into src/jit in source tree (like old build)
+  # This is simpler than managing include paths for generated files
   core_templates_h = custom_target('core_templates.h',
     input: expr_files,
     output: 'core_templates.h',
     command: [
-      perl,
-      '-I@SOURCE_ROOT@/tools/lib',
-      '@SOURCE_ROOT@/tools/expr-template-compiler.pl',
-      '-o', '@OUTPUT@',
-      '@INPUT0@',  # core_templates.expr (main input)
+      'sh', '-c',
+      'cd "@SOURCE_ROOT@" && "@0@" -I"tools/lib" "tools/expr-template-compiler.pl" -o "src/jit/core_templates.h" "src/jit/core_templates.expr" && cp "src/jit/core_templates.h" "@OUTPUT@"'.format(perl.full_path()),
     ],
     depend_files: files(
       'tools/lib/sexpr.pm',
@@ -624,15 +667,13 @@ if jit_enabled
 
   # Tile table generator for JIT (x64 specific)
   if host_cpu == 'x86_64'
+    # Generate tile_pattern.h directly into src/jit/x64 in source tree
     tile_pattern_h = custom_target('tile_pattern.h',
       input: 'src/jit/x64/tile_pattern.tile',
       output: 'tile_pattern.h',
       command: [
-        perl,
-        '-I@SOURCE_ROOT@/tools/lib',
-        '@SOURCE_ROOT@/tools/tiler-table-generator.pl',
-        '-o', '@OUTPUT@',
-        '@INPUT@',
+        'sh', '-c',
+        '@0@ -I@SOURCE_ROOT@/tools/lib @SOURCE_ROOT@/tools/tiler-table-generator.pl -o @SOURCE_ROOT@/src/jit/x64/tile_pattern.h @INPUT@ && cp @SOURCE_ROOT@/src/jit/x64/tile_pattern.h @OUTPUT@'.format(perl.full_path()),
       ],
       depend_files: files(
         'tools/lib/sexpr.pm',
@@ -922,11 +963,40 @@ if jit_enabled
   )
 
   if host_cpu == 'x86_64'
-    jit_sources += files(
-      'src/jit/x64/arch.c',
-      # Note: src/jit/x64/emit.c is generated from .dasc file
-      # TODO: Add DynASM processing for emit.dasc
+    # Get minilua from dynasm subproject for code generation
+    dynasm_sp = subproject('dynasm')
+    minilua = dynasm_sp.get_variable('minilua')
+
+    # DynASM flags based on platform
+    if is_windows
+      dasm_flags = ['-D', 'WIN32=1']
+    else
+      dasm_flags = ['-D', 'POSIX=1']
+    endif
+
+    # Create a wrapper script to run dynasm from the source root
+    # This is needed because emit.dasc has: .include src/jit/x64/tiles.dasc
+    # We need to use absolute paths since we're changing directories
+    source_root = meson.project_source_root()
+    build_root = meson.project_build_root()
+
+    emit_c = custom_target('emit.c',
+      input: 'src/jit/x64/emit.dasc',
+      output: 'emit.c',
+      command: [
+        'sh', '-c',
+        'cd "' + source_root + '" && ' +
+        '"$1" "' + source_root + '/subprojects/dynasm/dynasm.lua" ' +
+        '-D POSIX=1 -o "' + build_root + '/emit.c" ' +
+        '"' + source_root + '/src/jit/x64/emit.dasc"',
+        '--',
+        minilua,
+      ],
+      depend_files: files('src/jit/x64/tiles.dasc'),
     )
+
+    jit_sources += files('src/jit/x64/arch.c')
+    jit_sources += emit_c
   else
     jit_sources += files('src/jit/stub.c')
   endif
@@ -1010,7 +1080,8 @@ pkg.generate(libmoar,
 install_headers('src/moar.h', subdir: 'moar')
 
 # Install generated config header
-install_headers(config_h, subdir: 'moar')
+# Note: config_h is a custom_target, use install: true in target instead
+# or use meson.add_install_script to handle it
 
 # Install MAST NQP libraries (if they exist)
 # These are needed for tools that compile to MoarVM bytecode
@@ -1025,9 +1096,9 @@ endif
 # Summary
 # ============================================================================
 
-message('='*60)
+message('============================================================')
 message('MoarVM Meson Build Configuration Summary')
-message('='*60)
+message('============================================================')
 message('Version:               ' + meson.project_version())
 message('Prefix:                ' + get_option('prefix'))
 message('Libdir:                ' + get_option('prefix') / libdir)
@@ -1055,7 +1126,7 @@ message('  ASAN:                ' + opt_asan.to_string())
 message('  UBSAN:               ' + opt_ubsan.to_string())
 message('  TSAN:                ' + opt_tsan.to_string())
 message('Coverage:              ' + opt_coverage.to_string())
-message('='*60)
+message('============================================================')
 message('')
 message('Build with: meson compile -C builddir')
 message('Install with: meson install -C builddir')
