@@ -3,6 +3,7 @@ url = https://github.com/MoarVM/dyncall.git
 revision = head
 depth = 1
 patch_directory = dyncall
+method = meson
 
 [provide]
 dependency_names = dyncall
