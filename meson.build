@@ -661,6 +661,344 @@ endif
 # For now, prepare the module
 pkg = import('pkgconfig')
 
+# ============================================================================
+# Source Files
+# ============================================================================
+
+# Include directories
+moar_inc = include_directories('src', 'src/gen')
+
+# Core library sources (organized by directory)
+core_sources = files(
+  'src/core/callsite.c',
+  'src/core/args.c',
+  'src/core/exceptions.c',
+  'src/core/interp.c',
+  'src/core/str_hash_table.c',
+  'src/core/fixkey_hash_table.c',
+  'src/core/index_hash_table.c',
+  'src/core/ptr_hash_table.c',
+  'src/core/uni_hash_table.c',
+  'src/core/threadcontext.c',
+  'src/core/compunit.c',
+  'src/core/bytecode.c',
+  'src/core/frame.c',
+  'src/core/callstack.c',
+  'src/core/validation.c',
+  'src/core/bytecodedump.c',
+  'src/core/threads.c',
+  'src/core/ops.c',
+  'src/core/hll.c',
+  'src/core/loadbytecode.c',
+  'src/core/coerce.c',
+  'src/core/dll.c',
+  'src/core/ext.c',
+  'src/core/nativecall.c',
+  'src/core/continuation.c',
+  'src/core/intcache.c',
+  'src/core/regionalloc.c',
+)
+
+# Native call backend-specific source
+if nativecall_backend == 'libffi'
+  core_sources += files('src/core/nativecall_libffi.c')
+else
+  core_sources += files('src/core/nativecall_dyncall.c')
+endif
+
+# GC sources
+gc_sources = files(
+  'src/gc/orchestrate.c',
+  'src/gc/allocation.c',
+  'src/gc/worklist.c',
+  'src/gc/roots.c',
+  'src/gc/collect.c',
+  'src/gc/gen2.c',
+  'src/gc/wb.c',
+  'src/gc/objectid.c',
+  'src/gc/finalize.c',
+  'src/gc/debug.c',
+)
+
+# I/O sources
+io_sources = files(
+  'src/io/io.c',
+  'src/io/eventloop.c',
+  'src/io/syncfile.c',
+  'src/io/syncsocket.c',
+  'src/io/fileops.c',
+  'src/io/dirops.c',
+  'src/io/procops.c',
+  'src/io/timers.c',
+  'src/io/filewatchers.c',
+  'src/io/signals.c',
+  'src/io/asyncsocket.c',
+  'src/io/asyncsocketudp.c',
+)
+
+# 6model sources
+model6_sources = files(
+  'src/6model/reprs.c',
+  'src/6model/reprconv.c',
+  'src/6model/containers.c',
+  'src/6model/parametric.c',
+  'src/6model/6model.c',
+  'src/6model/bootstrap.c',
+  'src/6model/sc.c',
+  'src/6model/serialization.c',
+  # REPRs
+  'src/6model/reprs/MVMString.c',
+  'src/6model/reprs/VMArray.c',
+  'src/6model/reprs/MVMHash.c',
+  'src/6model/reprs/MVMCFunction.c',
+  'src/6model/reprs/KnowHOWREPR.c',
+  'src/6model/reprs/KnowHOWAttributeREPR.c',
+  'src/6model/reprs/P6str.c',
+  'src/6model/reprs/P6opaque.c',
+  'src/6model/reprs/MVMCode.c',
+  'src/6model/reprs/MVMOSHandle.c',
+  'src/6model/reprs/MVMCompUnit.c',
+  'src/6model/reprs/MVMStaticFrame.c',
+  'src/6model/reprs/P6int.c',
+  'src/6model/reprs/P6num.c',
+  'src/6model/reprs/Uninstantiable.c',
+  'src/6model/reprs/HashAttrStore.c',
+  'src/6model/reprs/MVMThread.c',
+  'src/6model/reprs/MVMIter.c',
+  'src/6model/reprs/MVMContext.c',
+  'src/6model/reprs/SCRef.c',
+  'src/6model/reprs/P6bigint.c',
+  'src/6model/reprs/NFA.c',
+  'src/6model/reprs/MVMException.c',
+  'src/6model/reprs/MVMDLLSym.c',
+  'src/6model/reprs/MVMContinuation.c',
+  'src/6model/reprs/NativeCall.c',
+  'src/6model/reprs/CPointer.c',
+  'src/6model/reprs/CStr.c',
+  'src/6model/reprs/CArray.c',
+  'src/6model/reprs/CStruct.c',
+  'src/6model/reprs/CUnion.c',
+  'src/6model/reprs/ReentrantMutex.c',
+  'src/6model/reprs/ConditionVariable.c',
+  'src/6model/reprs/Semaphore.c',
+  'src/6model/reprs/ConcBlockingQueue.c',
+  'src/6model/reprs/MVMAsyncTask.c',
+  'src/6model/reprs/MVMNull.c',
+  'src/6model/reprs/CPPStruct.c',
+  'src/6model/reprs/NativeRef.c',
+  'src/6model/reprs/MultiDimArray.c',
+  'src/6model/reprs/Decoder.c',
+  'src/6model/reprs/MVMSpeshLog.c',
+  'src/6model/reprs/MVMStaticFrameSpesh.c',
+  'src/6model/reprs/MVMSpeshCandidate.c',
+  'src/6model/reprs/MVMCapture.c',
+  'src/6model/reprs/MVMTracked.c',
+  'src/6model/reprs/MVMStat.c',
+)
+
+# Dispatcher sources
+disp_sources = files(
+  'src/disp/boot.c',
+  'src/disp/registry.c',
+  'src/disp/inline_cache.c',
+  'src/disp/program.c',
+  'src/disp/syscall.c',
+  'src/disp/resume.c',
+)
+
+# Specializer sources
+spesh_sources = files(
+  'src/spesh/dump.c',
+  'src/spesh/graph.c',
+  'src/spesh/codegen.c',
+  'src/spesh/manipulate.c',
+  'src/spesh/args.c',
+  'src/spesh/usages.c',
+  'src/spesh/facts.c',
+  'src/spesh/optimize.c',
+  'src/spesh/dead_bb_elimination.c',
+  'src/spesh/dead_ins_elimination.c',
+  'src/spesh/deopt.c',
+  'src/spesh/log.c',
+  'src/spesh/threshold.c',
+  'src/spesh/inline.c',
+  'src/spesh/osr.c',
+  'src/spesh/lookup.c',
+  'src/spesh/iterator.c',
+  'src/spesh/worker.c',
+  'src/spesh/debug.c',
+  'src/spesh/stats.c',
+  'src/spesh/plan.c',
+  'src/spesh/arg_guard.c',
+  'src/spesh/frame_walker.c',
+  'src/spesh/pea.c',
+  'src/spesh/disp.c',
+)
+
+# String processing sources
+strings_sources = files(
+  'src/strings/decode_stream.c',
+  'src/strings/ascii.c',
+  'src/strings/parse_num.c',
+  'src/strings/utf8.c',
+  'src/strings/utf8_c8.c',
+  'src/strings/nfg.c',
+  'src/strings/ops.c',
+  'src/strings/unicode.c',
+  'src/strings/normalize.c',
+  'src/strings/latin1.c',
+  'src/strings/utf16.c',
+  'src/strings/windows1252.c',
+  'src/strings/shiftjis.c',
+  'src/strings/gb2312.c',
+  'src/strings/gb18030.c',
+)
+
+# Math sources
+math_sources = files('src/math/bigintops.c')
+
+# Profiler sources
+profiler_sources = files(
+  'src/profiler/instrument.c',
+  'src/profiler/log.c',
+  'src/profiler/profile.c',
+  'src/profiler/heapsnapshot.c',
+  'src/profiler/telemeh.c',
+  'src/profiler/configuration.c',
+)
+
+# Instrumentation sources
+instrument_sources = files(
+  'src/instrument/crossthreadwrite.c',
+  'src/instrument/line_coverage.c',
+)
+
+# Platform-agnostic sources
+platform_sources = files(
+  'src/platform/sys.c',
+  'src/platform/random.c',
+  'src/platform/memmem32.c',
+  'src/platform/malloc_trim.c',
+)
+
+# Debug sources
+debug_sources = files('src/debug/debugserver.c')
+
+# Main VM source
+moar_sources = files('src/moar.c')
+
+# Platform-specific sources
+if is_windows
+  platform_sources += files(
+    'src/platform/win32/mmap.c',
+    'src/platform/win32/time.c',
+    'src/platform/win32/io.c',
+    'src/platform/win32/fork.c',
+  )
+else
+  platform_sources += files(
+    'src/platform/posix/mmap.c',
+    'src/platform/posix/time.c',
+    'src/platform/posix/io.c',
+    'src/platform/posix/fork.c',
+  )
+endif
+
+# JIT sources
+jit_sources = []
+if jit_enabled
+  jit_sources += files(
+    'src/jit/graph.c',
+    'src/jit/label.c',
+    'src/jit/compile.c',
+    'src/jit/dump.c',
+    'src/jit/expr.c',
+    'src/jit/tile.c',
+    'src/jit/linear_scan.c',
+    'src/jit/interface.c',
+  )
+
+  if host_cpu == 'x86_64'
+    jit_sources += files(
+      'src/jit/x64/arch.c',
+      # Note: src/jit/x64/emit.c is generated from .dasc file
+      # TODO: Add DynASM processing for emit.dasc
+    )
+  else
+    jit_sources += files('src/jit/stub.c')
+  endif
+else
+  jit_sources += files('src/jit/stub.c')
+endif
+
+# Combine all sources
+libmoar_sources = [
+  config_c,
+  core_sources,
+  gc_sources,
+  io_sources,
+  model6_sources,
+  disp_sources,
+  spesh_sources,
+  strings_sources,
+  math_sources,
+  profiler_sources,
+  instrument_sources,
+  platform_sources,
+  debug_sources,
+  moar_sources,
+  jit_sources,
+]
+
+# ============================================================================
+# Library Target
+# ============================================================================
+
+# Build libmoar (shared or static)
+libmoar = library('moar',
+  libmoar_sources,
+  include_directories: moar_inc,
+  dependencies: moar_deps,
+  install: true,
+  version: meson.project_version(),
+  soversion: version_major.to_string(),
+  c_args: is_windows ? [] : ['-fPIC'],
+  # For generated files
+  sources: jit_enabled ? jit_gen_files : [],
+)
+
+# Create a dependency object for libmoar
+libmoar_dep = declare_dependency(
+  link_with: libmoar,
+  include_directories: moar_inc,
+  dependencies: moar_deps,
+)
+
+# ============================================================================
+# Executable Target
+# ============================================================================
+
+# Build moar executable
+moar_exe = executable('moar',
+  files('src/main.c'),
+  include_directories: moar_inc,
+  dependencies: libmoar_dep,
+  install: true,
+  export_dynamic: not is_windows,  # Allow dynamic symbol resolution
+)
+
+# ============================================================================
+# Pkg-config File
+# ============================================================================
+
+pkg.generate(libmoar,
+  name: 'moar',
+  description: 'MoarVM - A VM for NQP and Rakudo Perl 6',
+  url: 'https://moarvm.org',
+  subdirs: 'moar',
+  extra_cflags: ['-DMVM_BUILD'],
+)
+
 # Subsequent phases will add:
-# - Source compilation (Phase 4)
 # - Installation rules (Phase 6)
+# - Build documentation
