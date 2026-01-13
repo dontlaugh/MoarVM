@@ -710,7 +710,8 @@ pkg = import('pkgconfig')
 # ============================================================================
 
 # Include directories
-moar_inc = include_directories('src', 'src/gen')
+# '.' refers to the build directory where gen/config.h is generated
+moar_inc = include_directories('.', 'src', 'src/gen')
 
 # Core library sources (organized by directory)
 core_sources = files(
