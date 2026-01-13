@@ -460,8 +460,123 @@ config_c = configure_file(
   install: false
 )
 
+# ============================================================================
+# Dependencies
+# ============================================================================
+
+# Vendored dependencies (always built from 3rdparty/)
+subdir('3rdparty')
+
+# 3rd party library dependencies
+# These can be satisfied by system libraries or subprojects
+
+# LibUV (async I/O)
+if get_option('use-system-libuv')
+  libuv_dep = dependency('libuv', required: true)
+else
+  libuv_dep = dependency('libuv', fallback: ['libuv', 'libuv_dep'], required: true)
+endif
+
+# Libtommath (big integer math)
+if get_option('use-system-libtommath')
+  libtommath_dep = dependency('libtommath', required: true)
+else
+  libtommath_dep = dependency('libtommath',
+    fallback: ['libtommath', 'libtommath_dep'],
+    required: true)
+endif
+
+# Atomic operations
+if use_c11_atomics
+  # Using C11 atomics, no library needed
+  atomic_ops_dep = declare_dependency()
+else
+  if get_option('use-system-libatomic-ops')
+    atomic_ops_dep = dependency('atomic_ops', required: true)
+  else
+    atomic_ops_dep = dependency('atomic_ops',
+      fallback: ['libatomic_ops', 'atomic_ops_dep'],
+      required: true)
+  endif
+endif
+
+# Native call backend: dyncall or libffi
+if opt_use_libffi
+  # Use libffi (system library)
+  libffi_dep = dependency('libffi', required: true)
+  nativecall_dep = libffi_dep
+  nativecall_backend = 'libffi'
+else
+  # Use dyncall (bundled or system)
+  if get_option('use-system-dyncall')
+    dyncall_dep = dependency('dyncall', required: true)
+  else
+    dyncall_dep = dependency('dyncall',
+      fallback: ['dyncall', 'dyncall_dep'],
+      required: true)
+  endif
+  nativecall_dep = dyncall_dep
+  nativecall_backend = 'dyncall'
+endif
+
+# CMP (MessagePack implementation)
+cmp_dep = dependency('cmp', fallback: ['cmp', 'cmp_dep'], required: true)
+
+# Ryu (float-to-string conversion)
+ryu_dep = dependency('ryu', fallback: ['ryu', 'ryu_dep'], required: true)
+
+# DynASM (JIT dynamic assembler) - only needed if JIT is enabled
+if jit_enabled
+  dynasm_dep = dependency('dynasm', fallback: ['dynasm', 'dynasm_dep'], required: true)
+endif
+
+# RapidHash (hash function library)
+rapidhash_dep = dependency('rapidhash', fallback: ['rapidhash', 'rapidhash_dep'], required: true)
+
+# Mimalloc (optional, high-performance allocator)
+if use_mimalloc
+  if get_option('use-system-mimalloc')
+    mimalloc_dep = dependency('mimalloc', required: true)
+  else
+    mimalloc_dep = dependency('mimalloc',
+      fallback: ['mimalloc', 'mimalloc_dep'],
+      required: true)
+  endif
+else
+  mimalloc_dep = declare_dependency()
+endif
+
+# Collect all dependencies
+moar_deps = [
+  thread_dep,
+  libuv_dep,
+  libtommath_dep,
+  atomic_ops_dep,
+  nativecall_dep,
+  cmp_dep,
+  ryu_dep,
+  rapidhash_dep,
+  mimalloc_dep,
+  sha1_dep,
+  freebsd_dep,
+]
+
+if is_windows
+  # Add msinttypes for old MSVC
+  moar_deps += msinttypes_dep
+endif
+
+if jit_enabled
+  moar_deps += dynasm_dep
+endif
+
+# Math library (needed on some platforms)
+m_dep = cc.find_library('m', required: false)
+if m_dep.found()
+  moar_deps += m_dep
+endif
+
 # Subsequent phases will add:
-# - Dependency setup (Phase 2)
 # - Code generation (Phase 3)
 # - Source compilation (Phase 4)
 # - Installation rules (Phase 6)
