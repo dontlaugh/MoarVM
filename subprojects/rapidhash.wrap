@@ -2,6 +2,7 @@
 url = https://github.com/Nicoshev/rapidhash.git
 revision = head
 depth = 1
+patch_directory = rapidhash
 
 [provide]
 dependency_names = rapidhash

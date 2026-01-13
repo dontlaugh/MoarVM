@@ -506,9 +506,6 @@ config_c = configure_file(
 # Dependencies
 # ============================================================================
 
-# Vendored dependencies (always built from 3rdparty/)
-subdir('3rdparty')
-
 # 3rd party library dependencies
 # These can be satisfied by system libraries or subprojects
 
@@ -591,6 +588,9 @@ endif
 # zstd for heap snapshot compression
 # Required dependency - install libzstd-dev/zstd-devel on your system
 zstd_dep = dependency('libzstd', required: true)
+
+# Vendored dependencies (small libraries included directly in 3rdparty/)
+subdir('3rdparty')
 
 # Collect all dependencies
 moar_deps = [

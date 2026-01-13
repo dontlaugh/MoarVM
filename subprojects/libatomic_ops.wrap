@@ -2,6 +2,7 @@
 url = https://github.com/MoarVM/libatomic_ops.git
 revision = head
 depth = 1
+patch_directory = libatomic_ops
 
 [provide]
 dependency_names = atomic_ops

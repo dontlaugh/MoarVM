@@ -2,6 +2,7 @@
 url = https://github.com/MoarVM/libtommath.git
 revision = head
 depth = 1
+patch_directory = libtommath
 
 [provide]
 dependency_names = libtommath, tommath

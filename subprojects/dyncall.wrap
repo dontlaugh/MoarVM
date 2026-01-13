@@ -2,6 +2,7 @@
 url = https://github.com/MoarVM/dyncall.git
 revision = head
 depth = 1
+patch_directory = dyncall
 
 [provide]
 dependency_names = dyncall
