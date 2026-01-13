@@ -28,6 +28,9 @@ is_msvc = cc.get_id() == 'msvc'
 is_gcc = cc.get_id() == 'gcc'
 is_clang = cc.get_id() == 'clang'
 
+# Filesystem module
+fs = import('fs')
+
 # Build options
 opt_jit = get_option('jit')
 opt_static = get_option('static')
@@ -999,6 +1002,61 @@ pkg.generate(libmoar,
   extra_cflags: ['-DMVM_BUILD'],
 )
 
-# Subsequent phases will add:
-# - Installation rules (Phase 6)
-# - Build documentation
+# ============================================================================
+# Installation Rules
+# ============================================================================
+
+# Install main header
+install_headers('src/moar.h', subdir: 'moar')
+
+# Install generated config header
+install_headers(config_h, subdir: 'moar')
+
+# Install MAST NQP libraries (if they exist)
+# These are needed for tools that compile to MoarVM bytecode
+if fs.is_dir('lib/MAST')
+  install_subdir('lib/MAST',
+    install_dir: mastdir,
+    strip_directory: true,
+  )
+endif
+
+# ============================================================================
+# Summary
+# ============================================================================
+
+message('='*60)
+message('MoarVM Meson Build Configuration Summary')
+message('='*60)
+message('Version:               ' + meson.project_version())
+message('Prefix:                ' + get_option('prefix'))
+message('Libdir:                ' + get_option('prefix') / libdir)
+message('Bindir:                ' + get_option('prefix') / bindir)
+message('MAST dir:              ' + get_option('prefix') / mastdir)
+message('')
+message('Compiler:              ' + cc.get_id() + ' ' + cc.version())
+message('Build type:            ' + get_option('buildtype'))
+message('Optimization:          ' + get_option('optimization'))
+message('Debug:                 ' + get_option('debug').to_string())
+message('')
+message('JIT:                   ' + (jit_enabled ? 'enabled' : 'disabled'))
+if jit_enabled
+  message('  Architecture:        ' + host_cpu)
+endif
+message('Static library:        ' + opt_static.to_string())
+message('Relocatable:           ' + opt_relocatable.to_string())
+message('')
+message('Memory allocator:      ' + (use_mimalloc ? 'mimalloc' : 'libc malloc'))
+message('C11 atomics:           ' + (use_c11_atomics ? 'yes' : 'libatomic_ops'))
+message('Nativecall backend:    ' + nativecall_backend)
+message('')
+message('Sanitizers:')
+message('  ASAN:                ' + opt_asan.to_string())
+message('  UBSAN:               ' + opt_ubsan.to_string())
+message('  TSAN:                ' + opt_tsan.to_string())
+message('Coverage:              ' + opt_coverage.to_string())
+message('='*60)
+message('')
+message('Build with: meson compile -C builddir')
+message('Install with: meson install -C builddir')
+message('')
