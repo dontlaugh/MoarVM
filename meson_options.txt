@@ -1,0 +1,73 @@
+# MoarVM Build Options
+
+# Build type options
+option('jit', type: 'feature', value: 'auto',
+       description: 'Enable JIT compilation support')
+
+option('static', type: 'boolean', value: false,
+       description: 'Build static library instead of shared')
+
+option('coverage', type: 'boolean', value: false,
+       description: 'Enable code coverage instrumentation')
+
+option('relocatable', type: 'boolean', value: false,
+       description: 'Build with relocatable paths (rpath)')
+
+# Sanitizer options
+option('asan', type: 'boolean', value: false,
+       description: 'Enable AddressSanitizer')
+
+option('ubsan', type: 'boolean', value: false,
+       description: 'Enable UndefinedBehaviorSanitizer')
+
+option('tsan', type: 'boolean', value: false,
+       description: 'Enable ThreadSanitizer')
+
+option('valgrind', type: 'boolean', value: false,
+       description: 'Enable Valgrind support')
+
+# Instrumentation options
+option('dtrace', type: 'boolean', value: false,
+       description: 'Enable DTrace instrumentation')
+
+option('telemeh', type: 'boolean', value: true,
+       description: 'Enable telemetry support')
+
+# Memory allocator
+option('mimalloc', type: 'feature', value: 'auto',
+       description: 'Use mimalloc instead of libc malloc (requires C11 atomics or MSVC)')
+
+# Atomics
+option('c11-atomics', type: 'feature', value: 'auto',
+       description: 'Use C11 atomics instead of libatomic_ops')
+
+# System library options (prefer system libs over bundled)
+option('use-system-libuv', type: 'boolean', value: false,
+       description: 'Use system libuv instead of bundled version')
+
+option('use-system-libtommath', type: 'boolean', value: false,
+       description: 'Use system libtommath instead of bundled version')
+
+option('use-system-libatomic-ops', type: 'boolean', value: false,
+       description: 'Use system libatomic_ops instead of bundled version')
+
+option('use-system-dyncall', type: 'boolean', value: false,
+       description: 'Use system dyncall instead of bundled version')
+
+option('use-system-mimalloc', type: 'boolean', value: false,
+       description: 'Use system mimalloc instead of bundled version')
+
+# Native call backend
+option('use-libffi', type: 'boolean', value: false,
+       description: 'Use libffi for native calls instead of dyncall')
+
+# Installation directories
+option('mastdir', type: 'string', value: '',
+       description: 'MAST files installation directory (default: libdir/moar/MAST)')
+
+# Development options
+option('show-autovect', type: 'boolean', value: false,
+       description: 'Show compiler auto-vectorization reports')
+
+option('show-autovect-failed', type: 'string', value: '',
+       description: 'Show failed auto-vectorization attempts for specific file')
