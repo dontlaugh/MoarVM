@@ -38,6 +38,8 @@ if host_system == 'linux'
     'src/unix/pipe.c',
     'src/unix/poll.c',
     'src/unix/process.c',
+    'src/unix/procfs-exepath.c',
+    'src/unix/proctitle.c',
     'src/unix/random-devurandom.c',
     'src/unix/random-getrandom.c',
     'src/unix/random-sysctl-linux.c',
