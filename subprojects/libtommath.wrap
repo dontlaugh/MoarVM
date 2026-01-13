@@ -1,5 +1,5 @@
 [wrap-git]
-url = https://github.com/MoarVM/libtommath.git
+url = https://github.com/libtom/libtommath.git
 revision = head
 depth = 1
 patch_directory = libtommath
